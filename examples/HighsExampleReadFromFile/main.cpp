@@ -3,17 +3,10 @@
 #include <stdio.h>
 
 int main(void) {
-   HighsLp lp;
-   HighsOptions options;
-   options.filename = "qap10.mps";
-   
-   Filereader* reader = Filereader::getFilereader("qap10.mps");
-   reader->readModelFromFile(options, lp);
-
    Highs highs;
 
-   highs.options_ = options;
-   highs.initializeLp(lp);
+   highs.readFromFile(std::string("qap10.mps"));
+
    highs.run();
 
    HighsSolution sol = highs.getSolution();
