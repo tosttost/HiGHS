@@ -5,7 +5,7 @@
 int main(void) {
    Highs highs;
 
-   highs.readFromFile(std::string("qap10.mps"));
+   highs.readFromFile(std::string("diet.lp"));
 
    highs.run();
 
