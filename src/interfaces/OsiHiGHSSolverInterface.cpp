@@ -833,6 +833,11 @@ void OsiHiGHSSolverInterface::writeMps(const char *filename,
                     "OsiHiGHSSolverInterface", __FILE__, __LINE__);
 }
 
+int OsiHiGHSSolverInterface::readLp(const char *filename, const double epsilon) {
+  this->highs->readFromFile(std::string(filename));
+  return 0;
+}
+
 void OsiHiGHSSolverInterface::passInMessageHandler(CoinMessageHandler *handler) {
   OsiSolverInterface::passInMessageHandler(handler);
 

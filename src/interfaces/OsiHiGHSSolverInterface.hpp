@@ -341,6 +341,10 @@ class OsiHiGHSSolverInterface : virtual public OsiSolverInterface {
   virtual void writeMps(const char* filename, const char* extension = "mps",
                         double objSense = 0.0) const;
 
+   /// Read file in LP format from file with name filename.
+  /// See class CoinLpIO for description of this format.
+  virtual int readLp(const char *filename, const double epsilon = 1e-5);
+
   ///@}
 
   virtual int canDoSimplexInterface() const;
