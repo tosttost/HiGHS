@@ -162,10 +162,10 @@ void HFactor::setup(int numCol_, int numRow_, const int* Astart_,
   // Copy Problem size and (pointer to) coefficient matrix
   numRow = numRow_;
   numCol = numCol_;
-  Astart = Astart_;
-  Aindex = Aindex_;
-  Avalue = Avalue_;
-  baseIndex = baseIndex_;
+  Astart.assign(Astart_, Astart_ + numCol_ + 1);
+  Aindex.assign(Aindex_, Aindex_ + Astart_[numCol_]);
+  Aindex.assign(Avalue_, Avalue_ + Aindex_[numCol_]);
+  baseIndex.assign(baseIndex_, baseIndex_ + numRow_);
   updateMethod = updateMethod_;
 
   // Allocate for working buffer
@@ -1134,7 +1134,7 @@ void HFactor::buildFinish() {
   PFvalue.clear();
 
   // Finally, permute the base index
-  iwork.assign(baseIndex, baseIndex + numRow);
+  iwork.assign(&baseIndex[0], &baseIndex[numRow]);
   for (int i = 0; i < numRow; i++) baseIndex[permute[i]] = iwork[i];
 
 #ifdef HiGHSDEV

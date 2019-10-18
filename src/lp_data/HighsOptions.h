@@ -11,6 +11,7 @@
  * @brief
  * @author Julian Hall, Ivet Galabova, Qi Huangfu and Michael Feldmeier
  */
+
 #ifndef LP_DATA_HIGHS_OPTIONS_H_
 #define LP_DATA_HIGHS_OPTIONS_H_
 
@@ -38,6 +39,23 @@ class OptionRecord {
     this->description = Xdescription;
     this->advanced = Xadvanced;
   }
+
+  OptionRecord(const OptionRecord& that) {
+    type = that.type;
+    name = that.name;
+    description = that.description;
+    advanced = that.advanced;
+  }
+
+  OptionRecord& operator=(const OptionRecord& that) {
+    if (this != &that) {
+      type = that.type;
+      name = that.name;
+      description = that.description;
+      advanced = that.advanced;
+    }
+    return *this;
+  }
   
   ~OptionRecord() {}
 };
@@ -62,6 +80,23 @@ class OptionRecordBool : public OptionRecord {
     *value = default_value;
   }
   
+  OptionRecordBool(const OptionRecordBool& that) : OptionRecord(that) {
+    value = that.value;
+    default_value = that.default_value;
+  }
+
+  OptionRecordBool& operator=(const OptionRecordBool& that) {
+    if (this != &that) {
+      type = that.type;
+      name = that.name;
+      description = that.description;
+      advanced = that.advanced;
+      value = that.value;
+      default_value = that.default_value;
+    }
+    return *this;
+  }
+
   void assignvalue(bool Xvalue) {
     *value = Xvalue;
   }
@@ -92,6 +127,23 @@ class OptionRecordInt : public OptionRecord {
     default_value = Xdefault_value;
     upper_bound = Xupper_bound;
     *value = default_value;
+  }
+
+  OptionRecordInt(const OptionRecordInt& that) : OptionRecord(that) {
+    value = that.value;
+    default_value = that.default_value;
+  }
+
+  OptionRecordInt& operator=(const OptionRecordInt& that) {
+    if (this != &that) {
+      type = that.type;
+      name = that.name;
+      description = that.description;
+      advanced = that.advanced;
+      value = that.value;
+      default_value = that.default_value;
+    }
+    return *this;
   }
 
 void assignvalue(int Xvalue) {
@@ -125,6 +177,23 @@ class OptionRecordDouble : public OptionRecord {
     *value = default_value;
   }
 
+  OptionRecordDouble(const OptionRecordDouble& that) : OptionRecord(that) {
+    value = that.value;
+    default_value = that.default_value;
+  }
+
+  OptionRecordDouble& operator=(const OptionRecordDouble& that) {
+    if (this != &that) {
+      type = that.type;
+      name = that.name;
+      description = that.description;
+      advanced = that.advanced;
+      value = that.value;
+      default_value = that.default_value;
+    }
+    return *this;
+  }
+
 void assignvalue(double Xvalue) {
   *value = Xvalue;
 }
@@ -149,6 +218,23 @@ class OptionRecordString : public OptionRecord {
     value = Xvalue_pointer;
     default_value = Xdefault_value;
     *value = default_value;
+  }
+
+  OptionRecordString(const OptionRecordString& that) : OptionRecord(that) {
+    value = that.value;
+    default_value = that.default_value;
+  }
+
+  OptionRecordString& operator=(const OptionRecordString& that) {
+    if (this != &that) {
+      type = that.type;
+      name = that.name;
+      description = that.description;
+      advanced = that.advanced;
+      value = that.value;
+      default_value = that.default_value;
+    }
+    return *this;
   }
 
 void assignvalue(std::string Xvalue) {

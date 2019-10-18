@@ -26,9 +26,9 @@ class HighsModelObject {
   HighsModelObject(HighsLp& lp, HighsOptions& options, HighsTimer& timer)
       : lp_(lp), options_(options), timer_(timer) {}
 
-  HighsLp& lp_;
-  HighsOptions& options_;
-  HighsTimer& timer_;
+  HighsLp lp_;
+  HighsOptions options_;
+  HighsTimer timer_;
 
   HighsModelStatus model_status_ = HighsModelStatus::NOTSET;
   HighsBasis basis_;

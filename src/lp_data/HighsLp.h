@@ -84,6 +84,73 @@ class HighsLp {
 
   std::vector<int> integrality_;
 
+  HighsLp() {
+    row_names_.clear();
+    col_names_.clear();
+  }
+
+  HighsLp(const HighsLp& that) {
+    numCol_ = that.numCol_;
+    numRow_ = that.numRow_;
+    numInt_ = that.numInt_;
+    nnz_ = that.nnz_;
+
+    Astart_ = (that.Astart_);
+    Aindex_ = (that.Aindex_);
+    Avalue_ = (that.Avalue_);
+    colCost_ = (that.colCost_);
+    colLower_ = (that.colLower_);
+    colUpper_ = (that.colUpper_);
+    rowLower_ = (that.rowLower_);
+    rowUpper_ = (that.rowUpper_);
+
+    sense_ = that.sense_;
+    offset_ = that.offset_;
+
+    model_name_ = that.model_name_;
+    lp_name_ = that.lp_name_;
+
+    row_names_ = (that.row_names_);
+    col_names_ = (that.col_names_);
+
+    integrality_ = (that.integrality_);
+  }
+
+  HighsLp& operator=(const HighsLp& that) {
+    if (this != &that) {
+      numCol_ = that.numCol_;
+      numRow_ = that.numRow_;
+      numInt_ = that.numInt_;
+      nnz_ = that.nnz_;
+
+      Astart_ = (that.Astart_);
+      Aindex_ = (that.Aindex_);
+      Avalue_ = (that.Avalue_);
+      colCost_ = (that.colCost_);
+      colLower_ = (that.colLower_);
+      colUpper_ = (that.colUpper_);
+      rowLower_ = (that.rowLower_);
+      rowUpper_ = (that.rowUpper_);
+
+      sense_ = that.sense_;
+      offset_ = that.offset_;
+
+      model_name_ = that.model_name_;
+      lp_name_ = that.lp_name_;
+
+      row_names_ = (that.row_names_);
+      col_names_ = (that.col_names_);
+
+      integrality_ = (that.integrality_);
+    }
+    return *this;
+  }
+
+  ~HighsLp() {
+    printf("HighsLP row name %d\n", (int)row_names_.size());
+    printf("HighsLP col name %d\n", (int)col_names_.size());
+  }
+
   bool operator==(const HighsLp& lp) {
     if (numCol_ != lp.numCol_ || numRow_ != lp.numRow_ || nnz_ != lp.nnz_ ||
         sense_ != lp.sense_ || offset_ != lp.offset_ ||

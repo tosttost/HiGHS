@@ -86,7 +86,16 @@ const double hyperRESULT = 0.10;
  *
  */
 class HFactor {
+
  public:
+  HFactor() {
+
+  }
+
+  ~HFactor() {
+
+  }
+
   /**
    * @brief Copy problem size and pointers of constraint matrix, and set
    * up space for INVERT
@@ -235,10 +244,10 @@ class HFactor {
   // Problem size, coefficient matrix and update method
   int numRow;
   int numCol;
-  const int* Astart;
-  const int* Aindex;
-  const double* Avalue;
-  int* baseIndex;
+  std::vector<int> Astart;
+  std::vector<int> Aindex;
+  std::vector<double> Avalue;
+  std::vector<int> baseIndex;
   int updateMethod;
 
   // Working buffer

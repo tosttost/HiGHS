@@ -111,7 +111,7 @@ class Highs {
    * of HighsModelObjects
    */
   HighsStatus initializeLp(
-      const HighsLp& lp  //!< The HighsLp instance for this LP
+      const HighsLp lp  //!< The HighsLp instance for this LP
   );
 
   /**
@@ -631,7 +631,7 @@ class Highs {
   // Each HighsModelObject holds a const ref to its lp_. There are potentially
   // several hmos_ to allow for the solution of several different modified
   // versions of the original LP. For instance different levels of presolve.
-  std::vector<HighsModelObject> hmos_;
+  std::vector<HighsModelObject*> hmos_;
 
   //  bool allow_presolve_;
 
