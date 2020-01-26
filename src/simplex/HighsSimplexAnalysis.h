@@ -18,6 +18,7 @@
 #include "lp_data/HighsOptions.h"
 #include "simplex/SimplexConst.h"
 #include "simplex/HVector.h"
+#include "simplex/HFactorStruct.h"
 #include "util/HighsTimer.h"
 #include "util/HighsUtils.h"
 
@@ -86,12 +87,7 @@ class HighsSimplexAnalysis {
 			 double& end_density
 			 );
   void afterTranStage(const int tran_stage_id,
-		      const double start_density,
-		      const double end_density,
-		      const double historical_density, 
-		      const double predicted_end_density, 
-		      const bool use_solve_sparse_original_HFactor_logic,
-		      const bool use_solve_sparse_new_HFactor_logic
+		      const UseSolveSparse& solve_sparse
 		      );
   void summaryReportHFactor();
 

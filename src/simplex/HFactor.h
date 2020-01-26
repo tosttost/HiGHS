@@ -51,6 +51,7 @@ const double hyperCANCEL = 0.05;
  * hyper-sparse - only for reporting
  */
 const double hyperRESULT = 0.10;
+
 /**
  * @brief Basis matrix factorization, update and solves for HiGHS
  *
@@ -155,6 +156,11 @@ class HFactor {
               int* hint     //!< Reinversion status
   );
 
+  void solveSparseDecision(const int tran_stage_id,
+			   UseSolveSparse& solve_sparse,
+			   HighsSimplexAnalysis* analysis
+			   );
+
 #ifdef HiGHSDEV
   /**
    * @brief Data used for reporting in HTester.cpp. Should only be
@@ -248,6 +254,10 @@ class HFactor {
   int updateMethod;
   HighsSimplexAnalysis* analysis;
   bool use_original_HFactor_logic;
+  double original_hyper_cancel;
+  double new_hyper_cancel;
+  vector<double> original_hyper_density;
+  double new_hyper_density_end;
 
   // Working buffer
   int nwork;
