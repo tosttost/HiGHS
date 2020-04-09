@@ -14,9 +14,19 @@
 #ifndef UTIL_HIGHSOPENMP_H_
 #define UTIL_HIGHSOPENMP_H_
 
+#include "HConfig.h"
+#include "io/HighsIO.h"
+//#include "lp_data/HighsOptions.h"
 #ifdef OPENMP
 #include "omp.h"
 #endif
+
+void ompReportMaxThreads(const HighsOptions& options) {
+#ifdef OPENMP
+  HighsLogMessage(options.logfile, HighsMessageType::INFO,
+                  "Running with %d OMP thread(s)", omp_get_max_threads());
+#endif
+}
 
 int ompGetMaxThreads() {
   int omp_max_threads = 1;

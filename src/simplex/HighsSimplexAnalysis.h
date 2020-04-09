@@ -17,17 +17,11 @@
 
 #include "lp_data/HighsLp.h"
 #include "lp_data/HighsOptions.h"
-//#include "lp_data/HighsAnalysis.h"
-//#include "simplex/SimplexConst.h"
-//#include "simplex/HFactor.h"
 #include "simplex/HVector.h"
 #include "simplex/SimplexConst.h"
+#include "util/HighsOpenMP.h"
 #include "util/HighsTimer.h"
 #include "util/HighsUtils.h"
-
-#ifdef OPENMP
-#include "omp.h"
-#endif
 
 #ifdef HiGHSDEV
 enum ANALYSIS_OPERATION_TYPE {
@@ -74,10 +68,7 @@ class HighsSimplexAnalysis {
   HighsSimplexAnalysis(HighsTimer& timer) {
     timer_ = &timer;
 #ifdef HiGHSDEV
-    int omp_max_threads = 1;
-#ifdef OPENMP
-    omp_max_threads = omp_get_max_threads();
-#endif
+    int omp_max_threads = ompGetMaxThreads();
     for (int i = 0; i < omp_max_threads; i++) {
       HighsTimerClock clock(timer);
       thread_simplex_clocks.push_back(clock);

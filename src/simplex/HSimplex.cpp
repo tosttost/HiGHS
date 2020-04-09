@@ -25,15 +25,12 @@
 #include "simplex/HighsSimplexInterface.h"
 #include "simplex/SimplexConst.h"  // For simplex strategy constants
 #include "simplex/SimplexTimer.h"
+#include "util/HighsOpenMP.h"
 #include "util/HighsUtils.h"
 
 using std::runtime_error;
 #include <cassert>
 #include <vector>
-
-#ifdef OPENMP
-#include "omp.h"
-#endif
 
 void setSimplexOptions(HighsModelObject& highs_model_object) {
   const HighsOptions& options = highs_model_object.options_;
@@ -2840,11 +2837,8 @@ int computeFactor(HighsModelObject& highs_model_object) {
   // TODO Understand why handling noPvC and noPvR in what seem to be
   // different ways ends up equivalent.
 #ifdef HiGHSDEV
-  int thread_id = 0;
-#ifdef OPENMP
-  thread_id = omp_get_thread_num();
+  int thread_id = ompGetThreadNum();
   //  printf("Hello world from computeFactor: thread %d\n", thread_id);
-#endif
   factor_timer_clock_pointer =
       highs_model_object.simplex_analysis_.getThreadFactorTimerClockPtr(
           thread_id);

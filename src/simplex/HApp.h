@@ -37,10 +37,6 @@
 #include "simplex/SimplexConst.h"
 #include "simplex/SimplexTimer.h"
 
-#ifdef OPENMP
-#include "omp.h"
-#endif
-
 #ifdef HiGHSDEV
 void reportAnalyseInvertForm(const HighsModelObject& highs_model_object) {
   const HighsSimplexInfo& simplex_info = highs_model_object.simplex_info_;
@@ -142,10 +138,7 @@ HighsStatus runSimplexSolver(HighsModelObject& highs_model_object) {
   // Record the min/max minimum number of HiGHS threads in the options
   const int highs_min_threads = highs_model_object.options_.highs_min_threads;
   const int highs_max_threads = highs_model_object.options_.highs_max_threads;
-  int omp_max_threads = 0;
-#ifdef OPENMP
-  omp_max_threads = omp_get_max_threads();
-#endif
+  int omp_max_threads = ompGetMaxThreads();
   if (highs_model_object.options_.parallel == on_string &&
       simplex_strategy == SIMPLEX_STRATEGY_DUAL) {
     // The parallel strategy is on and the simplex strategy is dual so use PAMI

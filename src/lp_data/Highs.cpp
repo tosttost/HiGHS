@@ -28,10 +28,6 @@
 #include "simplex/HighsSimplexInterface.h"
 #include "util/HighsOpenMP.h"
 
-#ifdef OPENMP
-#include "omp.h"
-#endif
-
 // until add_row_.. functions are moved to HighsLpUtils.h
 #include "simplex/HSimplex.h"
 
@@ -255,15 +251,8 @@ HighsStatus Highs::writeModel(const std::string filename) {
 // Checks the options calls presolve and postsolve if needed. Solvers are called
 // with runLpSolver(..)
 HighsStatus Highs::run() {
-#ifdef OPENMP
-  omp_max_threads = omp_get_max_threads();
-  assert(omp_max_threads > 0);
-#ifdef HiGHSDEV
-  if (omp_max_threads <= 0)
-    printf("WARNING: omp_get_max_threads() returns %d\n", omp_max_threads);
-  printf("Running with %d OMP thread(s)\n", omp_max_threads);
-#endif
-#endif
+  omp_max_threads = ompGetMaxThreads();
+  ompReportMaxThreads(options_);
   HighsStatus return_status = HighsStatus::OK;
   HighsStatus call_status;
   /*

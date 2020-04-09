@@ -34,10 +34,6 @@
 #include "util/HighsTimer.h"
 //#include "util/HighsOpenMP.h"
 
-//#ifdef OPENMP
-//#include "omp.h"
-//#endif
-
 using std::cout;
 using std::endl;
 using std::fabs;
@@ -1331,22 +1327,18 @@ void HDual::chooseColumnSlice(HVector* row_ep) {
   {
     dualRow.chooseMakepack(row_ep, solver_num_col);
     dualRow.choosePossible();
-#ifdef OPENMP
-    //    int row_ep_thread_id = omp_get_thread_num();
+    //    int row_ep_thread_id = ompGetThreadNum();
     //    printf("Hello world from Row_ep:         PACK + CC1 thread %d\n",
     //    row_ep_thread_id);
-#endif
   }
 
   // Row_ap: PRICE + PACK + CC1
   for (int i = 0; i < slice_num; i++) {
 #pragma omp task
     {
-#ifdef OPENMP
-      //      int row_ap_thread_id = omp_get_thread_num();
+      //      int row_ap_thread_id = ompGetThreadNum();
       //      printf("Hello world from omp Row_ap: PRICE + PACK + CC1 [%1d]
       //      thread %d\n", i, row_ap_thread_id);
-#endif
       slice_row_ap[i].clear();
 
       //      slice_matrix[i].priceByRowSparseResult(slice_row_ap[i], *row_ep);

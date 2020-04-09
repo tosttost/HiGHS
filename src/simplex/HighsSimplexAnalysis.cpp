@@ -602,11 +602,7 @@ double HighsSimplexAnalysis::simplexTimerRead(const int simplex_clock,
 HighsTimerClock* HighsSimplexAnalysis::getThreadFactorTimerClockPointer() {
   HighsTimerClock* factor_timer_clock_pointer = NULL;
 #ifdef HiGHSDEV
-  int thread_id = 0;
-#ifdef OPENMP
-  thread_id = omp_get_thread_num();
-#endif
-  factor_timer_clock_pointer = &thread_factor_clocks[thread_id];
+  factor_timer_clock_pointer = &thread_factor_clocks[ompGetThreadNum()];
 #endif
   return factor_timer_clock_pointer;
 }
@@ -614,10 +610,7 @@ HighsTimerClock* HighsSimplexAnalysis::getThreadFactorTimerClockPointer() {
 #ifdef HiGHSDEV
 void HighsSimplexAnalysis::reportFactorTimer() {
   FactorTimer factor_timer;
-  int omp_max_threads = 1;
-#ifdef OPENMP
-  omp_max_threads = omp_get_max_threads();
-#endif
+  int omp_max_threads = ompGetMaxThreads();
   for (int i = 0; i < omp_max_threads; i++) {
     //  for (HighsTimerClock clock : thread_factor_clocks) {
     printf("reportFactorTimer: HFactor clocks for OMP thread %d / %d\n", i,
