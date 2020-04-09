@@ -32,10 +32,11 @@
 #include "simplex/HSimplex.h"
 #include "simplex/SimplexTimer.h"
 #include "util/HighsTimer.h"
+//#include "util/HighsOpenMP.h"
 
-#ifdef OPENMP
-#include "omp.h"
-#endif
+//#ifdef OPENMP
+//#include "omp.h"
+//#endif
 
 using std::cout;
 using std::endl;

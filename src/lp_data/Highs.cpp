@@ -26,6 +26,7 @@
 #include "lp_data/HighsModelUtils.h"
 #include "simplex/HApp.h"
 #include "simplex/HighsSimplexInterface.h"
+#include "util/HighsOpenMP.h"
 
 #ifdef OPENMP
 #include "omp.h"

@@ -29,6 +29,7 @@
 #include "simplex/HDual.h"
 #include "simplex/HPrimal.h"
 #include "simplex/HQPrimal.h"
+#include "util/HighsOpenMP.h"
 #include "util/HighsUtils.h"
 //#include "HRanging.h"
 #include "simplex/HSimplex.h"
