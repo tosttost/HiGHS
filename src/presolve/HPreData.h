@@ -19,6 +19,7 @@
 #include <stack>
 #include <utility>
 #include <vector>
+#include <assert.h>
 
 #include "lp_data/HConst.h"
 #include "test/KktChStep.h"
