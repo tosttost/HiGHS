@@ -248,7 +248,7 @@ int Presolve::presolve(int print) {
   if (order.size() == 0) {
     // pre_release_order:
     order.push_back(Presolver::kMainRowSingletons);
-    order.push_back(Presolver::kMainForcing);
+    // order.push_back(Presolver::kMainForcing);
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainDoubletonEq);
     order.push_back(Presolver::kMainRowSingletons);
@@ -853,6 +853,9 @@ void Presolve::resizeProblem() {
 }
 
 void Presolve::initializeVectors() {
+  singCol.setSize(numCol);
+  singRow.setSize(numRow);
+
   // copy original bounds
   colCostOriginal = colCost;
   rowUpperOriginal = rowUpper;
@@ -999,7 +1002,7 @@ void Presolve::rowDualBoundsDominatedColumns() {
 
   // for each row calc yihat and yibar and store in implRowDualLower and
   // implRowDualUpper
-  for (list<int>::iterator it = singCol.begin(); it != singCol.end(); ++it)
+  for (std::vector<int>::iterator it = singCol.lst.begin(); it != singCol.lst.end(); ++it)
     if (flagCol.at(*it)) {
       col = *it;
       k = getSingColElementIndexInA(col);
@@ -1477,9 +1480,9 @@ void Presolve::removeSecondColumnSingletonInDoubletonRow(const int j,
 
 void Presolve::removeColumnSingletons() {
   int i, k, col;
-  list<int>::iterator it = singCol.begin();
+  std::vector<int>::iterator it = singCol.lst.begin();
 
-  while (it != singCol.end()) {
+  while (it != singCol.lst.end()) {
     if (flagCol[*it]) {
       if (timer.reachLimit()) {
         status = stat::Timeout;
@@ -1495,7 +1498,7 @@ void Presolve::removeColumnSingletons() {
           colUpper.at(col) >= HIGHS_CONST_INF) {
         timer.recordStart(FREE_SING_COL);
         removeFreeColumnSingleton(col, i, k);
-        it = singCol.erase(it);
+        singCol.remove(col);
         timer.recordFinish(FREE_SING_COL);
         continue;
       }
@@ -1506,7 +1509,7 @@ void Presolve::removeColumnSingletons() {
         bool result = removeColumnSingletonInDoubletonInequality(col, i, k);
         timer.recordFinish(SING_COL_DOUBLETON_INEQ);
         if (result) {
-          it = singCol.erase(it);
+          singCol.remove(col);
           continue;
         }
       }
@@ -1516,7 +1519,7 @@ void Presolve::removeColumnSingletons() {
         bool result = removeIfImpliedFree(col, i, k);
         timer.recordFinish(IMPLIED_FREE_SING_COL);
         if (result) {
-          it = singCol.erase(it);
+         singCol.remove(col);
           continue;
         }
       }
@@ -1524,7 +1527,7 @@ void Presolve::removeColumnSingletons() {
 
       if (status) return;
     } else
-      it = singCol.erase(it);
+      singCol.remove(col);
   }
 }
 
@@ -1926,7 +1929,8 @@ void Presolve::removeForcingConstraints() {
 void Presolve::removeRowSingletons() {
   timer.recordStart(SING_ROW);
   int i;
-  int singRowZ = singRow.size();
+  int singRowZ = singRow.length();
+
   /*
   if (singRowZ == 36) {
     printf("JAJH: singRow.size() = %d\n", singRowZ);fflush(stdout);
@@ -1940,7 +1944,7 @@ void Presolve::removeRowSingletons() {
     }
 
     i = singRow.front();
-    singRow.pop_front();
+    singRow.remove(i);
 
     assert(flagRow[i]);
 

@@ -131,6 +131,44 @@ struct PresolveStats {
 
 void initPresolve(PresolveStats& stats);
 
+class PresolveList {
+ public:
+  void setSize(const int size) { index.assign(size, -1); }
+
+  inline int front() {
+    assert(lst.size() > 0);
+    return lst[0];
+  }
+  inline void push_back(const int S) {
+    lst.push_back(S);
+    index[S] = lst.size() - 1;
+  }
+
+  inline void remove(const int S) {
+    assert(index.size() > S && S > 0);
+    // blows up assert(index[S] >= 0 && index[S] < lst.size());
+    if (index[S] < 0) return;
+    assert(lst[index[S]] == S);
+    lst[index[S]] = lst[lst.size() - 1];
+    assert(lst[lst.size() - 1] >= 0 && lst[lst.size() - 1] < index.size());
+    index[lst[lst.size() - 1]] = index[S];
+    index[S] = -1;
+
+    lst.pop_back();
+  }
+
+  inline int length() { return lst.size(); }
+
+  bool empty() {
+    if (lst.size() == 0) return true;
+    return false;
+  }
+
+  std::vector<int> lst;
+ private:
+  std::vector<int> index;
+};
+
 }  // namespace presolve
 
 #endif /* PRESOLVE_HPREDATA_H_ */

@@ -145,8 +145,8 @@ class Presolve : public HPreData {
   bool hasChange = true;
   int status = 0;  // 0 is unassigned, see enum stat
 
-  list<int> singRow;  // singleton rows
-  list<int> singCol;  // singleton columns
+  PresolveList singRow;  // singleton rows
+  PresolveList singCol;  // singleton columns
 
   // original data
  public:
