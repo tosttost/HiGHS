@@ -248,7 +248,7 @@ int Presolve::presolve(int print) {
   if (order.size() == 0) {
     // pre_release_order:
     order.push_back(Presolver::kMainRowSingletons);
-    // order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainForcing);
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainDoubletonEq);
     order.push_back(Presolver::kMainRowSingletons);
