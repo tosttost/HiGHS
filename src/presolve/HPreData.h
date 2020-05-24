@@ -145,7 +145,8 @@ class PresolveList {
   }
 
   inline void remove(const int S) {
-    assert(index.size() > S && S > 0);
+    // blows up assert(index.size() > S && S > 0);
+    if (S < 0) return;
     // blows up assert(index[S] >= 0 && index[S] < lst.size());
     if (index[S] < 0) return;
     assert(lst[index[S]] == S);
