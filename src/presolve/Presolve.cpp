@@ -1516,16 +1516,19 @@ void Presolve::removeSecondColumnSingletonInDoubletonRow(const int j,
 
 void Presolve::removeColumnSingletons() {
   int i, k, col;
-  std::vector<int>::iterator it = singCol.lst.begin();
-
-  while (it != singCol.lst.end()) {
-    if (flagCol[*it]) {
+  //  std::vector<int>::iterator it = singCol.lst.begin();
+  //  while (it != singCol.lst.end()) {
+  int it = 0;
+  for (;;) {
+    int list_length = singCol.lst.size();
+    if (it >= list_length) break;
+    col = singCol.lst[it];
+    if (flagCol[col]) {
       if (timer.reachLimit()) {
         status = stat::Timeout;
         return;
       }
 
-      col = *it;
       k = getSingColElementIndexInA(col);
       i = Aindex.at(k);
 
@@ -1566,12 +1569,13 @@ void Presolve::removeColumnSingletons() {
         }
       }
       it++;
-
+      
       if (status) return;
     } else {
       timer.timer_.start(aux_clocks[SingColRemove]);
       singCol.remove(col);
       timer.timer_.stop(aux_clocks[SingColRemove]);
+      continue;
     }
   }
 }
