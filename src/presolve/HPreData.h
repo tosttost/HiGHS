@@ -14,12 +14,13 @@
 #ifndef PRESOLVE_HPREDATA_H_
 #define PRESOLVE_HPREDATA_H_
 
+#include <assert.h>
+
 #include <cstring>
 #include <list>
 #include <stack>
 #include <utility>
 #include <vector>
-#include <assert.h>
 
 #include "lp_data/HConst.h"
 #include "test/KktChStep.h"
@@ -167,6 +168,7 @@ class PresolveList {
   }
 
   std::vector<int> lst;
+
  private:
   std::vector<int> index;
 };

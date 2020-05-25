@@ -242,8 +242,8 @@ int Presolve::presolve(int print) {
     if (flagCol.at(j)) {
       removeIfFixed(j);
       if (status) {
-	timer.recordFinish(FIXED_COL);
-	return status;
+        timer.recordFinish(FIXED_COL);
+        return status;
       }
     }
   timer.recordFinish(FIXED_COL);
@@ -318,7 +318,7 @@ HighsPresolveStatus Presolve::presolve() {
       presolve_status = HighsPresolveStatus::Timeout;
   }
   timer.recordFinish(TOTAL_PRESOLVE_TIME);
-  if (iprint > 0) timer.reportClocks();
+  if (iPrint > 0) timer.reportClocks();
 
   return presolve_status;
 }
@@ -474,7 +474,7 @@ void Presolve::removeDoubletonEquations() {
           fabs(rowLower[row] - rowUpper[row]) < tol) {
         if (timer.reachLimit()) {
           status = stat::Timeout;
-	  timer.recordFinish(DOUBLETON_EQUATION);
+          timer.recordFinish(DOUBLETON_EQUATION);
           return;
         }
 
@@ -492,9 +492,9 @@ void Presolve::removeDoubletonEquations() {
         aky = getaij(row, y);
         processRowDoubletonEquation(row, x, y, akx, aky, b);
         if (status) {
-	  timer.recordFinish(DOUBLETON_EQUATION);
-	  return;
-	}
+          timer.recordFinish(DOUBLETON_EQUATION);
+          return;
+        }
 
         for (int k = Astart.at(y); k < Aend.at(y); ++k)
           if (flagRow.at(Aindex.at(k)) && Aindex.at(k) != row) {
@@ -1018,7 +1018,8 @@ void Presolve::rowDualBoundsDominatedColumns() {
 
   // for each row calc yihat and yibar and store in implRowDualLower and
   // implRowDualUpper
-  for (std::vector<int>::iterator it = singCol.lst.begin(); it != singCol.lst.end(); ++it)
+  for (std::vector<int>::iterator it = singCol.lst.begin();
+       it != singCol.lst.end(); ++it)
     if (flagCol.at(*it)) {
       col = *it;
       k = getSingColElementIndexInA(col);
@@ -1147,7 +1148,7 @@ void Presolve::removeDominatedColumns() {
         if (colLower.at(j) <= -HIGHS_CONST_INF) {
           if (iPrint > 0) cout << "PR: Problem unbounded." << endl;
           status = Unbounded;
-	  timer.recordFinish(DOMINATED_COLS);
+          timer.recordFinish(DOMINATED_COLS);
           return;
         }
         setPrimalValue(j, colLower.at(j));
@@ -1160,7 +1161,7 @@ void Presolve::removeDominatedColumns() {
         if (colUpper.at(j) >= HIGHS_CONST_INF) {
           if (iPrint > 0) cout << "PR: Problem unbounded." << endl;
           status = Unbounded;
-	  timer.recordFinish(DOMINATED_COLS);
+          timer.recordFinish(DOMINATED_COLS);
           return;
         }
         setPrimalValue(j, colUpper.at(j));
@@ -1540,12 +1541,12 @@ void Presolve::removeColumnSingletons() {
         bool result = removeIfImpliedFree(col, i, k);
         timer.recordFinish(IMPLIED_FREE_SING_COL);
         if (result) {
-	  singCol.remove(col);
+          singCol.remove(col);
           continue;
         }
       }
       it++;
-      
+
       if (status) return;
     } else {
       singCol.remove(col);
@@ -2098,8 +2099,7 @@ void Presolve::setPrimalValue(int j, double value) {
       // update singleton row list
       if (nzRow.at(row) == 1) {
         singRow.push_back(row);
-      }
-      else if (nzRow.at(row) == 0) {
+      } else if (nzRow.at(row) == 0) {
         singRow.remove(row);
       }
     }
