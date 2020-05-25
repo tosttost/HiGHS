@@ -293,7 +293,6 @@ int Presolve::presolve(int print) {
 HighsPresolveStatus Presolve::presolve() {
   timer.recordStart(TOTAL_PRESOLVE_TIME);
   HighsPresolveStatus presolve_status = HighsPresolveStatus::NotReduced;
-  defineAuxClocks();
   int result = presolve(0);
   switch (result) {
     case stat::Unbounded:
@@ -319,8 +318,7 @@ HighsPresolveStatus Presolve::presolve() {
       presolve_status = HighsPresolveStatus::Timeout;
   }
   timer.recordFinish(TOTAL_PRESOLVE_TIME);
-  timer.reportClocks();
-  reportAuxClocks();
+  if (iprint > 0) timer.reportClocks();
 
   return presolve_status;
 }
@@ -582,9 +580,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXzero(const int i, const int x,
   nzCol.at(x)++;
   // nzRow does not change here.
   if (nzCol.at(x) == 2) {
-    timer.timer_.start(aux_clocks[SingRowRemove]);
     singCol.remove(x);
-    timer.timer_.stop(aux_clocks[SingRowRemove]);
   }
 }
 
@@ -596,15 +592,11 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
   // update nonzeros: for removal of
   nzRow.at(i)--;
   if (nzRow.at(i) == 1) {
-    timer.timer_.start(aux_clocks[SingRowPushBack]);
     singRow.push_back(i);
-    timer.timer_.stop(aux_clocks[SingRowPushBack]);
   }
 
   if (nzRow.at(i) == 0) {
-    timer.timer_.start(aux_clocks[SingRowRemove]);
     singRow.remove(i);
-    timer.timer_.stop(aux_clocks[SingRowRemove]);
     removeEmptyRow(i);
     countRemovedRows(DOUBLETON_EQUATION);
   }
@@ -637,15 +629,11 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
     nzRow.at(i)--;
     // update singleton row list
     if (nzRow.at(i) == 1) {
-      timer.timer_.start(aux_clocks[SingRowPushBack]);
       singRow.push_back(i);
-      timer.timer_.stop(aux_clocks[SingRowPushBack]);
     }
 
     if (nzRow.at(i) == 0) {
-      timer.timer_.start(aux_clocks[SingRowRemove]);
       singRow.remove(i);
-      timer.timer_.stop(aux_clocks[SingRowRemove]);
       removeEmptyRow(i);
       countRemovedRows(DOUBLETON_EQUATION);
     }
@@ -906,9 +894,7 @@ void Presolve::initializeVectors() {
   for (int i = 0; i < numRow; ++i) {
     nzRow.at(i) = ARstart.at(i + 1) - ARstart.at(i);
     if (nzRow.at(i) == 1) {
-      timer.timer_.start(aux_clocks[SingRowPushBack]);
       singRow.push_back(i);
-      timer.timer_.stop(aux_clocks[SingRowPushBack]);
     }
     if (nzRow.at(i) == 0) {
       timer.recordStart(EMPTY_ROW);
@@ -994,9 +980,7 @@ void Presolve::removeEmptyRow(int i) {
 
 void Presolve::removeEmptyColumn(int j) {
   flagCol.at(j) = 0;
-  timer.timer_.start(aux_clocks[SingColRemove]);
   singCol.remove(j);
-  timer.timer_.stop(aux_clocks[SingColRemove]);
   double value;
   if ((colCost.at(j) < 0 && colUpper.at(j) >= HIGHS_CONST_INF) ||
       (colCost.at(j) > 0 && colLower.at(j) <= -HIGHS_CONST_INF)) {
@@ -1509,9 +1493,7 @@ void Presolve::removeSecondColumnSingletonInDoubletonRow(const int j,
     cout << "PR: Second singleton column " << j << " in doubleton row " << i
          << " removed.\n";
   countRemovedCols(SING_COL_DOUBLETON_INEQ);
-  timer.timer_.start(aux_clocks[SingColRemove]);
   singCol.remove(j);
-  timer.timer_.stop(aux_clocks[SingColRemove]);
 }
 
 void Presolve::removeColumnSingletons() {
@@ -1537,9 +1519,7 @@ void Presolve::removeColumnSingletons() {
           colUpper.at(col) >= HIGHS_CONST_INF) {
         timer.recordStart(FREE_SING_COL);
         removeFreeColumnSingleton(col, i, k);
-	timer.timer_.start(aux_clocks[SingColRemove]);
         singCol.remove(col);
-	timer.timer_.stop(aux_clocks[SingColRemove]);
         timer.recordFinish(FREE_SING_COL);
         continue;
       }
@@ -1550,9 +1530,7 @@ void Presolve::removeColumnSingletons() {
         bool result = removeColumnSingletonInDoubletonInequality(col, i, k);
         timer.recordFinish(SING_COL_DOUBLETON_INEQ);
         if (result) {
-	  timer.timer_.start(aux_clocks[SingColRemove]);
           singCol.remove(col);
-	  timer.timer_.stop(aux_clocks[SingColRemove]);
           continue;
         }
       }
@@ -1562,9 +1540,7 @@ void Presolve::removeColumnSingletons() {
         bool result = removeIfImpliedFree(col, i, k);
         timer.recordFinish(IMPLIED_FREE_SING_COL);
         if (result) {
-	  timer.timer_.start(aux_clocks[SingColRemove]);
 	  singCol.remove(col);
-	  timer.timer_.stop(aux_clocks[SingColRemove]);
           continue;
         }
       }
@@ -1572,9 +1548,7 @@ void Presolve::removeColumnSingletons() {
       
       if (status) return;
     } else {
-      timer.timer_.start(aux_clocks[SingColRemove]);
       singCol.remove(col);
-      timer.timer_.stop(aux_clocks[SingColRemove]);
       continue;
     }
   }
@@ -1851,9 +1825,7 @@ void Presolve::setVariablesToBoundForForcingRow(const int row,
   }
 
   if (nzRow.at(row) == 1) {
-    timer.timer_.start(aux_clocks[SingRowRemove]);
     singRow.remove(row);
-    timer.timer_.stop(aux_clocks[SingRowRemove]);
   }
 
   countRemovedRows(FORCING_ROW);
@@ -1982,9 +1954,7 @@ void Presolve::removeForcingConstraints() {
 void Presolve::removeRowSingletons() {
   timer.recordStart(SING_ROW);
   int i;
-  timer.timer_.start(aux_clocks[SingRowLength]);
   int singRowZ = singRow.length();
-  timer.timer_.stop(aux_clocks[SingRowLength]);
 
   /*
   if (singRowZ == 36) {
@@ -1998,12 +1968,8 @@ void Presolve::removeRowSingletons() {
       return;
     }
 
-    timer.timer_.start(aux_clocks[SingRowFront]);
     i = singRow.front();
-    timer.timer_.stop(aux_clocks[SingRowFront]);
-    timer.timer_.start(aux_clocks[SingRowRemove]);
     singRow.remove(i);
-    timer.timer_.stop(aux_clocks[SingRowRemove]);
 
     assert(flagRow[i]);
 
@@ -2131,14 +2097,10 @@ void Presolve::setPrimalValue(int j, double value) {
 
       // update singleton row list
       if (nzRow.at(row) == 1) {
-	timer.timer_.start(aux_clocks[SingRowPushBack]);
         singRow.push_back(row);
-	timer.timer_.stop(aux_clocks[SingRowPushBack]);
       }
       else if (nzRow.at(row) == 0) {
-	timer.timer_.start(aux_clocks[SingRowRemove]);
         singRow.remove(row);
-	timer.timer_.stop(aux_clocks[SingRowRemove]);
       }
     }
   }
@@ -3671,38 +3633,6 @@ void Presolve::countRemovedCols(PresolveRule rule) {
   if (timer.time_limit > 0 &&
       timer.timer_.readRunHighsClock() > timer.time_limit)
     status = stat::Timeout;
-}
-
-void Presolve::defineAuxClocks() {
-  HighsTimer& highs_timer = timer.timer_;
-  aux_clocks.push_back(highs_timer.clock_def("singRow.front", "SRF"));
-  aux_clocks.push_back(highs_timer.clock_def("singRow.pushback", "SRP"));
-  aux_clocks.push_back(highs_timer.clock_def("singRow.remove", "SRR"));
-  aux_clocks.push_back(highs_timer.clock_def("singRow.length", "SRL"));
-  aux_clocks.push_back(highs_timer.clock_def("singRow.empty", "SRE"));
-  aux_clocks.push_back(highs_timer.clock_def("singCol.remove", "SCR"));
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingRowFront]] == "SRF");
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingRowPushBack]] == "SRP");
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingRowRemove]] == "SRR");
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingRowLength]] == "SRL");
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingRowEmpty]] == "SRE");
-  assert(highs_timer.clock_ch3_names[aux_clocks[SingColRemove]] == "SCR");
-}
-
-void Presolve::reportAuxClocks() {
-  double ideal_time;
-  std::vector<int> report_clocks;
-
-  ideal_time = timer.getRuleTime(TOTAL_PRESOLVE_TIME);
-  report_clocks.push_back(aux_clocks[SingRowFront]);
-  report_clocks.push_back(aux_clocks[SingRowPushBack]);
-  report_clocks.push_back(aux_clocks[SingRowRemove]);
-  report_clocks.push_back(aux_clocks[SingRowLength]);
-  report_clocks.push_back(aux_clocks[SingRowEmpty]);
-  report_clocks.push_back(aux_clocks[SingColRemove]);
-  timer.timer_.report_tl("grep-AuxPresolve", report_clocks, ideal_time, 0);
-  if (ideal_time) printf("\n");
-  report_clocks.clear();
 }
 
 }  // namespace presolve

@@ -141,15 +141,6 @@ class Presolve : public HPreData {
     Timeout = 6,
   };
 
-  enum AuxClocks {
-    SingRowFront = 0,
-    SingRowPushBack,
-    SingRowRemove,
-    SingRowLength,
-    SingRowEmpty,
-    SingColRemove,
-  };
-
  private:
   bool hasChange = true;
   int status = 0;  // 0 is unassigned, see enum stat
@@ -166,7 +157,6 @@ class Presolve : public HPreData {
   vector<double> rowUpperOriginal;
   vector<double> colLowerOriginal;
   vector<double> colUpperOriginal;
-  vector<int> aux_clocks;
 
   // functions
   void setPrimalValue(int j, double value);
@@ -282,8 +272,6 @@ class Presolve : public HPreData {
   void reportDevMidMainLoop();
   PresolveStats stats;
   int runPresolvers(const std::vector<Presolver>& order);
-  void reportAuxClocks();
-  void defineAuxClocks();
 };
 
 }  // namespace presolve
