@@ -128,7 +128,9 @@ void Presolve::setNumericalTolerances() {
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
   // done here, as the tolerances are only known in Presolve.h/cpp so
-  // have to be passed in
+  // have to be passed in.
+  //
+  // Presolve records
   timer.presolve_numerics.resize(PRESOLVE_NUMERICS_COUNT);
   timer.initialisePresolveNumericsRecord(
       PRESOLVE_INCONSISTENT_BOUNDS, "Inconsistent bounds",
@@ -153,6 +155,11 @@ void Presolve::setNumericalTolerances() {
   timer.initialisePresolveNumericsRecord(
       PRESOLVE_WEAKLY_DOMINATED_COLUMN, "Weakly dominated column",
       presolve_weakly_dominated_column_tolerance);
+  // Postsolve records
+  timer.postsolve_numerics.resize(POSTSOLVE_NUMERICS_COUNT);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_INCONSISTENT_BOUNDS, "Inconsistent bounds",
+      postsolve_inconsistent_bounds_tolerance);
 }
 
 // printing with cout goes here.
@@ -2848,7 +2855,11 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           }
           double valuePrimalUB = min(colUpperOriginal[c.col], bndU);
           double valuePrimalLB = max(colLowerOriginal[c.col], bndL);
-          if (valuePrimalUB < valuePrimalLB - tol) {
+          // Analyse dependency on numerical tolerance
+          timer.updatePostsolveNumericsRecord(POSTSOLVE_INCONSISTENT_BOUNDS,
+                                              valuePrimalLB - valuePrimalUB);
+          if (valuePrimalLB - valuePrimalUB >
+              postsolve_inconsistent_bounds_tolerance) {
             cout << "Postsolve error: inconsistent bounds for implied free "
                     "column singleton "
                  << c.col << endl;
@@ -3088,6 +3099,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
   // cmpNBF();
 
+  //  if (iPrint > 0)
+  timer.reportPostsolveNumericsRecords();
   // Check number of basic variables
   int num_basic_var = 0;
   for (int iCol = 0; iCol < numColOriginal; iCol++) {

@@ -248,6 +248,11 @@ class PresolveTimer {
     initialiseNumericsRecord(name, tolerance, presolve_numerics[record]);
   }
 
+  void initialisePostsolveNumericsRecord(int record, std::string name,
+                                         const double tolerance) {
+    initialiseNumericsRecord(name, tolerance, postsolve_numerics[record]);
+  }
+
   void updateNumericsRecord(numericsRecord& numerics_record,
                             const double value) {
     double tolerance = numerics_record.tolerance;
@@ -269,6 +274,10 @@ class PresolveTimer {
 
   void updatePresolveNumericsRecord(int record, const double value) {
     updateNumericsRecord(presolve_numerics[record], value);
+  }
+
+  void updatePostsolveNumericsRecord(int record, const double value) {
+    updateNumericsRecord(postsolve_numerics[record], value);
   }
 
   void reportNumericsRecord(const numericsRecord& numerics_record) {
