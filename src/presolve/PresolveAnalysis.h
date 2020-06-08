@@ -85,6 +85,11 @@ enum presolveNumerics {
   PRESOLVE_NUMERICS_COUNT
 };
 
+enum postsolveNumerics {
+  POSTSOLVE_INCONSISTENT_BOUNDS,
+  POSTSOLVE_NUMERICS_COUNT
+};
+
 struct PresolveRuleInfo {
   PresolveRuleInfo(PresolveRule id, std::string name, std::string name_ch3)
       : rule_id(id),
@@ -128,6 +133,7 @@ class PresolveTimer {
   }
 
   std::vector<numericsRecord> presolve_numerics;
+  std::vector<numericsRecord> postsolve_numerics;
 
   void recordStart(PresolveRule rule) {
     assert(rule >= 0 && rule < PRESOLVE_RULES_COUNT);
@@ -223,11 +229,11 @@ class PresolveTimer {
     std::cout << std::endl;
   }
 
-  void initialiseNumericsRecord(int record, std::string name,
-                                const double tolerance) {
+  void initialiseNumericsRecord(std::string name,
+                                const double tolerance,
+				numericsRecord& numerics_record) {
     // Make sure that the tolerance has been set to a positive value
     assert(tolerance > 0);
-    numericsRecord& numerics_record = presolve_numerics[record];
     numerics_record.name = name;
     numerics_record.tolerance = tolerance;
     numerics_record.num_test = 0;
@@ -238,8 +244,12 @@ class PresolveTimer {
     numerics_record.min_positive_true = HIGHS_CONST_INF;
   }
 
-  void updateNumericsRecord(int record, const double value) {
-    numericsRecord& numerics_record = presolve_numerics[record];
+  void initialisePresolveNumericsRecord(int record, std::string name,
+					const double tolerance) {
+    initialiseNumericsRecord(name, tolerance, presolve_numerics[record]);
+  }
+
+  void updateNumericsRecord(numericsRecord& numerics_record, const double value) {
     double tolerance = numerics_record.tolerance;
     numerics_record.num_test++;
     if (value < 0) return;
@@ -255,6 +265,10 @@ class PresolveTimer {
     if (value > 0)
       numerics_record.min_positive_true =
           min(value, numerics_record.min_positive_true);
+  }
+
+  void updatePresolveNumericsRecord(int record, const double value) {
+    updateNumericsRecord(presolve_numerics[record], value);
   }
 
   void reportNumericsRecord(const numericsRecord& numerics_record) {
@@ -274,17 +288,20 @@ class PresolveTimer {
            numerics_record.num_clear_true);
   }
 
-  void reportNumericsRecords() {
-    assert((int)presolve_numerics.size() == PRESOLVE_NUMERICS_COUNT);
-    if (presolve_numerics.size() < PRESOLVE_NUMERICS_COUNT) return;
-    printf("Presolve numerics analysis for %s\n", model_name.c_str());
-    for (int record = 0; record < PRESOLVE_NUMERICS_COUNT; record++)
-      reportNumericsRecord(presolve_numerics[record]);
-    printf("grep_presolveNumerics:,%s", model_name.c_str());
-    for (int record = 0; record < PRESOLVE_NUMERICS_COUNT; record++)
-      reportNumericsCsvRecord(presolve_numerics[record]);
+  void reportNumericsRecords(const std::string type,
+			     const std::vector<numericsRecord>& numerics_record) {
+    int num_record = numerics_record.size();
+    printf("%s numerics analysis for %s\n", type.c_str(), model_name.c_str());
+    for (int record = 0; record < num_record; record++)
+      reportNumericsRecord(numerics_record[record]);
+    printf("grep_%sNumerics:,%s", type.c_str(), model_name.c_str());
+    for (int record = 0; record < num_record; record++)
+      reportNumericsCsvRecord(numerics_record[record]);
     printf("\n");
   }
+
+  void reportPresolveNumericsRecords() { reportNumericsRecords("Presolve", presolve_numerics); }
+  void reportPostsolveNumericsRecords() { reportNumericsRecords("Postsolve", postsolve_numerics); }
 
   void updateInfo();
   double getTotalTime() { return total_time_; }
