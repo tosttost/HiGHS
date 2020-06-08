@@ -229,9 +229,8 @@ class PresolveTimer {
     std::cout << std::endl;
   }
 
-  void initialiseNumericsRecord(std::string name,
-                                const double tolerance,
-				numericsRecord& numerics_record) {
+  void initialiseNumericsRecord(std::string name, const double tolerance,
+                                numericsRecord& numerics_record) {
     // Make sure that the tolerance has been set to a positive value
     assert(tolerance > 0);
     numerics_record.name = name;
@@ -245,11 +244,12 @@ class PresolveTimer {
   }
 
   void initialisePresolveNumericsRecord(int record, std::string name,
-					const double tolerance) {
+                                        const double tolerance) {
     initialiseNumericsRecord(name, tolerance, presolve_numerics[record]);
   }
 
-  void updateNumericsRecord(numericsRecord& numerics_record, const double value) {
+  void updateNumericsRecord(numericsRecord& numerics_record,
+                            const double value) {
     double tolerance = numerics_record.tolerance;
     numerics_record.num_test++;
     if (value < 0) return;
@@ -288,8 +288,9 @@ class PresolveTimer {
            numerics_record.num_clear_true);
   }
 
-  void reportNumericsRecords(const std::string type,
-			     const std::vector<numericsRecord>& numerics_record) {
+  void reportNumericsRecords(
+      const std::string type,
+      const std::vector<numericsRecord>& numerics_record) {
     int num_record = numerics_record.size();
     printf("%s numerics analysis for %s\n", type.c_str(), model_name.c_str());
     for (int record = 0; record < num_record; record++)
@@ -300,8 +301,12 @@ class PresolveTimer {
     printf("\n");
   }
 
-  void reportPresolveNumericsRecords() { reportNumericsRecords("Presolve", presolve_numerics); }
-  void reportPostsolveNumericsRecords() { reportNumericsRecords("Postsolve", postsolve_numerics); }
+  void reportPresolveNumericsRecords() {
+    reportNumericsRecords("Presolve", presolve_numerics);
+  }
+  void reportPostsolveNumericsRecords() {
+    reportNumericsRecords("Postsolve", postsolve_numerics);
+  }
 
   void updateInfo();
   double getTotalTime() { return total_time_; }
