@@ -83,6 +83,7 @@ void Presolve::setNumericalTolerances() {
     presolve_dominated_column_tolerance = tol;
     presolve_weakly_dominated_column_tolerance = tol;
     postsolve_inconsistent_bounds_tolerance = tol;
+    postsolve_sing_col_doubleton_inequality_basic_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -124,6 +125,8 @@ void Presolve::setNumericalTolerances() {
     // Tolerance on identifying inconsistent bounds
     postsolve_inconsistent_bounds_tolerance =
         default_primal_feasiblility_tolerance;
+    postsolve_sing_col_doubleton_inequality_basic_tolerance =
+        default_primal_feasiblility_tolerance;
   }
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
@@ -160,6 +163,9 @@ void Presolve::setNumericalTolerances() {
   timer.initialisePostsolveNumericsRecord(
       POSTSOLVE_INCONSISTENT_BOUNDS, "Inconsistent bounds",
       postsolve_inconsistent_bounds_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_SING_COL_DOUBLETON_INEQUALITY_BASIC, "Sing col doubleton ineq",
+      postsolve_sing_col_doubleton_inequality_basic_tolerance);
 }
 
 // printing with cout goes here.
@@ -2969,7 +2975,13 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // fix duals
 
         double rowVal = aij * xj + aik * xkValue;
-        if (rowub - rowVal > tol && rowVal - rowlb > tol) {
+        double residual = min(rowub - rowVal, rowVal - rowlb);
+        // Analyse dependency on numerical tolerance
+        timer.updatePostsolveNumericsRecord(
+            POSTSOLVE_SING_COL_DOUBLETON_INEQUALITY_BASIC, residual);
+        if (residual >
+            postsolve_sing_col_doubleton_inequality_basic_tolerance) {
+          //        if (rowub - rowVal > tol && rowVal - rowlb > tol) {
           row_status.at(c.row) = HighsBasisStatus::BASIC;
           col_status.at(c.col) = HighsBasisStatus::NONBASIC;
           valueRowDual[c.row] = 0;
@@ -2985,7 +2997,6 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
             up = HIGHS_CONST_INF;
           } else if (fabs(rowlb - rowVal) <= tol) {
             lo = -HIGHS_CONST_INF;
-            ;
             up = 0;
           }
 
