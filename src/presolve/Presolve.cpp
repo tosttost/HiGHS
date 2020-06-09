@@ -83,7 +83,9 @@ void Presolve::setNumericalTolerances() {
     presolve_dominated_column_tolerance = tol;
     presolve_weakly_dominated_column_tolerance = tol;
     postsolve_inconsistent_bounds_tolerance = tol;
-    postsolve_sing_col_doubleton_inequality_basic_tolerance = tol;
+    postsolve_doubleton_inequality_basic_tolerance = tol;
+    postsolve_doubleton_inequality_lo_up_tolerance = tol;
+    postsolve_doubleton_inequality_infeas_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -125,8 +127,12 @@ void Presolve::setNumericalTolerances() {
     // Tolerance on identifying inconsistent bounds
     postsolve_inconsistent_bounds_tolerance =
         default_primal_feasiblility_tolerance;
-    postsolve_sing_col_doubleton_inequality_basic_tolerance =
-        default_primal_feasiblility_tolerance;
+    postsolve_doubleton_inequality_basic_tolerance = tol;
+    //        default_primal_feasiblility_tolerance;
+    postsolve_doubleton_inequality_lo_up_tolerance = tol;
+    //        default_primal_feasiblility_tolerance;
+    postsolve_doubleton_inequality_infeas_tolerance = tol;
+    //        default_primal_feasiblility_tolerance;
   }
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
@@ -164,8 +170,14 @@ void Presolve::setNumericalTolerances() {
       POSTSOLVE_INCONSISTENT_BOUNDS, "Inconsistent bounds",
       postsolve_inconsistent_bounds_tolerance);
   timer.initialisePostsolveNumericsRecord(
-      POSTSOLVE_SING_COL_DOUBLETON_INEQUALITY_BASIC, "Sing col doubleton ineq",
-      postsolve_sing_col_doubleton_inequality_basic_tolerance);
+      POSTSOLVE_DOUBLETON_INEQUALITY_BASIC, "Doubleton ineq",
+      postsolve_doubleton_inequality_basic_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, "Doubleton lo up",
+      postsolve_doubleton_inequality_lo_up_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, "Doubleton infeas",
+      postsolve_doubleton_inequality_infeas_tolerance);
 }
 
 // printing with cout goes here.
@@ -2978,9 +2990,9 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         double residual = min(rowub - rowVal, rowVal - rowlb);
         // Analyse dependency on numerical tolerance
         timer.updatePostsolveNumericsRecord(
-            POSTSOLVE_SING_COL_DOUBLETON_INEQUALITY_BASIC, residual);
+            POSTSOLVE_DOUBLETON_INEQUALITY_BASIC, residual);
         if (residual >
-            postsolve_sing_col_doubleton_inequality_basic_tolerance) {
+            postsolve_doubleton_inequality_basic_tolerance) {
           //        if (rowub - rowVal > tol && rowVal - rowlb > tol) {
           row_status.at(c.row) = HighsBasisStatus::BASIC;
           col_status.at(c.col) = HighsBasisStatus::NONBASIC;
@@ -2988,6 +3000,19 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           flagRow[c.row] = 1;
           valueColDual[c.col] = getColumnDualPost(c.col);
         } else {
+	  double value = fabs(rowlb - rowub);
+	  timer.updatePostsolveNumericsRecord(
+            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+	  if (value >= tol) {
+	    value = fabs(rowub - rowVal);
+	    timer.updatePostsolveNumericsRecord(
+            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+	    if (value >= tol) {
+	      value = fabs(rowlb - rowVal);
+	      timer.updatePostsolveNumericsRecord(
+            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+	    }
+	  }
           double lo, up;
           if (fabs(rowlb - rowub) < tol) {
             lo = -HIGHS_CONST_INF;
@@ -3004,6 +3029,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           getBoundOnLByZj(c.row, j, &lo, &up, lbOld, ubOld);
           getBoundOnLByZj(c.row, c.col, &lo, &up, lbCOL, ubCOL);
 
+	  timer.updatePostsolveNumericsRecord(
+            POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, lo - up);
           // calculate yi
           if (lo - up > tol)
             cout << "PR: Error in postsolving doubleton inequality " << c.row

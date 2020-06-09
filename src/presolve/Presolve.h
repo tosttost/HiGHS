@@ -249,7 +249,9 @@ class Presolve : public HPreData {
   double presolve_dominated_column_tolerance;
   double presolve_weakly_dominated_column_tolerance;
   double postsolve_inconsistent_bounds_tolerance;
-  double postsolve_sing_col_doubleton_inequality_basic_tolerance;
+  double postsolve_doubleton_inequality_basic_tolerance;
+  double postsolve_doubleton_inequality_lo_up_tolerance;
+  double postsolve_doubleton_inequality_infeas_tolerance;
 
   // postsolve
   bool noPostSolve = false;
