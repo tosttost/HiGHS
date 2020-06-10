@@ -2991,8 +2991,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // Analyse dependency on numerical tolerance
         timer.updatePostsolveNumericsRecord(
             POSTSOLVE_DOUBLETON_INEQUALITY_BASIC, residual);
-        if (residual >
-            postsolve_doubleton_inequality_basic_tolerance) {
+        if (residual > postsolve_doubleton_inequality_basic_tolerance) {
           //        if (rowub - rowVal > tol && rowVal - rowlb > tol) {
           row_status.at(c.row) = HighsBasisStatus::BASIC;
           col_status.at(c.col) = HighsBasisStatus::NONBASIC;
@@ -3000,19 +2999,19 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           flagRow[c.row] = 1;
           valueColDual[c.col] = getColumnDualPost(c.col);
         } else {
-	  double value = fabs(rowlb - rowub);
-	  timer.updatePostsolveNumericsRecord(
-            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
-	  if (value >= tol) {
-	    value = fabs(rowub - rowVal);
-	    timer.updatePostsolveNumericsRecord(
-            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
-	    if (value >= tol) {
-	      value = fabs(rowlb - rowVal);
-	      timer.updatePostsolveNumericsRecord(
-            POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
-	    }
-	  }
+          double value = fabs(rowlb - rowub);
+          timer.updatePostsolveNumericsRecord(
+              POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+          if (value >= tol) {
+            value = fabs(rowub - rowVal);
+            timer.updatePostsolveNumericsRecord(
+                POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+            if (value >= tol) {
+              value = fabs(rowlb - rowVal);
+              timer.updatePostsolveNumericsRecord(
+                  POSTSOLVE_DOUBLETON_INEQUALITY_LO_UP, value);
+            }
+          }
           double lo, up;
           if (fabs(rowlb - rowub) < tol) {
             lo = -HIGHS_CONST_INF;
@@ -3029,8 +3028,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           getBoundOnLByZj(c.row, j, &lo, &up, lbOld, ubOld);
           getBoundOnLByZj(c.row, c.col, &lo, &up, lbCOL, ubCOL);
 
-	  timer.updatePostsolveNumericsRecord(
-            POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, lo - up);
+          timer.updatePostsolveNumericsRecord(
+              POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, lo - up);
           // calculate yi
           if (lo - up > tol)
             cout << "PR: Error in postsolving doubleton inequality " << c.row

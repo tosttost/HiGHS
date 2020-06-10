@@ -24,6 +24,7 @@
 
 namespace presolve {
 
+using std::max;
 using std::min;
 
 constexpr double inf = std::numeric_limits<double>::infinity();
@@ -115,11 +116,14 @@ struct numericsRecord {
   std::string name;
   double tolerance;
   int num_test;
+  int num_negative;
   int num_zero_true;
+  int num_tol10_true;
   int num_tol_true;
   int num_10tol_true;
   int num_clear_true;
-  double min_positive_true;
+  double max_below_tolerance;
+  double min_above_tolerance;
 };
 
 void initializePresolveRuleInfo(std::vector<PresolveRuleInfo>& rules);
@@ -239,11 +243,14 @@ class PresolveTimer {
     numerics_record.name = name;
     numerics_record.tolerance = tolerance;
     numerics_record.num_test = 0;
+    numerics_record.num_negative = 0;
     numerics_record.num_zero_true = 0;
+    numerics_record.num_tol10_true = 0;
     numerics_record.num_tol_true = 0;
     numerics_record.num_10tol_true = 0;
     numerics_record.num_clear_true = 0;
-    numerics_record.min_positive_true = HIGHS_CONST_INF;
+    numerics_record.max_below_tolerance = 0;
+    numerics_record.min_above_tolerance = HIGHS_CONST_INF;
   }
 
   void initialisePresolveNumericsRecord(int record, std::string name,
@@ -260,9 +267,14 @@ class PresolveTimer {
                             const double value) {
     double tolerance = numerics_record.tolerance;
     numerics_record.num_test++;
-    if (value < 0) return;
+    if (value < 0) {
+      numerics_record.num_negative++;
+      return;
+    }
     if (value == 0) {
       numerics_record.num_zero_true++;
+    } else if (10 * value <= tolerance) {
+      numerics_record.num_tol10_true++;
     } else if (value <= tolerance) {
       numerics_record.num_tol_true++;
     } else if (value <= 10 * tolerance) {
@@ -270,9 +282,12 @@ class PresolveTimer {
     } else {
       numerics_record.num_clear_true++;
     }
-    if (value > 0)
-      numerics_record.min_positive_true =
-          min(value, numerics_record.min_positive_true);
+    if (value <= tolerance)
+      numerics_record.max_below_tolerance =
+          max(value, numerics_record.max_below_tolerance);
+    if (value >= tolerance)
+      numerics_record.min_above_tolerance =
+          min(value, numerics_record.min_above_tolerance);
   }
 
   void updatePresolveNumericsRecord(int record, const double value) {
@@ -285,19 +300,34 @@ class PresolveTimer {
 
   void reportNumericsRecord(const numericsRecord& numerics_record) {
     if (!numerics_record.num_test) return;
-    printf(
-        "%-26s: tolerance =%6.1g: Zero =%9d; Tol =%9d; 10Tol =%9d; Clear =%9d; "
-        "MinPositive =%7.2g; Tests =%9d\n",
-        numerics_record.name.c_str(), numerics_record.tolerance,
-        numerics_record.num_zero_true, numerics_record.num_tol_true,
-        numerics_record.num_10tol_true, numerics_record.num_clear_true,
-        numerics_record.min_positive_true, numerics_record.num_test);
+    assert(numerics_record.num_test ==
+           numerics_record.num_negative + numerics_record.num_zero_true +
+               numerics_record.num_tol10_true + numerics_record.num_tol_true +
+               numerics_record.num_10tol_true + numerics_record.num_clear_true);
+    printf("%-26s %6.1g %9d %9d %9d %9.2g %9d %9.2g %9d %9d\n",
+           numerics_record.name.c_str(), numerics_record.tolerance,
+           numerics_record.num_negative, numerics_record.num_zero_true,
+           numerics_record.num_tol10_true, numerics_record.max_below_tolerance,
+           numerics_record.num_tol_true, numerics_record.min_above_tolerance,
+           numerics_record.num_10tol_true, numerics_record.num_clear_true);
   }
 
   void reportNumericsCsvRecord(const numericsRecord& numerics_record) {
-    printf(",%d,%d,%d", numerics_record.num_zero_true,
-           numerics_record.num_tol_true + numerics_record.num_10tol_true,
-           numerics_record.num_clear_true);
+    printf(",");
+    if (numerics_record.num_tol10_true)
+      printf("%d", numerics_record.num_tol10_true);
+    printf(",");
+    if (numerics_record.max_below_tolerance > 0)
+      printf("%g", numerics_record.max_below_tolerance);
+    printf(",");
+    if (numerics_record.num_tol_true)
+      printf("%d", numerics_record.num_tol_true);
+    printf(",");
+    if (numerics_record.min_above_tolerance < HIGHS_CONST_INF)
+      printf("%g", numerics_record.min_above_tolerance);
+    printf(",");
+    if (numerics_record.num_10tol_true)
+      printf("%d", numerics_record.num_10tol_true);
   }
 
   void reportNumericsRecords(
@@ -305,6 +335,10 @@ class PresolveTimer {
       const std::vector<numericsRecord>& numerics_record) {
     int num_record = numerics_record.size();
     printf("%s numerics analysis for %s\n", type.c_str(), model_name.c_str());
+    printf(
+        "Rule                          Tol  Negative      Zero    Tol/10     "
+        "MaxBw       Tol     MinAb     10Tol     Clear\n");
+
     for (int record = 0; record < num_record; record++)
       reportNumericsRecord(numerics_record[record]);
     printf("grep_%sNumerics:,%s", type.c_str(), model_name.c_str());

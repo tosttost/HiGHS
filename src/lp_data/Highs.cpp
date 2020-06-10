@@ -605,6 +605,7 @@ basis_.valid_, hmos_[0].basis_.valid_);
       }
     }
     // Postsolve. Does nothing if there were no reductions during presolve.
+    bool postsolve_required = false;
     if (hmos_[solved_hmo].scaled_model_status_ == HighsModelStatus::OPTIMAL) {
       if (presolve_status == HighsPresolveStatus::Reduced ||
           presolve_status == HighsPresolveStatus::ReducedToEmpty) {
@@ -624,6 +625,7 @@ basis_.valid_, hmos_[0].basis_.valid_);
         presolve_.data_.reduced_basis_.row_status =
             hmos_[solved_hmo].basis_.row_status;
 
+        postsolve_required = true;
         this_postsolve_time = -timer_.read(timer_.postsolve_clock);
         timer_.start(timer_.postsolve_clock);
         HighsPostsolveStatus postsolve_status = runPostsolve();
@@ -707,6 +709,11 @@ basis_.valid_, hmos_[0].basis_.valid_);
       hmos_[original_hmo].scaled_model_status_ =
           hmos_[solved_hmo].scaled_model_status_;
     }
+
+    // Te
+    if (!postsolve_required)
+      printf("grep_postsolveNumerics:,%s\n", hmos_[0].lp_.model_name_.c_str());
+
   } else {
     // There is a valid basis for the problem or presolve is off
     solved_hmo = original_hmo;
