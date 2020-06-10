@@ -86,6 +86,8 @@ void Presolve::setNumericalTolerances() {
     postsolve_doubleton_inequality_basic_tolerance = tol;
     postsolve_doubleton_inequality_lo_up_tolerance = tol;
     postsolve_doubleton_inequality_infeas_tolerance = tol;
+    postsolve_bound_on_lbyjz_fixed_tolerance = tol;
+    postsolve_bound_on_lbyjz_at_bound_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -133,6 +135,8 @@ void Presolve::setNumericalTolerances() {
     //        default_primal_feasiblility_tolerance;
     postsolve_doubleton_inequality_infeas_tolerance = tol;
     //        default_primal_feasiblility_tolerance;
+    postsolve_bound_on_lbyjz_fixed_tolerance = tol;
+    postsolve_bound_on_lbyjz_at_bound_tolerance = tol;
   }
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
@@ -178,6 +182,12 @@ void Presolve::setNumericalTolerances() {
   timer.initialisePostsolveNumericsRecord(
       POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, "Doubleton infeas",
       postsolve_doubleton_inequality_infeas_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_BOUND_ON_LBYZJ_FIXED, "Bound on LB y Zj fixed",
+      postsolve_bound_on_lbyjz_fixed_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND, "Bound on LB y Zj at bound",
+      postsolve_bound_on_lbyjz_at_bound_tolerance);
 }
 
 // printing with cout goes here.
@@ -3013,13 +3023,16 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
             }
           }
           double lo, up;
-          if (fabs(rowlb - rowub) < tol) {
+          if (fabs(rowlb - rowub) <
+              postsolve_doubleton_inequality_lo_up_tolerance) {
             lo = -HIGHS_CONST_INF;
             up = HIGHS_CONST_INF;
-          } else if (fabs(rowub - rowVal) <= tol) {
+          } else if (fabs(rowub - rowVal) <=
+                     postsolve_doubleton_inequality_lo_up_tolerance) {
             lo = 0;
             up = HIGHS_CONST_INF;
-          } else if (fabs(rowlb - rowVal) <= tol) {
+          } else if (fabs(rowlb - rowVal) <=
+                     postsolve_doubleton_inequality_lo_up_tolerance) {
             lo = -HIGHS_CONST_INF;
             up = 0;
           }
@@ -3031,7 +3044,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           timer.updatePostsolveNumericsRecord(
               POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS, lo - up);
           // calculate yi
-          if (lo - up > tol)
+          if (lo - up > postsolve_doubleton_inequality_infeas_tolerance)
             cout << "PR: Error in postsolving doubleton inequality " << c.row
                  << " : inconsistent bounds for its dual value.\n";
 
@@ -3453,11 +3466,28 @@ void Presolve::getBoundOnLByZj(int row, int j, double* lo, double* up,
   double aij = getaij(row, j);
   x = x / aij;
 
-  if (fabs(colLow - colUpp) < tol)
+  timer.updatePostsolveNumericsRecord(POSTSOLVE_BOUND_ON_LBYZJ_FIXED,
+                                      fabs(colLow - colUpp));
+  //  if (fabs(colLow - colUpp) < tol)
+  if (fabs(colLow - colUpp) <= postsolve_bound_on_lbyjz_fixed_tolerance)
     return;  // here there is no restriction on zj so no bound on y
 
-  if ((valuePrimal.at(j) - colLow) > tol &&
-      (colUpp - valuePrimal.at(j)) > tol) {
+  timer.updatePostsolveNumericsRecord(POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND,
+                                      valuePrimal.at(j) - colLow);
+  timer.updatePostsolveNumericsRecord(POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND,
+                                      colUpp - valuePrimal.at(j));
+  // Subsequent if-structure should (presumably) be based on toerances
+  //
+  //  bool at_lower_bound = valuePrimal.at(j) - colLow <=
+  //  postsolve_bound_on_lbyjz_at_bound_tolerance;
+  //
+  //  bool at_upper_bound = colUpp - valuePrimal.at(j) <=
+  //  postsolve_bound_on_lbyjz_at_bound_tolerance;
+
+  if ((valuePrimal.at(j) - colLow) >
+          postsolve_bound_on_lbyjz_at_bound_tolerance &&
+      (colUpp - valuePrimal.at(j)) >
+          postsolve_bound_on_lbyjz_at_bound_tolerance) {
     // set both bounds
     if (x < *up) *up = x;
     if (x > *lo) *lo = x;

@@ -252,6 +252,8 @@ class Presolve : public HPreData {
   double postsolve_doubleton_inequality_basic_tolerance;
   double postsolve_doubleton_inequality_lo_up_tolerance;
   double postsolve_doubleton_inequality_infeas_tolerance;
+  double postsolve_bound_on_lbyjz_fixed_tolerance;
+  double postsolve_bound_on_lbyjz_at_bound_tolerance;
 
   // postsolve
   bool noPostSolve = false;
