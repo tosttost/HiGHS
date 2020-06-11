@@ -92,8 +92,7 @@ void Presolve::setNumericalTolerances() {
     postsolve_duals_sing_row_row_basic_tolerance = tol;
     postsolve_duals_sing_row_row_below_lb_tolerance = tol;
     postsolve_duals_sing_row_row_above_ub_tolerance = tol;
-    postsolve_duals_sing_row_positive_dual_tolerance = tol;
-    postsolve_duals_sing_row_negative_dual_tolerance = tol;
+    postsolve_duals_sing_row_row_dual_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -149,9 +148,7 @@ void Presolve::setNumericalTolerances() {
         default_primal_feasiblility_tolerance;
     postsolve_duals_sing_row_row_above_ub_tolerance =
         default_primal_feasiblility_tolerance;
-    postsolve_duals_sing_row_positive_dual_tolerance =
-        default_dual_feasiblility_tolerance;
-    postsolve_duals_sing_row_negative_dual_tolerance =
+    postsolve_duals_sing_row_row_dual_tolerance =
         default_dual_feasiblility_tolerance;
   }
   timer.model_name = modelName;
@@ -217,11 +214,8 @@ void Presolve::setNumericalTolerances() {
       POSTSOLVE_DUALS_SING_ROW_ROW_ABOVE_UB, "Duals for sing row - above UB",
       postsolve_duals_sing_row_row_above_ub_tolerance);
   timer.initialisePostsolveNumericsRecord(
-      POSTSOLVE_DUALS_SING_ROW_POSITIVE_DUAL, "Duals for sing row - pos dual",
-      postsolve_duals_sing_row_positive_dual_tolerance);
-  timer.initialisePostsolveNumericsRecord(
-      POSTSOLVE_DUALS_SING_ROW_NEGATIVE_DUAL, "Duals for sing row - neg dual",
-      postsolve_duals_sing_row_negative_dual_tolerance);
+      POSTSOLVE_DUALS_SING_ROW_ROW_DUAL, "Duals for sing row - dual",
+      postsolve_duals_sing_row_row_dual_tolerance);
 }
 
 // printing with cout goes here.
@@ -3722,13 +3716,27 @@ void Presolve::getDualsSingletonRow(int row, int col) {
       valueColDual[col] = 0;
       double row_dual = getRowDualPost(row, col);
 
-      timer.updatePostsolveNumericsRecord(
-          POSTSOLVE_DUALS_SING_ROW_POSITIVE_DUAL, row_dual);
-      timer.updatePostsolveNumericsRecord(
-          POSTSOLVE_DUALS_SING_ROW_NEGATIVE_DUAL, -row_dual);
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_DUAL,
+                                          row_dual);
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_DUAL,
+                                          -row_dual);
 
-      if ((isRowAtLB && !isRowAtUB && row_dual > 0) ||
-          (!isRowAtLB && isRowAtUB && row_dual < 0) ||
+      const double lc_tl = postsolve_duals_sing_row_row_dual_tolerance;
+      if ((row_dual > 0 && row_dual <= lc_tl) ||
+          (row_dual < 0 && row_dual >= -lc_tl)) {
+        printf("Marginally signed row dual of %g\n", row_dual);
+        printf("isRowAtLB && !isRowAtUB && row_dual > lc_tl = %d\n",
+               isRowAtLB && !isRowAtUB && row_dual > lc_tl);
+        printf("!isRowAtLB && isRowAtUB && row_dual < -lc_tl = %d\n",
+               !isRowAtLB && isRowAtUB && row_dual < -lc_tl);
+        printf("!isRowAtLB && !isRowAtUB = %d\n", !isRowAtLB && !isRowAtUB);
+        bool make_row_basic = (isRowAtLB && !isRowAtUB && row_dual > lc_tl) ||
+                              (!isRowAtLB && isRowAtUB && row_dual < -lc_tl) ||
+                              (!isRowAtLB && !isRowAtUB);
+        printf("make_row_basic = %d\n", make_row_basic);
+      }
+      if ((isRowAtLB && !isRowAtUB && row_dual > lc_tl) ||
+          (!isRowAtLB && isRowAtUB && row_dual < -lc_tl) ||
           (!isRowAtLB && !isRowAtUB)) {
         // make row basic
         row_status.at(row) = HighsBasisStatus::BASIC;
