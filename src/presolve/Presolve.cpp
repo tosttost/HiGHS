@@ -88,6 +88,12 @@ void Presolve::setNumericalTolerances() {
     postsolve_doubleton_inequality_infeas_tolerance = tol;
     postsolve_bound_on_lbyjz_fixed_tolerance = tol;
     postsolve_bound_on_lbyjz_at_bound_tolerance = tol;
+    postsolve_duals_sing_row_col_basic_tolerance = tol;
+    postsolve_duals_sing_row_row_basic_tolerance = tol;
+    postsolve_duals_sing_row_row_below_lb_tolerance = tol;
+    postsolve_duals_sing_row_row_above_ub_tolerance = tol;
+    postsolve_duals_sing_row_positive_dual_tolerance = tol;
+    postsolve_duals_sing_row_negative_dual_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -137,6 +143,16 @@ void Presolve::setNumericalTolerances() {
     //        default_primal_feasiblility_tolerance;
     postsolve_bound_on_lbyjz_fixed_tolerance = tol;
     postsolve_bound_on_lbyjz_at_bound_tolerance = tol;
+    postsolve_duals_sing_row_col_basic_tolerance = tol;
+    postsolve_duals_sing_row_row_basic_tolerance = tol;
+    postsolve_duals_sing_row_row_below_lb_tolerance =
+        default_primal_feasiblility_tolerance;
+    postsolve_duals_sing_row_row_above_ub_tolerance =
+        default_primal_feasiblility_tolerance;
+    postsolve_duals_sing_row_positive_dual_tolerance =
+        default_dual_feasiblility_tolerance;
+    postsolve_duals_sing_row_negative_dual_tolerance =
+        default_dual_feasiblility_tolerance;
   }
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
@@ -188,6 +204,24 @@ void Presolve::setNumericalTolerances() {
   timer.initialisePostsolveNumericsRecord(
       POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND, "Bound on LB y Zj at bound",
       postsolve_bound_on_lbyjz_at_bound_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_COL_BASIC, "Duals for sing row - col basic",
+      postsolve_duals_sing_row_col_basic_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_ROW_BASIC, "Duals for sing row - row basic",
+      postsolve_duals_sing_row_row_basic_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_ROW_BELOW_LB, "Duals for sing row - below LB",
+      postsolve_duals_sing_row_row_below_lb_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_ROW_ABOVE_UB, "Duals for sing row - above UB",
+      postsolve_duals_sing_row_row_above_ub_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_POSITIVE_DUAL, "Duals for sing row - pos dual",
+      postsolve_duals_sing_row_positive_dual_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_SING_ROW_NEGATIVE_DUAL, "Duals for sing row - neg dual",
+      postsolve_duals_sing_row_negative_dual_tolerance);
 }
 
 // printing with cout goes here.
@@ -3476,7 +3510,7 @@ void Presolve::getBoundOnLByZj(int row, int j, double* lo, double* up,
                                       valuePrimal.at(j) - colLow);
   timer.updatePostsolveNumericsRecord(POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND,
                                       colUpp - valuePrimal.at(j));
-  // Subsequent if-structure should (presumably) be based on toerances
+  // Subsequent if-structure should (presumably) be based on tolerances
   //
   //  bool at_lower_bound = valuePrimal.at(j) - colLow <=
   //  postsolve_bound_on_lbyjz_at_bound_tolerance;
@@ -3641,8 +3675,15 @@ void Presolve::getDualsSingletonRow(int row, int col) {
   if (local_status != HighsBasisStatus::BASIC) {
     // x was not basic but is now
     // if x is strictly between original bounds or a_ij*x_j is at a bound.
-    if (fabs(valuePrimal.at(col) - l) > tol &&
-        fabs(valuePrimal.at(col) - u) > tol) {
+    timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_COL_BASIC,
+                                        fabs(valuePrimal.at(col) - l));
+    timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_COL_BASIC,
+                                        fabs(valuePrimal.at(col) - u));
+
+    if (fabs(valuePrimal.at(col) - l) >
+            postsolve_duals_sing_row_col_basic_tolerance &&
+        fabs(valuePrimal.at(col) - u) >
+            postsolve_duals_sing_row_col_basic_tolerance) {
       if (report_postsolve) {
         printf("3.1 : Make column %3d basic and row %3d nonbasic\n", col, row);
       }
@@ -3652,12 +3693,39 @@ void Presolve::getDualsSingletonRow(int row, int col) {
       valueRowDual[row] = getRowDualPost(row, col);
     } else {
       // column is at bound
-      bool isRowAtLB = fabs(aij * valuePrimal[col] - lrow) < tol;
-      bool isRowAtUB = fabs(aij * valuePrimal[col] - urow) < tol;
+
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_BASIC,
+                                          fabs(aij * valuePrimal[col] - lrow));
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_BASIC,
+                                          fabs(aij * valuePrimal[col] - urow));
+      double residual0 = lrow - aij * valuePrimal[col];
+      double residual1 = aij * valuePrimal[col] - urow;
+      if (residual0 > 0) {
+        printf("Positive residual below LB = %g for %g < %g\n", residual0,
+               aij * valuePrimal[col], lrow);
+      }
+      if (residual1 > 0) {
+        printf("Positive residual above UB = %g for %g > %g\n", residual1,
+               aij * valuePrimal[col], urow);
+      }
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_BELOW_LB,
+                                          lrow - aij * valuePrimal[col]);
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_SING_ROW_ROW_ABOVE_UB,
+                                          aij * valuePrimal[col] - urow);
+
+      bool isRowAtLB = fabs(aij * valuePrimal[col] - lrow) <
+                       postsolve_duals_sing_row_row_basic_tolerance;
+      bool isRowAtUB = fabs(aij * valuePrimal[col] - urow) <
+                       postsolve_duals_sing_row_row_basic_tolerance;
 
       double save_dual = valueColDual[col];
       valueColDual[col] = 0;
       double row_dual = getRowDualPost(row, col);
+
+      timer.updatePostsolveNumericsRecord(
+          POSTSOLVE_DUALS_SING_ROW_POSITIVE_DUAL, row_dual);
+      timer.updatePostsolveNumericsRecord(
+          POSTSOLVE_DUALS_SING_ROW_NEGATIVE_DUAL, -row_dual);
 
       if ((isRowAtLB && !isRowAtUB && row_dual > 0) ||
           (!isRowAtLB && isRowAtUB && row_dual < 0) ||

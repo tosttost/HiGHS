@@ -93,6 +93,12 @@ enum postsolveNumerics {
   POSTSOLVE_DOUBLETON_INEQUALITY_INFEAS,
   POSTSOLVE_BOUND_ON_LBYZJ_FIXED,
   POSTSOLVE_BOUND_ON_LBYZJ_AT_BOUND,
+  POSTSOLVE_DUALS_SING_ROW_COL_BASIC,
+  POSTSOLVE_DUALS_SING_ROW_ROW_BASIC,
+  POSTSOLVE_DUALS_SING_ROW_ROW_BELOW_LB,
+  POSTSOLVE_DUALS_SING_ROW_ROW_ABOVE_UB,
+  POSTSOLVE_DUALS_SING_ROW_POSITIVE_DUAL,
+  POSTSOLVE_DUALS_SING_ROW_NEGATIVE_DUAL,
   POSTSOLVE_NUMERICS_COUNT
 };
 
@@ -306,7 +312,7 @@ class PresolveTimer {
            numerics_record.num_negative + numerics_record.num_zero_true +
                numerics_record.num_tol10_true + numerics_record.num_tol_true +
                numerics_record.num_10tol_true + numerics_record.num_clear_true);
-    printf("%-26s %6.1g %9d %9d %9d %9.2g %9d %9.2g %9d %9d\n",
+    printf("%-30s %6.1g %9d %9d %9d %9.2g %9d %9.2g %9d %9d\n",
            numerics_record.name.c_str(), numerics_record.tolerance,
            numerics_record.num_negative, numerics_record.num_zero_true,
            numerics_record.num_tol10_true, numerics_record.max_below_tolerance,
@@ -314,22 +320,27 @@ class PresolveTimer {
            numerics_record.num_10tol_true, numerics_record.num_clear_true);
   }
 
-  void reportNumericsCsvRecord(const numericsRecord& numerics_record) {
-    printf(",");
-    if (numerics_record.num_tol10_true)
-      printf("%d", numerics_record.num_tol10_true);
-    printf(",");
-    if (numerics_record.max_below_tolerance > 0)
-      printf("%g", numerics_record.max_below_tolerance);
-    printf(",");
-    if (numerics_record.num_tol_true)
-      printf("%d", numerics_record.num_tol_true);
-    printf(",");
-    if (numerics_record.min_above_tolerance < HIGHS_CONST_INF)
-      printf("%g", numerics_record.min_above_tolerance);
-    printf(",");
-    if (numerics_record.num_10tol_true)
-      printf("%d", numerics_record.num_10tol_true);
+  void reportNumericsCsvRecord(const numericsRecord& numerics_record,
+                               const bool header = false) {
+    if (header) {
+      printf(",Tol/10,MaxBw,Tol,MinAb,10Tol");
+    } else {
+      printf(",");
+      if (numerics_record.num_tol10_true)
+        printf("%d", numerics_record.num_tol10_true);
+      printf(",");
+      if (numerics_record.max_below_tolerance > 0)
+        printf("%g", numerics_record.max_below_tolerance);
+      printf(",");
+      if (numerics_record.num_tol_true)
+        printf("%d", numerics_record.num_tol_true);
+      printf(",");
+      if (numerics_record.min_above_tolerance < HIGHS_CONST_INF)
+        printf("%g", numerics_record.min_above_tolerance);
+      printf(",");
+      if (numerics_record.num_10tol_true)
+        printf("%d", numerics_record.num_10tol_true);
+    }
   }
 
   void reportNumericsRecords(
@@ -338,12 +349,23 @@ class PresolveTimer {
     int num_record = numerics_record.size();
     printf("%s numerics analysis for %s\n", type.c_str(), model_name.c_str());
     printf(
-        "Rule                          Tol  Negative      Zero    Tol/10     "
+        "Rule                              Tol  Negative      Zero    Tol/10   "
+        "  "
         "MaxBw       Tol     MinAb     10Tol     Clear\n");
 
     for (int record = 0; record < num_record; record++)
       reportNumericsRecord(numerics_record[record]);
-    printf("grep_%sNumerics:,%s", type.c_str(), model_name.c_str());
+    printf("grep_%sNumerics:,0,%s", type.c_str(), model_name.c_str());
+    for (int record = 0; record < num_record; record++)
+      printf(",%s,,", numerics_record[record].name.c_str());
+    printf("\n");
+
+    printf("grep_%sNumerics:,1,%s", type.c_str(), model_name.c_str());
+    for (int record = 0; record < num_record; record++)
+      reportNumericsCsvRecord(numerics_record[record], true);
+    printf("\n");
+
+    printf("grep_%sNumerics:,2,%s", type.c_str(), model_name.c_str());
     for (int record = 0; record < num_record; record++)
       reportNumericsCsvRecord(numerics_record[record]);
     printf("\n");
