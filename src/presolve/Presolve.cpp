@@ -92,7 +92,7 @@ void Presolve::setNumericalTolerances() {
     postsolve_duals_sing_row_row_basic_tolerance = tol;
     postsolve_duals_sing_row_row_below_lb_tolerance = tol;
     postsolve_duals_sing_row_row_above_ub_tolerance = tol;
-    postsolve_duals_sing_row_row_dual_tolerance = tol;
+    postsolve_duals_sing_row_row_dual_tolerance = zero_tolerance;
     postsolve_duals_doubleton_equality_x_value_tolerance = zero_tolerance;
     postsolve_duals_doubleton_equality_x_bound_tolerance = zero_tolerance;
     postsolve_duals_doubleton_equality_y0_tolerance = tol;
@@ -152,8 +152,8 @@ void Presolve::setNumericalTolerances() {
         default_primal_feasiblility_tolerance;
     postsolve_duals_sing_row_row_above_ub_tolerance =
         default_primal_feasiblility_tolerance;
-    postsolve_duals_sing_row_row_dual_tolerance =
-        default_dual_feasiblility_tolerance;
+    postsolve_duals_sing_row_row_dual_tolerance = zero_tolerance;
+    //        default_dual_feasiblility_tolerance;
     postsolve_duals_doubleton_equality_x_value_tolerance = zero_tolerance;
     postsolve_duals_doubleton_equality_x_bound_tolerance = zero_tolerance;
     postsolve_duals_doubleton_equality_y0_tolerance = tol;
