@@ -93,6 +93,10 @@ void Presolve::setNumericalTolerances() {
     postsolve_duals_sing_row_row_below_lb_tolerance = tol;
     postsolve_duals_sing_row_row_above_ub_tolerance = tol;
     postsolve_duals_sing_row_row_dual_tolerance = tol;
+    postsolve_duals_doubleton_equality_x_value_tolerance = zero_tolerance;
+    postsolve_duals_doubleton_equality_x_bound_tolerance = zero_tolerance;
+    postsolve_duals_doubleton_equality_y0_tolerance = tol;
+    postsolve_duals_doubleton_equality_y1_tolerance = tol;
   } else {
     // Tolerance on bounds being inconsistent: should be twice
     // primal_feasibility_tolerance since bounds inconsistent by this
@@ -150,6 +154,10 @@ void Presolve::setNumericalTolerances() {
         default_primal_feasiblility_tolerance;
     postsolve_duals_sing_row_row_dual_tolerance =
         default_dual_feasiblility_tolerance;
+    postsolve_duals_doubleton_equality_x_value_tolerance = zero_tolerance;
+    postsolve_duals_doubleton_equality_x_bound_tolerance = zero_tolerance;
+    postsolve_duals_doubleton_equality_y0_tolerance = tol;
+    postsolve_duals_doubleton_equality_y1_tolerance = tol;
   }
   timer.model_name = modelName;
   // Initialise the numerics records. JAJH thinks that this has to be
@@ -216,6 +224,20 @@ void Presolve::setNumericalTolerances() {
   timer.initialisePostsolveNumericsRecord(
       POSTSOLVE_DUALS_SING_ROW_ROW_DUAL, "Duals for sing row - dual",
       postsolve_duals_sing_row_row_dual_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_VALUE,
+      "Duals for dbltn eq - x value",
+      postsolve_duals_doubleton_equality_x_value_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_BOUND,
+      "Duals for dbltn eq - x bound",
+      postsolve_duals_doubleton_equality_x_bound_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y0, "Duals for dbltn eq - y0",
+      postsolve_duals_doubleton_equality_y0_tolerance);
+  timer.initialisePostsolveNumericsRecord(
+      POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y1, "Duals for dbltn eq - y1",
+      postsolve_duals_doubleton_equality_y1_tolerance);
 }
 
 // printing with cout goes here.
@@ -3817,6 +3839,19 @@ void Presolve::getDualsDoubletonEquation(int row, int col) {
   } else {
     local_status = row_status.at(x - numColOriginal);
   }
+
+  if (local_status != HighsBasisStatus::BASIC) {
+    // Analyse dependency on numerical tolerance
+    timer.updatePostsolveNumericsRecord(
+        POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_VALUE, fabs(valueX - ubxNew));
+    timer.updatePostsolveNumericsRecord(
+        POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_VALUE, fabs(valueX - lbxNew));
+    timer.updatePostsolveNumericsRecord(
+        POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_BOUND, ubxOld - ubxNew);
+    timer.updatePostsolveNumericsRecord(
+        POSTSOLVE_DUALS_DOUBLETON_EQUALITY_X_BOUND, lbxNew - lbxOld);
+  }
+
   if ((local_status != HighsBasisStatus::BASIC && valueX == ubxNew &&
        ubxNew < ubxOld) ||
       (local_status != HighsBasisStatus::BASIC && valueX == lbxNew &&
@@ -3840,7 +3875,25 @@ void Presolve::getDualsDoubletonEquation(int row, int col) {
     }
   } else {
     // row becomes basic unless y is between bounds, in which case y is basic
-    if (valuePrimal.at(y) - lby > tol && uby - valuePrimal.at(y) > tol) {
+
+    timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y0,
+                                        valuePrimal.at(y) - lby);
+    timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y0,
+                                        uby - valuePrimal.at(y));
+    bool first_if = valuePrimal.at(y) - lby >
+                        postsolve_duals_doubleton_equality_y0_tolerance &&
+                    uby - valuePrimal.at(y) >
+                        postsolve_duals_doubleton_equality_y0_tolerance;
+    if (!first_if) {
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y1,
+                                          fabs(valueX - ubxNew));
+      timer.updatePostsolveNumericsRecord(POSTSOLVE_DUALS_DOUBLETON_EQUALITY_Y1,
+                                          fabs(valueX - lbxNew));
+    }
+    if (valuePrimal.at(y) - lby >
+            postsolve_duals_doubleton_equality_y0_tolerance &&
+        uby - valuePrimal.at(y) >
+            postsolve_duals_doubleton_equality_y0_tolerance) {
       if (y < numColOriginal) {
         col_status.at(y) = HighsBasisStatus::BASIC;
         if (report_postsolve) printf("4.2 : Make column %3d basic\n", y);
@@ -3856,7 +3909,10 @@ void Presolve::getDualsDoubletonEquation(int row, int col) {
         valueColDual.at(x) = getColumnDualPost(x);
         valueColDual.at(y) = getColumnDualPost(y);
       }
-    } else if (fabs(valueX - ubxNew) < tol || fabs(valueX - lbxNew) < tol) {
+    } else if (fabs(valueX - ubxNew) <
+                   postsolve_duals_doubleton_equality_y1_tolerance ||
+               fabs(valueX - lbxNew) <
+                   postsolve_duals_doubleton_equality_y1_tolerance) {
       if (y < numColOriginal) {
         col_status.at(y) = HighsBasisStatus::BASIC;
         if (report_postsolve) printf("4.3 : Make column %3d basic\n", y);

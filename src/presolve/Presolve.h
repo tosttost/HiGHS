@@ -259,6 +259,10 @@ class Presolve : public HPreData {
   double postsolve_duals_sing_row_row_below_lb_tolerance;
   double postsolve_duals_sing_row_row_above_ub_tolerance;
   double postsolve_duals_sing_row_row_dual_tolerance;
+  double postsolve_duals_doubleton_equality_x_value_tolerance;
+  double postsolve_duals_doubleton_equality_x_bound_tolerance;
+  double postsolve_duals_doubleton_equality_y0_tolerance;
+  double postsolve_duals_doubleton_equality_y1_tolerance;
 
   // postsolve
   bool noPostSolve = false;
