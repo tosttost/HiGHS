@@ -3735,8 +3735,8 @@ void Presolve::getDualsSingletonRow(int row, int col) {
                               (!isRowAtLB && !isRowAtUB);
         printf("make_row_basic = %d\n", make_row_basic);
       }
-      if ((isRowAtLB && !isRowAtUB && row_dual > lc_tl) ||
-          (!isRowAtLB && isRowAtUB && row_dual < -lc_tl) ||
+      if ((isRowAtLB && !isRowAtUB && row_dual > 0) ||
+          (!isRowAtLB && isRowAtUB && row_dual < 0) ||
           (!isRowAtLB && !isRowAtUB)) {
         // make row basic
         row_status.at(row) = HighsBasisStatus::BASIC;
