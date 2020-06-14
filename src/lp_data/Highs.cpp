@@ -711,8 +711,9 @@ basis_.valid_, hmos_[0].basis_.valid_);
     }
 
     // Te
-    if (!postsolve_required)
-      printf("grep_postsolveNumerics:,%s\n", hmos_[0].lp_.model_name_.c_str());
+    if (!postsolve_required && options_.highs_debug_level)
+      printf("grep_postsolveNumerics:,2,%s\n",
+             hmos_[0].lp_.model_name_.c_str());
 
   } else {
     // There is a valid basis for the problem or presolve is off

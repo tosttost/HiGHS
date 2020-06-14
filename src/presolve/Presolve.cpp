@@ -502,10 +502,10 @@ HighsPresolveStatus Presolve::presolve() {
       presolve_status = HighsPresolveStatus::Timeout;
   }
   timer.recordFinish(TOTAL_PRESOLVE_TIME);
-  //  if (iPrint > 0) {
-  timer.reportClocks();
-  timer.reportPresolveNumericsRecords();
-  //  }
+  if (iPrint > 0) {
+    timer.reportClocks();
+    timer.reportPresolveNumericsRecords();
+  }
   return presolve_status;
 }
 
@@ -3199,8 +3199,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
   // cmpNBF();
 
-  //  if (iPrint > 0)
-  timer.reportPostsolveNumericsRecords();
+  if (iPrint > 0) timer.reportPostsolveNumericsRecords();
   // Check number of basic variables
   int num_basic_var = 0;
   for (int iCol = 0; iCol < numColOriginal; iCol++) {

@@ -360,7 +360,7 @@ class PresolveTimer {
       reportNumericsRecord(numerics_record[record]);
     printf("grep_%sNumerics:,0,%s", type.c_str(), model_name.c_str());
     for (int record = 0; record < num_record; record++)
-      printf(",%s,,", numerics_record[record].name.c_str());
+      printf(",%s,,,,", numerics_record[record].name.c_str());
     printf("\n");
 
     printf("grep_%sNumerics:,1,%s", type.c_str(), model_name.c_str());
