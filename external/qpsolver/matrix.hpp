@@ -6,7 +6,9 @@
 
 #include "vector.hpp"
 
+#ifdef OPENMP
 #include "omp.h"
+#endif
 
 struct MatrixBase {
    unsigned int num_row;
