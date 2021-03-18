@@ -453,11 +453,11 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
   return true;
 }
 
-bool HighsCutGeneration::cmirCutGenerationHeuristic() {
+bool HighsCutGeneration::cmirCutGenerationHeuristic(double minEfficacy) {
   std::vector<double> deltas;
 
-  HighsCDouble continuouscontribution = 0.0;
-  HighsCDouble continuoussqrnorm = 0.0;
+  double continuouscontribution = 0.0;
+  double continuoussqrnorm = 0.0;
   std::vector<int> integerinds;
   integerinds.reserve(rowlen);
   double maxabsdelta = 0.0;
@@ -472,6 +472,7 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
         complementation[i] = 1 - complementation[i];
         rhs -= upper[i] * vals[i];
         vals[i] = -vals[i];
+        solval[i] = upper[i] - solval[i];
       }
 
       if (solval[i] > feastol) {
@@ -503,25 +504,25 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
 
   deltas.erase(std::remove(deltas.begin(), deltas.end(), 0.0), deltas.end());
   double bestdelta = -1;
-  double bestefficacy = 0.0;
+  double bestefficacy = minEfficacy;
 
   for (double delta : deltas) {
-    HighsCDouble scale = 1.0 / HighsCDouble(delta);
-    HighsCDouble scalrhs = rhs * scale;
+    double scale = 1.0 / double(delta);
+    double scalrhs = double(rhs) * scale;
     double downrhs = std::floor(double(scalrhs));
 
-    HighsCDouble f0 = scalrhs - downrhs;
+    double f0 = scalrhs - downrhs;
     if (f0 < 0.01 || f0 > 0.99) continue;
-    HighsCDouble oneoveroneminusf0 = 1.0 / (1.0 - f0);
+    double oneoveroneminusf0 = 1.0 / (1.0 - f0);
     if (double(oneoveroneminusf0) * double(scale) > 1e4) continue;
 
-    HighsCDouble sqrnorm = scale * scale * continuoussqrnorm;
-    HighsCDouble viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
+    double sqrnorm = scale * scale * continuoussqrnorm;
+    double viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
 
     for (int j : integerinds) {
-      HighsCDouble scalaj = vals[j] * scale;
+      double scalaj = vals[j] * scale;
       double downaj = std::floor(double(scalaj));
-      HighsCDouble fj = scalaj - downaj;
+      double fj = scalaj - downaj;
       double aj;
       if (fj > f0)
         aj = double(downaj + fj - f0);
@@ -545,22 +546,22 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
   for (int k = 1; k <= 3; ++k) {
     double delta = bestdelta * (1 << k);
     if (delta <= 1e-4 || delta >= 1e4) continue;
-    HighsCDouble scale = 1.0 / HighsCDouble(delta);
-    HighsCDouble scalrhs = rhs * scale;
+    double scale = 1.0 / double(delta);
+    double scalrhs = double(rhs) * scale;
     double downrhs = std::floor(double(scalrhs));
-    HighsCDouble f0 = scalrhs - downrhs;
+    double f0 = scalrhs - downrhs;
     if (f0 < 0.01 || f0 > 0.99) continue;
 
-    HighsCDouble oneoveroneminusf0 = 1.0 / (1.0 - f0);
+    double oneoveroneminusf0 = 1.0 / (1.0 - f0);
     if (double(oneoveroneminusf0) * double(scale) > 1e4) continue;
 
-    HighsCDouble sqrnorm = scale * scale * continuoussqrnorm;
-    HighsCDouble viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
+    double sqrnorm = scale * scale * continuoussqrnorm;
+    double viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
 
     for (int j : integerinds) {
-      HighsCDouble scalaj = vals[j] * scale;
+      double scalaj = vals[j] * scale;
       double downaj = std::floor(double(scalaj));
-      HighsCDouble fj = scalaj - downaj;
+      double fj = scalaj - downaj;
       double aj;
       if (fj > f0)
         aj = double(downaj + fj - f0);
@@ -591,11 +592,11 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
     vals[k] = -vals[k];
 
     double delta = bestdelta;
-    HighsCDouble scale = 1.0 / HighsCDouble(delta);
-    HighsCDouble scalrhs = rhs * scale;
+    double scale = 1.0 / double(delta);
+    double scalrhs = double(rhs) * scale;
     double downrhs = std::floor(double(scalrhs));
 
-    HighsCDouble f0 = scalrhs - downrhs;
+    double f0 = scalrhs - downrhs;
     if (f0 < 0.01 || f0 > 0.99) {
       complementation[k] = 1 - complementation[k];
       solval[k] = upper[k] - solval[k];
@@ -605,7 +606,7 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
       continue;
     }
 
-    HighsCDouble oneoveroneminusf0 = 1.0 / (1.0 - f0);
+    double oneoveroneminusf0 = 1.0 / (1.0 - f0);
     if (double(oneoveroneminusf0) * double(scale) > 1e4) {
       complementation[k] = 1 - complementation[k];
       solval[k] = upper[k] - solval[k];
@@ -615,13 +616,13 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic() {
       continue;
     }
 
-    HighsCDouble sqrnorm = scale * scale * continuoussqrnorm;
-    HighsCDouble viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
+    double sqrnorm = scale * scale * continuoussqrnorm;
+    double viol = continuouscontribution * oneoveroneminusf0 - scalrhs;
 
     for (int j : integerinds) {
-      HighsCDouble scalaj = vals[j] * scale;
+      double scalaj = vals[j] * scale;
       double downaj = std::floor(double(scalaj));
-      HighsCDouble fj = scalaj - downaj;
+      double fj = scalaj - downaj;
       double aj;
       if (fj > f0)
         aj = double(downaj + fj - f0);
@@ -973,6 +974,7 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
       complementation[i] = 1 - complementation[i];
       rhs -= upper[i] * vals[i];
       vals[i] = -vals[i];
+      solval[i] = upper[i] - solval[i];
     }
   }
 
@@ -983,21 +985,62 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
     // the
     //    lifting functions have minimality of the cover as necessary facet
     //    condition
-    if (!determineCover()) return false;
+    if (!determineCover()) return cmirCutGenerationHeuristic();
 
+    // store base inequality
+    int tmpLen = rowlen;
+    HighsCDouble tmpRhs = rhs;
+    std::vector<int> tmpInds(inds, inds + tmpLen);
+    std::vector<double> tmpVals(vals, vals + tmpLen);
+    std::vector<uint8_t> tmpCompl = complementation;
     // 2. use superadditive lifting function depending on structure of base
     //    inequality:
     //    We have 3 lifting functions available for pure binary knapsack sets,
     //    for mixed-binary knapsack sets and for mixed integer knapsack sets.
-    if (!hasContinuous && !hasGeneralInts)
+    bool success;
+    if (!hasContinuous && !hasGeneralInts) {
       separateLiftedKnapsackCover();
-    else if (hasGeneralInts) {
-      if (!separateLiftedMixedIntegerCover()) return false;
+      success = true;
+    } else if (hasGeneralInts) {
+      success = separateLiftedMixedIntegerCover();
     } else {
       assert(hasContinuous);
       assert(!hasGeneralInts);
-      if (!separateLiftedMixedBinaryCover()) return false;
+      success = separateLiftedMixedBinaryCover();
     }
+
+    double minMirEfficacy = 0.0;
+    if (success) {
+      HighsCDouble efficacy = -rhs;
+      HighsCDouble norm = 0.0;
+
+      for (int i = 0; i != rowlen; ++i) {
+        efficacy += solval[i] * vals[i];
+        norm += vals[i] * vals[i];
+      }
+
+      minMirEfficacy = double(efficacy) / double(sqrt(norm));
+    }
+
+    std::swap(tmpRhs, rhs);
+    std::swap(tmpLen, rowlen);
+    this->inds = tmpInds.data();
+    this->vals = tmpVals.data();
+
+    if (cmirCutGenerationHeuristic(minMirEfficacy)) {
+      // cmir heuristic succeeded to find better cut
+      inds_.assign(this->inds, this->inds + rowlen);
+      vals_.assign(this->vals, this->vals + rowlen);
+    } else if (success) {
+      // cut with superadditive lifting was better so restore it
+      rhs = tmpRhs;
+      rowlen = tmpLen;
+      complementation = std::move(tmpCompl);
+    } else
+      return false;
+
+    this->inds = inds_.data();
+    this->vals = vals_.data();
   }
 
   // apply cut postprocessing including scaling and removal of small

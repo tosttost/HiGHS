@@ -57,7 +57,7 @@ class HighsCutGeneration {
 
   bool separateLiftedMixedIntegerCover();
 
-  bool cmirCutGenerationHeuristic();
+  bool cmirCutGenerationHeuristic(double minEfficacy = 0.0);
 
   bool postprocessCut();
 
