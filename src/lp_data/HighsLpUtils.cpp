@@ -25,6 +25,17 @@
 #include "util/HighsSort.h"
 #include "util/HighsTimer.h"
 
+bool isQp(HighsLp& lp) {
+  int Qvalue_size = lp.Qvalue_.size();
+  if (Qvalue_size) {
+    assert(Qvalue_size >= lp.numCol_);
+    assert((int)lp.Qindex_.size() >= lp.numCol_);
+    assert((int)lp.Qstart_.size() >= lp.numCol_ + 1);
+    return true;
+  }
+  return false;
+}
+
 HighsStatus assessLp(HighsLp& lp, const HighsOptions& options) {
   HighsStatus return_status = HighsStatus::OK;
   HighsStatus call_status;

@@ -27,6 +27,9 @@ class HighsLp {
   int numCol_ = 0;
   int numRow_ = 0;
 
+  std::vector<int> Qstart_;
+  std::vector<int> Qindex_;
+  std::vector<double> Qvalue_;
   std::vector<int> Astart_;
   std::vector<int> Aindex_;
   std::vector<double> Avalue_;

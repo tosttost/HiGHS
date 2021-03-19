@@ -487,6 +487,16 @@ basis_.valid_, hmos_[0].basis_.valid_);
   // Running as LP solver: start the HiGHS clock unless it's already running
   bool run_highs_clock_already_running = timer_.runningRunHighsClock();
   if (!run_highs_clock_already_running) timer_.startRunHighsClock();
+
+  if (!options_.solver.compare(choose_string) && isQp(lp_)) {
+    // Solve the model as a QP
+    call_status = callSolveQp();
+    return_status =
+        interpretCallStatus(call_status, return_status, "callSolveQp");
+    if (!run_highs_clock_already_running) timer_.stopRunHighsClock();
+    return returnFromRun(return_status);
+  }
+
   // Record the initial time and set the postsolve iteration count to
   // -1 to identify whether it's not required
   double initial_time = timer_.readRunHighsClock();
@@ -1904,6 +1914,62 @@ HighsStatus Highs::runLpSolver(const int model_index, const string message) {
   copyHighsIterationCounts(iteration_counts, info_);
 
   return returnFromHighs(return_status);
+}
+
+HighsStatus Highs::callSolveQp() {
+  HighsStatus return_status = HighsStatus::OK;
+  // Check that the model isn't row-wise - not yet in master
+  // assert(lp_.orientation_ != MatrixOrientation::ROWWISE);
+  //
+  // Run the QP solver
+  /*
+  HighsMipSolver solver(options_, lp_);
+  solver.run();
+  // Cheating now, but need to set this honestly!
+  HighsStatus call_status = HighsStatus::OK;
+  return_status =
+      interpretCallStatus(call_status, return_status, "HighsMipSolver::solver");
+  if (return_status == HighsStatus::Error) return return_status;
+  // Cheating now, but need to set this honestly!
+  scaled_model_status_ = HighsModelStatus::OPTIMAL;
+  scaled_model_status_ = solver.modelstatus_;
+  model_status_ = scaled_model_status_;
+  // Set the values in HighsInfo instance info_
+  info_.mip_node_count = solver.node_count_;
+  info_.simplex_iteration_count = -1;    // Not known
+  info_.ipm_iteration_count = -1;        // Not known
+  info_.crossover_iteration_count = -1;  // Not known
+  info_.primal_status = PrimalDualStatus::STATUS_NO_SOLUTION;
+  info_.dual_status = PrimalDualStatus::STATUS_NO_SOLUTION;
+  info_.objective_function_value = solver.solution_objective_;
+  info_.mip_dual_bound = solver.dual_bound_;
+  info_.mip_gap =
+      100 * std::abs(info_.objective_function_value - info_.mip_dual_bound) /
+      std::max(1.0, std::abs(info_.objective_function_value));
+  info_.num_primal_infeasibilities = -1;  // Not known
+  // Are the violations max or sum?
+  info_.max_primal_infeasibility =
+      std::max({solver.bound_violation_, solver.row_violation_,
+                solver.integrality_violation_});
+  info_.sum_primal_infeasibilities = -1;  // Not known
+  info_.num_dual_infeasibilities = -1;    // Not known
+  info_.max_dual_infeasibility = -1;      // Not known
+  info_.sum_dual_infeasibilities = -1;    // Not known
+  // The solution needs to be here, but just resize it for now
+  if (solver.solution_objective_ != HIGHS_CONST_INF) {
+    info_.primal_status = PrimalDualStatus::STATUS_FEASIBLE_POINT;
+    int solver_solution_size = solver.solution_.size();
+    assert(solver_solution_size >= lp_.numCol_);
+    solution_.col_value.resize(lp_.numCol_);
+    for (int iCol = 0; iCol < lp_.numCol_; iCol++)
+      solution_.col_value[iCol] = solver.solution_[iCol];
+  }
+
+  //  assert((int)solution_.col_value.size() == lp_.numCol_);
+  //  assert((int)solution_.row_value.size() == lp_.numRow_);
+  //  solution_.row_value.resize(lp_.numRow_);
+  */
+  return return_status;
 }
 
 HighsStatus Highs::writeSolution(const std::string filename,

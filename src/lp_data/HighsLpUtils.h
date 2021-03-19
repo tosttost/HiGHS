@@ -36,6 +36,8 @@ HighsStatus readBasisFile(const HighsOptions& options, HighsBasis& basis,
                           const std::string filename);
 
 // Methods taking HighsLp as an argument
+bool isQp(HighsLp& lp);
+
 HighsStatus assessLp(HighsLp& lp, const HighsOptions& options);
 
 HighsStatus assessLpDimensions(const HighsOptions& options, const HighsLp& lp);
