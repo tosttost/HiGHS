@@ -29,6 +29,7 @@
 #include "simplex/HSimplexDebug.h"
 #include "simplex/HighsSimplexInterface.h"
 #include "util/HighsMatrixPic.h"
+#include "../external/qpsolver/solver.hpp"
 
 #ifdef OPENMP
 #include "omp.h"
@@ -1916,15 +1917,68 @@ HighsStatus Highs::runLpSolver(const int model_index, const string message) {
   return returnFromHighs(return_status);
 }
 
+void reportIteration(Runtime& rt) {
+   unsigned int rep = rt.statistics.iteration.size() -1;
+   printf("%u, %lf, %u, %lf, %lf, %u, %lf, %lf\n", 
+      rt.statistics.iteration[rep],
+      rt.statistics.objval[rep],
+      rt.statistics.nullspacedimension[rep],
+      rt.statistics.time[rep],
+      rt.statistics.sum_primal_infeasibilities[rep],
+      rt.statistics.num_primal_infeasibilities[rep],
+      rt.statistics.density_nullspace[rep],
+      rt.statistics.density_factor[rep]);
+}
+
 HighsStatus Highs::callSolveQp() {
   HighsStatus return_status = HighsStatus::OK;
   // Check that the model isn't row-wise - not yet in master
   // assert(lp_.orientation_ != MatrixOrientation::ROWWISE);
   //
   // Run the QP solver
-  /*
-  HighsMipSolver solver(options_, lp_);
-  solver.run();
+
+  Instance instance(lp_.numCol_, lp_.numRow_);
+
+  
+  instance.num_con = lp_.numRow_;
+  instance.num_var = lp_.numCol_;
+
+  instance.A.mat.num_col = lp_.numCol_;
+  instance.A.mat.num_row = lp_.numRow_;
+  instance.A.mat.start = *((std::vector<unsigned int>*)&lp_.Astart_);
+  instance.A.mat.index = *((std::vector<unsigned int>*)&lp_.Aindex_);
+  instance.A.mat.value = lp_.Avalue_;
+  instance.c.value = lp_.colCost_;
+  instance.con_lo = lp_.rowLower_;
+  instance.con_up = lp_.rowUpper_;
+  instance.var_lo = lp_.colLower_;
+  instance.var_up = lp_.colUpper_;
+  instance.Q.mat.num_col = lp_.numCol_;
+  instance.Q.mat.num_row = lp_.numRow_;
+  instance.Q.mat.start = lp_.Qstart_;
+  instance.Q.mat.index = lp_.Qindex_;
+  instance.Q.mat.value = lp_.Qvalue_;
+
+  if (lp_.sense_ != ObjSense::MINIMIZE) {
+    for (double& i : instance.c.value) {
+      i *= -1.0;
+    }
+  }
+
+  Runtime runtime(instance);
+
+  runtime.settings.reportingfequency = 1;
+  runtime.endofiterationevent.subscribe(reportIteration);
+  runtime.settings.iterationlimit = 999999;
+  runtime.settings.ratiotest = new RatiotestTwopass(instance, 0.000000001, 0.000001);
+  Solver solver(runtime);
+  solver.solve();
+
+
+
+
+
+  //
   // Cheating now, but need to set this honestly!
   HighsStatus call_status = HighsStatus::OK;
   return_status =
@@ -1932,43 +1986,32 @@ HighsStatus Highs::callSolveQp() {
   if (return_status == HighsStatus::Error) return return_status;
   // Cheating now, but need to set this honestly!
   scaled_model_status_ = HighsModelStatus::OPTIMAL;
-  scaled_model_status_ = solver.modelstatus_;
   model_status_ = scaled_model_status_;
   // Set the values in HighsInfo instance info_
-  info_.mip_node_count = solver.node_count_;
   info_.simplex_iteration_count = -1;    // Not known
   info_.ipm_iteration_count = -1;        // Not known
   info_.crossover_iteration_count = -1;  // Not known
   info_.primal_status = PrimalDualStatus::STATUS_NO_SOLUTION;
   info_.dual_status = PrimalDualStatus::STATUS_NO_SOLUTION;
-  info_.objective_function_value = solver.solution_objective_;
-  info_.mip_dual_bound = solver.dual_bound_;
-  info_.mip_gap =
-      100 * std::abs(info_.objective_function_value - info_.mip_dual_bound) /
-      std::max(1.0, std::abs(info_.objective_function_value));
+  info_.objective_function_value = 0.0; //
   info_.num_primal_infeasibilities = -1;  // Not known
   // Are the violations max or sum?
-  info_.max_primal_infeasibility =
-      std::max({solver.bound_violation_, solver.row_violation_,
-                solver.integrality_violation_});
+  info_.max_primal_infeasibility =0.0; //
   info_.sum_primal_infeasibilities = -1;  // Not known
   info_.num_dual_infeasibilities = -1;    // Not known
   info_.max_dual_infeasibility = -1;      // Not known
   info_.sum_dual_infeasibilities = -1;    // Not known
   // The solution needs to be here, but just resize it for now
-  if (solver.solution_objective_ != HIGHS_CONST_INF) {
-    info_.primal_status = PrimalDualStatus::STATUS_FEASIBLE_POINT;
-    int solver_solution_size = solver.solution_.size();
-    assert(solver_solution_size >= lp_.numCol_);
-    solution_.col_value.resize(lp_.numCol_);
-    for (int iCol = 0; iCol < lp_.numCol_; iCol++)
-      solution_.col_value[iCol] = solver.solution_[iCol];
-  }
+
+  info_.primal_status = PrimalDualStatus::STATUS_FEASIBLE_POINT;
+  solution_.col_value.resize(lp_.numCol_);
+  for (int iCol = 0; iCol < lp_.numCol_; iCol++)
+    solution_.col_value[iCol] = 0.0; //
 
   //  assert((int)solution_.col_value.size() == lp_.numCol_);
   //  assert((int)solution_.row_value.size() == lp_.numRow_);
   //  solution_.row_value.resize(lp_.numRow_);
-  */
+  
   return return_status;
 }
 

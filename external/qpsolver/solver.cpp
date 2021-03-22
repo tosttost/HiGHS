@@ -158,7 +158,8 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 			tidyup(p, rowmove, basis, runtime);
 			maxsteplength = std::numeric_limits<double>::infinity();
 			if (runtime.instance.Q.mat.value.size() > 0) {
-				double denominator = p * runtime.instance.Q.mat_vec(p);
+				Vector temp(runtime.instance.num_var);
+				double denominator = p * runtime.instance.Q.mat_vec(p, temp);
 				if (fabs(denominator) > 10E-5) {
 					double numerator = (- p * gradient.getGradient());
 					if (numerator < 0.0) {

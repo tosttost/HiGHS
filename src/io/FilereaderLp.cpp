@@ -45,6 +45,32 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
       model.colCost_[varindex[lt->var->name]] = lt->coef;
     }
 
+    std::map<std::shared_ptr<Variable>, std::vector<std::shared_ptr<Variable>>> mat;
+    std::map<std::shared_ptr<Variable>, std::vector<double>> mat2;
+    for (std::shared_ptr<QuadTerm> qt : m.objective->quadterms) {     
+      if (qt->var1 != qt->var2) {
+        mat[qt->var1].push_back(qt->var2);
+        mat2[qt->var1].push_back(qt->coef / 2);
+        mat[qt->var2].push_back(qt->var1);
+        mat2[qt->var2].push_back(qt->coef / 2);
+      } else {
+        mat[qt->var1].push_back(qt->var2);
+        mat2[qt->var1].push_back(qt->coef);
+      }
+    }
+
+    unsigned int qnnz = 0;
+    for (std::shared_ptr<Variable> var : m.variables) {
+      model.Qstart_.push_back(qnnz);
+
+      for (unsigned int i=0; i<mat[var].size(); i++) {
+        model.Qindex_.push_back(varindex[mat[var][i]->name]);
+        model.Qvalue_.push_back(mat2[var][i]);
+        qnnz++;
+      }
+    }
+    model.Qstart_.push_back(qnnz);
+
     // handle constraints
     std::map<std::shared_ptr<Variable>, std::vector<unsigned int>>
         consofvarmap_index;
