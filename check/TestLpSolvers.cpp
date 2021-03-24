@@ -1,7 +1,7 @@
 #include "Highs.h"
 #include "catch.hpp"
 
-const bool dev_run = false;
+const bool dev_run = true;
 
 struct IterationCount {
   int simplex;
@@ -184,17 +184,17 @@ void testSolversSetup(const std::string model,
                       vector<int>& simplex_strategy_iteration_count) {
   if (model.compare("adlittle") == 0) {
     simplex_strategy_iteration_count[(
-        int)SimplexStrategy::SIMPLEX_STRATEGY_CHOOSE] = 72;
+        int)SimplexStrategy::SIMPLEX_STRATEGY_CHOOSE] = 113;
     simplex_strategy_iteration_count[(
-        int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_PLAIN] = 72;
+        int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_PLAIN] = 113;
     simplex_strategy_iteration_count[(
         int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_TASKS] = 72;
     simplex_strategy_iteration_count[(
         int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_MULTI] = 73;
     simplex_strategy_iteration_count[(
         int)SimplexStrategy::SIMPLEX_STRATEGY_PRIMAL] = 94;
-    model_iteration_count.ipm = 18;
-    model_iteration_count.crossover = 4;
+    model_iteration_count.ipm = 19;
+    model_iteration_count.crossover = 3;
   }
 }
 
@@ -233,13 +233,12 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   simplex_strategy_iteration_count.resize(
       (int)SimplexStrategy::SIMPLEX_STRATEGY_NUM);
 
-  HighsOptions options;
   HighsLp lp;
   //  HighsStatus run_status;
   HighsStatus return_status;
   HighsStatus read_status;
 
-  Highs highs(options);
+  Highs highs;
   if (!dev_run) {
     highs.setHighsOptionValue("output_flag", false);
   }
@@ -283,9 +282,9 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   REQUIRE(return_status == HighsStatus::OK);
 
   const HighsInfo& info = highs.getHighsInfo();
-  REQUIRE(info.num_dual_infeasibilities == 1);
+  REQUIRE(info.num_dual_infeasibilities == 2);
 
-  REQUIRE(info.simplex_iteration_count == 370);
+  REQUIRE(info.simplex_iteration_count == 415);
 
   HighsModelStatus model_status = highs.getModelStatus();
   REQUIRE(model_status == HighsModelStatus::NOTSET);
@@ -301,7 +300,7 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   return_status = highs.run();
   REQUIRE(return_status == HighsStatus::OK);
 
-  REQUIRE(info.simplex_iteration_count == 635);
+  REQUIRE(info.simplex_iteration_count == 531);
 }
 
 TEST_CASE("dual-objective-upper-bound", "[highs_lp_solver]") {
@@ -315,8 +314,7 @@ TEST_CASE("dual-objective-upper-bound", "[highs_lp_solver]") {
   const double larger_min_dual_objective_value_upper_bound = -45.876;
   const double use_max_dual_objective_value_upper_bound = 150.0;
   double save_dual_objective_value_upper_bound;
-  HighsOptions options;
-  Highs highs(options);
+  Highs highs;
   if (!dev_run) {
     highs.setHighsOptionValue("output_flag", false);
   }

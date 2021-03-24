@@ -20,6 +20,7 @@
 #include "util/HighsCDouble.h"
 
 class HighsDomain;
+class HighsLpRelaxation;
 
 class HighsNodeQueue {
  public:
@@ -27,7 +28,6 @@ class HighsNodeQueue {
     std::vector<HighsDomainChange> domchgstack;
     std::vector<std::multimap<double, int>::iterator> domchglinks;
     double lower_bound;
-    double lp_objective;
     double estimate;
     int depth;
     int leftlower;
@@ -46,10 +46,9 @@ class HighsNodeQueue {
           rightestimate(-1) {}
 
     OpenNode(std::vector<HighsDomainChange>&& domchgstack, double lower_bound,
-             double lp_objective, double estimate, int depth)
+             double estimate, int depth)
         : domchgstack(domchgstack),
           lower_bound(lower_bound),
-          lp_objective(lp_objective),
           estimate(estimate),
           depth(depth),
           leftlower(-1),
@@ -97,24 +96,26 @@ class HighsNodeQueue {
   void setNumCol(int numcol);
 
   void emplaceNode(std::vector<HighsDomainChange>&& domchgs, double lower_bound,
-                   double lp_objective, double estimate, int depth);
+                   double estimate, int depth);
 
   OpenNode popBestNode();
 
   OpenNode popBestBoundNode();
 
-  size_t numNodesUp(int col) const { return colLowerNodes[col].size(); }
+  OpenNode popRelatedNode(const HighsLpRelaxation& lprelax);
 
-  size_t numNodesDown(int col) const { return colUpperNodes[col].size(); }
+  int64_t numNodesUp(int col) const { return colLowerNodes[col].size(); }
 
-  size_t numNodesUp(int col, double val) const {
+  int64_t numNodesDown(int col) const { return colUpperNodes[col].size(); }
+
+  int64_t numNodesUp(int col, double val) const {
     auto it = colLowerNodes[col].upper_bound(val);
     if (it == colLowerNodes[col].begin()) return colLowerNodes[col].size();
     return std::distance(colLowerNodes[col].upper_bound(val),
                          colLowerNodes[col].end());
   }
 
-  size_t numNodesDown(int col, double val) const {
+  int64_t numNodesDown(int col, double val) const {
     auto it = colUpperNodes[col].lower_bound(val);
     if (it == colUpperNodes[col].end()) return colUpperNodes[col].size();
     return std::distance(colUpperNodes[col].begin(), it);
@@ -131,7 +132,7 @@ class HighsNodeQueue {
 
   bool empty() const { return nodes.size() == freeslots.size(); }
 
-  size_t numNodes() const { return nodes.size() - freeslots.size(); }
+  int64_t numNodes() const { return nodes.size() - freeslots.size(); }
 };
 
 #endif

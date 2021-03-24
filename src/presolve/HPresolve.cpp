@@ -765,11 +765,10 @@ void HPresolve::shrinkProblem(HighsPostsolveStack& postSolveStack) {
 }
 
 HPresolve::Result HPresolve::runProbing(HighsPostsolveStack& postSolveStack) {
-  if (numDeletedCols + numDeletedRows != 0) {
-    shrinkProblem(postSolveStack);
-    toCSC(model->Avalue_, model->Aindex_, model->Astart_);
-    fromCSC(model->Avalue_, model->Aindex_, model->Astart_);
-  }
+  if (numDeletedCols + numDeletedRows != 0) shrinkProblem(postSolveStack);
+
+  toCSC(model->Avalue_, model->Aindex_, model->Astart_);
+  fromCSC(model->Avalue_, model->Aindex_, model->Astart_);
 
   // first tighten all bounds if they have an implied bound that is tighter
   // thatn their column bound before probing this is not done for continuous
@@ -2660,11 +2659,10 @@ HPresolve::Result HPresolve::emptyCol(HighsPostsolveStack& postSolveStack,
   else if (model->colCost_[col] < 0 ||
            std::abs(model->colUpper_[col]) < std::abs(model->colLower_[col]))
     fixColToUpper(postSolveStack, col);
-  else {
-    assert(model->colLower_[col] != -HIGHS_CONST_INF);
-    // todo, handle free empty column
+  else if (model->colLower_[col] != -HIGHS_CONST_INF)
     fixColToLower(postSolveStack, col);
-  }
+  else
+    fixColToZero(postSolveStack, col);
 
   return checkLimits(postSolveStack);
 }
@@ -3451,6 +3449,36 @@ void HPresolve::fixColToUpper(HighsPostsolveStack& postSolveStack, int col) {
   model->colCost_[col] = 0;
 }
 
+void HPresolve::fixColToZero(HighsPostsolveStack& postSolveStack, int col) {
+  postSolveStack.fixedColAtZero(col, model->colCost_[col],
+                                getColumnVector(col));
+  // mark the column as deleted first so that it is not registered as singleton
+  // column upon removing its nonzeros
+  markColDeleted(col);
+
+  for (int coliter = colhead[col]; coliter != -1;) {
+    int colrow = Arow[coliter];
+    double colval = Avalue[coliter];
+    assert(Acol[coliter] == col);
+
+    int colpos = coliter;
+    coliter = Anext[coliter];
+
+    unlink(colpos);
+
+    if (model->rowLower_[colrow] == model->rowUpper_[colrow] &&
+        eqiters[colrow] != equations.end() &&
+        eqiters[colrow]->first != rowsize[colrow]) {
+      // if that is the case reinsert it into the equation set that is ordered
+      // by sparsity
+      equations.erase(eqiters[colrow]);
+      eqiters[colrow] = equations.emplace(rowsize[colrow], colrow).first;
+    }
+  }
+
+  model->colCost_[col] = 0;
+}
+
 void HPresolve::removeRow(int row) {
   assert(row < int(rowroot.size()));
   assert(row >= 0);
@@ -3682,10 +3710,11 @@ int HPresolve::strengthenInequalities() {
       continue;
     }
 
+    const double smallVal =
+        std::max(10 * options->mip_feasibility_tolerance,
+                 options->mip_feasibility_tolerance * double(maxviolation));
     while (true) {
-      if (maxviolation <=
-              continuouscontribution + options->mip_feasibility_tolerance ||
-          indices.empty())
+      if (maxviolation - continuouscontribution <= smallVal || indices.empty())
         break;
 
       std::sort(indices.begin(), indices.end(), [&](int i1, int i2) {
@@ -3700,13 +3729,13 @@ int HPresolve::strengthenInequalities() {
       for (int i = indices.size() - 1; i >= 0; --i) {
         double delta = upper[indices[i]] * reducedcost[indices[i]];
 
-        if (lambda <= delta + 10 * options->mip_feasibility_tolerance)
+        if (reducedcost[indices[i]] > smallVal && lambda - delta <= smallVal)
           cover.push_back(indices[i]);
         else
           lambda -= delta;
       }
 
-      if (cover.empty()) break;
+      if (cover.empty() || lambda <= smallVal) break;
 
       int alpos = *std::min_element(
           cover.begin(), cover.end(),
@@ -4826,7 +4855,7 @@ void HPresolve::debug(const HighsLp& lp, const HighsOptions& options) {
 }
 
 HPresolve::Result HPresolve::sparsify(HighsPostsolveStack& postSolveStack) {
-  std::vector<std::pair<int, double>> sparsifyRows;
+  std::vector<HighsPostsolveStack::Nonzero> sparsifyRows;
   HPRESOLVE_CHECKED_CALL(removeRowSingletons(postSolveStack));
   HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
   std::vector<int> tmpEquations;
@@ -5005,8 +5034,8 @@ HPresolve::Result HPresolve::sparsify(HighsPostsolveStack& postSolveStack) {
     postSolveStack.equalityRowAdditions(eqrow, getStoredRow(), sparsifyRows);
     double rhs = model->rowLower_[eqrow];
     for (const auto& sparsifyRow : sparsifyRows) {
-      int row = sparsifyRow.first;
-      double scale = sparsifyRow.second;
+      int row = sparsifyRow.index;
+      double scale = sparsifyRow.value;
 
       if (model->rowLower_[row] != -HIGHS_CONST_INF)
         model->rowLower_[row] += scale * rhs;

@@ -4,7 +4,7 @@
 #include "lp_data/HighsLpUtils.h"
 #include "util/HighsUtils.h"
 
-const bool dev_run = true;
+const bool dev_run = false;
 
 // No commas in test case name.
 TEST_CASE("LP-orientation", "[lp_orientation]") {
@@ -45,7 +45,7 @@ TEST_CASE("LP-orientation", "[lp_orientation]") {
   assert(num_col_nz == num_row_nz);
 
   double optimal_objective_function_value = -7.75;
-  Highs highs_options(options);
+  //  Highs highs_options(options);
   Highs highs;  //(options);
   const HighsLp& highs_lp = highs.getLp();
   const HighsInfo& info = highs.getHighsInfo();

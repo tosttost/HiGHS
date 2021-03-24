@@ -4,7 +4,7 @@
 #include "lp_data/HighsLpUtils.h"
 #include "util/HighsUtils.h"
 
-const bool dev_run = false;
+const bool dev_run = true;
 
 void HighsStatusReport(const HighsLogOptions& log_options, std::string message,
                        HighsStatus status) {
@@ -380,7 +380,8 @@ TEST_CASE("LP-modification", "[highs_data]") {
   HighsLp avgas_lp;
   HighsLp lp;
 
-  Highs avgas_highs(options);
+  Highs avgas_highs;
+  avgas_highs.passHighsOptions(options);
   if (!dev_run) {
     avgas_highs.setHighsOptionValue("output_flag", false);
   }
@@ -394,22 +395,18 @@ TEST_CASE("LP-modification", "[highs_data]") {
   REQUIRE(avgas_highs.addRows(num_row, &rowLower[0], &rowUpper[0], num_row_nz,
                               &ARstart[0], &ARindex[0], &ARvalue[0]));
 
-  return_status = avgas_highs.writeModel("");
-  HighsStatusReport(options.log_options, "avgas_highs.writeModel(\"\")",
-                    return_status);
-  REQUIRE(return_status == HighsStatus::OK);
+  //  return_status = avgas_highs.writeModel("");
 
-  Highs highs(options);
+  Highs highs;
+  highs.passHighsOptions(options);
   if (!dev_run) {
     highs.setHighsOptionValue("output_flag", false);
   }
   return_status = highs.setHighsOptionValue("highs_debug_level", 2);
-  HighsStatusReport(options.log_options, "\"highs_debug_level\", 2",
-                    return_status);
   REQUIRE(return_status == HighsStatus::OK);
 
+  lp.model_name_ = "Building avgas";
   return_status = highs.passModel(lp);
-  HighsStatusReport(options.log_options, "highs.passModel(lp)", return_status);
   REQUIRE(return_status == HighsStatus::OK);
 
   model_status = highs.getModelStatus();
@@ -430,19 +427,13 @@ TEST_CASE("LP-modification", "[highs_data]") {
 
   callRun(highs, options.log_options, "highs.run()", HighsStatus::OK);
 
-  return_status = highs.writeModel("");
-  HighsStatusReport(options.log_options, "highs.writeModel(\"\")",
-                    return_status);
-  REQUIRE(return_status == HighsStatus::OK);
+  //  return_status = highs.writeModel("");
 
   // Adding row vectors and matrix to model with columns returns OK
   REQUIRE(highs.addRows(num_row, &rowLower[0], &rowUpper[0], num_row_nz,
                         &ARstart[0], &ARindex[0], &ARvalue[0]));
 
-  return_status = highs.writeModel("");
-  HighsStatusReport(options.log_options, "highs.writeModel(\"\")",
-                    return_status);
-  REQUIRE(return_status == HighsStatus::OK);
+  //  return_status = highs.writeModel("");
 
   REQUIRE(
       areLpEqual(highs.getLp(), avgas_highs.getLp(), options.infinite_bound));

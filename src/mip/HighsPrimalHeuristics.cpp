@@ -47,6 +47,7 @@ bool HighsPrimalHeuristics::solveSubMip(
   submipoptions.output_flag = false;
   submipoptions.mip_max_nodes = maxnodes;
   submipoptions.mip_max_stall_nodes = stallnodes;
+  submipoptions.mip_pscost_minreliable = 0;
   submipoptions.time_limit -=
       mipsolver.timer_.read(mipsolver.timer_.solve_clock);
   submipoptions.dual_objective_value_upper_bound =
@@ -56,6 +57,7 @@ bool HighsPrimalHeuristics::solveSubMip(
 
   HighsMipSolver submipsolver(submipoptions, submip, true);
   submipsolver.rootbasis = &basis;
+  submipsolver.pscostinit = &mipsolver.mipdata_->pseudocost;
   submipsolver.run();
   if (submipsolver.mipdata_) {
     double adjustmentfactor =
@@ -241,8 +243,10 @@ retry:
         // reinforce direction of this solution away from root
         // solution if the change is at least 0.4
         // otherwise take the direction where the objective gets worse
-        // if objcetive is zero round to nearest integer
-        double rootchange = fracval - mipsolver.mipdata_->rootlpsol[col];
+        // if objective is zero round to nearest integer
+        double rootchange = mipsolver.mipdata_->rootlpsol.empty()
+                                ? 0.0
+                                : fracval - mipsolver.mipdata_->rootlpsol[col];
         if (rootchange >= 0.4)
           fixval = std::ceil(fracval);
         else if (rootchange <= -0.4)
@@ -610,6 +614,7 @@ bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<double>& point,
 
   if (numintcols != mipsolver.numCol()) {
     HighsLpRelaxation lprelax(mipsolver);
+    lprelax.loadModel();
     lprelax.getLpSolver().changeColsBounds(0, mipsolver.numCol() - 1,
                                            localdom.colLower_.data(),
                                            localdom.colUpper_.data());

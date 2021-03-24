@@ -14,6 +14,7 @@
 
 #include "lp_data/HConst.h"
 #include "mip/HighsDomain.h"
+#include "mip/HighsLpRelaxation.h"
 #include "mip/HighsMipSolverData.h"
 #include "util/HighsSplay.h"
 
@@ -53,7 +54,7 @@ void HighsNodeQueue::link_lower(int node) {
   auto get_left = [&](int n) -> int& { return nodes[n].leftlower; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightlower; };
   auto get_key = [&](int n) {
-    return std::make_tuple(nodes[n].lower_bound, nodes[n].lp_objective, n);
+    return std::make_tuple(nodes[n].lower_bound, nodes[n].estimate, n);
   };
 
   assert(node != -1);
@@ -65,7 +66,7 @@ void HighsNodeQueue::unlink_lower(int node) {
   auto get_left = [&](int n) -> int& { return nodes[n].leftlower; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightlower; };
   auto get_key = [&](int n) {
-    return std::make_tuple(nodes[n].lower_bound, nodes[n].lp_objective, n);
+    return std::make_tuple(nodes[n].lower_bound, nodes[n].estimate, n);
   };
 
   assert(lowerroot != -1);
@@ -200,7 +201,7 @@ double HighsNodeQueue::performBounding(double upper_limit) {
   auto get_left = [&](int n) -> int& { return nodes[n].leftlower; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightlower; };
   auto get_key = [&](int n) {
-    return std::make_tuple(nodes[n].lower_bound, nodes[n].lp_objective, n);
+    return std::make_tuple(nodes[n].lower_bound, nodes[n].estimate, n);
   };
 
   // split the lower bound tree along the bounding value
@@ -252,23 +253,20 @@ double HighsNodeQueue::performBounding(double upper_limit) {
 }
 
 void HighsNodeQueue::emplaceNode(std::vector<HighsDomainChange>&& domchgs,
-                                 double lower_bound, double lp_objective,
-                                 double estimate, int depth) {
+                                 double lower_bound, double estimate,
+                                 int depth) {
   int pos;
 
   if (freeslots.empty()) {
     pos = nodes.size();
-    nodes.emplace_back(std::move(domchgs), lower_bound, lp_objective, estimate,
-                       depth);
+    nodes.emplace_back(std::move(domchgs), lower_bound, estimate, depth);
   } else {
     pos = freeslots.top();
     freeslots.pop();
-    nodes[pos] = OpenNode(std::move(domchgs), lower_bound, lp_objective,
-                          estimate, depth);
+    nodes[pos] = OpenNode(std::move(domchgs), lower_bound, estimate, depth);
   }
 
   assert(nodes[pos].lower_bound == lower_bound);
-  assert(nodes[pos].lp_objective == lp_objective);
   assert(nodes[pos].estimate == estimate);
   assert(nodes[pos].depth == depth);
 
@@ -279,7 +277,7 @@ HighsNodeQueue::OpenNode HighsNodeQueue::popBestNode() {
   auto get_left = [&](int n) -> int& { return nodes[n].leftestimate; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightestimate; };
   auto get_key = [&](int n) {
-    return std::make_tuple(LOWERBOUND_WEIGHT * nodes[n].lp_objective +
+    return std::make_tuple(LOWERBOUND_WEIGHT * nodes[n].lower_bound +
                                ESTIMATE_WEIGHT * nodes[n].estimate,
                            -int(nodes[n].domchgstack.size()), n);
   };
@@ -298,7 +296,7 @@ HighsNodeQueue::OpenNode HighsNodeQueue::popBestBoundNode() {
   auto get_left = [&](int n) -> int& { return nodes[n].leftlower; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightlower; };
   auto get_key = [&](int n) {
-    return std::make_tuple(nodes[n].lower_bound, nodes[n].lp_objective, n);
+    return std::make_tuple(nodes[n].lower_bound, nodes[n].estimate, n);
   };
 
   lowerroot =
@@ -311,13 +309,69 @@ HighsNodeQueue::OpenNode HighsNodeQueue::popBestBoundNode() {
   return std::move(nodes[bestboundnode]);
 }
 
+HighsNodeQueue::OpenNode HighsNodeQueue::popRelatedNode(
+    const HighsLpRelaxation& lprelax) {
+  const HighsSolution& sol = lprelax.getSolution();
+  if ((int)sol.col_dual.size() != lprelax.numCols()) return popBestNode();
+  double bestRedCost = 0.0;
+  int bestCol = -1;
+  for (int i : lprelax.getMipSolver().mipdata_->integral_cols) {
+    if (sol.col_dual[i] > std::abs(bestRedCost)) {
+      if (numNodesDown(i, sol.col_value[i] - 0.5) > 0) {
+        bestCol = i;
+        bestRedCost = sol.col_dual[i];
+      }
+    } else if (sol.col_dual[i] < -std::abs(bestRedCost)) {
+      if (numNodesUp(i, sol.col_value[i] + 0.5) > 0) {
+        bestCol = i;
+        bestRedCost = sol.col_dual[i];
+      }
+    }
+  }
+
+  if (bestCol == -1) return popBestNode();
+
+  std::multimap<double, int>::iterator start;
+  std::multimap<double, int>::iterator end;
+  if (bestRedCost > 0) {
+    start = colUpperNodes[bestCol].begin();
+    end = colUpperNodes[bestCol].lower_bound(sol.col_value[bestCol] - 0.5);
+  } else {
+    start = colLowerNodes[bestCol].upper_bound(sol.col_value[bestCol] + 0.5);
+    end = colLowerNodes[bestCol].end();
+  }
+
+  int bestNode = -1;
+  double bestNodeCriterion = HIGHS_CONST_INF;
+  for (auto i = start; i != end; ++i) {
+    double nodeCriterion = ESTIMATE_WEIGHT * nodes[i->second].estimate +
+                           LOWERBOUND_WEIGHT * nodes[i->second].lower_bound;
+    if (nodeCriterion < bestNodeCriterion) {
+      bestNode = i->second;
+      bestNodeCriterion = nodeCriterion;
+    }
+  }
+
+  assert(bestNode != -1);
+
+  // printf(
+  //     "popping related node %d with lower bound %g and estimate %g which has
+  //     " "col %d with reduced cost %g flipped\n", bestNode,
+  //     nodes[bestNode].lower_bound, nodes[bestNode].estimate, bestCol,
+  //     bestRedCost);
+
+  unlink(bestNode);
+
+  return std::move(nodes[bestNode]);
+}
+
 double HighsNodeQueue::getBestLowerBound() {
   if (lowerroot == -1) return HIGHS_CONST_INF;
 
   auto get_left = [&](int n) -> int& { return nodes[n].leftlower; };
   auto get_right = [&](int n) -> int& { return nodes[n].rightlower; };
   auto get_key = [&](int n) {
-    return std::make_tuple(nodes[n].lower_bound, nodes[n].lp_objective, n);
+    return std::make_tuple(nodes[n].lower_bound, nodes[n].estimate, n);
   };
 
   lowerroot =
