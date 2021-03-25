@@ -20,7 +20,7 @@ private:
       
       int minidx = -1;
       double maxabslambda = 0.0;
-      for (unsigned int i = 0; i < activeconstraintidx.size(); i++) {
+      for (int i = 0; i < activeconstraintidx.size(); i++) {
          int indexinbasis = constraintindexinbasisfactor[activeconstraintidx[i]];
          if (indexinbasis == -1) {
             printf("error\n");
@@ -56,7 +56,7 @@ int price(const Vector& x, const Vector& gradient) {
       return minidx;
    }
 
-   void update_weights(const Vector& aq, const Vector& ep, unsigned int p, unsigned int q) {
+   void update_weights(const Vector& aq, const Vector& ep, int p, int q) {
       // does nothing
    }
 

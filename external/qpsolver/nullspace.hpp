@@ -7,22 +7,22 @@
 #include "runtime.hpp"
 
 struct NullspaceReductionResult {
-   unsigned int maxabsd;
-   unsigned int constrainttodrop;
+   int maxabsd;
+   int constrainttodrop;
    Vector& d;
 
    bool p_in_v;
 
-   NullspaceReductionResult(bool pinv, unsigned int mad, Vector& d_, unsigned int ctd) : p_in_v(pinv), d(d_), maxabsd(mad), constrainttodrop(ctd) {;
+   NullspaceReductionResult(bool pinv, int mad, Vector& d_, int ctd) : maxabsd(mad), constrainttodrop(ctd), d(d_), p_in_v(pinv) {;
    }
 };
 
 class Nullspace {
    bool uptodateZ = false;
-   Matrix bufferZ;
 
    const Basis& basis;
    Runtime& runtime;
+   Matrix bufferZ;
 
    Vector temp_unit;
    Vector buffer_d;
@@ -34,14 +34,14 @@ class Nullspace {
    Vector buffer_unit;
 
    void recompute() {
-      unsigned int nvar = basis.getnumactive() + basis.getnuminactive();
+      int nvar = basis.getnumactive() + basis.getnuminactive();
       Matrix Z(nvar, 0);
 
-      const std::vector<unsigned int>& nonactive = basis.getinactive(); 
+      const std::vector<int>& nonactive = basis.getinactive(); 
       const std::vector<int>& indexinfactor = basis.getindexinfactor();
       
-      for (unsigned int i = 0; i < nonactive.size(); i++) {
-         unsigned int unit =
+      for (int i = 0; i < nonactive.size(); i++) {
+         int unit =
             indexinfactor[nonactive[i]];
 
          Vector::unit(nvar, unit, temp_unit);
@@ -54,14 +54,14 @@ class Nullspace {
       uptodateZ = true;
    }
 
-   Vector& aq_Z_prod(Runtime& rt, unsigned int q, Vector& target) {
+   Vector& aq_Z_prod(Runtime& rt, int q, Vector& target) {
       target.reset();
       Matrix& Z = getNullspace();
 
       if (q >= rt.instance.num_con) {
          // Vector aq = rt.instance.A.t().extractcol(q);
          // return Z.vec_mat(aq);
-         unsigned int ep = q - rt.instance.num_con;
+         int ep = q - rt.instance.num_con;
          // 
          for (int col=0; col<Z.mat.num_col; col++) {
             double dot = 0.0;
@@ -89,16 +89,16 @@ class Nullspace {
    }
 
 public:
-   Nullspace(Runtime& rt, Basis& bas) : runtime(rt), basis(bas), bufferZ(Matrix(rt.instance.num_var,0)), temp_unit(rt.instance.num_var), buffer_d(rt.instance.num_var), buffer_col(rt.instance.num_var), buffer_aq(rt.instance.num_var), buffer_col_p(rt.instance.num_var), buffer_unit(rt.instance.num_var) {
+   Nullspace(Runtime& rt, Basis& bas) : basis(bas), runtime(rt), bufferZ(Matrix(rt.instance.num_var,0)), temp_unit(rt.instance.num_var), buffer_d(rt.instance.num_var), buffer_col(rt.instance.num_var), buffer_aq(rt.instance.num_var), buffer_col_p(rt.instance.num_var), buffer_unit(rt.instance.num_var) {
       if (bas.getnumactive() > 0) {
          recompute();
       }
       uptodateZ = true;
    }
 
-   Vector& expand_computenewcol(unsigned int conid, Vector& target) {
+   Vector& expand_computenewcol(int conid, Vector& target) {
       if (uptodateZ) {
-         unsigned int unit = basis.getindexinfactor()[conid];
+         int unit = basis.getindexinfactor()[conid];
          Vector::unit(bufferZ.mat.num_row, unit, target);
 
          basis.btran(target, target);
@@ -114,7 +114,7 @@ public:
       } 
    }
 
-   NullspaceReductionResult reduce(Runtime& rt, unsigned int newactivecon) { 
+   NullspaceReductionResult reduce(Runtime& rt, int newactivecon) { 
       Matrix& Z = getNullspace();
 
       int idx = indexof(basis.getinactive(), newactivecon);
@@ -130,8 +130,8 @@ public:
       // Vector d = Z.vec_mat(aq);
       aq_Z_prod(rt, newactivecon, buffer_d);
 
-      unsigned int maxabs = 0;
-      for (unsigned int i = 0; i < buffer_d.num_nz; i++) {
+      int maxabs = 0;
+      for (int i = 0; i < buffer_d.num_nz; i++) {
          if (fabs(buffer_d.value[buffer_d.index[i]]) > fabs(buffer_d.value[maxabs])) {
             maxabs = buffer_d.index[i];
          }
@@ -146,7 +146,7 @@ public:
 
       Z.mat.extractcol(maxabs, buffer_col_p);
       // assert(col_p == row_ep);
-      for (unsigned int i=0; i<Z.mat.num_col; i++) {
+      for (int i=0; i<Z.mat.num_col; i++) {
          if (i == maxabs) {
             continue;
          }
@@ -179,9 +179,9 @@ public:
          Vector res_ = basis.ftran(rhs);
          
          target.reset();
-         for (unsigned int i=0; i<Z.mat.num_col; i++) {
-            unsigned int nonactive = basis.getinactive()[i];
-            unsigned int idx = basis.getindexinfactor()[nonactive];
+         for (int i=0; i<Z.mat.num_col; i++) {
+            int nonactive = basis.getinactive()[i];
+            int idx = basis.getindexinfactor()[nonactive];
             target.index[i] = i;
             target.value[i] = res_.value[idx];
          }
@@ -202,9 +202,9 @@ public:
       Matrix& Z = getNullspace();
       bool test = false;
       if (test) {
-         for (unsigned int i=0; i<rhs.num_nz; i++) {
-            unsigned int nonactive = basis.getinactive()[i];
-            unsigned int idx = basis.getindexinfactor()[nonactive];
+         for (int i=0; i<rhs.num_nz; i++) {
+            int nonactive = basis.getinactive()[i];
+            int idx = basis.getindexinfactor()[nonactive];
             target.index[i] = idx;
             target.value[idx] = rhs.value[i];
          }

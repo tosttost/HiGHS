@@ -21,7 +21,7 @@ class ReducedCosts {
    }
 
 public:
-   ReducedCosts(Runtime& rt, Basis& bas, Gradient& grad) : gradient(grad), basis(bas), runtime(rt),  uptodate(false), reducedcosts(Vector(rt.instance.num_var)) {
+   ReducedCosts(Runtime& rt, Basis& bas, Gradient& grad) : runtime(rt), basis(bas), gradient(grad), reducedcosts(Vector(rt.instance.num_var)), uptodate(false) {
    
    }
 

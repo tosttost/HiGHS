@@ -5,7 +5,7 @@
 #include "eventhandler.hpp"
 #include "runtime.hpp"
 
-#include "redhes/newfactor.hpp"
+#include "redhes/factor.hpp"
 #include "nullspace.hpp"
 
 #include "instance.hpp"

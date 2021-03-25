@@ -15,8 +15,8 @@ CrashSolution computestartingpoint(Instance& instance) {
 
 
 	HighsLp lp;
-	lp.Aindex_ = *((std::vector<int>*)&instance.A.mat.index);
-	lp.Astart_ = *((std::vector<int>*)&instance.A.mat.start);
+	lp.Aindex_ = instance.A.mat.index;
+	lp.Astart_ = instance.A.mat.start;
 	lp.Avalue_ = instance.A.mat.value;
    lp.colCost_.assign(instance.num_var, 0.0);
 	// lp.colCost_ = instance.c.value;
@@ -41,22 +41,22 @@ CrashSolution computestartingpoint(Instance& instance) {
 
 	Vector x0(instance.num_var);
 	Vector ra(instance.num_con);
-	for (unsigned int i=0; i<x0.dim; i++) {
+	for (int i=0; i<x0.dim; i++) {
 		if (fabs(sol.col_value[i]) > 10E-5) {
 			x0.value[i] = sol.col_value[i];
 			x0.index[x0.num_nz++] = i;
 		}
 	}
 
-	for (unsigned int i=0; i<ra.dim; i++) {
+	for (int i=0; i<ra.dim; i++) {
 		if (fabs(sol.row_value[i]) > 10E-5) {
 			ra.value[i] = sol.row_value[i];
 			ra.index[ra.num_nz++] = i;
 		}
 	}
 
-	std::vector<unsigned int> initialactive;
-   std::vector<unsigned int> initialinactive;
+	std::vector<int> initialactive;
+   std::vector<int> initialinactive;
 	std::vector<BasisStatus> atlower;
 	for (int i=0; i<bas.row_status.size(); i++) {
 		if (bas.row_status[i] == HighsBasisStatus::LOWER) {

@@ -16,14 +16,14 @@ struct Settings {
    double d_zero_threshold = 10E-13;
    double lambda_zero_threshold = 10E-10;
    OutputLevel outputlevel = OutputLevel::LIGHT;
-   unsigned int reportingfequency = 100;
+   int reportingfequency = 100;
 
-   unsigned int reinvertfrequency = 100;
-   unsigned int gradientrecomputefrequency = 1;
-   unsigned int reducedgradientrecomputefrequency = std::numeric_limits<unsigned int>::infinity();
-   unsigned int reducedhessianrecomputefrequency = std::numeric_limits<unsigned int>::infinity();
+   int reinvertfrequency = 100;
+   int gradientrecomputefrequency = 1;
+   int reducedgradientrecomputefrequency = std::numeric_limits<int>::infinity();
+   int reducedhessianrecomputefrequency = std::numeric_limits<int>::infinity();
 
-   unsigned int iterationlimit = std::numeric_limits<unsigned int>::infinity();
+   int iterationlimit = std::numeric_limits<int>::infinity();
    double timelimit = std::numeric_limits<double>::infinity();
 
    bool rowscaling = true;

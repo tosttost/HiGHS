@@ -53,22 +53,22 @@ enum class BasisStatus {
 class Basis {
    Runtime& runtime;
    HFactor basisfactor;
-   unsigned int updatessinceinvert = 0;
+   int updatessinceinvert = 0;
 
    MatrixBase Atran;
 
    // indices of active constraints in basis
-	std::vector<unsigned int> activeconstraintidx;
+	std::vector<int> activeconstraintidx;
 
 	// ids of constraints that are in the basis but not active
 	// I need to extract those columns to get Z
-	std::vector<unsigned int> nonactiveconstraintsidx;
+	std::vector<int> nonactiveconstraintsidx;
 
 	// ids of constraints that are in the basis 
 	// std::vector<int> baseindex;
    int* baseindex;
 
-   std::map<unsigned int, BasisStatus> basisstatus;
+   std::map<int, BasisStatus> basisstatus;
 
    // index i: -1 if constraint not in basis, [0, num_var] if constraint in basis (active or not)
 	std::vector<int> constraintindexinbasisfactor;
@@ -81,30 +81,30 @@ class Basis {
    Vector buffer_row_ep;
 
 public:
-   Basis(Runtime& rt, std::vector<unsigned int> active, std::vector<BasisStatus> atlower, std::vector<unsigned int> inactive);
+   Basis(Runtime& rt, std::vector<int> active, std::vector<BasisStatus> atlower, std::vector<int> inactive);
 
-   unsigned int getnupdatessinceinvert() {
+   int getnupdatessinceinvert() {
       return updatessinceinvert;
    }
 
-   unsigned int getnumactive() const { return activeconstraintidx.size(); };
+   int getnumactive() const { return activeconstraintidx.size(); };
 
-   unsigned int getnuminactive() const { return nonactiveconstraintsidx.size(); };
+   int getnuminactive() const { return nonactiveconstraintsidx.size(); };
 
-   const std::vector<unsigned int>& getactive() const { return activeconstraintidx; };
+   const std::vector<int>& getactive() const { return activeconstraintidx; };
 
-   const std::vector<unsigned int>& getinactive() const { return nonactiveconstraintsidx; };
+   const std::vector<int>& getinactive() const { return nonactiveconstraintsidx; };
 
    const std::vector<int>& getindexinfactor() const { return constraintindexinbasisfactor; };
 
-   BasisStatus getstatus(unsigned int conid) { return basisstatus[conid]; };
+   BasisStatus getstatus(int conid) { return basisstatus[conid]; };
 
    void report();
 
    // move that constraint into V section basis (will correspond to Nullspace from now on)
-   void deactivate(unsigned int conid);
+   void deactivate(int conid);
 
-   void activate(Runtime& rt, unsigned int conid, BasisStatus atlower, unsigned int nonactivetoremove, Pricing* pricing);
+   void activate(Runtime& rt, int conid, BasisStatus atlower, int nonactivetoremove, Pricing* pricing);
 
    void updatebasis(Runtime& rt, int newactivecon, int droppedcon, Pricing* pricing);
 

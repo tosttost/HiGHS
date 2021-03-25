@@ -16,8 +16,8 @@ RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p, const Vecto
    result.alpha = alphastart;
 
    // check ratio towards variable bounds
-   for (unsigned int j=0; j<p.num_nz; j++) {
-      unsigned int i = p.index[j];
+   for (int j=0; j<p.num_nz; j++) {
+      int i = p.index[j];
       double alpha_i = step(x.value[i], p.value[i], instance.var_lo[i], instance.var_up[i], t);
       if (alpha_i < result.alpha) {
          result.alpha = alpha_i;
@@ -27,8 +27,8 @@ RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p, const Vecto
    }
 
    // check ratio towards constraint bounds
-   for (unsigned int j=0; j<rowmove.num_nz; j++) {
-      unsigned int i = rowmove.index[j];
+   for (int j=0; j<rowmove.num_nz; j++) {
+      int i = rowmove.index[j];
       double alpha_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i], instance.con_up[i], t);
       if (alpha_i < result.alpha) {
          result.alpha = alpha_i;
@@ -59,7 +59,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p, const Vector
       }
    }
 
-   for (unsigned int i=0; i<instance.num_con; i++) {
+   for (int i=0; i<instance.num_con; i++) {
       double step_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i], instance.con_up[i], t);
       if (fabs(rowmove.value[i]) >= fabs(max_pivot) && step_i <= res1.alpha) {
          max_pivot = rowmove.value[i];
@@ -69,7 +69,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p, const Vector
       }
    }
 
-   for (unsigned int i=0; i<instance.num_var; i++) {
+   for (int i=0; i<instance.num_var; i++) {
       double step_i = step(x.value[i], p.value[i], instance.var_lo[i], instance.var_up[i], t);
       if (fabs(p.value[i]) >= fabs(max_pivot) && step_i <= res1.alpha) {
          max_pivot = p.value[i];

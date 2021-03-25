@@ -3,12 +3,12 @@
 #include <cassert>
 #include <memory>
 
-Basis::Basis(Runtime& rt, std::vector<unsigned int> active, std::vector<BasisStatus> lower, std::vector<unsigned int> inactive) : runtime(rt), buffer_column_aq(rt.instance.num_var), buffer_row_ep(rt.instance.num_var) {
-   for (unsigned int i=0; i<active.size(); i++) {
+Basis::Basis(Runtime& rt, std::vector<int> active, std::vector<BasisStatus> lower, std::vector<int> inactive) : runtime(rt), buffer_column_aq(rt.instance.num_var), buffer_row_ep(rt.instance.num_var) {
+   for (int i=0; i<active.size(); i++) {
       activeconstraintidx.push_back(active[i]);
       basisstatus[activeconstraintidx[i]] = lower[i];
    }
-   for (unsigned int i : inactive) {
+   for (int i : inactive) {
       nonactiveconstraintsidx.push_back(i);
    }
 
@@ -28,11 +28,11 @@ void Basis::build() {
    constraintindexinbasisfactor.assign(Atran.num_row + Atran.num_col, -1);
    assert(nonactiveconstraintsidx.size() + activeconstraintidx.size() == Atran.num_row);
    
-   unsigned int counter = 0;
-   for (unsigned int i : nonactiveconstraintsidx) {
+   int counter = 0;
+   for (int i : nonactiveconstraintsidx) {
       baseindex[counter++] = i;
    }
-   for (unsigned int i : activeconstraintidx) {
+   for (int i : activeconstraintidx) {
       baseindex[counter++] = i;
    }
 
@@ -52,7 +52,7 @@ void Basis::rebuild() {
    
    constraintindexinbasisfactor.assign(Atran.num_row + Atran.num_col, -1);
    assert(nonactiveconstraintsidx.size() + activeconstraintidx.size() == Atran.num_row);
-   unsigned int idx = 0;
+   int idx = 0;
 
    basisfactor.build();
 
@@ -63,11 +63,11 @@ void Basis::rebuild() {
 
 void Basis::report() {
    printf("basis: ");
-   for (unsigned int a_ : activeconstraintidx) {
+   for (int a_ : activeconstraintidx) {
       printf("%u ", a_);
    }
    printf(" - ");
-   for (unsigned int n_ : nonactiveconstraintsidx) {
+   for (int n_ : nonactiveconstraintsidx) {
       printf("%u ", n_);
    }
    printf("\n");
@@ -75,7 +75,7 @@ void Basis::report() {
 
    // move that constraint into V section basis (will correspond to Nullspace from
    // now on)
-void Basis::deactivate(unsigned int conid) {
+void Basis::deactivate(int conid) {
    // printf("deact %u\n", conid);
    assert(contains(activeconstraintidx, conid));
    basisstatus.erase(conid);
@@ -83,10 +83,10 @@ void Basis::deactivate(unsigned int conid) {
    nonactiveconstraintsidx.push_back(conid);
 }
 
-void Basis::activate(Runtime& rt, unsigned int conid,
-                        BasisStatus atlower, unsigned int nonactivetoremove, Pricing* pricing) {
+void Basis::activate(Runtime& rt, int conid,
+                        BasisStatus atlower, int nonactivetoremove, Pricing* pricing) {
    // printf("activ %u\n", conid);
-   if (!contains(activeconstraintidx, (unsigned int)conid)) {
+   if (!contains(activeconstraintidx, (int)conid)) {
       basisstatus[conid] = atlower;
       activeconstraintidx.push_back(conid);
    } else {
@@ -113,7 +113,7 @@ void Basis::updatebasis(Runtime& rt, int newactivecon, int droppedcon, Pricing* 
       return;
    }
 
-   unsigned int droppedcon_rowindex = constraintindexinbasisfactor[droppedcon];
+   int droppedcon_rowindex = constraintindexinbasisfactor[droppedcon];
    Atran.extractcol(newactivecon, buffer_column_aq);
    // column.report("col_pre_ftran");
 
@@ -173,8 +173,8 @@ Vector Basis::recomputex(const Instance& inst) {
    assert(activeconstraintidx.size() == inst.num_var);
    Vector rhs(inst.num_var);
 
-   for (unsigned int i=0; i<inst.num_var; i++) {
-      unsigned int con = activeconstraintidx[i];
+   for (int i=0; i<inst.num_var; i++) {
+      int con = activeconstraintidx[i];
       if (constraintindexinbasisfactor[con] == -1) {
          printf("error\n");
       }
@@ -207,11 +207,11 @@ Vector Basis::recomputex(const Instance& inst) {
    //    FILE* file = fopen(filename.c_str(), "w");
 
    //    fprintf(file, "%lu %lu\n", activeconstraintidx.size(), nonactiveconstraintsidx.size());
-   //    for (unsigned int i=0; i<activeconstraintidx.size(); i++) {
-   //       fprintf(file, "%u %u\n", activeconstraintidx[i], (unsigned int)rowstatus[i]);
+   //    for (int i=0; i<activeconstraintidx.size(); i++) {
+   //       fprintf(file, "%u %u\n", activeconstraintidx[i], (int)rowstatus[i]);
    //    }
-   //    for (unsigned int i=0; i<nonactiveconstraintsidx.size(); i++) {
-   //       fprintf(file, "%u %u\n", nonactiveconstraintsidx[i], (unsigned int)rowstatus[i]);
+   //    for (int i=0; i<nonactiveconstraintsidx.size(); i++) {
+   //       fprintf(file, "%u %u\n", nonactiveconstraintsidx[i], (int)rowstatus[i]);
    //    }
    //    // TODO
       

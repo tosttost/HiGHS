@@ -9,7 +9,7 @@ class Gradient {
 
    Vector gradient;
    bool uptodate;
-   unsigned int numupdates = 0;
+   int numupdates = 0;
 
    Vector buffer_temp;
 
@@ -21,7 +21,7 @@ class Gradient {
    }
 
 public:
-   Gradient(Runtime& rt) : runtime(rt),  uptodate(false), gradient(Vector(rt.instance.num_var)), buffer_temp(rt.instance.num_var) {
+   Gradient(Runtime& rt) : runtime(rt),  gradient(Vector(rt.instance.num_var)), uptodate(false), buffer_temp(rt.instance.num_var) {
    
    }
 

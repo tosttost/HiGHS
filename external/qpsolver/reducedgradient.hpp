@@ -7,7 +7,6 @@
 #include "nullspace.hpp"
 
 class ReducedGradient {
-
    Vector rg;
    bool uptodate = false;
    Gradient& gradient;
@@ -20,7 +19,7 @@ class ReducedGradient {
    }
 
 public:
-   ReducedGradient(Runtime& rt, Nullspace& ns, Gradient& grad) : rg(rt.instance.num_var), nullspace(ns), gradient(grad) {
+   ReducedGradient(Runtime& rt, Nullspace& ns, Gradient& grad) : rg(rt.instance.num_var), gradient(grad) , nullspace(ns){
       
    }
 
@@ -36,18 +35,18 @@ public:
          return;
       }
       // Vector r(rg.dim-1); 
-      // for (unsigned int col=0; col<nrr.maxabsd; col++) {
+      // for (int col=0; col<nrr.maxabsd; col++) {
       //    r.index[col] = col;
       //    r.value[col] = -nrr.d[col] / nrr.d[nrr.maxabsd];
       // }
-      // for (unsigned int col=nrr.maxabsd+1; col<rg.dim; col++) {
+      // for (int col=nrr.maxabsd+1; col<rg.dim; col++) {
       //    r.index[col-1] = col-1;
       //    r.value[col-1] = -nrr.d[col] / nrr.d[nrr.maxabsd];
       // }
       // r.num_nz = rg.dim-1;
 
-      for (unsigned int i=0; i<nrr.d.num_nz; i++) {
-         unsigned int idx = nrr.d.index[i];
+      for (int i=0; i<nrr.d.num_nz; i++) {
+         int idx = nrr.d.index[i];
          if (idx== nrr.maxabsd) {
             continue;
          }
@@ -77,7 +76,7 @@ public:
          return;
       }
       if (minor) {
-         for (unsigned int i=0; i<rg.num_nz; i++) {
+         for (int i=0; i<rg.num_nz; i++) {
             rg.value[rg.index[i]] *= (1.0-alpha);
          }
          uptodate = true;

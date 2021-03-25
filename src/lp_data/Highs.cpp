@@ -1945,8 +1945,8 @@ HighsStatus Highs::callSolveQp() {
 
   instance.A.mat.num_col = lp_.numCol_;
   instance.A.mat.num_row = lp_.numRow_;
-  instance.A.mat.start = *((std::vector<unsigned int>*)&lp_.Astart_);
-  instance.A.mat.index = *((std::vector<unsigned int>*)&lp_.Aindex_);
+  instance.A.mat.start = lp_.Astart_;
+  instance.A.mat.index = lp_.Aindex_;
   instance.A.mat.value = lp_.Avalue_;
   instance.c.value = lp_.colCost_;
   instance.con_lo = lp_.rowLower_;
@@ -1954,7 +1954,7 @@ HighsStatus Highs::callSolveQp() {
   instance.var_lo = lp_.colLower_;
   instance.var_up = lp_.colUpper_;
   instance.Q.mat.num_col = lp_.numCol_;
-  instance.Q.mat.num_row = lp_.numRow_;
+  instance.Q.mat.num_row = lp_.numCol_;
   instance.Q.mat.start = lp_.Qstart_;
   instance.Q.mat.index = lp_.Qindex_;
   instance.Q.mat.value = lp_.Qvalue_;
@@ -1967,7 +1967,7 @@ HighsStatus Highs::callSolveQp() {
 
   Runtime runtime(instance);
 
-  runtime.settings.reportingfequency = 1;
+  runtime.settings.reportingfequency = 1000;
   runtime.endofiterationevent.subscribe(reportIteration);
   runtime.settings.iterationlimit = 999999;
   runtime.settings.ratiotest = new RatiotestTwopass(instance, 0.000000001, 0.000001);

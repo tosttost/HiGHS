@@ -6,31 +6,37 @@
 
 #include "vector.hpp"
 
-#ifdef OPENMP
 #include "omp.h"
-#endif
 
 struct MatrixBase {
-   unsigned int num_row;
-   unsigned int num_col;
-   std::vector<unsigned int> start;
-   std::vector<unsigned int> index;
+   int num_row;
+   int num_col;
+   std::vector<int> start;
+   std::vector<int> index;
    std::vector<double> value;
+
+   void reset() {
+      num_row = 0;
+      num_col = 0;
+      start.clear();
+      index.clear();
+      value.clear();
+   }
 
    Vector& mat_vec(const Vector& other, Vector& target) const {
       target.reset();
 
       // omp_lock_t row_locks[num_row];
-      // for (unsigned int i=0; i<num_row; i++) {
+      // for (int i=0; i<num_row; i++) {
       //    omp_init_lock(&(row_locks[i]));
       // }
 
       // #pragma omp parallel for shared(target, other, row_locks) default(none)
-      for (unsigned int i=0; i<other.num_nz; i++) {
-         unsigned int col = other.index[i];
+      for (int i=0; i<other.num_nz; i++) {
+         int col = other.index[i];
          // #pragma omp parallel for shared(target, other, col) default(none)
-         for (unsigned int idx = start[col]; idx < start[col+1]; idx++) {
-            unsigned int row = index[idx];
+         for (int idx = start[col]; idx < start[col+1]; idx++) {
+            int row = index[idx];
             // omp_set_lock(&row_locks[row]);
             target.value[row] += value[idx] * other.value[col];
             // omp_unset_lock(&row_locks[row]);
@@ -46,12 +52,12 @@ struct MatrixBase {
       return result;
    }
 
-   Vector vec_mat(unsigned int* idx, double* val, unsigned int nnz) {
+   Vector vec_mat(int* idx, double* val, int nnz) {
       Vector result(num_col);
       for (int i=0; i<num_col; i++) {
          double dot = 0.0;
-         // unsigned int idx_other = 0;
-         // unsigned int idx_this = start[i];
+         // int idx_other = 0;
+         // int idx_this = start[i];
          // while (idx_this < start[i+1] && idx_other < nnz) {
          //    if (idx[idx_other] == index[idx_this]) {
          //       dot += val[idx_other] * value[idx_this];
@@ -65,7 +71,7 @@ struct MatrixBase {
          for (int j=start[i]; j<start[i+1]; j++) {
             // does the vector have an entry for index index[j]?
             double other_value = 0.0;
-            for (unsigned int k=0; k<nnz; k++) {
+            for (int k=0; k<nnz; k++) {
                if (idx[k] == index[j]) {
                   other_value = val[k];
                   break;
@@ -120,7 +126,6 @@ struct MatrixBase {
       Vector buffer_col_res(num_col);
       for (int r=0; r<other.num_col; r++) {
          other.extractcol(r, buffer_col);
-
          vec_mat(buffer_col, buffer_col_res);
          for (int i=0; i<buffer_col_res.num_nz; i++) {
             res.index.push_back(buffer_col_res.index[i]);
@@ -132,7 +137,7 @@ struct MatrixBase {
       return res;
    }
 
-   Vector& extractcol(unsigned int col, Vector& target) const {
+   Vector& extractcol(int col, Vector& target) const {
       assert(target.dim == num_row);
       target.reset();
       
@@ -142,7 +147,7 @@ struct MatrixBase {
          target.num_nz = 1;
       } else {
          
-         for (unsigned int i=0; i< start[col+1] - start[col]; i++) {
+         for (int i=0; i< start[col+1] - start[col]; i++) {
             target.index[i] = index[start[col] + i];
             target.value[target.index[i]] = value[start[col]+i];
          }
@@ -152,7 +157,7 @@ struct MatrixBase {
       return target;
    }
 
-   Vector extractcol(unsigned int col) const {
+   Vector extractcol(int col) const {
       Vector res(num_row);
 
       return extractcol(col, res);
@@ -166,12 +171,12 @@ private:
 
    void transpose() {
       if (!has_transpose) {
-         std::vector<std::vector<unsigned int>> row_indices(mat.num_row);
+         std::vector<std::vector<int>> row_indices(mat.num_row);
          std::vector<std::vector<double>> row_values(mat.num_row);
 
-         for (unsigned int col=0; col<mat.num_col; col++) {
-            for (unsigned int entry=mat.start[col]; entry<mat.start[col+1]; entry++) {
-               unsigned int row = mat.index[entry];
+         for (int col=0; col<mat.num_col; col++) {
+            for (int entry=mat.start[col]; entry<mat.start[col+1]; entry++) {
+               int row = mat.index[entry];
                double val = mat.value[entry];
                row_indices[row].push_back(col);
                row_values[row].push_back(val);
@@ -185,7 +190,7 @@ private:
          tran.value.reserve(mat.value.size());
 
          tran.start.push_back(0);
-         for (unsigned int row=0; row<mat.num_row; row++) {
+         for (int row=0; row<mat.num_row; row++) {
             tran.index.insert(tran.index.end(), row_indices[row].begin(), row_indices[row].end());
             tran.value.insert(tran.value.end(), row_values[row].begin(), row_values[row].end());
 
@@ -200,7 +205,7 @@ private:
 public:
    MatrixBase mat;
 
-   Matrix(unsigned int nr, unsigned int nc) {
+   Matrix(int nr, int nc) {
       mat.num_row = nr;
       mat.num_col = nc;
    };
@@ -216,7 +221,7 @@ public:
       if (mat.num_col == 0 && mat.start.size() == 0) {
          mat.start.push_back(0);
       }
-      for (unsigned int i=0; i<vec.num_nz; i++) {
+      for (int i=0; i<vec.num_nz; i++) {
          mat.index.push_back(vec.index[i]);
          mat.value.push_back(vec.value[vec.index[i]]);
       }
@@ -225,11 +230,11 @@ public:
       has_transpose = false;
    }
 
-   void append(unsigned int* idx, double* val, unsigned int nnz) {
+   void append(int* idx, double* val, int nnz) {
       if (mat.num_col == 0 && mat.start.size() == 0) {
          mat.start.push_back(0);
       }
-      for (unsigned int i=0; i<nnz; i++) {
+      for (int i=0; i<nnz; i++) {
          mat.index.push_back(idx[i]);
          mat.value.push_back(val[i]);
       }
@@ -238,11 +243,11 @@ public:
       has_transpose = false;
    }
 
-   void append(unsigned int num_nz, unsigned int* index, double* value) {
+   void append(int num_nz, int* index, double* value) {
       if (mat.num_col == 0 && mat.start.size() == 0) {
          mat.start.push_back(0);
       }
-      for (unsigned int i=0; i<num_nz; i++) {
+      for (int i=0; i<num_nz; i++) {
          mat.index.push_back(index[i]);
          mat.value.push_back(value[i]);
       }
@@ -251,7 +256,7 @@ public:
       has_transpose = false;
    }
 
-   void dropcol(unsigned int col) {
+   void dropcol(int col) {
       assert(col < mat.num_col);
       has_transpose = false;
 
@@ -279,7 +284,7 @@ public:
 
       Vector buffer(other.mat.num_row);
       Vector buffer2(mat.num_col);
-      for (unsigned int col=0; col<other.mat.num_col; col++) {
+      for (int col=0; col<other.mat.num_col; col++) {
          res.append(vec_mat(other.mat.extractcol(col, buffer), buffer2));
       }
 
@@ -291,7 +296,7 @@ public:
 
       Vector buffer(other.mat.num_row);
       Vector buffer2(mat.num_row);
-      for (unsigned int col=0; col<other.mat.num_col; col++) {
+      for (int col=0; col<other.mat.num_col; col++) {
          res.append(mat_vec(other.mat.extractcol(col, buffer), buffer2));
       }
       return res;
@@ -325,7 +330,7 @@ public:
       return mat.vec_mat(other, target);
    }
 
-   Vector vec_mat(unsigned int* index, double* value, unsigned int num_nz) {
+   Vector vec_mat(int* index, double* value, int num_nz) {
       return mat.vec_mat(index, value, num_nz);
    }
 
@@ -335,13 +340,13 @@ public:
       }
       printf("[%u x %u]\n", mat.num_row, mat.num_col);
       printf("start: ");
-      for (unsigned int i : mat.start) {
+      for (int i : mat.start) {
          printf("%u ", i);
       }
       printf("\n");
 
       printf("index: ");
-      for (unsigned int i : mat.index) {
+      for (int i : mat.index) {
          printf("%u ", i);
       }
       printf("\n");

@@ -22,7 +22,7 @@ private:
       
       int minidx = -1;
       double maxabslambda = 0.0;
-      for (unsigned int i = 0; i < activeconstraintidx.size(); i++) {
+      for (int i = 0; i < activeconstraintidx.size(); i++) {
          int indexinbasis = constraintindexinbasisfactor[activeconstraintidx[i]];
          if (indexinbasis == -1) {
             printf("error\n");
@@ -52,7 +52,7 @@ private:
    
 
 public:  
-   DevexPricing(Runtime& rt, Basis& bas, ReducedCosts& rc) : redcosts(rc), runtime(rt), basis(bas), weights(std::vector<double>(rt.instance.num_var, 1.0)) {};
+   DevexPricing(Runtime& rt, Basis& bas, ReducedCosts& rc) : runtime(rt), basis(bas), redcosts(rc), weights(std::vector<double>(rt.instance.num_var, 1.0)) {};
    
    // B lambda = g
    // lambda = inv(B)g
@@ -67,10 +67,10 @@ public:
       return minidx;
    }
 
-   void update_weights(const Vector& aq, const Vector& ep, unsigned int p, unsigned int q) {
-      unsigned int rowindex_p = basis.getindexinfactor()[p];
+   void update_weights(const Vector& aq, const Vector& ep, int p, int q) {
+      int rowindex_p = basis.getindexinfactor()[p];
       double weight_p = weights[rowindex_p];
-      for (unsigned int i=0; i<runtime.instance.num_var; i++) {
+      for (int i=0; i<runtime.instance.num_var; i++) {
          if (i == rowindex_p) {
             weights[i] = weight_p / (aq.value[rowindex_p] * aq.value[rowindex_p]);
          } else {

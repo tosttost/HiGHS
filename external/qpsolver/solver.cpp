@@ -9,7 +9,7 @@
 #include "basis.hpp"
 #include "feasibility/feasibility_highs.hpp"
 #include "gradient.hpp"
-#include "redhes/newfactor.hpp"
+#include "redhes/factor.hpp"
 #include "pricing/dantzigpricing.hpp"
 #include "pricing/devexpricing.hpp"
 #include "pricing/devexharrispricing.hpp"
@@ -67,7 +67,7 @@ void computerowmove(Runtime& runtime, Basis& basis, Vector& p, Vector& rowmove) 
 	MatrixBase& Atran = runtime.instance.A.t();
 	Atran.vec_mat(p, rowmove);
 	return;
-	for (unsigned int i=0; i<runtime.instance.num_con; i++) {
+	for (int i=0; i<runtime.instance.num_con; i++) {
 		if (basis.getstatus(i) == BasisStatus::Default) {
 			// check with assertions, is it really the same?
 			double val = p.dot(&Atran.index[Atran.start[i]], &Atran.value[Atran.start[i]], Atran.start[i+1] - Atran.start[i]);
@@ -131,6 +131,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 	Vector buffer_yp(runtime.instance.num_var);
 	Vector buffer_gyp(runtime.instance.num_var);
 	Vector buffer_l(runtime.instance.num_var);
+	Vector buffer_Qp(runtime.instance.num_var);
 
 	bool atfsep = true;
 	while (true && runtime.statistics.num_iterations < runtime.settings.iterationlimit
@@ -158,10 +159,9 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 			tidyup(p, rowmove, basis, runtime);
 			maxsteplength = std::numeric_limits<double>::infinity();
 			if (runtime.instance.Q.mat.value.size() > 0) {
-				Vector temp(runtime.instance.num_var);
-				double denominator = p * runtime.instance.Q.mat_vec(p, temp);
+				double denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
 				if (fabs(denominator) > 10E-5) {
-					double numerator = (- p * gradient.getGradient());
+					double numerator = (- (p * gradient.getGradient()));
 					if (numerator < 0.0) {
 						// printf("numerator < 0: %lf\n", numerator);
 						maxsteplength = 0.0;
