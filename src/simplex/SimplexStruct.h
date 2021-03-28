@@ -26,6 +26,7 @@ struct SimplexBasis {
   std::vector<int> basicIndex_;
   std::vector<int> nonbasicFlag_;
   std::vector<int> nonbasicMove_;
+  uint64_t hash;
 };
 
 struct HighsSimplexLpStatus {

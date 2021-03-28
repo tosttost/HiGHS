@@ -27,6 +27,7 @@
 #include "simplex/HSimplexReport.h"
 #include "simplex/HighsSimplexAnalysis.h"
 #include "simplex/SimplexTimer.h"
+#include "util/HighsHash.h"
 #include "util/HighsRandom.h"
 
 #ifdef OPENMP
@@ -187,11 +188,15 @@ HighsStatus HEkk::setBasis() {
   const int num_col = simplex_lp_.numCol_;
   const int num_row = simplex_lp_.numRow_;
   const int num_tot = num_col + num_row;
+  simplex_basis_.hash = 0;
   simplex_basis_.nonbasicFlag_.resize(num_tot);
   simplex_basis_.nonbasicMove_.resize(num_tot);
   simplex_basis_.basicIndex_.resize(num_row);
   for (int iCol = 0; iCol < num_col; iCol++) {
     simplex_basis_.nonbasicFlag_[iCol] = NONBASIC_FLAG_TRUE;
+    HighsHashHelpers::sparse_combine(
+        simplex_basis_.hash, iCol,
+        2147483648 * simplex_basis_.nonbasicFlag_[iCol]);
     double lower = simplex_lp_.colLower_[iCol];
     double upper = simplex_lp_.colUpper_[iCol];
     int move = illegal_move_value;
@@ -227,6 +232,9 @@ HighsStatus HEkk::setBasis() {
   for (int iRow = 0; iRow < num_row; iRow++) {
     int iVar = num_col + iRow;
     simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_FALSE;
+    HighsHashHelpers::sparse_combine(
+        simplex_basis_.hash, iVar,
+        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
     simplex_basis_.basicIndex_[iRow] = iVar;
   }
   simplex_info_.num_basic_logicals = num_row;
@@ -251,6 +259,7 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
   simplex_basis_.nonbasicFlag_.resize(num_tot);
   simplex_basis_.nonbasicMove_.resize(num_tot);
   simplex_basis_.basicIndex_.resize(num_row);
+  simplex_basis_.hash = 0;
   int num_basic_variables = 0;
   for (int iCol = 0; iCol < num_col; iCol++) {
     int iVar = iCol;
@@ -275,6 +284,10 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
         simplex_basis_.nonbasicMove_[iVar] = NONBASIC_MOVE_ZE;
       }
     }
+
+    HighsHashHelpers::sparse_combine(
+        simplex_basis_.hash, iVar,
+        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
   }
   for (int iRow = 0; iRow < num_row; iRow++) {
     int iVar = num_col + iRow;
@@ -299,6 +312,10 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
         simplex_basis_.nonbasicMove_[iVar] = NONBASIC_MOVE_ZE;
       }
     }
+
+    HighsHashHelpers::sparse_combine(
+        simplex_basis_.hash, iVar,
+        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
   }
   simplex_lp_status_.has_basis = true;
   return HighsStatus::OK;
@@ -317,6 +334,7 @@ HighsStatus HEkk::setBasis(const SimplexBasis& basis) {
   simplex_basis_.nonbasicFlag_ = basis.nonbasicFlag_;
   simplex_basis_.nonbasicMove_ = basis.nonbasicMove_;
   simplex_basis_.basicIndex_ = basis.basicIndex_;
+  simplex_basis_.hash = basis.hash;
   simplex_lp_status_.has_basis = true;
   return HighsStatus::OK;
 }
@@ -1813,6 +1831,12 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
   int variable_out = simplex_basis_.basicIndex_[row_out];
 
   // Incoming variable
+  HighsHashHelpers::sparse_inverse_combine(
+      simplex_basis_.hash, variable_in,
+      2147483648 * simplex_basis_.nonbasicFlag_[variable_in]);
+  HighsHashHelpers::sparse_inverse_combine(
+      simplex_basis_.hash, variable_out,
+      2147483648 * simplex_basis_.nonbasicFlag_[variable_out]);
   simplex_basis_.basicIndex_[row_out] = variable_in;
   simplex_basis_.nonbasicFlag_[variable_in] = 0;
   simplex_basis_.nonbasicMove_[variable_in] = 0;
@@ -1821,6 +1845,12 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
 
   // Outgoing variable
   simplex_basis_.nonbasicFlag_[variable_out] = 1;
+  HighsHashHelpers::sparse_combine(
+      simplex_basis_.hash, variable_in,
+      2147483648 * simplex_basis_.nonbasicFlag_[variable_in]);
+  HighsHashHelpers::sparse_combine(
+      simplex_basis_.hash, variable_out,
+      2147483648 * simplex_basis_.nonbasicFlag_[variable_out]);
   if (simplex_info_.workLower_[variable_out] ==
       simplex_info_.workUpper_[variable_out]) {
     simplex_info_.workValue_[variable_out] =
