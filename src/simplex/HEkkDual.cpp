@@ -1072,6 +1072,10 @@ void HEkkDual::iterate() {
   chooseColumn(&row_ep);
   analysis->simplexTimerStop(IterateChuzcClock);
 
+  if (ekk_instance_.checkForCycling(variable_in, row_out)) {
+    printf("cycling detected\n");
+  }
+
   analysis->simplexTimerStart(IterateFtranClock);
   updateFtranBFRT();
 

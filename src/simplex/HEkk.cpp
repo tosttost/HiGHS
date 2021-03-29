@@ -194,9 +194,6 @@ HighsStatus HEkk::setBasis() {
   simplex_basis_.basicIndex_.resize(num_row);
   for (int iCol = 0; iCol < num_col; iCol++) {
     simplex_basis_.nonbasicFlag_[iCol] = NONBASIC_FLAG_TRUE;
-    HighsHashHelpers::sparse_combine(
-        simplex_basis_.hash, iCol,
-        2147483648 * simplex_basis_.nonbasicFlag_[iCol]);
     double lower = simplex_lp_.colLower_[iCol];
     double upper = simplex_lp_.colUpper_[iCol];
     int move = illegal_move_value;
@@ -232,13 +229,13 @@ HighsStatus HEkk::setBasis() {
   for (int iRow = 0; iRow < num_row; iRow++) {
     int iVar = num_col + iRow;
     simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_FALSE;
-    HighsHashHelpers::sparse_combine(
-        simplex_basis_.hash, iVar,
-        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
+    HighsHashHelpers::sparse_combine(simplex_basis_.hash, iVar, 2147483648);
     simplex_basis_.basicIndex_[iRow] = iVar;
   }
   simplex_info_.num_basic_logicals = num_row;
   simplex_lp_status_.has_basis = true;
+  visited_basis_.clear();
+  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -269,6 +266,7 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
       simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_FALSE;
       simplex_basis_.nonbasicMove_[iVar] = 0;
       simplex_basis_.basicIndex_[num_basic_variables++] = iVar;
+      HighsHashHelpers::sparse_combine(simplex_basis_.hash, iVar, 2147483648);
     } else {
       simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_TRUE;
       if (basis.col_status[iCol] == HighsBasisStatus::LOWER) {
@@ -284,10 +282,6 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
         simplex_basis_.nonbasicMove_[iVar] = NONBASIC_MOVE_ZE;
       }
     }
-
-    HighsHashHelpers::sparse_combine(
-        simplex_basis_.hash, iVar,
-        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
   }
   for (int iRow = 0; iRow < num_row; iRow++) {
     int iVar = num_col + iRow;
@@ -297,6 +291,7 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
       simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_FALSE;
       simplex_basis_.nonbasicMove_[iVar] = 0;
       simplex_basis_.basicIndex_[num_basic_variables++] = iVar;
+      HighsHashHelpers::sparse_combine(simplex_basis_.hash, iVar, 2147483648);
     } else {
       simplex_basis_.nonbasicFlag_[iVar] = NONBASIC_FLAG_TRUE;
       if (basis.row_status[iRow] == HighsBasisStatus::LOWER) {
@@ -312,12 +307,10 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
         simplex_basis_.nonbasicMove_[iVar] = NONBASIC_MOVE_ZE;
       }
     }
-
-    HighsHashHelpers::sparse_combine(
-        simplex_basis_.hash, iVar,
-        2147483648 * simplex_basis_.nonbasicFlag_[iVar]);
   }
   simplex_lp_status_.has_basis = true;
+  visited_basis_.clear();
+  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -336,6 +329,8 @@ HighsStatus HEkk::setBasis(const SimplexBasis& basis) {
   simplex_basis_.basicIndex_ = basis.basicIndex_;
   simplex_basis_.hash = basis.hash;
   simplex_lp_status_.has_basis = true;
+  visited_basis_.clear();
+  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -1834,13 +1829,14 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
   analysis_.simplexTimerStart(UpdatePivotsClock);
   int variable_out = simplex_basis_.basicIndex_[row_out];
 
+  // update hash value of basis
+  HighsHashHelpers::sparse_inverse_combine(simplex_basis_.hash, variable_out,
+                                           2147483648);
+  HighsHashHelpers::sparse_combine(simplex_basis_.hash, variable_in,
+                                   2147483648);
+  visited_basis_.insert(simplex_basis_.hash);
+
   // Incoming variable
-  HighsHashHelpers::sparse_inverse_combine(
-      simplex_basis_.hash, variable_in,
-      2147483648 * simplex_basis_.nonbasicFlag_[variable_in]);
-  HighsHashHelpers::sparse_inverse_combine(
-      simplex_basis_.hash, variable_out,
-      2147483648 * simplex_basis_.nonbasicFlag_[variable_out]);
   simplex_basis_.basicIndex_[row_out] = variable_in;
   simplex_basis_.nonbasicFlag_[variable_in] = 0;
   simplex_basis_.nonbasicMove_[variable_in] = 0;
@@ -1849,12 +1845,6 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
 
   // Outgoing variable
   simplex_basis_.nonbasicFlag_[variable_out] = 1;
-  HighsHashHelpers::sparse_combine(
-      simplex_basis_.hash, variable_in,
-      2147483648 * simplex_basis_.nonbasicFlag_[variable_in]);
-  HighsHashHelpers::sparse_combine(
-      simplex_basis_.hash, variable_out,
-      2147483648 * simplex_basis_.nonbasicFlag_[variable_out]);
   if (simplex_info_.workLower_[variable_out] ==
       simplex_info_.workUpper_[variable_out]) {
     simplex_info_.workValue_[variable_out] =
@@ -1885,6 +1875,16 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
   // Data are no longer fresh from rebuild
   simplex_lp_status_.has_fresh_rebuild = false;
   analysis_.simplexTimerStop(UpdatePivotsClock);
+}
+
+bool HEkk::checkForCycling(const int variable_in, const int row_out) {
+  uint64_t currhash = simplex_basis_.hash;
+  int variable_out = simplex_basis_.basicIndex_[row_out];
+
+  HighsHashHelpers::sparse_inverse_combine(currhash, variable_out, 2147483648);
+  HighsHashHelpers::sparse_combine(currhash, variable_in, 2147483648);
+
+  return visited_basis_.find(currhash) != nullptr;
 }
 
 void HEkk::updateMatrix(const int variable_in, const int variable_out) {
