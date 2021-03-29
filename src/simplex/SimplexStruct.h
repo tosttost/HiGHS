@@ -16,6 +16,8 @@
 
 #include "HConfig.h"
 #include "simplex/SimplexConst.h"
+#include <vector>
+#include <cstdint>
 
 struct SimplexBasis {
   // The basis for the simplex method consists of basicIndex,

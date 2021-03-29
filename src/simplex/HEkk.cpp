@@ -1874,6 +1874,7 @@ void HEkk::updatePivots(const int variable_in, const int row_out,
 }
 
 bool HEkk::checkForCycling(const int variable_in, const int row_out) {
+  if (variable_in == -1 || row_out == -1) return false;
   uint64_t currhash = simplex_basis_.hash;
   int variable_out = simplex_basis_.basicIndex_[row_out];
 
