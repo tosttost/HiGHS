@@ -303,6 +303,7 @@ double HighsMipSolverData::transformNewIncumbent(
   double integrality_violation_ = 0;
 
   HighsCDouble obj = mipsolver.orig_model_->offset_;
+  assert((int)solution.col_value.size() == mipsolver.orig_model_->numCol_);
   for (int i = 0; i != mipsolver.orig_model_->numCol_; ++i) {
     obj += mipsolver.orig_model_->colCost_[i] * solution.col_value[i];
 
@@ -334,7 +335,6 @@ double HighsMipSolverData::transformNewIncumbent(
       integrality_violation_ <=
           mipsolver.options_mip_->mip_feasibility_tolerance &&
       row_violation_ <= mipsolver.options_mip_->mip_feasibility_tolerance;
-
   // store the solution as incumbent in the original space if there is no
   // solution or if it is feasible
   if (feasible) {
@@ -439,7 +439,7 @@ void HighsMipSolverData::performRestart() {
   }
   runSetup();
 
-  postSolveStack.removeCutsFromModel(cutpool.getNumCuts());
+  postSolveStack.removeCutsFromModel(numCuts);
 
   // HighsNodeQueue oldNodeQueue;
   // std::swap(nodequeue, oldNodeQueue);
@@ -672,6 +672,14 @@ bool HighsMipSolverData::rootSeparationRound(
   if (incumbent.empty()) {
     heuristics.randomizedRounding(solvals);
     heuristics.flushStatistics();
+
+    if (domain.infeasible()) {
+      pruned_treeweight = 1.0;
+      lower_bound = std::min(HIGHS_CONST_INF, upper_bound);
+      num_nodes = 1;
+      num_leaves = 1;
+      return true;
+    }
   }
 
   if (lp.unscaledDualFeasible(status)) {
@@ -719,6 +727,9 @@ restart:
   // solve the first root lp
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::INFO,
                "\nSolving root node LP relaxation\n");
+  // lp.getLpSolver().setHighsOptionValue(
+  //     "dual_simplex_cost_perturbation_multiplier", 10.0);
+  lp.setIterationLimit();
   lp.loadModel();
 
   // add all cuts again after restart
@@ -919,9 +930,7 @@ restart:
   // if global propagation found bound changes, we update the local domain
   if (!domain.getChangedCols().empty()) {
     int ncuts;
-    if (rootSeparationRound(sepa, ncuts, status)) {
-      return;
-    }
+    if (rootSeparationRound(sepa, ncuts, status)) return;
 
     if (lp.unscaledDualFeasible(status)) lower_bound = lp.getObjective();
 

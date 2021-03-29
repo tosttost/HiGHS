@@ -221,9 +221,15 @@ class HighsPostsolveStack {
   int origNumRow = -1;
 
  public:
-  int getOrigRowIndex(int row) const { return origRowIndex[row]; }
+  int getOrigRowIndex(int row) const {
+    assert(row < (int)origRowIndex.size());
+    return origRowIndex[row];
+  }
 
-  int getOrigColIndex(int col) const { return origColIndex[col]; }
+  int getOrigColIndex(int col) const {
+    assert(col < (int)origColIndex.size());
+    return origColIndex[col];
+  }
 
   void appendCutsToModel(int numCuts) {
     int currNumRow = origRowIndex.size();
@@ -234,8 +240,15 @@ class HighsPostsolveStack {
   }
 
   void removeCutsFromModel(int numCuts) {
-    int currNumRow = origRowIndex.size();
-    origRowIndex.resize(currNumRow - numCuts);
+    origNumRow -= numCuts;
+
+    int origRowIndexSize = origRowIndex.size();
+    for (int i = origRowIndex.size() - 1; i >= 0; --i) {
+      if (origRowIndex[i] < origNumRow) break;
+      --origRowIndexSize;
+    }
+
+    origRowIndex.resize(origRowIndexSize);
   }
 
   int getOrigNumRow() const { return origNumRow; }

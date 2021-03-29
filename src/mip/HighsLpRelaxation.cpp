@@ -114,6 +114,7 @@ HighsLpRelaxation::HighsLpRelaxation(const HighsMipSolver& mipsolver)
   numSolved = 0;
   epochs = 0;
   maxNumFractional = 0;
+  objective = -HIGHS_CONST_INF;
   currentbasisstored = false;
 }
 
@@ -133,6 +134,7 @@ HighsLpRelaxation::HighsLpRelaxation(const HighsLpRelaxation& other)
   numSolved = 0;
   epochs = 0;
   maxNumFractional = 0;
+  objective = -HIGHS_CONST_INF;
 }
 
 void HighsLpRelaxation::loadModel() {
@@ -827,8 +829,6 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
                   break;
               }
 
-              assert(lpsolver.getLp().colLower_[subst->replace.col] !=
-                     lpsolver.getLp().colUpper_[subst->replace.col]);
               col = subst->replace.col;
               if (subst->replace.val == 0) val = 1.0 - val;
 
