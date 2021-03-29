@@ -234,8 +234,6 @@ HighsStatus HEkk::setBasis() {
   }
   simplex_info_.num_basic_logicals = num_row;
   simplex_lp_status_.has_basis = true;
-  visited_basis_.clear();
-  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -309,8 +307,6 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
     }
   }
   simplex_lp_status_.has_basis = true;
-  visited_basis_.clear();
-  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -329,8 +325,6 @@ HighsStatus HEkk::setBasis(const SimplexBasis& basis) {
   simplex_basis_.basicIndex_ = basis.basicIndex_;
   simplex_basis_.hash = basis.hash;
   simplex_lp_status_.has_basis = true;
-  visited_basis_.clear();
-  visited_basis_.insert(simplex_basis_.hash);
   return HighsStatus::OK;
 }
 
@@ -521,6 +515,7 @@ HighsStatus HEkk::initialiseForSolve() {
   bool primal_feasible = simplex_info_.num_primal_infeasibility == 0;
   bool dual_feasible = simplex_info_.num_dual_infeasibility == 0;
   visited_basis_.clear();
+  visited_basis_.insert(simplex_basis_.hash);
   scaled_model_status_ = HighsModelStatus::NOTSET;
   if (primal_feasible && dual_feasible)
     scaled_model_status_ = HighsModelStatus::OPTIMAL;
