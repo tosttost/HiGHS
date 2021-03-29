@@ -520,6 +520,7 @@ HighsStatus HEkk::initialiseForSolve() {
 
   bool primal_feasible = simplex_info_.num_primal_infeasibility == 0;
   bool dual_feasible = simplex_info_.num_dual_infeasibility == 0;
+  visited_basis_.clear();
   scaled_model_status_ = HighsModelStatus::NOTSET;
   if (primal_feasible && dual_feasible)
     scaled_model_status_ = HighsModelStatus::OPTIMAL;
