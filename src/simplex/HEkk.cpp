@@ -732,6 +732,10 @@ bool HEkk::getNonsingularInverse(const int solve_phase) {
     simplex_info_.backtracking_ = true;
     visited_basis_.clear();
     visited_basis_.insert(simplex_basis_.hash);
+    // in case of backtracking reinitialize the random vectors
+    // so the the primal/dual simplex can add a new perturbation
+    // as appropriate
+    initialiseSimplexLpRandomVectors();
     updateSimplexLpStatus(simplex_lp_status_, LpAction::BACKTRACKING);
     int backtrack_rank_deficiency = computeFactor();
     // This basis has previously been inverted successfully, so it shouldn't be

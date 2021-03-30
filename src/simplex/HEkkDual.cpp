@@ -951,6 +951,12 @@ void HEkkDual::rebuild() {
     // Reset the knowledge of previous objective values
     //    debugUpdatedObjectiveValue(ekk_instance_, algorithm, -1, "");
   }
+  if (simplex_info.backtracking_ && solvePhase == SOLVE_PHASE_2) {
+    // printf("new cost perturbation after backtracking\n");
+    // if we are backtracking initialise the cost with a new perturbation
+    // so that it is more unlikely to run into the singularity again
+    ekk_instance_.initialiseCost(SimplexAlgorithm::DUAL, solvePhase, true);
+  }
   // Recompute dual solution
   ekk_instance_.computeDual();
 
