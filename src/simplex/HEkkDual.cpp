@@ -1080,7 +1080,7 @@ void HEkkDual::iterate() {
 
   if (solvePhase == SOLVE_PHASE_2 &&
       ekk_instance_.checkForCycling(variable_in, row_out)) {
-    printf("cycling detected\n", solvePhase, rebuild_reason);
+    printf("cycling detected\n");
 
     // todo@ Julian: there is bad cycling from which highs does not break out by
     // itself, e.g. due to numerical differences, in the second LP on
