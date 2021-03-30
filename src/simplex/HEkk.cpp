@@ -730,6 +730,8 @@ bool HEkk::getNonsingularInverse(const int solve_phase) {
     if (!getBacktrackingBasis(workEdWtFull_)) return false;
     // Record that backtracking is taking place
     simplex_info_.backtracking_ = true;
+    visited_basis_.clear();
+    visited_basis_.insert(simplex_basis_.hash);
     updateSimplexLpStatus(simplex_lp_status_, LpAction::BACKTRACKING);
     int backtrack_rank_deficiency = computeFactor();
     // This basis has previously been inverted successfully, so it shouldn't be

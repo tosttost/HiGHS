@@ -1072,8 +1072,47 @@ void HEkkDual::iterate() {
   chooseColumn(&row_ep);
   analysis->simplexTimerStop(IterateChuzcClock);
 
-  if (ekk_instance_.checkForCycling(variable_in, row_out)) {
-    printf("cycling detected\n");
+  if (solvePhase == SOLVE_PHASE_2 &&
+      ekk_instance_.checkForCycling(variable_in, row_out)) {
+    printf("cycling detected\n", solvePhase, rebuild_reason);
+
+    // todo@ Julian: there is bad cycling from which highs does not break out by
+    // itself, e.g. due to numerical differences, in the second LP on
+    // satellites2-40 when setting highs_random_seed=1261. With the code below
+    // it only prints "cycling detected" once and solves the
+    // LP even though it needs quite some iterations. I don't know whether I
+    // reset set all data correctly but I think because I return rebuild reason
+    // and set has_fresh_rebuild=false it will set everything up correctly
+    // in iteration loop during the rebuild. This could probably be done in a
+    // better way but this was the least invasive for me to add to the solver
+    // code. Also I am unsure about what to do in phase1 which is why I added
+    // the solvePhase check to the if condition. I am sure you can add some
+    // better way to resolve the cycling than going to rebuild. Maybe you can
+    // incorporate the hash information into the choose* functions so that no
+    // row/column that closes a cycle is chosen in the first place.
+
+    // Apart from the cycling: Since the random initialisation is only reset for
+    // a new LP it could be good to also change the randomization and
+    // perturbation after backtracking so that HiGHS is less likely to choose
+    // the same pivots that yielded a singular basis
+#if 1
+    // in case cycling is detected: draw new random
+    // numbers, reperturb costs, and rebuild
+    ekk_instance_.initialiseSimplexLpRandomVectors();
+    ekk_instance_.simplex_info_
+        .dual_simplex_cost_perturbation_multiplier = std::max(
+        ekk_instance_.simplex_info_.dual_simplex_cost_perturbation_multiplier,
+        1.0);
+    ekk_instance_.initialiseCost(SimplexAlgorithm::DUAL, solvePhase, true);
+    // clear the set of visited basis as it can happen due to the new
+    // perturbation that a previous basis is visited again and we do not want to
+    // add new perturbations if no new cycles occur. Only store the current
+    // basis hash.
+    ekk_instance_.visited_basis_.clear();
+    ekk_instance_.visited_basis_.insert(ekk_instance_.simplex_basis_.hash);
+    ekk_instance_.simplex_lp_status_.has_fresh_rebuild = false;
+    rebuild_reason = RebuildReason::REBUILD_REASON_CHOOSE_COLUMN_FAIL;
+#endif
   }
 
   analysis->simplexTimerStart(IterateFtranClock);
