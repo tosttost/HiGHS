@@ -166,6 +166,10 @@ void reportSolvedLpStats(FILE* output, int message_level,
     HighsPrintMessage(output, message_level, ML_ALWAYS,
                       "Simplex   iterations: %d\n",
                       highs_info.simplex_iteration_count);
+     if (highs_info.qp_iteration_count)
+      HighsPrintMessage(output, message_level, ML_ALWAYS,
+                        "QP ASM    iterations: %d\n",
+                        highs_info.qp_iteration_count);
     if (highs_info.ipm_iteration_count)
       HighsPrintMessage(output, message_level, ML_ALWAYS,
                         "IPM       iterations: %d\n",

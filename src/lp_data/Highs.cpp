@@ -1918,7 +1918,10 @@ HighsStatus Highs::runLpSolver(const int model_index, const string message) {
 }
 
 void reportIteration(Runtime& rt) {
-   unsigned int rep = rt.statistics.iteration.size() -1;
+   int rep = rt.statistics.iteration.size() -1;
+    //  HighsPrintMessage(options_.output, options_.message_level, ML_VERBOSE,
+    //                 "Solving %s\n", lp_.model_name_.c_str());
+
    printf("%u, %lf, %u, %lf, %lf, %u, %lf, %lf\n", 
       rt.statistics.iteration[rep],
       rt.statistics.objval[rep],
@@ -1969,7 +1972,7 @@ HighsStatus Highs::callSolveQp() {
 
   runtime.settings.reportingfequency = 1000;
   runtime.endofiterationevent.subscribe(reportIteration);
-  runtime.settings.iterationlimit = 999999;
+  runtime.settings.iterationlimit = std::numeric_limits<int>::max();
   runtime.settings.ratiotest = new RatiotestTwopass(instance, 0.000000001, 0.000001);
   Solver solver(runtime);
   solver.solve();
@@ -1982,18 +1985,19 @@ HighsStatus Highs::callSolveQp() {
   // Cheating now, but need to set this honestly!
   HighsStatus call_status = HighsStatus::OK;
   return_status =
-      interpretCallStatus(call_status, return_status, "HighsMipSolver::solver");
+      interpretCallStatus(call_status, return_status, "QpSolver");
   if (return_status == HighsStatus::Error) return return_status;
   // Cheating now, but need to set this honestly!
-  scaled_model_status_ = HighsModelStatus::OPTIMAL;
+  scaled_model_status_ = runtime.status == ProblemStatus::OPTIMAL ? HighsModelStatus::OPTIMAL : runtime.status == ProblemStatus::UNBOUNDED ? HighsModelStatus::PRIMAL_UNBOUNDED : HighsModelStatus::PRIMAL_INFEASIBLE;
   model_status_ = scaled_model_status_;
   // Set the values in HighsInfo instance info_
-  info_.simplex_iteration_count = -1;    // Not known
-  info_.ipm_iteration_count = -1;        // Not known
-  info_.crossover_iteration_count = -1;  // Not known
-  info_.primal_status = PrimalDualStatus::STATUS_NO_SOLUTION;
-  info_.dual_status = PrimalDualStatus::STATUS_NO_SOLUTION;
-  info_.objective_function_value = 0.0; //
+  info_.qp_iteration_count = runtime.statistics.num_iterations;
+  info_.simplex_iteration_count = runtime.statistics.phase1_iterations;
+  info_.ipm_iteration_count = -1;        
+  info_.crossover_iteration_count = -1; 
+  info_.primal_status = runtime.status == ProblemStatus::OPTIMAL ? PrimalDualStatus::STATUS_FEASIBLE_POINT : PrimalDualStatus::STATUS_NO_SOLUTION;
+  info_.dual_status = runtime.status == ProblemStatus::OPTIMAL ? PrimalDualStatus::STATUS_FEASIBLE_POINT : PrimalDualStatus::STATUS_NO_SOLUTION;
+  info_.objective_function_value = runtime.instance.objval(runtime.primal);
   info_.num_primal_infeasibilities = -1;  // Not known
   // Are the violations max or sum?
   info_.max_primal_infeasibility =0.0; //
@@ -2005,12 +2009,18 @@ HighsStatus Highs::callSolveQp() {
 
   info_.primal_status = PrimalDualStatus::STATUS_FEASIBLE_POINT;
   solution_.col_value.resize(lp_.numCol_);
-  for (int iCol = 0; iCol < lp_.numCol_; iCol++)
-    solution_.col_value[iCol] = 0.0; //
+  solution_.col_dual.resize(lp_.numCol_);
+  for (int iCol = 0; iCol < lp_.numCol_; iCol++) {
+    solution_.col_value[iCol] = runtime.primal.value[iCol]; //
+    solution_.col_dual[iCol] = runtime.dualvar.value[iCol];
+  }
 
-  //  assert((int)solution_.col_value.size() == lp_.numCol_);
-  //  assert((int)solution_.row_value.size() == lp_.numRow_);
-  //  solution_.row_value.resize(lp_.numRow_);
+  solution_.row_value.resize(lp_.numRow_);
+  solution_.row_dual.resize(lp_.numRow_);
+  for (int iRow = 0; iRow < lp_.numRow_; iRow++) {
+    solution_.row_value[iRow] = runtime.rowactivity.value[iRow];
+    solution_.row_dual[iRow] = runtime.dualcon.value[iRow];
+  }
   
   return return_status;
 }

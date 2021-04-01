@@ -25,9 +25,12 @@
 
 
 void Solver::solve() {
-	CrashSolution crash = computestartingpoint(runtime.instance);   
-   Basis basis(runtime, crash.active, crash.rowstatus, crash.inactive);
-   solve(crash.primal, crash.rowact,  basis);
+	CrashSolution* crash;
+	computestartingpoint(runtime, crash);   
+	if (runtime.status != ProblemStatus::INFEASIBLE) {
+		Basis basis(runtime, crash->active, crash->rowstatus, crash->inactive);
+   	solve(crash->primal, crash->rowact,  basis);
+	}
 }
 
 Solver::Solver(Runtime& rt) : runtime(rt) {
@@ -148,6 +151,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 			int minidx = pricing->price(runtime.primal, gradient.getGradient());
 			// printf("%u -> ", minidx);
 			if (minidx == -1) {
+				runtime.status = ProblemStatus::OPTIMAL;
 				break;
 			}
 			
@@ -199,6 +203,9 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 				if (basis.getnumactive() != runtime.instance.num_var) {
 					atfsep = false;
 				}
+			} else if (stepres.alpha == std::numeric_limits<double>::infinity()) {
+				runtime.status = ProblemStatus::UNBOUNDED;
+				break;
 			} else {
 				atfsep = true;
 				redgrad.update(stepres.alpha, false);
@@ -219,6 +226,19 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 	if (basis.getnumactive() == runtime.instance.num_var) {
 		runtime.primal = basis.recomputex(runtime.instance);
 	}
+
+	Vector lambda =redcosts.getReducedCosts();
+	for (auto e: basis.getactive()) {
+		int indexinbasis = basis.getindexinfactor()[e];
+		if (e >= runtime.instance.num_con) {
+			// active variable bound
+			int var = e - runtime.instance.num_con;
+			runtime.dualvar.value[var] = lambda.value[indexinbasis];
+		} else {
+			runtime.dualcon.value[e] = lambda.value[indexinbasis];
+		}
+	}
+
 	// x.report("x");
 	runtime.statistics.time_end = std::chrono::high_resolution_clock::now();
 }

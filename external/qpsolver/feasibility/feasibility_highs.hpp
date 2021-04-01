@@ -5,7 +5,7 @@
 
 #include "feasibility.hpp"
 
-CrashSolution computestartingpoint(Instance& instance) {
+void computestartingpoint(Runtime& runtime, CrashSolution*& result) {
    // compute initial feasible point
    Highs highs;
 	
@@ -15,32 +15,34 @@ CrashSolution computestartingpoint(Instance& instance) {
 
 
 	HighsLp lp;
-	lp.Aindex_ = instance.A.mat.index;
-	lp.Astart_ = instance.A.mat.start;
-	lp.Avalue_ = instance.A.mat.value;
-   lp.colCost_.assign(instance.num_var, 0.0);
-	// lp.colCost_ = instance.c.value;
-	lp.colLower_ = instance.var_lo;
-	lp.colUpper_ = instance.var_up;
-	lp.rowLower_ = instance.con_lo;
-	lp.rowUpper_ = instance.con_up;
-	lp.numCol_ = instance.num_var;
-	lp.numRow_ = instance.num_con;
+	lp.Aindex_ = *((std::vector<int>*)&runtime.instance.A.mat.index);
+	lp.Astart_ = *((std::vector<int>*)&runtime.instance.A.mat.start);
+	lp.Avalue_ = runtime.instance.A.mat.value;
+   lp.colCost_.assign(runtime.instance.num_var, 0.0);
+	// lp.colCost_ = runtime.instance.c.value;
+	lp.colLower_ = runtime.instance.var_lo;
+	lp.colUpper_ = runtime.instance.var_up;
+	lp.rowLower_ = runtime.instance.con_lo;
+	lp.rowUpper_ = runtime.instance.con_up;
+	lp.numCol_ = runtime.instance.num_var;
+	lp.numRow_ = runtime.instance.num_con;
    
 	highs.passModel(lp);
 	highs.run();
 
+	runtime.statistics.phase1_iterations = highs.getSimplexIterationCount();
+
    HighsModelStatus phase1stat = highs.getModelStatus();
    if (phase1stat == HighsModelStatus::PRIMAL_INFEASIBLE) {
-      printf("QP infeasible\n");
-      exit(0);
+		runtime.status = ProblemStatus::INFEASIBLE;
+      return;
    }
 
 	HighsSolution sol = highs.getSolution();
 	HighsBasis bas = highs.getBasis();
 
-	Vector x0(instance.num_var);
-	Vector ra(instance.num_con);
+	Vector x0(runtime.instance.num_var);
+	Vector ra(runtime.instance.num_con);
 	for (int i=0; i<x0.dim; i++) {
 		if (fabs(sol.col_value[i]) > 10E-5) {
 			x0.value[i] = sol.col_value[i];
@@ -66,8 +68,8 @@ CrashSolution computestartingpoint(Instance& instance) {
 			initialactive.push_back(i);
 			atlower.push_back(BasisStatus::ActiveAtUpper);
 		} else if (bas.row_status[i] != HighsBasisStatus::BASIC) {
-         printf("row %u nonbasic\n", i);
-         initialinactive.push_back(instance.num_con + i);
+         // printf("row %d nonbasic\n", i);
+         initialinactive.push_back(runtime.instance.num_con + i);
       } else {
          assert(bas.row_status[i] == HighsBasisStatus::BASIC);
       }
@@ -75,32 +77,30 @@ CrashSolution computestartingpoint(Instance& instance) {
 
 	for (int i=0; i<bas.col_status.size(); i++) {
 		if (bas.col_status[i] == HighsBasisStatus::LOWER) {
-			initialactive.push_back(i + instance.num_con);
+			initialactive.push_back(i + runtime.instance.num_con);
 			atlower.push_back(BasisStatus::ActiveAtLower);
 		} else if (bas.col_status[i] == HighsBasisStatus::UPPER) {
-			initialactive.push_back(i + instance.num_con);
+			initialactive.push_back(i + runtime.instance.num_con);
 			atlower.push_back(BasisStatus::ActiveAtUpper);
 		} else if (bas.col_status[i] == HighsBasisStatus::ZERO) {
          // printf("col %u free and set to 0 %d\n", i, (int)bas.col_status[i]);
-         initialinactive.push_back(instance.num_con + i);
+         initialinactive.push_back(runtime.instance.num_con + i);
       } else if (bas.col_status[i] != HighsBasisStatus::BASIC) {
-         printf("Column %d basis stus %d\n", i, (int)bas.col_status[i]);
+         // printf("Column %d basis stus %d\n", i, (int)bas.col_status[i]);
       } else {
          assert(bas.col_status[i] == HighsBasisStatus::BASIC);
       }
 	}
 
 
-   assert(initialactive.size() + initialinactive.size() == instance.num_var);
+   assert(initialactive.size() + initialinactive.size() == runtime.instance.num_var);
 
-   CrashSolution crash(instance.num_var, instance.num_con);
-   crash.rowstatus = atlower;
-   crash.active = initialactive;
-   crash.inactive = initialinactive;
-	crash.primal = x0;
-	crash.rowact = ra;
-
-   return crash;
+   result = new CrashSolution(runtime.instance.num_var, runtime.instance.num_con);
+   result->rowstatus = atlower;
+   result->active = initialactive;
+   result->inactive = initialinactive;
+	result->primal = x0;
+	result->rowact = ra;
 }
 
 #endif

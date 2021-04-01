@@ -106,6 +106,7 @@ struct HighsInfoStruct {
   int simplex_iteration_count;
   int ipm_iteration_count;
   int crossover_iteration_count;
+  int qp_iteration_count;
   int primal_status;
   int dual_status;
   double objective_function_value;
