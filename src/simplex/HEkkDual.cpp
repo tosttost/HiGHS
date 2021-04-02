@@ -1093,7 +1093,7 @@ void HEkkDual::iterate() {
   chooseColumn(&row_ep);
   analysis->simplexTimerStop(IterateChuzcClock);
 
-  if (solvePhase == SOLVE_PHASE_2 &&
+  if (solvePhase == SOLVE_PHASE_2 && ekk_instance_.visited_basis_.size() > 1 &&
       ekk_instance_.checkForCycling(variable_in, row_out)) {
     printf("cycling detected\n");
 
