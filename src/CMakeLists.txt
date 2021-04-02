@@ -250,6 +250,7 @@ set(headers
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsHash.h
+    util/HighsInt.h
     util/HighsIntegers.h
     util/HighsLinearSumBounds.h
     util/HighsMatrixPic.h
@@ -277,6 +278,9 @@ if (IPX_ON)
         ${ipx_headers})
     add_library(libbasiclu ${basiclu_sources})
     add_library(libipx ${ipx_sources})
+    if(HIGHSINT64)
+    target_compile_definitions(libbasiclu PRIVATE -DHIGHSINT64)
+    endif()
     target_link_libraries(libipx libbasiclu)
 else ()
     set(headers ${headers} ipm/IpxWrapperEmpty.h)
@@ -633,6 +637,7 @@ set(headers_fast_build_
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsHash.h
+    util/HighsInt.h
     util/HighsIntegers.h
     util/HighsLinearSumBounds.h
     util/HighsMatrixPic.h

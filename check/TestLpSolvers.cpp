@@ -4,17 +4,17 @@
 const bool dev_run = false;
 
 struct IterationCount {
-  int simplex;
-  int ipm;
-  int crossover;
+  HighsInt simplex;
+  HighsInt ipm;
+  HighsInt crossover;
 };
 
 void testSolver(Highs& highs, const std::string solver,
                 IterationCount& default_iteration_count,
-                const int int_simplex_strategy = 0) {
+                const HighsInt int_simplex_strategy = 0) {
   double default_time_limit;
-  int default_simplex_iteration_limit;
-  int default_ipm_iteration_limit;
+  HighsInt default_simplex_iteration_limit;
+  HighsInt default_ipm_iteration_limit;
   HighsModelStatus model_status;
   HighsStatus return_status;
   const bool perform_timeout_test = false;  // true;  //
@@ -31,7 +31,7 @@ void testSolver(Highs& highs, const std::string solver,
         static_cast<SimplexStrategy>(int_simplex_strategy);
     if (simplex_strategy == SimplexStrategy::SIMPLEX_STRATEGY_DUAL_TASKS)
       return;
-    if (dev_run) printf("Simplex strategy %d\n", int_simplex_strategy);
+    if (dev_run) printf("Simplex strategy %" HIGHSINT_FORMAT "\n", int_simplex_strategy);
     return_status =
         highs.setHighsOptionValue("simplex_strategy", simplex_strategy);
     REQUIRE(return_status == HighsStatus::OK);
@@ -64,7 +64,7 @@ void testSolver(Highs& highs, const std::string solver,
     REQUIRE(info.simplex_iteration_count == default_iteration_count.simplex);
   } else {
     if (dev_run)
-      printf("IPM: %d; Crossover: %d\n", info.ipm_iteration_count,
+      printf("IPM: %" HIGHSINT_FORMAT "; Crossover: %" HIGHSINT_FORMAT "\n", info.ipm_iteration_count,
              info.crossover_iteration_count);
     REQUIRE(info.ipm_iteration_count == default_iteration_count.ipm);
     REQUIRE(info.crossover_iteration_count ==
@@ -74,7 +74,7 @@ void testSolver(Highs& highs, const std::string solver,
   // Only perform the time limit test if the solve time is large enough
   const double min_run_time_for_test = 0.001;
   if (perform_timeout_test && single_solve_run_time > min_run_time_for_test) {
-    const int ideal_num_solve = 10;
+    const HighsInt ideal_num_solve = 10;
     const double local_time_limit = ideal_num_solve * single_solve_run_time;
 
     // Solve with time limit
@@ -85,8 +85,8 @@ void testSolver(Highs& highs, const std::string solver,
     return_status = highs.setHighsOptionValue("time_limit", use_time_limit);
     REQUIRE(return_status == HighsStatus::OK);
 
-    const int max_num_solve = 10 * ideal_num_solve;
-    int num_solve;
+    const HighsInt max_num_solve = 10 * ideal_num_solve;
+    HighsInt num_solve;
     for (num_solve = 0; num_solve < max_num_solve; num_solve++) {
       if (use_simplex) return_status = highs.setBasis();
       return_status = highs.run();
@@ -99,7 +99,7 @@ void testSolver(Highs& highs, const std::string solver,
              run_time, use_time_limit, run_time - use_time_limit);
 
     if (dev_run)
-      printf("Required %d solves (ideally %d - max %d)\n", num_solve,
+      printf("Required %" HIGHSINT_FORMAT " solves (ideally %" HIGHSINT_FORMAT " - max %" HIGHSINT_FORMAT ")\n", num_solve,
              ideal_num_solve, max_num_solve);
   } else {
     if (dev_run)
@@ -112,7 +112,7 @@ void testSolver(Highs& highs, const std::string solver,
   REQUIRE(return_status == HighsStatus::OK);
   if (!use_simplex) {
     if (dev_run)
-      printf("IPM: %d; Crossover: %d\n", info.ipm_iteration_count,
+      printf("IPM: %" HIGHSINT_FORMAT "; Crossover: %" HIGHSINT_FORMAT "\n", info.ipm_iteration_count,
              info.crossover_iteration_count);
   }
   // Solve with iteration limit
@@ -132,7 +132,7 @@ void testSolver(Highs& highs, const std::string solver,
   return_status = highs.run();
   model_status = highs.getModelStatus();
   if (dev_run)
-    printf("Returns status = %d; model status = %s\n", (int)return_status,
+    printf("Returns status = %" HIGHSINT_FORMAT "; model status = %s\n", (HighsInt)return_status,
            highs.highsModelStatusToString(model_status).c_str());
   REQUIRE(return_status == HighsStatus::Warning);
   REQUIRE(model_status == HighsModelStatus::REACHED_ITERATION_LIMIT);
@@ -144,11 +144,11 @@ void testSolver(Highs& highs, const std::string solver,
   }
 
   // Now check that simplex/IPM stops after 10/5 iterations
-  const int further_simplex_iterations = 10;
-  const int further_ipm_iterations = 5;
+  const HighsInt further_simplex_iterations = 10;
+  const HighsInt further_ipm_iterations = 5;
   if (use_simplex) {
     if (dev_run)
-      printf("Setting simplex_iteration_limit = %d\n",
+      printf("Setting simplex_iteration_limit = %" HIGHSINT_FORMAT "\n",
              further_simplex_iterations);
     return_status = highs.setHighsOptionValue("simplex_iteration_limit",
                                               further_simplex_iterations);
@@ -157,7 +157,7 @@ void testSolver(Highs& highs, const std::string solver,
     REQUIRE(return_status == HighsStatus::OK);
   } else {
     if (dev_run)
-      printf("Setting ipm_iteration_limit = %d\n", further_ipm_iterations);
+      printf("Setting ipm_iteration_limit = %" HIGHSINT_FORMAT "\n", further_ipm_iterations);
     return_status = highs.setHighsOptionValue("ipm_iteration_limit",
                                               further_ipm_iterations);
     REQUIRE(return_status == HighsStatus::OK);
@@ -182,7 +182,7 @@ void testSolver(Highs& highs, const std::string solver,
 
 void testSolversSetup(const std::string model,
                       IterationCount& model_iteration_count,
-                      vector<int>& simplex_strategy_iteration_count) {
+                      vector<HighsInt>& simplex_strategy_iteration_count) {
   if (model.compare("adlittle") == 0) {
     simplex_strategy_iteration_count[(
         int)SimplexStrategy::SIMPLEX_STRATEGY_CHOOSE] = 75;
@@ -200,24 +200,24 @@ void testSolversSetup(const std::string model,
 }
 
 void testSolvers(Highs& highs, IterationCount& model_iteration_count,
-                 const vector<int>& simplex_strategy_iteration_count) {
+                 const vector<HighsInt>& simplex_strategy_iteration_count) {
   bool have_omp = false;
 #ifdef OPENMP
   have_omp = true;
 #endif
   /*
-  int i = (int)SimplexStrategy::SIMPLEX_STRATEGY_PRIMAL;
+  HighsInt i = (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_PRIMAL;
   model_iteration_count.simplex = simplex_strategy_iteration_count[i];
   testSolver(highs, "simplex", model_iteration_count, i);
   */
 
-  int from_i = (int)SimplexStrategy::SIMPLEX_STRATEGY_MIN;
-  int to_i =
-      (int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_MULTI;  // PRIMAL;  // NUM;
-  for (int i = from_i; i < to_i; i++) {
+  HighsInt from_i = (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_MIN;
+  HighsInt to_i =
+      (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_MULTI;  // PRIMAL;  // NUM;
+  for (HighsInt i = from_i; i < to_i; i++) {
     if (!have_omp) {
-      if (i == (int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_TASKS) continue;
-      if (i == (int)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_MULTI) continue;
+      if (i == (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_TASKS) continue;
+      if (i == (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_DUAL_MULTI) continue;
     }
     model_iteration_count.simplex = simplex_strategy_iteration_count[i];
     testSolver(highs, "simplex", model_iteration_count, i);
@@ -230,9 +230,9 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   std::string model;
   std::string model_file;
   IterationCount model_iteration_count;
-  vector<int> simplex_strategy_iteration_count;
+  vector<HighsInt> simplex_strategy_iteration_count;
   simplex_strategy_iteration_count.resize(
-      (int)SimplexStrategy::SIMPLEX_STRATEGY_NUM);
+      (HighsInt)SimplexStrategy::SIMPLEX_STRATEGY_NUM);
 
   HighsLp lp;
   //  HighsStatus run_status;
@@ -277,9 +277,9 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   REQUIRE(return_status == HighsStatus::OK);
 
   const HighsInfo& info = highs.getHighsInfo();
-  REQUIRE(info.num_dual_infeasibilities == 2);
+  REQUIRE(info.num_dual_infeasibilities == 1);
 
-  REQUIRE(info.simplex_iteration_count == 378);
+  REQUIRE(info.simplex_iteration_count == 403);
 
   HighsModelStatus model_status = highs.getModelStatus();
   REQUIRE(model_status == HighsModelStatus::NOTSET);
@@ -295,7 +295,7 @@ TEST_CASE("LP-solver", "[highs_lp_solver]") {
   return_status = highs.run();
   REQUIRE(return_status == HighsStatus::OK);
 
-  REQUIRE(info.simplex_iteration_count == 583);
+  REQUIRE(info.simplex_iteration_count == 598);
 }
 
 TEST_CASE("dual-objective-upper-bound", "[highs_lp_solver]") {
