@@ -188,16 +188,10 @@ HighsStatus HEkk::cleanup() {
 
 HighsStatus HEkk::setBasis() {
   // Set up nonbasicFlag and basicIndex for a logical basis
-<<<<<<< HEAD
-  const int num_col = simplex_lp_.numCol_;
-  const int num_row = simplex_lp_.numRow_;
-  const int num_tot = num_col + num_row;
-  simplex_basis_.hash = 0;
-=======
   const HighsInt num_col = simplex_lp_.numCol_;
   const HighsInt num_row = simplex_lp_.numRow_;
   const HighsInt num_tot = num_col + num_row;
->>>>>>> origin/ekk-master
+  simplex_basis_.hash = 0;
   simplex_basis_.nonbasicFlag_.resize(num_tot);
   simplex_basis_.nonbasicMove_.resize(num_tot);
   simplex_basis_.basicIndex_.resize(num_row);
@@ -263,18 +257,12 @@ HighsStatus HEkk::setBasis(const HighsBasis& basis) {
   simplex_basis_.nonbasicFlag_.resize(num_tot);
   simplex_basis_.nonbasicMove_.resize(num_tot);
   simplex_basis_.basicIndex_.resize(num_row);
-<<<<<<< HEAD
-  simplex_basis_.hash = 0;
-  int num_basic_variables = 0;
-  for (int iCol = 0; iCol < num_col; iCol++) {
-    int iVar = iCol;
-=======
 
+  simplex_basis_.hash = 0;
   HighsInt num_basic_variables = 0;
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
     HighsInt iVar = iCol;
 
->>>>>>> origin/ekk-master
     const double lower = simplex_lp_.colLower_[iCol];
     const double upper = simplex_lp_.colUpper_[iCol];
     if (basis.col_status[iCol] == HighsBasisStatus::BASIC) {
