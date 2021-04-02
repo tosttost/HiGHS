@@ -739,16 +739,16 @@ bool HEkk::getNonsingularInverse(const HighsInt solve_phase) {
     // Rank deficient basis, so backtrack to last full rank basis
     //
     // Get the last nonsingular basis - so long as there is one
-    uint64_t deficient_hash = simplex_basis_.hash;
+    // uint64_t deficient_hash = simplex_basis_.hash;
     if (!getBacktrackingBasis(workEdWtFull_)) return false;
     // Record that backtracking is taking place
     simplex_info_.backtracking_ = true;
     visited_basis_.clear();
     visited_basis_.insert(simplex_basis_.hash);
-    visited_basis_.insert(deficient_hash);
-    // in case of backtracking reinitialize the random vectors
-    // so the the primal/dual simplex can add a new perturbation
-    // as appropriate
+    // todo, can leads to looping in glass4:
+    // visited_basis_.insert(deficient_hash); in case of backtracking
+    // reinitialize the random vectors so the the primal/dual simplex can add a
+    // new perturbation as appropriate
     initialiseSimplexLpRandomVectors();
     updateSimplexLpStatus(simplex_lp_status_, LpAction::BACKTRACKING);
     HighsInt backtrack_rank_deficiency = computeFactor();
