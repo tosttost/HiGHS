@@ -1120,10 +1120,11 @@ void HEkkDual::iterate() {
     // in case cycling is detected: draw new random
     // numbers, reperturb costs, and rebuild
     ekk_instance_.initialiseSimplexLpRandomVectors();
-    ekk_instance_.simplex_info_
-        .dual_simplex_cost_perturbation_multiplier = std::max(
-        ekk_instance_.simplex_info_.dual_simplex_cost_perturbation_multiplier,
-        1.0);
+    ekk_instance_.simplex_info_.dual_simplex_cost_perturbation_multiplier =
+        std::min(128.0,
+                 std::max(2 * ekk_instance_.simplex_info_
+                                  .dual_simplex_cost_perturbation_multiplier,
+                          1.0));
     ekk_instance_.initialiseCost(SimplexAlgorithm::DUAL, solvePhase, true);
     // clear the set of visited basis as it can happen due to the new
     // perturbation that a previous basis is visited again and we do not want to
