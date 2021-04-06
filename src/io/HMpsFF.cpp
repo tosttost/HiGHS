@@ -131,6 +131,14 @@ FreeFormatParserReturnCode HMpsFF::parse(const HighsLogOptions& log_options,
       }
     }
 
+    // Assign bounds to columns that remain binary by default
+    for (HighsInt colidx = 0; colidx < numCol; colidx++) {
+      if (col_binary[colidx]) {
+        colLower[colidx] = 0.0;
+        colUpper[colidx] = 1.0;
+      }
+    }
+
     if (keyword == HMpsFF::parsekey::FAIL) {
       f.close();
       return FreeFormatParserReturnCode::PARSERERROR;
@@ -457,11 +465,7 @@ typename HMpsFF::parsekey HMpsFF::parseCols(const HighsLogOptions& log_options,
 
       // initialize with default bounds
       colLower.push_back(0.0);
-      if (integral_cols) {
-        colUpper.push_back(1.0);
-      } else {
-        colUpper.push_back(HIGHS_CONST_INF);
-      }
+      colUpper.push_back(HIGHS_CONST_INF);
     }
 
     assert(ncols > 0);
@@ -746,16 +750,6 @@ HMpsFF::parsekey HMpsFF::parseBounds(const HighsLogOptions& log_options,
             log_options, HighsLogType::INFO,
             "Number of UI entries in BOUNDS section is %" HIGHSINT_FORMAT "\n",
             num_ui);
-      // Bounds of columns that remain binary by default should have already
-      // been assigned
-      for (HighsInt colidx = 0; colidx < numCol; colidx++) {
-        if (col_binary[colidx]) {
-          assert(colLower[colidx] == 0.0);
-          assert(colUpper[colidx] == 1.0);
-          //          colLower[colidx] = 0.0;
-          //          colUpper[colidx] = 1.0;
-        }
-      }
       return key;
     }
     bool islb = false;
