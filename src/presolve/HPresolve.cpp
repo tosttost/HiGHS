@@ -877,7 +877,11 @@ HPresolve::Result HPresolve::runProbing(HighsPostsolveStack& postSolveStack) {
 
       if (domain.infeasible()) return Result::PrimalInfeasible;
     }
+
+    domain.propagate();
   }
+
+  cliquetable.cleanupFixed(domain);
 
   // store binary variables in vector with their number of implications on
   // other binaries
