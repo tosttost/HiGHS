@@ -1125,7 +1125,15 @@ void HEkkDual::iterate() {
                  std::max(2 * ekk_instance_.simplex_info_
                                   .dual_simplex_cost_perturbation_multiplier,
                           1.0));
+    double oldCost = ekk_instance_.simplex_info_.workCost_[variable_in];
     ekk_instance_.initialiseCost(SimplexAlgorithm::DUAL, solvePhase, true);
+    // perturb the chosen column to have zero dual in the current solution
+    // this seems to considerably improve cycling behavior even though more
+    // primal simplex iterations may be required in the cleanup phase
+    ekk_instance_.simplex_info_.workCost_[variable_in] =
+        oldCost - workDual[variable_in];
+    workDual[variable_in] = 0;
+
     // clear the set of visited basis as it can happen due to the new
     // perturbation that a previous basis is visited again and we do not want to
     // add new perturbations if no new cycles occur. Only store the current
@@ -1898,8 +1906,8 @@ void HEkkDual::shiftCost(const HighsInt iCol, const double amount) {
     printf("Column %" HIGHSINT_FORMAT " already has nonzero shift of %g\n",
            iCol, simplex_info.workShift_[iCol]);
   }
-  assert(simplex_info.workShift_[iCol] == 0);
-  simplex_info.workShift_[iCol] = amount;
+  // assert(simplex_info.workShift_[iCol] == 0);
+  simplex_info.workShift_[iCol] += amount;
 }
 
 // Undo the shift in the cost of a particular column
