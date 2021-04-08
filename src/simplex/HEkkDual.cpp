@@ -1093,7 +1093,17 @@ void HEkkDual::iterate() {
   chooseColumn(&row_ep);
   analysis->simplexTimerStop(IterateChuzcClock);
 
-  if (solvePhase == SOLVE_PHASE_2 && ekk_instance_.visited_basis_.size() > 1 &&
+  if (ekk_instance_.simplex_info_
+          .allow_cost_perturbation &&  // todo, if cost perturbation is not
+                                       // allowed then maybe increase a cycling
+                                       // counter, clear the visited basis set
+                                       // and return an error if the counter
+                                       // reaches N. N should probably be above
+                                       // one so that a single occurence of a
+                                       // cycle or a false positive does not
+                                       // lead to an immediate error
+      solvePhase == SOLVE_PHASE_2 &&
+      ekk_instance_.visited_basis_.size() > 1 &&
       ekk_instance_.checkForCycling(variable_in, row_out)) {
     printf("cycling detected\n");
 
