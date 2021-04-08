@@ -83,7 +83,7 @@ class PresolveComponent : public HighsComponent {
 
   HighsStatus init(const HighsLp& lp, HighsTimer& timer, bool mip = false);
 
-  HighsPresolveStatus run();
+  HighsPresolveStatus run(HighsBasis* startBasis = nullptr);
 
   HighsLp& getReducedProblem() { return data_.reduced_lp_; }
 

@@ -573,6 +573,10 @@ HighsStatus Highs::run() {
         // Record the HMO to be solved
         solved_hmo = presolve_hmo;
         hmos_[solved_hmo].lp_.lp_name_ = "Presolved LP";
+        if (basis_.valid_) {
+          refineBasis(hmos_[solved_hmo].lp_, solution_, basis_);
+          hmos_[solved_hmo].basis_ = basis_;
+        }
         // Don't try dual cut-off when solving the presolved LP, as the
         // objective values aren't correct
         //	HighsOptions& options = hmos_[solved_hmo].options_;
@@ -1843,7 +1847,7 @@ HighsPresolveStatus Highs::runPresolve() {
                 time_init, left);
   }
 
-  HighsPresolveStatus presolve_return_status = presolve_.run();
+  HighsPresolveStatus presolve_return_status = presolve_.run(&basis_);
 
   // Update reduction counts.
   switch (presolve_.presolve_status_) {

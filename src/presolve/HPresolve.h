@@ -275,7 +275,8 @@ class HPresolve {
 
   Result initialRowAndColPresolve(HighsPostsolveStack& postSolveStack);
 
-  HighsModelStatus run(HighsPostsolveStack& postSolveStack);
+  HighsModelStatus run(HighsPostsolveStack& postSolveStack,
+                       HighsBasis* startBasis = nullptr);
 
   void computeIntermediateMatrix(std::vector<HighsInt>& flagRow,
                                  std::vector<HighsInt>& flagCol,

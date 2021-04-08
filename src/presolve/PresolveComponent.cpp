@@ -38,11 +38,11 @@ void PresolveComponent::negateReducedLpColDuals(bool reduced) {
 
 void PresolveComponent::negateReducedLpCost() { return; }
 
-HighsPresolveStatus PresolveComponent::run() {
+HighsPresolveStatus PresolveComponent::run(HighsBasis* startBasis) {
   presolve::HPresolve presolve;
   presolve.setInput(data_.reduced_lp_, *options_);
 
-  HighsModelStatus status = presolve.run(data_.postSolveStack);
+  HighsModelStatus status = presolve.run(data_.postSolveStack, startBasis);
 
   switch (status) {
     case HighsModelStatus::PRIMAL_INFEASIBLE:

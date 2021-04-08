@@ -3197,7 +3197,8 @@ double HPresolve::problemSizeReduction() {
   return std::max(rowReduction, colReduction);
 }
 
-HighsModelStatus HPresolve::run(HighsPostsolveStack& postSolveStack) {
+HighsModelStatus HPresolve::run(HighsPostsolveStack& postSolveStack,
+                                HighsBasis* startBasis) {
   shrinkProblemEnabled = true;
   switch (presolve(postSolveStack)) {
     case Result::Stopped:
@@ -3262,7 +3263,126 @@ HighsModelStatus HPresolve::run(HighsPostsolveStack& postSolveStack) {
     return HighsModelStatus::OPTIMAL;
   }
 
-  if (!mipsolver) setRelaxedImpliedBounds();
+  if (!mipsolver) {
+    setRelaxedImpliedBounds();
+
+    if (startBasis != nullptr) {
+      startBasis->col_status.assign(model->numCol_, HighsBasisStatus::NONBASIC);
+      startBasis->row_status.assign(model->numRow_, HighsBasisStatus::BASIC);
+
+      std::vector<double> costCopy(model->colCost_);
+      std::vector<uint8_t> rowBlocked(model->numRow_);
+      std::vector<HighsInt> rows(model->numRow_);
+
+      for (HighsInt i = 0; i < model->numRow_; ++i) rows[i] = i;
+
+      std::sort(rows.begin(), rows.end(), [&](HighsInt i, HighsInt j) {
+        if (rowsize[i] < rowsize[j]) return true;
+        if (rowsize[i] > rowsize[j]) return false;
+
+        size_t hi = HighsHashHelpers::hash(i);
+        size_t hj = HighsHashHelpers::hash(j);
+        if (hi < hj) return true;
+        if (hi > hj) return false;
+        return i < j;
+      });
+
+      HighsInt numStructuralCols = 0;
+      for (HighsInt i = 0; i < model->numRow_; ++i) {
+        int row = rows[i];
+        if (rowBlocked[row]) continue;
+
+        storeRow(row);
+
+        HighsInt basicCol = -1;
+        HighsInt basicColSize = HIGHS_CONST_I_INF;
+
+        double dualVal = HIGHS_CONST_INF;
+        if (model->rowLower_[row] != -HIGHS_CONST_INF &&
+            model->rowUpper_[row] != HIGHS_CONST_INF) {
+          for (const HighsSliceNonzero& nonz : getStoredRow()) {
+            int col = nonz.index();
+            if (startBasis->col_status[col] == HighsBasisStatus::BASIC) {
+              basicCol = -1;
+              break;
+            }
+
+            double thisDual = -costCopy[col] / nonz.value();
+            if (std::abs(thisDual) < std::abs(dualVal) ||
+                (std::abs(thisDual) == std::abs(thisDual) &&
+                 colsize[col] < basicColSize)) {
+              basicCol = col;
+              dualVal = thisDual;
+              basicColSize = colsize[col];
+            }
+          }
+        } else if (model->rowUpper_[row] == HIGHS_CONST_INF) {
+          for (const HighsSliceNonzero& nonz : getStoredRow()) {
+            int col = nonz.index();
+            if (startBasis->col_status[col] == HighsBasisStatus::BASIC) {
+              basicCol = -1;
+              break;
+            }
+
+            double thisDual = -costCopy[col] / nonz.value();
+            if (thisDual >= -options->dual_feasibility_tolerance) {
+              basicCol = -1;
+              break;
+            }
+
+            if (thisDual > dualVal ||
+                (thisDual == thisDual && colsize[col] < basicColSize)) {
+              basicCol = col;
+              dualVal = thisDual;
+              basicColSize = colsize[col];
+            }
+          }
+        } else {
+          for (const HighsSliceNonzero& nonz : getStoredRow()) {
+            int col = nonz.index();
+            if (startBasis->col_status[col] == HighsBasisStatus::BASIC) {
+              basicCol = -1;
+              break;
+            }
+
+            double thisDual = -costCopy[col] / nonz.value();
+            if (thisDual <= options->dual_feasibility_tolerance) {
+              basicCol = -1;
+              break;
+            }
+
+            if (thisDual < dualVal ||
+                (thisDual == thisDual && colsize[col] < basicColSize)) {
+              basicCol = col;
+              dualVal = thisDual;
+              basicColSize = colsize[col];
+            }
+          }
+        }
+
+        if (basicCol == -1) continue;
+
+        startBasis->row_status[row] = HighsBasisStatus::NONBASIC;
+        startBasis->col_status[basicCol] = HighsBasisStatus::BASIC;
+        ++numStructuralCols;
+
+        for (const HighsSliceNonzero& nonz : getStoredRow())
+          costCopy[nonz.index()] += nonz.value() * dualVal;
+
+        for (HighsInt j = model->Astart_[basicCol];
+             j != model->Astart_[basicCol + 1]; ++j)
+          rowBlocked[model->Aindex_[j]] = true;
+      }
+
+      if (numStructuralCols != 0) {
+        startBasis->valid_ = true;
+        highsLogUser(options->log_options, HighsLogType::INFO,
+                     "Constructed initial basis with %" HIGHSINT_FORMAT
+                     " structural columns\n",
+                     numStructuralCols);
+      }
+    }
+  }
 
   return HighsModelStatus::NOTSET;
 }
