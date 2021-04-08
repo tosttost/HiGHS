@@ -159,11 +159,13 @@ void HighsMipSolverData::init() {
 }
 
 void HighsMipSolverData::runPresolve() {
+  mipsolver.timer_.start(mipsolver.timer_.presolve_clock);
   presolve::HPresolve presolve;
 
   presolve.setInput(mipsolver);
 
   mipsolver.modelstatus_ = presolve.run(postSolveStack);
+  mipsolver.timer_.stop(mipsolver.timer_.presolve_clock);
 }
 
 void HighsMipSolverData::runSetup() {
@@ -590,8 +592,8 @@ bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
     }
     if (new_upper_limit < upper_limit) {
       ++numImprovingSols;
-      debugSolution.newIncumbentFound();
       upper_limit = new_upper_limit;
+      debugSolution.newIncumbentFound();
       redcostfixing.propagateRootRedcost(mipsolver);
       if (domain.infeasible()) {
         pruned_treeweight = 1.0;
