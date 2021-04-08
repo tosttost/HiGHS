@@ -119,6 +119,7 @@ void HighsDomain::CutpoolPropagation::markPropagateCut(HighsInt cut) {
 void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
                                                              double oldbound,
                                                              double newbound) {
+  assert(!domain->infeasible_);
   cutpool->getMatrix().forEachColumnEntry(col, [&](HighsInt row, double val) {
     if (val > 0) {
       double deltamin;
@@ -148,6 +149,8 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
         activitycuts_[row] += deltamin;
       }
 
+      if (deltamin <= 0) return true;
+
       if (activitycutsinf_[row] == 0 &&
           activitycuts_[row] - cutpool->getRhs()[row] >
               domain->mipsolver->mipdata_->feastol) {
@@ -155,11 +158,12 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
         // encoded differently
         domain->mipsolver->mipdata_->debugSolution.nodePruned(*domain);
         domain->infeasible_ = true;
+        domain->infeasible_pos = domain->domchgstack_.size();
         domain->infeasible_reason = Reason::cut(cutpoolindex, row);
+        return false;
       }
 
-      if (deltamin > 0 && activitycutsinf_[row] <= 1 &&
-          !propagatecutflags_[row]) {
+      if (activitycutsinf_[row] <= 1 && !propagatecutflags_[row]) {
         markPropagateCut(row);
         // propagatecutflags_[row] = 1;
         // propagatecutinds_.push_back(row);
@@ -168,11 +172,39 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
 
     return true;
   });
+
+  if (domain->infeasible_) {
+    assert(domain->infeasible_reason.type == cutpoolindex);
+    assert(domain->infeasible_reason.index >= 0);
+    std::swap(oldbound, newbound);
+    cutpool->getMatrix().forEachColumnEntry(col, [&](HighsInt row, double val) {
+      if (val > 0) {
+        double deltamin;
+
+        assert(row < int(activitycutversion_.size()));
+
+        if (oldbound == -HIGHS_CONST_INF) {
+          --activitycutsinf_[row];
+          deltamin = newbound * val;
+        } else if (newbound == -HIGHS_CONST_INF) {
+          ++activitycutsinf_[row];
+          deltamin = -oldbound * val;
+        } else {
+          deltamin = (newbound - oldbound) * val;
+        }
+        activitycuts_[row] += deltamin;
+
+        if (domain->infeasible_reason.index == row) return false;
+      }
+      return true;
+    });
+  }
 }
 
 void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
                                                              double oldbound,
                                                              double newbound) {
+  assert(!domain->infeasible_);
   cutpool->getMatrix().forEachColumnEntry(col, [&](HighsInt row, double val) {
     if (val < 0) {
       double deltamin;
@@ -204,16 +236,19 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
         activitycuts_[row] += deltamin;
       }
 
+      if (deltamin <= 0) return true;
+
       if (activitycutsinf_[row] == 0 &&
           activitycuts_[row] - cutpool->getRhs()[row] >
               domain->mipsolver->mipdata_->feastol) {
         domain->mipsolver->mipdata_->debugSolution.nodePruned(*domain);
         domain->infeasible_ = true;
+        domain->infeasible_pos = domain->domchgstack_.size();
         domain->infeasible_reason = Reason::cut(cutpoolindex, row);
+        return false;
       }
 
-      if (deltamin > 0 && activitycutsinf_[row] <= 1 &&
-          !propagatecutflags_[row]) {
+      if (activitycutsinf_[row] <= 1 && !propagatecutflags_[row]) {
         markPropagateCut(row);
         // propagatecutflags_[row] = 1;
         // propagatecutinds_.push_back(row);
@@ -222,6 +257,33 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
 
     return true;
   });
+
+  if (domain->infeasible_) {
+    assert(domain->infeasible_reason.type == cutpoolindex);
+    assert(domain->infeasible_reason.index >= 0);
+    std::swap(oldbound, newbound);
+    cutpool->getMatrix().forEachColumnEntry(col, [&](HighsInt row, double val) {
+      if (val < 0) {
+        double deltamin;
+
+        assert(row < int(activitycutversion_.size()));
+
+        if (oldbound == HIGHS_CONST_INF) {
+          --activitycutsinf_[row];
+          deltamin = newbound * val;
+        } else if (newbound == HIGHS_CONST_INF) {
+          ++activitycutsinf_[row];
+          deltamin = -oldbound * val;
+        } else {
+          deltamin = (newbound - oldbound) * val;
+        }
+        activitycuts_[row] += deltamin;
+
+        if (domain->infeasible_reason.index == row) return false;
+      }
+      return true;
+    });
+  }
 }
 
 void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
@@ -483,6 +545,8 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
   HighsInt start = mip->Astart_[col];
   HighsInt end = mip->Astart_[col + 1];
 
+  assert(!infeasible_);
+
   for (HighsInt i = start; i != end; ++i) {
     if (mip->Avalue_[i] > 0) {
       double deltamin;
@@ -497,16 +561,21 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
       }
       activitymin_[mip->Aindex_[i]] += deltamin;
 
+      if (deltamin <= 0) continue;
+
       if (mip->rowUpper_[mip->Aindex_[i]] != HIGHS_CONST_INF &&
           activitymininf_[mip->Aindex_[i]] == 0 &&
           activitymin_[mip->Aindex_[i]] - mip->rowUpper_[mip->Aindex_[i]] >
               mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
         infeasible_ = true;
+        infeasible_pos = domchgstack_.size();
         infeasible_reason = Reason::modelRow(mip->Aindex_[i]);
+        end = i + 1;
+        break;
       }
 
-      if (deltamin > 0 && activitymininf_[mip->Aindex_[i]] <= 1 &&
+      if (activitymininf_[mip->Aindex_[i]] <= 1 &&
           !propagateflags_[mip->Aindex_[i]] &&
           mip->rowUpper_[mip->Aindex_[i]] != HIGHS_CONST_INF) {
         markPropagate(mip->Aindex_[i]);
@@ -526,16 +595,21 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
       }
       activitymax_[mip->Aindex_[i]] += deltamax;
 
+      if (deltamax >= 0) continue;
+
       if (mip->rowLower_[mip->Aindex_[i]] != -HIGHS_CONST_INF &&
           activitymaxinf_[mip->Aindex_[i]] == 0 &&
           mip->rowLower_[mip->Aindex_[i]] - activitymax_[mip->Aindex_[i]] >
               mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
         infeasible_ = true;
+        infeasible_pos = domchgstack_.size();
         infeasible_reason = Reason::modelRow(mip->Aindex_[i]);
+        end = i + 1;
+        break;
       }
 
-      if (deltamax < 0 && activitymaxinf_[mip->Aindex_[i]] <= 1 &&
+      if (activitymaxinf_[mip->Aindex_[i]] <= 1 &&
           !propagateflags_[mip->Aindex_[i]] &&
           mip->rowLower_[mip->Aindex_[i]] != -HIGHS_CONST_INF) {
         markPropagate(mip->Aindex_[i]);
@@ -545,8 +619,46 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
     }
   }
 
-  for (CutpoolPropagation& cutpoolprop : cutpoolpropagation)
-    cutpoolprop.updateActivityLbChange(col, oldbound, newbound);
+  if (!infeasible_) {
+    for (CutpoolPropagation& cutpoolprop : cutpoolpropagation)
+      cutpoolprop.updateActivityLbChange(col, oldbound, newbound);
+  } else {
+    assert(infeasible_reason.type == Reason::kModelRow);
+    assert(infeasible_reason.index == mip->Aindex_[end - 1]);
+  }
+
+  if (infeasible_) {
+    std::swap(oldbound, newbound);
+    for (HighsInt i = start; i != end; ++i) {
+      if (mip->Avalue_[i] > 0) {
+        double deltamin;
+        if (oldbound == -HIGHS_CONST_INF) {
+          --activitymininf_[mip->Aindex_[i]];
+          deltamin = newbound * mip->Avalue_[i];
+        } else if (newbound == -HIGHS_CONST_INF) {
+          ++activitymininf_[mip->Aindex_[i]];
+          deltamin = -oldbound * mip->Avalue_[i];
+        } else {
+          deltamin = (newbound - oldbound) * mip->Avalue_[i];
+        }
+        activitymin_[mip->Aindex_[i]] += deltamin;
+      } else {
+        double deltamax;
+        if (oldbound == -HIGHS_CONST_INF) {
+          --activitymaxinf_[mip->Aindex_[i]];
+          deltamax = newbound * mip->Avalue_[i];
+        } else if (newbound == -HIGHS_CONST_INF) {
+          ++activitymaxinf_[mip->Aindex_[i]];
+          deltamax = -oldbound * mip->Avalue_[i];
+        } else {
+          deltamax = (newbound - oldbound) * mip->Avalue_[i];
+        }
+        activitymax_[mip->Aindex_[i]] += deltamax;
+      }
+    }
+
+    return;
+  }
 }
 
 void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
@@ -555,6 +667,8 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
   HighsInt start = mip->Astart_[col];
   HighsInt end = mip->Astart_[col + 1];
 
+  assert(!infeasible_);
+
   for (HighsInt i = start; i != end; ++i) {
     if (mip->Avalue_[i] > 0) {
       double deltamax;
@@ -569,15 +683,21 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
       }
       activitymax_[mip->Aindex_[i]] += deltamax;
 
+      if (deltamax >= 0) continue;
+
       if (mip->rowLower_[mip->Aindex_[i]] != -HIGHS_CONST_INF &&
           activitymaxinf_[mip->Aindex_[i]] == 0 &&
           mip->rowLower_[mip->Aindex_[i]] - activitymax_[mip->Aindex_[i]] >
               mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
-        infeasible_ = mip->Aindex_[i] + 1;
+        infeasible_ = true;
+        infeasible_pos = domchgstack_.size();
+        infeasible_reason = Reason::modelRow(mip->Aindex_[i]);
+        end = i + 1;
+        break;
       }
 
-      if (deltamax < 0 && activitymaxinf_[mip->Aindex_[i]] <= 1 &&
+      if (activitymaxinf_[mip->Aindex_[i]] <= 1 &&
           !propagateflags_[mip->Aindex_[i]] &&
           mip->rowLower_[mip->Aindex_[i]] != -HIGHS_CONST_INF) {
         markPropagate(mip->Aindex_[i]);
@@ -598,15 +718,21 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
 
       activitymin_[mip->Aindex_[i]] += deltamin;
 
+      if (deltamin <= 0) continue;
+
       if (mip->rowUpper_[mip->Aindex_[i]] != HIGHS_CONST_INF &&
           activitymininf_[mip->Aindex_[i]] == 0 &&
           activitymin_[mip->Aindex_[i]] - mip->rowUpper_[mip->Aindex_[i]] >
               mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
-        infeasible_ = mip->Aindex_[i] + 1;
+        infeasible_ = true;
+        infeasible_pos = domchgstack_.size();
+        infeasible_reason = Reason::modelRow(mip->Aindex_[i]);
+        end = i + 1;
+        break;
       }
 
-      if (deltamin > 0 && activitymininf_[mip->Aindex_[i]] <= 1 &&
+      if (activitymininf_[mip->Aindex_[i]] <= 1 &&
           !propagateflags_[mip->Aindex_[i]] &&
           mip->rowUpper_[mip->Aindex_[i]] != HIGHS_CONST_INF) {
         markPropagate(mip->Aindex_[i]);
@@ -616,8 +742,47 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
     }
   }
 
-  for (CutpoolPropagation& cutpoolprop : cutpoolpropagation)
-    cutpoolprop.updateActivityUbChange(col, oldbound, newbound);
+  if (!infeasible_) {
+    for (CutpoolPropagation& cutpoolprop : cutpoolpropagation)
+      cutpoolprop.updateActivityUbChange(col, oldbound, newbound);
+  } else {
+    assert(infeasible_reason.type == Reason::kModelRow);
+    assert(infeasible_reason.index == mip->Aindex_[end - 1]);
+  }
+
+  if (infeasible_) {
+    std::swap(oldbound, newbound);
+    for (HighsInt i = start; i != end; ++i) {
+      if (mip->Avalue_[i] > 0) {
+        double deltamax;
+        if (oldbound == HIGHS_CONST_INF) {
+          --activitymaxinf_[mip->Aindex_[i]];
+          deltamax = newbound * mip->Avalue_[i];
+        } else if (newbound == HIGHS_CONST_INF) {
+          ++activitymaxinf_[mip->Aindex_[i]];
+          deltamax = -oldbound * mip->Avalue_[i];
+        } else {
+          deltamax = (newbound - oldbound) * mip->Avalue_[i];
+        }
+        activitymax_[mip->Aindex_[i]] += deltamax;
+      } else {
+        double deltamin;
+        if (oldbound == HIGHS_CONST_INF) {
+          --activitymininf_[mip->Aindex_[i]];
+          deltamin = newbound * mip->Avalue_[i];
+        } else if (newbound == HIGHS_CONST_INF) {
+          ++activitymininf_[mip->Aindex_[i]];
+          deltamin = -oldbound * mip->Avalue_[i];
+        } else {
+          deltamin = (newbound - oldbound) * mip->Avalue_[i];
+        }
+
+        activitymin_[mip->Aindex_[i]] += deltamin;
+      }
+    }
+
+    return;
+  }
 }
 
 void HighsDomain::markPropagateCut(Reason reason) {
@@ -692,7 +857,8 @@ double HighsDomain::doChangeBound(const HighsDomainChange& boundchg) {
   if (boundchg.boundtype == HighsBoundType::Lower) {
     oldbound = colLower_[boundchg.column];
     colLower_[boundchg.column] = boundchg.boundval;
-    updateActivityLbChange(boundchg.column, oldbound, boundchg.boundval);
+    if (!infeasible_)
+      updateActivityLbChange(boundchg.column, oldbound, boundchg.boundval);
 
     if (!changedcolsflags_[boundchg.column]) {
       changedcolsflags_[boundchg.column] = 1;
@@ -701,7 +867,8 @@ double HighsDomain::doChangeBound(const HighsDomainChange& boundchg) {
   } else {
     oldbound = colUpper_[boundchg.column];
     colUpper_[boundchg.column] = boundchg.boundval;
-    updateActivityUbChange(boundchg.column, oldbound, boundchg.boundval);
+    if (!infeasible_)
+      updateActivityUbChange(boundchg.column, oldbound, boundchg.boundval);
 
     if (!changedcolsflags_[boundchg.column]) {
       changedcolsflags_[boundchg.column] = 1;
@@ -726,13 +893,13 @@ void HighsDomain::changeBound(HighsDomainChange boundchg, Reason reason) {
       if (boundchg.boundval - colUpper_[boundchg.column] >
           mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
+        if (!infeasible_) infeasible_pos = domchgstack_.size();
         infeasible_ = true;
         infeasible_reason = reason;
-        return;
+      } else {
+        boundchg.boundval = colUpper_[boundchg.column];
+        if (boundchg.boundval == colLower_[boundchg.column]) return;
       }
-
-      boundchg.boundval = colUpper_[boundchg.column];
-      if (boundchg.boundval == colLower_[boundchg.column]) return;
     }
   } else {
     if (boundchg.boundval >= colUpper_[boundchg.column]) return;
@@ -740,13 +907,13 @@ void HighsDomain::changeBound(HighsDomainChange boundchg, Reason reason) {
       if (colLower_[boundchg.column] - boundchg.boundval >
           mipsolver->mipdata_->feastol) {
         mipsolver->mipdata_->debugSolution.nodePruned(*this);
+        if (!infeasible_) infeasible_pos = domchgstack_.size();
         infeasible_ = true;
         infeasible_reason = reason;
-        return;
+      } else {
+        boundchg.boundval = colLower_[boundchg.column];
+        if (boundchg.boundval == colUpper_[boundchg.column]) return;
       }
-
-      boundchg.boundval = colLower_[boundchg.column];
-      if (boundchg.boundval == colUpper_[boundchg.column]) return;
     }
   }
 
@@ -790,7 +957,9 @@ void HighsDomain::setDomainChangeStack(
 }
 
 HighsDomainChange HighsDomain::backtrack() {
-  HighsInt k = domchgstack_.size() - 1;
+  HighsInt k = HighsInt(domchgstack_.size()) - 1;
+  bool old_infeasible = infeasible_;
+  Reason old_reason = infeasible_reason;
 
   while (k >= 0) {
     double prevbound = prevboundval_[k];
@@ -802,13 +971,20 @@ HighsDomainChange HighsDomain::backtrack() {
     doChangeBound(
         {domchgstack_[k].boundtype, domchgstack_[k].column, prevbound});
 
+    if (infeasible_ && infeasible_pos == k) {
+      assert(old_infeasible);
+      assert(k == HighsInt(domchgstack_.size()) - 1);
+      infeasible_ = false;
+      infeasible_reason = Reason::unspecified();
+    }
+
     if (domchgreason_[k].type == Reason::kBranching) break;
 
     --k;
   }
 
-  if (infeasible_) {
-    markPropagateCut(infeasible_reason);
+  if (old_infeasible) {
+    markPropagateCut(old_reason);
     infeasible_reason = Reason::unspecified();
     infeasible_ = false;
   }
