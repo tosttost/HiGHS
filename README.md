@@ -85,14 +85,22 @@ Usage:
 Language interfaces and further documentation
 ---------------------------------------------
 
-There are HiGHS interfaces for C, C#, FORTRAN, and Python in HiGHS/src/interfaces, with example driver files in HiGHS/examples. Documentation beyond what is in this file is "work in progress", but we expect to have some available before summer 2020. However, we are happy to give a reasonable level of support via email sent to highsopt@gmail.com.
+There are HiGHS interfaces for C, C#, FORTRAN, and Python in
+HiGHS/src/interfaces, with example driver files in
+HiGHS/examples. Documentation beyond what is in this file is "work in
+progress", but we expect to have some available before summer
+2020. However, we are happy to give a reasonable level of support via
+email sent to highsopt@gmail.com.
 
 Parallel code
 -------------
 
-At the moment the parallel option is temporarily unavailable due to a large
-refactoring in progress. This document will be updated once we have completed
-the interface currently being developed.
+Parallel dual simplex is available in HiGHS under Linux, but not on
+Windows or MacOS due to issues relating to OpenMP. This situation
+should improve when parallelism in HiGHS is handled via the native C++
+instructions. However, performance gain with the simplex solver is
+unlikely to be significant. At best, speed-up is limited to the number
+of memory channels, rather than the number of cores.
 
 In order to use OpenMP if available, set`-DOPENMP=ON` during the configuration
 step (`cmake ..`).
@@ -179,6 +187,16 @@ Julia
 -----
 
 - A Julia interface is available at https://github.com/jump-dev/HiGHS.jl.
+
+Rust
+----
+
+- HiGHS can be used from rust through the [`highs` crate](https://crates.io/crates/highs). The rust linear programming modeler [**good_lp**](https://crates.io/crates/good_lp) supports HiGHS. 
+
+Javascript
+----------
+
+HiGHS can be used from javascript directly inside a web browser thanks to [highs-js](https://github.com/lovasoa/highs-js). See the [demo](https://lovasoa.github.io/highs-js/) and the [npm package](https://www.npmjs.com/package/highs).
 
 OSI
 ---
