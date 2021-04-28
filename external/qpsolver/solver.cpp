@@ -136,7 +136,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 	Vector buffer_l(runtime.instance.num_var);
 	Vector buffer_Qp(runtime.instance.num_var);
 
-	bool atfsep = true;
+	bool atfsep = basis.getnumactive() == runtime.instance.num_var;
 	while (true && runtime.statistics.num_iterations < runtime.settings.iterationlimit
 	&& std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - runtime.statistics.time_start).count() < runtime.settings.timelimit) {
 		// LOGGING
