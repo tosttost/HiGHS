@@ -37,15 +37,15 @@ private:
          }
       }
 
-      for (int col = 0; col < orig.size(); col++) { 
-        for (int row = 0; row <= col; row++) { 
+      for (size_t col = 0; col < orig.size(); col++) { 
+        for (size_t row = 0; row <= col; row++) { 
             double sum = 0; 
             if (row == col) { 
-               for (int k = 0; k < row; k++) 
+               for (size_t k = 0; k < row; k++) 
                     sum += L[k * current_k_max + row] * L[k * current_k_max + row];
                 L[row * current_k_max + row] = sqrt(orig[row][row] - sum); 
             } else { 
-               for (int k = 0; k < row; k++) 
+               for (size_t k = 0; k < row; k++) 
                   sum += (L[k * current_k_max + col] * L[k * current_k_max + row]); 
                L[row * current_k_max + col] = (orig[col][row] - sum) / L[row * current_k_max + row]; 
             } 

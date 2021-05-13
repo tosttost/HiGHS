@@ -49,7 +49,8 @@ class Highs {
                         const double* costs, const double* col_lower,
                         const double* col_upper, const double* row_lower,
                         const double* row_upper, const int* astart,
-                        const int* aindex, const double* avalue);
+                        const int* aindex, const double* avalue, const int* qstart,
+                        const int* qindex, const double* qvalue);
 
   /**
    * @brief reads in a model and initializes the HighsModelObject

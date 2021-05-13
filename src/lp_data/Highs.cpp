@@ -29,7 +29,7 @@
 #include "simplex/HSimplexDebug.h"
 #include "simplex/HighsSimplexInterface.h"
 #include "util/HighsMatrixPic.h"
-#include "../external/qpsolver/solver.hpp"
+#include "qpsolver/solver.hpp"
 
 #ifdef OPENMP
 #include "omp.h"
@@ -243,7 +243,7 @@ HighsStatus Highs::passModel(const int num_col, const int num_row,
                              const double* col_lower, const double* col_upper,
                              const double* row_lower, const double* row_upper,
                              const int* astart, const int* aindex,
-                             const double* avalue) {
+                             const double* avalue, const int* qstart = nullptr, const int* qindex = nullptr, const double* qvalue = nullptr) {
   HighsLp lp;
   lp.numCol_ = num_col;
   lp.numRow_ = num_row;
@@ -270,6 +270,9 @@ HighsStatus Highs::passModel(const int num_col, const int num_row,
     lp.Astart_.assign(astart, astart + num_col);
     lp.Aindex_.assign(aindex, aindex + num_nz);
     lp.Avalue_.assign(avalue, avalue + num_nz);
+  }
+  if (qvalue != NULL) {
+    lp.Qstart_.assign(qstart, qstart + num_col + 1);
   }
   lp.Astart_.resize(num_col + 1);
   lp.Astart_[num_col] = num_nz;

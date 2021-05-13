@@ -78,9 +78,9 @@ include_directories(ipm/basiclu/include)
 
 set(sources
     ../external/filereaderlp/reader.cpp
-    ../external/qpsolver/basis.cpp
-    ../external/qpsolver/solver.cpp
-    ../external/qpsolver/ratiotest/ratiotest.cpp
+    qpsolver/basis.cpp
+    qpsolver/solver.cpp
+    qpsolver/ratiotest/ratiotest.cpp
     io/Filereader.cpp
     io/FilereaderLp.cpp
     io/FilereaderEms.cpp
@@ -147,8 +147,8 @@ set(headers
     ../external/filereaderlp/builder.hpp
     ../external/filereaderlp/model.hpp
     ../external/filereaderlp/reader.hpp
-    ../external/qpsolver/solver.hpp
-    ../external/qpsolver/vector.hpp
+    qpsolver/solver.hpp
+    qpsolver/vector.hpp
     ipm/IpxStatus.h
     io/Filereader.h
     io/FilereaderLp.h

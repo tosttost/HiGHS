@@ -52,7 +52,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p, const Vector
 
    double max_pivot = 0;
    if (res1.limitingconstraint != -1) {
-      if (result.limitingconstraint < instance.num_con) {
+      if ((int)result.limitingconstraint < instance.num_con) {
          max_pivot = rowmove.value[result.limitingconstraint];
       } else {
          max_pivot = p.value[result.limitingconstraint - instance.num_con];

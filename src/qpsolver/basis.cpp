@@ -41,7 +41,7 @@ void Basis::build() {
                      baseindex);
    basisfactor.build();
 
-   for (int i = 0; i < activeconstraintidx.size() + nonactiveconstraintsidx.size(); i++) {
+   for (size_t i = 0; i < activeconstraintidx.size() + nonactiveconstraintsidx.size(); i++) {
       constraintindexinbasisfactor[baseindex[i]] = i;
    }
 }
@@ -52,11 +52,10 @@ void Basis::rebuild() {
    
    constraintindexinbasisfactor.assign(Atran.num_row + Atran.num_col, -1);
    assert(nonactiveconstraintsidx.size() + activeconstraintidx.size() == Atran.num_row);
-   int idx = 0;
 
    basisfactor.build();
 
-   for (int i = 0; i < activeconstraintidx.size() + nonactiveconstraintsidx.size(); i++) {
+   for (size_t i = 0; i < activeconstraintidx.size() + nonactiveconstraintsidx.size(); i++) {
       constraintindexinbasisfactor[baseindex[i]] = i;
    }
 }

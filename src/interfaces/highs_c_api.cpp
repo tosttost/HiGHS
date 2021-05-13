@@ -18,11 +18,22 @@ int Highs_call(const int numcol, const int numrow, const int numnz,
                const double* avalue, double* colvalue, double* coldual,
                double* rowvalue, double* rowdual, int* colbasisstatus,
                int* rowbasisstatus, int* modelstatus) {
+  return Highs_callQp(numcol, numrow, numnz, colcost, collower, colupper, rowlower, rowupper,
+                 astart, aindex, avalue, NULL, NULL, NULL, colvalue, coldual, rowvalue, rowdual, colbasisstatus, rowbasisstatus, modelstatus);
+}
+
+int Highs_callQp(const int numcol, const int numrow, const int numnz,
+               const double* colcost, const double* collower,
+               const double* colupper, const double* rowlower,
+               const double* rowupper, const int* astart, const int* aindex,
+               const double* avalue, const int* qstart, const int* qindex, const double* qvalue, double* colvalue, double* coldual,
+               double* rowvalue, double* rowdual, int* colbasisstatus,
+               int* rowbasisstatus, int* modelstatus) {
   Highs highs;
 
   int status =
-      Highs_passLp(&highs, numcol, numrow, numnz, colcost, collower, colupper,
-                   rowlower, rowupper, astart, aindex, avalue);
+      Highs_passQp(&highs, numcol, numrow, numnz, colcost, collower, colupper,
+                   rowlower, rowupper, astart, aindex, avalue, qstart, qindex, qvalue);
   if (status != 0) {
     return status;
   }
@@ -79,7 +90,17 @@ int Highs_passLp(void* highs, const int numcol, const int numrow,
                  const double* avalue) {
   return (int)((Highs*)highs)
       ->passModel(numcol, numrow, numnz, colcost, collower, colupper, rowlower,
-                  rowupper, astart, aindex, avalue);
+                  rowupper, astart, aindex, avalue, NULL, NULL, NULL);
+}
+
+int Highs_passQp(void* highs, const int numcol, const int numrow,
+                 const int numnz, const double* colcost, const double* collower,
+                 const double* colupper, const double* rowlower,
+                 const double* rowupper, const int* astart, const int* aindex,
+                 const double* avalue, const int* qstart, const int* qindex, const double* qvalue) {
+  return (int)((Highs*)highs)
+      ->passModel(numcol, numrow, numnz, colcost, collower, colupper, rowlower,
+                  rowupper, astart, aindex, avalue, qstart, qindex, qvalue);
 }
 
 int Highs_clearModel(void* highs) { return (int)((Highs*)highs)->clearModel(); }

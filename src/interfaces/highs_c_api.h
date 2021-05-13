@@ -15,7 +15,42 @@ extern "C" {
 #endif
 
 /*
- * @brief runs a model using HiGHS
+ * @brief runs a QP model using HiGHS
+ */
+int Highs_callQp(
+    const int numcol,       //!< number of columns
+    const int numrow,       //!< number of rows
+    const int numnz,        //!< number of entries in the constraint matrix
+    const double* colcost,  //!< array of length [numcol] with column costs
+    const double*
+        collower,  //!< array of length [numcol] with lower column bounds
+    const double*
+        colupper,  //!< array of length [numcol] with upper column bounds
+    const double* rowlower,  //!< array of length [numrow] with lower row bounds
+    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const int*
+        astart,  //!< array of length [numcol+1] with column start indices
+    const int*
+        aindex,  //!< array of length [numnz] with row indices of matrix entries
+    const double*
+        avalue,        //!< array of length [numnz] with value of matrix entries
+    
+    const int* qstart, 
+    const int* qindex,
+    const double* qvalue,
+    double* colvalue,  //!< array of length [numcol], filled with column values
+    double* coldual,   //!< array of length [numcol], filled with column duals
+    double* rowvalue,  //!< array of length [numrow], filled with row values
+    double* rowdual,   //!< array of length [numrow], filled with row duals
+    int* colbasisstatus,  //!< array of length [numcol], filled with column
+                          //!< basis stati
+    int* rowbasisstatus,  //!< array of length [numrow], filled with row basis
+                          //!< stati
+    int* modelstatus      //!< status of the model will be saved here
+);
+
+/*
+ * @brief runs a LP model using HiGHS
  */
 int Highs_call(
     const int numcol,       //!< number of columns
@@ -130,6 +165,35 @@ int Highs_passLp(
         aindex,  //!< array of length [numnz] with row indices of matrix entries
     const double*
         avalue  //!< array of length [numnz] with value of matrix entries
+);
+
+/*
+ * @brief pass an Qp to HiGHS
+ */
+int Highs_passQp(
+    void* highs,            //!< HiGHS object reference
+    const int numcol,       //!< number of columns
+    const int numrow,       //!< number of rows
+    const int numnz,        //!< number of entries in the constraint matrix
+    const double* colcost,  //!< array of length [numcol] with column costs
+    const double*
+        collower,  //!< array of length [numcol] with lower column bounds
+    const double*
+        colupper,  //!< array of length [numcol] with upper column bounds
+    const double* rowlower,  //!< array of length [numrow] with lower row bounds
+    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const int*
+        astart,  //!< array of length [numcol+1] with column start indices
+    const int*
+        aindex,  //!< array of length [numnz] with row indices of matrix entries
+    const double*
+        avalue,  //!< array of length [numnz] with value of matrix entries
+    const int*
+        qastart,  //!< array of length [numcol+1] with column start indices
+    const int*
+        qindex,  //!< array of length [numnz] with row indices of matrix entries
+    const double*
+        qvalue  //!< array of length [numnz] with value of matrix entries
 );
 
 /*

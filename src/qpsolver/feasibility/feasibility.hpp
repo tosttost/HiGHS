@@ -11,10 +11,6 @@ struct CrashSolution {
    Vector rowact;
 
    CrashSolution(int num_var, int num_row) : primal(Vector(num_var)), rowact(Vector(num_row)) {}
-
-   static CrashSolution read(std::string filename) {
-
-   } 
 };
 
 #endif

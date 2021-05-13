@@ -27,10 +27,8 @@
 void Solver::solve() {
 	CrashSolution* crash;
 	computestartingpoint(runtime, crash);   
-	if (runtime.status != ProblemStatus::INFEASIBLE) {
-		Basis basis(runtime, crash->active, crash->rowstatus, crash->inactive);
-   	solve(crash->primal, crash->rowact,  basis);
-	}
+   Basis basis(runtime, crash->active, crash->rowstatus, crash->inactive);
+   solve(crash->primal, crash->rowact,  basis);
 }
 
 Solver::Solver(Runtime& rt) : runtime(rt) {
@@ -134,6 +132,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 	Vector buffer_yp(runtime.instance.num_var);
 	Vector buffer_gyp(runtime.instance.num_var);
 	Vector buffer_l(runtime.instance.num_var);
+
 	Vector buffer_Qp(runtime.instance.num_var);
 
 	bool atfsep = basis.getnumactive() == runtime.instance.num_var;
@@ -165,7 +164,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 			if (runtime.instance.Q.mat.value.size() > 0) {
 				double denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
 				if (fabs(denominator) > 10E-5) {
-					double numerator = (- (p * gradient.getGradient()));
+					double numerator = -(p * gradient.getGradient());
 					if (numerator < 0.0) {
 						// printf("numerator < 0: %lf\n", numerator);
 						maxsteplength = 0.0;
@@ -203,10 +202,11 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 				if (basis.getnumactive() != runtime.instance.num_var) {
 					atfsep = false;
 				}
-			} else if (stepres.alpha == std::numeric_limits<double>::infinity()) {
-				runtime.status = ProblemStatus::UNBOUNDED;
-				break;
 			} else {
+				if (stepres.limitingconstraint == std::numeric_limits<double>::infinity()) {
+					// unbounded
+					runtime.status = ProblemStatus::UNBOUNDED;
+				}
 				atfsep = true;
 				redgrad.update(stepres.alpha, false);
 			}
@@ -223,10 +223,6 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 	loginformation(runtime, basis, ns, factor);
 	runtime.endofiterationevent.fire(runtime);
 
-	if (basis.getnumactive() == runtime.instance.num_var) {
-		runtime.primal = basis.recomputex(runtime.instance);
-	}
-
 	Vector lambda =redcosts.getReducedCosts();
 	for (auto e: basis.getactive()) {
 		int indexinbasis = basis.getindexinfactor()[e];
@@ -239,6 +235,9 @@ void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
 		}
 	}
 
+	if (basis.getnumactive() == runtime.instance.num_var) {
+		runtime.primal = basis.recomputex(runtime.instance);
+	}
 	// x.report("x");
 	runtime.statistics.time_end = std::chrono::high_resolution_clock::now();
 }
