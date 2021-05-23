@@ -24,6 +24,7 @@ set(TEST_SOURCES
     TestBasisSolves.cpp
     TestLpValidation.cpp
     TestLpModification.cpp
+    TestQpSolver.cpp
     TestRays.cpp
     TestRanging.cpp
     Avgas.cpp)

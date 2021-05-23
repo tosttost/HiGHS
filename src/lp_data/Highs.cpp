@@ -1955,6 +1955,10 @@ HighsStatus Highs::callSolveQp() {
   instance.A.mat.index = lp_.Aindex_;
   instance.A.mat.value = lp_.Avalue_;
   instance.c.value = lp_.colCost_;
+  instance.c.num_nz = lp_.numCol_;
+  for (int i=0; i<lp_.numCol_; i++) {
+    instance.c.index[i] = i;
+  }
   instance.con_lo = lp_.rowLower_;
   instance.con_up = lp_.rowUpper_;
   instance.var_lo = lp_.colLower_;
@@ -2003,7 +2007,7 @@ HighsStatus Highs::callSolveQp() {
   info_.objective_function_value = runtime.instance.objval(runtime.primal);
   info_.num_primal_infeasibilities = -1;  // Not known
   // Are the violations max or sum?
-  info_.max_primal_infeasibility =0.0; //
+  info_.max_primal_infeasibility = 0.0; //
   info_.sum_primal_infeasibilities = -1;  // Not known
   info_.num_dual_infeasibilities = -1;    // Not known
   info_.max_dual_infeasibility = -1;      // Not known

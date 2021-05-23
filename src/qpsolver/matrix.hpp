@@ -88,7 +88,7 @@ Vector& mat_vec_par(const Vector& other, Vector& target) const {
 
 
    Vector& mat_vec(const Vector& other, Vector& target) const {
-      return mat_vec_par(other, target);
+      return mat_vec_seq(other, target);
    }
 
    Vector& mat_vec_seq(const Vector& other, Vector& target) const {
