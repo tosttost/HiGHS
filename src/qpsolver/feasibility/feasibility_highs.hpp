@@ -33,7 +33,7 @@ void computestartingpoint(Runtime& runtime, CrashSolution*& result) {
 	runtime.statistics.phase1_iterations = highs.getSimplexIterationCount();
 
    HighsModelStatus phase1stat = highs.getModelStatus();
-   if (phase1stat == HighsModelStatus::PRIMAL_INFEASIBLE) {
+   if (phase1stat == HighsModelStatus::kInfeasible) {
 		runtime.status = ProblemStatus::INFEASIBLE;
       return;
    }
@@ -61,34 +61,34 @@ void computestartingpoint(Runtime& runtime, CrashSolution*& result) {
    std::vector<int> initialinactive;
 	std::vector<BasisStatus> atlower;
 	for (int i=0; i<bas.row_status.size(); i++) {
-		if (bas.row_status[i] == HighsBasisStatus::LOWER) {
+		if (bas.row_status[i] == HighsBasisStatus::kLower) {
 			initialactive.push_back(i);
 			atlower.push_back(BasisStatus::ActiveAtLower);
-		} else if (bas.row_status[i] == HighsBasisStatus::UPPER) {
+		} else if (bas.row_status[i] == HighsBasisStatus::kUpper) {
 			initialactive.push_back(i);
 			atlower.push_back(BasisStatus::ActiveAtUpper);
-		} else if (bas.row_status[i] != HighsBasisStatus::BASIC) {
+		} else if (bas.row_status[i] != HighsBasisStatus::kBasic) {
          // printf("row %d nonbasic\n", i);
          initialinactive.push_back(runtime.instance.num_con + i);
       } else {
-         assert(bas.row_status[i] == HighsBasisStatus::BASIC);
+         assert(bas.row_status[i] == HighsBasisStatus::kBasic);
       }
 	}
 
 	for (int i=0; i<bas.col_status.size(); i++) {
-		if (bas.col_status[i] == HighsBasisStatus::LOWER) {
+		if (bas.col_status[i] == HighsBasisStatus::kLower) {
 			initialactive.push_back(i + runtime.instance.num_con);
 			atlower.push_back(BasisStatus::ActiveAtLower);
-		} else if (bas.col_status[i] == HighsBasisStatus::UPPER) {
+		} else if (bas.col_status[i] == HighsBasisStatus::kUpper) {
 			initialactive.push_back(i + runtime.instance.num_con);
 			atlower.push_back(BasisStatus::ActiveAtUpper);
-		} else if (bas.col_status[i] == HighsBasisStatus::ZERO) {
+		} else if (bas.col_status[i] == HighsBasisStatus::kZero) {
          // printf("col %u free and set to 0 %d\n", i, (int)bas.col_status[i]);
          initialinactive.push_back(runtime.instance.num_con + i);
-      } else if (bas.col_status[i] != HighsBasisStatus::BASIC) {
+      } else if (bas.col_status[i] != HighsBasisStatus::kBasic) {
          // printf("Column %d basis stus %d\n", i, (int)bas.col_status[i]);
       } else {
-         assert(bas.col_status[i] == HighsBasisStatus::BASIC);
+         assert(bas.col_status[i] == HighsBasisStatus::kBasic);
       }
 	}
 

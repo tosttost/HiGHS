@@ -111,9 +111,9 @@ Vector& computesearchdirection_major(Runtime& runtime, Nullspace& ns, Basis& bas
 	}
 }
 
-void Solver::solve(const Vector& x0, const Vector& ra, const Basis& b0) {
+void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
 	runtime.statistics.time_start = std::chrono::high_resolution_clock::now();
-	Basis basis = b0;
+	Basis& basis = b0;
 	runtime.primal = x0;
 
 	// TODO: remove redundant equations before starting 

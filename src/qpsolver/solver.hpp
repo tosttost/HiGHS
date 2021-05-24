@@ -13,7 +13,7 @@
 struct Solver {
    Solver(Runtime& rt);
    
-   void solve(const Vector& x0, const Vector& ra, const Basis& b0);
+   void solve(const Vector& x0, const Vector& ra, Basis& b0);
 
    void solve();
 
