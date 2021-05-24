@@ -93,6 +93,16 @@ void Highs_destroy(void* highs);
 /*
  * @brief
  */
+void Highs_clear(void* highs);
+
+/*
+ * @brief
+ */
+void Highs_clearModel(void* highs);
+
+/*
+ * @brief
+ */
 HighsInt Highs_readModel(void* highs,
                          const char* filename  //!< filename
 );
@@ -103,11 +113,6 @@ HighsInt Highs_readModel(void* highs,
 HighsInt Highs_writeModel(void* highs,
                           const char* filename  //!< filename
 );
-
-/*
- * @brief
- */
-HighsInt Highs_clearModel(void* highs);
 
 /*
  * @brief Runs HiGHS

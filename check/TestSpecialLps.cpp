@@ -173,7 +173,7 @@ void issue316(Highs& highs) {
   const HighsModelStatus require_model_status = HighsModelStatus::kOptimal;
   const double min_optimal_objective = -6;
   const double max_optimal_objective = 12;
-  REQUIRE(highs.clearModel() == HighsStatus::kOk);
+  highs.clearModel();
 
   bool_status = highs.addCol(2, -3, 6, 0, NULL, NULL);
   REQUIRE(bool_status);

@@ -95,6 +95,10 @@ void* Highs_create() { return new Highs(); }
 
 void Highs_destroy(void* highs) { delete (Highs*)highs; }
 
+void Highs_clear(void* highs) { ((Highs*)highs)->clear(); }
+
+void Highs_clearModel(void* highs) { ((Highs*)highs)->clearModel(); }
+
 HighsInt Highs_run(void* highs) { return (HighsInt)((Highs*)highs)->run(); }
 
 HighsInt Highs_readModel(void* highs, const char* filename) {
@@ -137,10 +141,6 @@ HighsInt Highs_passMip(void* highs, const HighsInt numcol,
       ->passModel(numcol, numrow, numnz, bool_rowwise, colcost, collower,
                   colupper, rowlower, rowupper, astart, aindex, avalue,
                   integrality);
-}
-
-HighsInt Highs_clearModel(void* highs) {
-  return (HighsInt)((Highs*)highs)->clearModel();
 }
 
 HighsInt Highs_setBoolOptionValue(void* highs, const char* option,

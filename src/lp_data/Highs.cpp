@@ -44,25 +44,34 @@ Highs::Highs() {
   hmos_.push_back(HighsModelObject(model_.lp_, options_, timer_));
 }
 
-HighsStatus Highs::clear() {
+void Highs::clear() {
   resetOptions();
-  return clearModel();
+  clearModel();
 }
 
-HighsStatus Highs::clearModel() {
+void Highs::clearModel() {
   model_.clear();
-  return clearSolver();
+  clearSolver();
 }
 
-HighsStatus Highs::clearSolver() {
-  HighsStatus return_status = HighsStatus::kOk;
+void Highs::clearSolver() {
+  if ((int)hmos_.size()) {
+    const int old_lp_numcol = (int)hmos_[0].lp_.numCol_;
+    const bool ekk_valid = hmos_[0].ekk_instance_.status_.valid;
+    printf("old_lp_numcol = %d; ekk_valid = %d\n", old_lp_numcol, ekk_valid);
+    //    assert(!ekk_valid);
+  }
   clearPresolve();
   clearUserSolverData();
   hmos_.clear();
   // Clear any HighsModelObject instances and create a fresh one for
   // the incumbent model
   hmos_.push_back(HighsModelObject(model_.lp_, options_, timer_));
-  return returnFromHighs(return_status);
+  // By clearing everything, there should be nothing to verify in
+  // returnFromHighs() that could yield an error
+  HighsStatus return_status = HighsStatus::kOk;
+  return_status = returnFromHighs(return_status);
+  assert(return_status == HighsStatus::kOk);
 }
 
 HighsStatus Highs::setOptionValue(const std::string& option, const bool value) {
@@ -248,11 +257,7 @@ HighsStatus Highs::passModel(const HighsModel model) {
                                       return_status, "assessHessian");
   if (return_status == HighsStatus::kError) return return_status;
 
-  // Clear solver status, solution, basis and info associated with any
-  // previous model; clear any HiGHS model object; create a HiGHS
-  // model object for this LP
-  return_status =
-      interpretCallStatus(clearSolver(), return_status, "clearSolver");
+  clearSolver();
   return returnFromHighs(return_status);
 }
 

@@ -42,18 +42,18 @@ class Highs {
   /**
    * @brief Resets options and then calls clearModel()
    */
-  HighsStatus clear();
+  void clear();
 
   /**
    * @brief Clears model and then calls clearSolver()
    */
-  HighsStatus clearModel();
+  void clearModel();
 
   /**
    * @brief Clears solver, and creates a HiGHS model object for the LP
    * in HiGHS
    */
-  HighsStatus clearSolver();
+  void clearSolver();
 
   /**
    * Methods for model input
