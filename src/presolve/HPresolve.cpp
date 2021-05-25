@@ -5173,5 +5173,9 @@ HPresolve::Result HPresolve::sparsify(HighsPostsolveStack& postSolveStack) {
 
   return Result::kOk;
 }
+bool HPresolve::isReduced(const HighsPostsolveStack& postSolveStack) {
+  const bool is_reduced = postSolveStack.numReductions();
+  return is_reduced;
+}
 
 }  // namespace presolve

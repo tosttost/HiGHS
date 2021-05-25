@@ -57,14 +57,17 @@ std::string PresolveComponent::presolveStatusToString(
   }
 }
 
-void PresolveComponent::negateReducedLpColDuals(bool reduced) {
+void PresolveComponent::negateReducedLpColDuals() {
   for (HighsInt col = 0; col < data_.reduced_lp_.numCol_; col++)
     data_.recovered_solution_.col_dual[col] =
         -data_.recovered_solution_.col_dual[col];
   return;
 }
 
-void PresolveComponent::negateReducedLpCost() { return; }
+bool PresolveComponent::isReduced() {
+  presolve::HPresolve presolve;
+  return presolve.isReduced(data_.postSolveStack);
+}
 
 HighsPresolveStatus PresolveComponent::run() {
   presolve::HPresolve presolve;
@@ -84,10 +87,7 @@ HighsPresolveStatus PresolveComponent::run() {
   }
 }
 
-void PresolveComponent::clear() {
-  //  has_run_ = false;
-  data_.clear();
-}
+void PresolveComponent::clear() { data_.clear(); }
 namespace presolve {
 
 bool checkOptions(const PresolveComponentOptions& options) {

@@ -433,41 +433,59 @@ HighsStatus Highs::writeBasis(const std::string filename) {
 HighsStatus Highs::presolve() {
   if (!haveHmo("presolve")) return HighsStatus::kError;
   HighsStatus return_status = HighsStatus::kOk;
-  const bool force_presolve = true;
-  model_presolve_status_ = runPresolve(force_presolve);
+
+  clearPresolve();
+  if (model_.isEmpty()) {
+    model_presolve_status_ = HighsPresolveStatus::kNotReduced;
+  } else {
+    const bool force_presolve = true;
+    model_presolve_status_ = runPresolve(force_presolve);
+  }
+  highsLogUser(
+      options_.log_options, HighsLogType::kInfo, "Presolve status: %s\n",
+      presolve_.presolveStatusToString(model_presolve_status_).c_str());
+
   switch (model_presolve_status_) {
-  case HighsPresolveStatus::kNotPresolved: {
-    // Shouldn't happen
-    assert(model_presolve_status_ != HighsPresolveStatus::kNotPresolved);
-    return_status = HighsStatus::kError;
-    break;
-  }
-  case HighsPresolveStatus::kNotReduced:
-  case HighsPresolveStatus::kInfeasible:
-  case HighsPresolveStatus::kReduced:
-  case HighsPresolveStatus::kReducedToEmpty:
-  case HighsPresolveStatus::kUnboundedOrInfeasible: {
-    // All OK
-    if (model_presolve_status_ == HighsPresolveStatus::kInfeasible) {
-      // Model is infeasible 
-      setHighsModelStatusAndInfo(HighsModelStatus::kInfeasible);
-    } else if (model_presolve_status_ == HighsPresolveStatus::kReduced) {
-      // Record the reduced LP
-      presolved_model_.lp_ = presolve_.getReducedProblem();
+    case HighsPresolveStatus::kNotPresolved: {
+      // Shouldn't happen
+      assert(model_presolve_status_ != HighsPresolveStatus::kNotPresolved);
+      return_status = HighsStatus::kError;
+      break;
     }
-    return_status = HighsStatus::kOk;
-    break;
-  }
-  case HighsPresolveStatus::kTimeout: {
-    // @Leona: Is there a reduced LP to be extracted?
-    return_status = HighsStatus::kWarning;
-    break;
-  }
-  default: {
-    // case HighsPresolveStatus::kError
-    setHighsModelStatusAndInfo(HighsModelStatus::kPresolveError);
-    return_status = HighsStatus::kError;
-  }
+    case HighsPresolveStatus::kNotReduced:
+    case HighsPresolveStatus::kInfeasible:
+    case HighsPresolveStatus::kReduced:
+    case HighsPresolveStatus::kReducedToEmpty:
+    case HighsPresolveStatus::kUnboundedOrInfeasible: {
+      // All OK
+      if (model_presolve_status_ == HighsPresolveStatus::kInfeasible) {
+        // Infeasible model, so indicate that the incumbent model is
+        // known as such
+        setHighsModelStatusAndInfo(HighsModelStatus::kInfeasible);
+      } else if (model_presolve_status_ == HighsPresolveStatus::kNotReduced) {
+        // No reduction, so fill Highs presolved model with the
+        // incumbent model
+        presolved_model_ = model_;
+      } else if (model_presolve_status_ == HighsPresolveStatus::kReduced) {
+        // Nontrivial reduction, so fill Highs presolved model with the
+        // presolved model
+        presolved_model_.lp_ = presolve_.getReducedProblem();
+      }
+      return_status = HighsStatus::kOk;
+      break;
+    }
+    case HighsPresolveStatus::kTimeout: {
+      // Timeout, so assume that it's OK to fill the Highs presolved model with
+      // the presolved model, but return warning.
+      presolved_model_.lp_ = presolve_.getReducedProblem();
+      return_status = HighsStatus::kWarning;
+      break;
+    }
+    default: {
+      // case HighsPresolveStatus::kError
+      setHighsModelStatusAndInfo(HighsModelStatus::kPresolveError);
+      return_status = HighsStatus::kError;
+    }
   }
   return returnFromHighs(return_status);
 }
@@ -478,7 +496,7 @@ HighsStatus Highs::run() {
   if (!haveHmo("run")) return HighsStatus::kError;
   // Ensure that there is exactly one Highs model object
   assert((HighsInt)hmos_.size() == 1);
-  HighsInt min_highs_debug_level = //kHighsDebugLevelMin;
+  HighsInt min_highs_debug_level =  // kHighsDebugLevelMin;
       kHighsDebugLevelCostly;
 #ifdef HiGHSDEV
   min_highs_debug_level =  // kHighsDebugLevelMin;
@@ -2007,16 +2025,15 @@ void Highs::setMatrixOrientation(const MatrixOrientation& desired_orientation) {
 
 // Private methods
 HighsPresolveStatus Highs::runPresolve(const bool force_presolve) {
-  presolve_.clear();
+  clearPresolve();
   // Exit if presolve is set to off (unless presolve is forced)
   if (options_.presolve == kHighsOffString && !force_presolve)
     return HighsPresolveStatus::kNotPresolved;
 
-  const bool empty_lp = model_.lp_.numCol_ == 0 && model_.lp_.numRow_ == 0;
-  if (empty_lp) {
+  if (model_.isEmpty()) {
     // Empty models shouldn't reach here, but this status would cause
     // no harm if one did
-    assert(!empty_lp);
+    assert(1 == 0);
     return HighsPresolveStatus::kNotReduced;
   }
 
@@ -2061,12 +2078,22 @@ HighsPresolveStatus Highs::runPresolve(const bool force_presolve) {
 
   HighsPresolveStatus presolve_return_status = presolve_.run();
 
+  if (presolve_return_status == HighsPresolveStatus::kReduced) {
+    // presolve_.run() returns HighsPresolveStatus::kReduced, even if
+    // no reductions have taken place - since the presolved problem
+    // may have been converted to a minimization, and this must be
+    // corrected in postsolve. However, the LP solvers don't require
+    // this, and should solve the original LP.
+    if (!presolve_.isReduced())
+      presolve_return_status = HighsPresolveStatus::kNotReduced;
+  }
+
   highsLogDev(options_.log_options, HighsLogType::kVerbose,
               "presolve_.run() returns status: %s\n",
               presolve_.presolveStatusToString(presolve_return_status).c_str());
 
   // Update reduction counts.
-  switch (presolve_.presolve_status_) {
+  switch (presolve_return_status) {
     case HighsPresolveStatus::kReduced: {
       HighsLp& reduced_lp = presolve_.getReducedProblem();
       presolve_.info_.n_cols_removed = model_.lp_.numCol_ - reduced_lp.numCol_;
@@ -2088,7 +2115,6 @@ HighsPresolveStatus Highs::runPresolve(const bool force_presolve) {
 }
 
 HighsPostsolveStatus Highs::runPostsolve() {
-  // assert(presolve_.has_run_);
   bool solution_ok = isSolutionRightSize(presolve_.getReducedProblem(),
                                          presolve_.data_.recovered_solution_);
   if (!solution_ok) return HighsPostsolveStatus::kReducedSolutionDimenionsError;
@@ -2098,13 +2124,14 @@ HighsPostsolveStatus Highs::runPostsolve() {
                                       presolve_.data_.recovered_basis_);
 
   if (model_.lp_.sense_ == ObjSense::kMaximize)
-    presolve_.negateReducedLpColDuals(true);
+    presolve_.negateReducedLpColDuals();
 
   return HighsPostsolveStatus::kSolutionRecovered;
 }
 
 void Highs::clearPresolve() {
   model_presolve_status_ = HighsPresolveStatus::kNotPresolved;
+  presolved_model_.clear();
   presolve_.clear();
 }
 

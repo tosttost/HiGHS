@@ -312,6 +312,8 @@ class HPresolve {
 
   Result sparsify(HighsPostsolveStack& postsolveStack);
 
+  bool isReduced(const HighsPostsolveStack& postsolveStack);
+
   void setRelaxedImpliedBounds();
 
   static void debug(const HighsLp& lp, const HighsOptions& options);

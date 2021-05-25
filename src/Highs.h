@@ -261,7 +261,9 @@ class Highs {
   /**
    * @brief Returns the current model status
    */
-  const HighsPresolveStatus& getModelPresolveStatus() const { return model_presolve_status_; }
+  const HighsPresolveStatus& getModelPresolveStatus() const {
+    return model_presolve_status_;
+  }
 
   /**
    * @brief Indicates whether a dual unbounded ray exdists, and gets

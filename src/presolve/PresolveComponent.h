@@ -92,18 +92,13 @@ class PresolveComponent : public HighsComponent {
   HighsStatus setOptions(const HighsOptions& options);
   std::string presolveStatusToString(const HighsPresolveStatus presolve_status);
 
-  void negateReducedLpColDuals(bool reduced);
-  void negateReducedLpCost();
-
-  //  bool has_run_ = false;
+  void negateReducedLpColDuals();
+  bool isReduced();
 
   PresolveComponentInfo info_;
   PresolveComponentData data_;
   const HighsOptions* options_;
   HighsTimer* timer;
-
-  HighsPresolveStatus presolve_status_ = HighsPresolveStatus::kNotPresolved;
-  HighsPostsolveStatus postsolve_status_ = HighsPostsolveStatus::kNotPresolved;
 
   virtual ~PresolveComponent() = default;
 };
