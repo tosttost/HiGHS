@@ -259,6 +259,11 @@ class Highs {
   const HighsModelStatus& getModelStatus(const bool scaled_model = false) const;
 
   /**
+   * @brief Returns the current model status
+   */
+  const HighsPresolveStatus& getModelPresolveStatus() const { return model_presolve_status_; }
+
+  /**
    * @brief Indicates whether a dual unbounded ray exdists, and gets
    * it if it does and dual_ray is not NULL
    */
@@ -1022,7 +1027,7 @@ class Highs {
   HighsStatus callSolveMip();
 
   PresolveComponent presolve_;
-  HighsPresolveStatus runPresolve();
+  HighsPresolveStatus runPresolve(const bool force_presolve = false);
   HighsPostsolveStatus runPostsolve();
 
   HighsStatus openWriteFile(const string filename, const string method_name,

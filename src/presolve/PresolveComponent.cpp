@@ -49,10 +49,8 @@ std::string PresolveComponent::presolveStatusToString(
       return "Reduced to empty";
     case HighsPresolveStatus::kTimeout:
       return "Timeout";
-    case HighsPresolveStatus::kNullError:
-      return "Null error";
-    case HighsPresolveStatus::kOptionsError:
-      return "Options error";
+    case HighsPresolveStatus::kError:
+      return "Error";
     default:
       assert(1 == 0);
       return "Unrecognised presolve status";

@@ -31,6 +31,7 @@ set(TEST_SOURCES
     TestLpValidation.cpp
     TestLpModification.cpp
     TestLpOrientation.cpp
+    TestPresolve.cpp
     TestRays.cpp
     TestRanging.cpp
     TestThrow.cpp

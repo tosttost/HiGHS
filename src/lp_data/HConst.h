@@ -108,8 +108,7 @@ enum class HighsPresolveStatus {
   kReduced,
   kReducedToEmpty,
   kTimeout,
-  kNullError,
-  kOptionsError,
+  kError
 };
 
 enum class HighsModelStatus {

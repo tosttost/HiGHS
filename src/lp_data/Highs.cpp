@@ -55,12 +55,6 @@ void Highs::clearModel() {
 }
 
 void Highs::clearSolver() {
-  if ((int)hmos_.size()) {
-    const int old_lp_numcol = (int)hmos_[0].lp_.numCol_;
-    const bool ekk_valid = hmos_[0].ekk_instance_.status_.valid;
-    printf("old_lp_numcol = %d; ekk_valid = %d\n", old_lp_numcol, ekk_valid);
-    //    assert(!ekk_valid);
-  }
   clearPresolve();
   clearUserSolverData();
   hmos_.clear();
@@ -436,14 +430,56 @@ HighsStatus Highs::writeBasis(const std::string filename) {
   return returnFromHighs(return_status);
 }
 
+HighsStatus Highs::presolve() {
+  if (!haveHmo("presolve")) return HighsStatus::kError;
+  HighsStatus return_status = HighsStatus::kOk;
+  const bool force_presolve = true;
+  model_presolve_status_ = runPresolve(force_presolve);
+  switch (model_presolve_status_) {
+  case HighsPresolveStatus::kNotPresolved: {
+    // Shouldn't happen
+    assert(model_presolve_status_ != HighsPresolveStatus::kNotPresolved);
+    return_status = HighsStatus::kError;
+    break;
+  }
+  case HighsPresolveStatus::kNotReduced:
+  case HighsPresolveStatus::kInfeasible:
+  case HighsPresolveStatus::kReduced:
+  case HighsPresolveStatus::kReducedToEmpty:
+  case HighsPresolveStatus::kUnboundedOrInfeasible: {
+    // All OK
+    if (model_presolve_status_ == HighsPresolveStatus::kInfeasible) {
+      // Model is infeasible 
+      setHighsModelStatusAndInfo(HighsModelStatus::kInfeasible);
+    } else if (model_presolve_status_ == HighsPresolveStatus::kReduced) {
+      // Record the reduced LP
+      presolved_model_.lp_ = presolve_.getReducedProblem();
+    }
+    return_status = HighsStatus::kOk;
+    break;
+  }
+  case HighsPresolveStatus::kTimeout: {
+    // @Leona: Is there a reduced LP to be extracted?
+    return_status = HighsStatus::kWarning;
+    break;
+  }
+  default: {
+    // case HighsPresolveStatus::kError
+    setHighsModelStatusAndInfo(HighsModelStatus::kPresolveError);
+    return_status = HighsStatus::kError;
+  }
+  }
+  return returnFromHighs(return_status);
+}
+
 // Checks the options calls presolve and postsolve if needed. Solvers are called
 // with callSolveLp(..)
 HighsStatus Highs::run() {
   if (!haveHmo("run")) return HighsStatus::kError;
   // Ensure that there is exactly one Highs model object
   assert((HighsInt)hmos_.size() == 1);
-  HighsInt min_highs_debug_level = kHighsDebugLevelMin;
-  //    kHighsDebugLevelCostly;
+  HighsInt min_highs_debug_level = //kHighsDebugLevelMin;
+      kHighsDebugLevelCostly;
 #ifdef HiGHSDEV
   min_highs_debug_level =  // kHighsDebugLevelMin;
                            //  kHighsDebugLevelCheap;
@@ -750,17 +786,11 @@ HighsStatus Highs::run() {
                     "Presolve reached timeout\n");
         return returnFromRun(HighsStatus::kWarning);
       }
-      case HighsPresolveStatus::kOptionsError: {
-        setHighsModelStatusAndInfo(HighsModelStatus::kPresolveError);
-        highsLogDev(options_.log_options, HighsLogType::kError,
-                    "Presolve options error\n");
-        return returnFromRun(HighsStatus::kError);
-      }
       default: {
         // case HighsPresolveStatus::kError
         setHighsModelStatusAndInfo(HighsModelStatus::kPresolveError);
         highsLogDev(options_.log_options, HighsLogType::kError,
-                    "Presolve returned status %d\n",
+                    "Presolve returned status %s\n",
                     (int)model_presolve_status_);
         return returnFromRun(HighsStatus::kError);
       }
@@ -1976,24 +2006,22 @@ void Highs::setMatrixOrientation(const MatrixOrientation& desired_orientation) {
 }
 
 // Private methods
-HighsPresolveStatus Highs::runPresolve() {
+HighsPresolveStatus Highs::runPresolve(const bool force_presolve) {
   presolve_.clear();
-  // Exit if the problem is empty or if presolve is set to off.
-  if (options_.presolve == kHighsOffString)
+  // Exit if presolve is set to off (unless presolve is forced)
+  if (options_.presolve == kHighsOffString && !force_presolve)
     return HighsPresolveStatus::kNotPresolved;
 
-  // @FlipRowDual Side-stpe presolve until @leona has fixed it wrt row dual flip
-  const bool force_no_presolve = false;
-  if (force_no_presolve) {
-    printf("Forcing no presolve!!\n");
-    return HighsPresolveStatus::kNotPresolved;
+  const bool empty_lp = model_.lp_.numCol_ == 0 && model_.lp_.numRow_ == 0;
+  if (empty_lp) {
+    // Empty models shouldn't reach here, but this status would cause
+    // no harm if one did
+    assert(!empty_lp);
+    return HighsPresolveStatus::kNotReduced;
   }
 
   // Ensure that the LP is column-wise
-  // setOrientation(model_.lp_);
-
-  if (model_.lp_.numCol_ == 0 && model_.lp_.numRow_ == 0)
-    return HighsPresolveStatus::kNullError;
+  setOrientation(model_.lp_);
 
   // Clear info from previous runs if model_.lp_ has been modified.
   double start_presolve = timer_.readRunHighsClock();

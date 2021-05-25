@@ -542,7 +542,7 @@ HighsPresolveStatus Presolve::presolve() {
     default:
       assert(result != result);
       printf("Unrecognised presolve return of %" HIGHSINT_FORMAT "\n", result);
-      return HighsPresolveStatus::kNullError;
+      return HighsPresolveStatus::kError;
   }
   timer.recordFinish(kTotalPresolveTime);
   if (iPrint > 0) {
