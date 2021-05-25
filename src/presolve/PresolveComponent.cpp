@@ -22,6 +22,7 @@ HighsStatus PresolveComponent::init(const HighsLp& lp, HighsTimer& timer,
                                     bool mip) {
   data_.postSolveStack.initializeIndexMaps(lp.numRow_, lp.numCol_);
   data_.reduced_lp_ = lp;
+  data_.reduced_lp_.lp_name_ = "Presolved LP";
   this->timer = &timer;
   return HighsStatus::kOk;
 }

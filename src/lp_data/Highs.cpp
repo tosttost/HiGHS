@@ -630,7 +630,7 @@ HighsStatus Highs::run() {
   if (basis_.valid || options_.presolve == kHighsOffString) {
     // There is a valid basis for the problem or presolve is off
     solved_hmo = original_hmo;
-    hmos_[solved_hmo].lp_.lp_name_ = "LP without presolve or with basis";
+    model.lp_.lp_name_ = "LP without presolve or with basis";
     if (basis_.valid) {
       // There is a valid HiGHS basis, so use it to initialise the basis
       // in the HMO to be solved after refining any status values that
@@ -676,7 +676,8 @@ HighsStatus Highs::run() {
     bool have_optimal_solution = false;
     switch (model_presolve_status_) {
       case HighsPresolveStatus::kNotPresolved: {
-        hmos_[solved_hmo].lp_.lp_name_ = "Original LP";
+	assert(solved_hmo == original_hmo);
+        model_.lp_.lp_name_ = "Original LP";
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
         call_status = callSolveLp(solved_hmo, "Not presolved: solving the LP");
@@ -689,7 +690,8 @@ HighsStatus Highs::run() {
         break;
       }
       case HighsPresolveStatus::kNotReduced: {
-        hmos_[solved_hmo].lp_.lp_name_ = "Unreduced LP";
+	assert(solved_hmo == original_hmo);
+        model_.lp_.lp_name_ = "Unreduced LP";
         // Log the presolve reductions
         reportPresolveReductions(hmos_[original_hmo].options_.log_options,
                                  hmos_[original_hmo].lp_, false);
@@ -725,7 +727,6 @@ HighsStatus Highs::run() {
                                  hmos_[presolve_hmo].lp_);
         // Record the HMO to be solved
         solved_hmo = presolve_hmo;
-        hmos_[solved_hmo].lp_.lp_name_ = "Presolved LP";
         // Don't try dual cut-off when solving the presolved LP, as the
         // objective values aren't correct
         //	HighsOptions& options = hmos_[solved_hmo].options_;
@@ -901,8 +902,8 @@ HighsStatus Highs::run() {
           // and EKK expects a refined basis, so set it up now
           refineBasis(model_.lp_, hmos_[original_hmo].solution_,
                       hmos_[original_hmo].basis_);
-
-          hmos_[solved_hmo].lp_.lp_name_ = "Postsolve LP";
+	  assert(solved_hmo == original_hmo);
+          model.lp_.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
           timer_.start(timer_.solve_clock);
