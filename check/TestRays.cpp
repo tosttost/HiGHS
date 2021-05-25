@@ -1,7 +1,7 @@
 #include "Highs.h"
 #include "SpecialLps.h"
 #include "catch.hpp"
-#include "lp_data/HConst.h"
+//#include "lp_data/HConst.h"
 
 const bool dev_run = false;
 const double zero_ray_value_tolerance = 1e-8;

@@ -27,9 +27,9 @@ class HighsModel {
  public:
   HighsLp lp_;
   HighsHessian hessian_;
-  bool isQp();
-  bool isMip() { return this->lp_.isMip(); }
-  bool isEmpty() { return (this->lp_.numCol_ == 0 && this->lp_.numRow_ == 0); }
+  bool isQp() const ;
+  bool isMip() const { return this->lp_.isMip(); }
+  bool isEmpty() const { return (this->lp_.numCol_ == 0 && this->lp_.numRow_ == 0); }
   void clear();
 };
 

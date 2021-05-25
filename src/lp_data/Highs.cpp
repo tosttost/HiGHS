@@ -441,9 +441,6 @@ HighsStatus Highs::presolve() {
     const bool force_presolve = true;
     model_presolve_status_ = runPresolve(force_presolve);
   }
-  highsLogUser(
-      options_.log_options, HighsLogType::kInfo, "Presolve status: %s\n",
-      presolve_.presolveStatusToString(model_presolve_status_).c_str());
 
   switch (model_presolve_status_) {
     case HighsPresolveStatus::kNotPresolved: {
@@ -487,6 +484,9 @@ HighsStatus Highs::presolve() {
       return_status = HighsStatus::kError;
     }
   }
+  highsLogUser(
+      options_.log_options, HighsLogType::kInfo, "Presolve status: %s\n",
+      presolve_.presolveStatusToString(model_presolve_status_).c_str());
   return returnFromHighs(return_status);
 }
 
@@ -2357,6 +2357,11 @@ HighsStatus Highs::callSolveMip() {
       std::max(1.0, std::abs(info_.objective_function_value));
   info_.valid = true;
   return return_status;
+}
+
+HighsStatus Highs::postsolve(const HighsSolution& solution,
+                             const HighsBasis& basis) {
+  return HighsStatus::kOk;
 }
 
 HighsStatus Highs::writeSolution(const std::string filename,

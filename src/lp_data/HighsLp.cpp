@@ -17,7 +17,7 @@
 
 #include <cassert>
 
-bool HighsLp::isMip() {
+bool HighsLp::isMip() const {
   HighsInt integrality_size = this->integrality_.size();
   if (integrality_size) {
     assert(integrality_size == this->numCol_);

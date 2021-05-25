@@ -52,7 +52,7 @@ class HighsLp {
 
   bool operator==(const HighsLp& lp);
   bool equalButForNames(const HighsLp& lp);
-  bool isMip();
+  bool isMip() const;
   void clear();
 };
 
