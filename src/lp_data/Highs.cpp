@@ -676,7 +676,7 @@ HighsStatus Highs::run() {
     bool have_optimal_solution = false;
     switch (model_presolve_status_) {
       case HighsPresolveStatus::kNotPresolved: {
-	assert(solved_hmo == original_hmo);
+        assert(solved_hmo == original_hmo);
         model_.lp_.lp_name_ = "Original LP";
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
@@ -690,7 +690,7 @@ HighsStatus Highs::run() {
         break;
       }
       case HighsPresolveStatus::kNotReduced: {
-	assert(solved_hmo == original_hmo);
+        assert(solved_hmo == original_hmo);
         model_.lp_.lp_name_ = "Unreduced LP";
         // Log the presolve reductions
         reportPresolveReductions(hmos_[original_hmo].options_.log_options,
@@ -708,15 +708,20 @@ HighsStatus Highs::run() {
         break;
       }
       case HighsPresolveStatus::kReduced: {
-        HighsLp& reduced_lp = presolve_.getReducedProblem();
-        // Validate the reduced LP
-        assert(assessLp(reduced_lp, options_) == HighsStatus::kOk);
-        call_status = cleanBounds(options_, reduced_lp);
-        // Ignore any warning from clean bounds since the original LP
-        // is still solved after presolve
-        if (interpretCallStatus(call_status, return_status, "cleanBounds") ==
-            HighsStatus::kError)
-          return HighsStatus::kError;
+        const HighsLp& reduced_lp = presolve_.getReducedProblem();
+        if (options_.highs_debug_level > min_highs_debug_level) {
+          HighsLp check_reduced_lp = presolve_.getReducedProblem();
+          // Validate the reduced LP
+          call_status = assessLp(check_reduced_lp, options_);
+          assert(call_status == HighsStatus::kOk);
+          // Look for inconsistent bounds:
+          //
+          // kError => inconsistency > primal_feasibility_tolerance;
+          // kWarning => 0< inconsistency <=
+          // primal_feasibility_tolerance
+          call_status = cleanBounds(options_, check_reduced_lp);
+          assert(call_status == HighsStatus::kOk);
+        }
         // Add reduced lp object to vector of HighsModelObject,
         // so the last one in lp_ is the presolved one.
 
@@ -902,7 +907,7 @@ HighsStatus Highs::run() {
           // and EKK expects a refined basis, so set it up now
           refineBasis(model_.lp_, hmos_[original_hmo].solution_,
                       hmos_[original_hmo].basis_);
-	  assert(solved_hmo == original_hmo);
+          assert(solved_hmo == original_hmo);
           model_.lp_.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
@@ -2096,7 +2101,7 @@ HighsPresolveStatus Highs::runPresolve(const bool force_presolve) {
   // Update reduction counts.
   switch (presolve_return_status) {
     case HighsPresolveStatus::kReduced: {
-      HighsLp& reduced_lp = presolve_.getReducedProblem();
+      const HighsLp& reduced_lp = presolve_.getReducedProblem();
       presolve_.info_.n_cols_removed = model_.lp_.numCol_ - reduced_lp.numCol_;
       presolve_.info_.n_rows_removed = model_.lp_.numRow_ - reduced_lp.numRow_;
       presolve_.info_.n_nnz_removed = (HighsInt)model_.lp_.Avalue_.size() -

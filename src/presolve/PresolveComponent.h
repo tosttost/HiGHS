@@ -87,7 +87,7 @@ class PresolveComponent : public HighsComponent {
 
   HighsPresolveStatus run();
 
-  HighsLp& getReducedProblem() { return data_.reduced_lp_; }
+  const HighsLp& getReducedProblem() const { return data_.reduced_lp_; }
 
   HighsStatus setOptions(const HighsOptions& options);
   std::string presolveStatusToString(const HighsPresolveStatus presolve_status);
