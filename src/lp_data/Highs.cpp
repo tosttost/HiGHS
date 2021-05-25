@@ -630,7 +630,7 @@ HighsStatus Highs::run() {
   if (basis_.valid || options_.presolve == kHighsOffString) {
     // There is a valid basis for the problem or presolve is off
     solved_hmo = original_hmo;
-    model.lp_.lp_name_ = "LP without presolve or with basis";
+    model_.lp_.lp_name_ = "LP without presolve or with basis";
     if (basis_.valid) {
       // There is a valid HiGHS basis, so use it to initialise the basis
       // in the HMO to be solved after refining any status values that
@@ -903,7 +903,7 @@ HighsStatus Highs::run() {
           refineBasis(model_.lp_, hmos_[original_hmo].solution_,
                       hmos_[original_hmo].basis_);
 	  assert(solved_hmo == original_hmo);
-          model.lp_.lp_name_ = "Postsolve LP";
+          model_.lp_.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
           timer_.start(timer_.solve_clock);

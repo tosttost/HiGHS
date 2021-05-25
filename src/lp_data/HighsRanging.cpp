@@ -585,7 +585,7 @@ void writeRanging(const HighsRanging& ranging,
   if (!highs_model_object.options_.log_dev_level) return;
   if (highs_model_object.scaled_model_status_ != HighsModelStatus::kOptimal)
     return;
-  HighsLp& lp = highs_model_object.lp_;
+  const HighsLp& lp = highs_model_object.lp_;
   HighsLogOptions& log_options = highs_model_object.options_.log_options;
   highsLogDev(log_options, HighsLogType::kVerbose,
               "\nRanging data: Optimal objective = %g\n"
