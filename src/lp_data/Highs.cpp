@@ -642,7 +642,7 @@ HighsStatus Highs::run() {
     this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
     timer_.start(timer_.solve_clock);
     call_status =
-        callSolveLp(solved_hmo, "Solving LP without presolve or with basis");
+        callSolveLp(hmos_[solved_hmo], "Solving LP without presolve or with basis");
     timer_.stop(timer_.solve_clock);
     this_solve_original_lp_time += timer_.read(timer_.solve_clock);
     return_status =
@@ -681,7 +681,7 @@ HighsStatus Highs::run() {
         model_.lp_.lp_name_ = "Original LP";
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
-        call_status = callSolveLp(solved_hmo, "Not presolved: solving the LP");
+        call_status = callSolveLp(hmos_[solved_hmo], "Not presolved: solving the LP");
         timer_.stop(timer_.solve_clock);
         this_solve_original_lp_time += timer_.read(timer_.solve_clock);
         return_status =
@@ -699,7 +699,7 @@ HighsStatus Highs::run() {
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
         call_status = callSolveLp(
-            solved_hmo, "Problem not reduced by presolve: solving the LP");
+            hmos_[solved_hmo], "Problem not reduced by presolve: solving the LP");
         timer_.stop(timer_.solve_clock);
         this_solve_original_lp_time += timer_.read(timer_.solve_clock);
         return_status =
@@ -741,7 +741,7 @@ HighsStatus Highs::run() {
         options_.objective_bound = kHighsInf;
         this_solve_presolved_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
-        call_status = callSolveLp(solved_hmo, "Solving the presolved LP");
+        call_status = callSolveLp(hmos_[solved_hmo], "Solving the presolved LP");
         timer_.stop(timer_.solve_clock);
         this_solve_presolved_lp_time += timer_.read(timer_.solve_clock);
         if (hmos_[solved_hmo].ekk_instance_.status_.valid) {
@@ -793,7 +793,7 @@ HighsStatus Highs::run() {
         options_.simplex_strategy = kSimplexStrategyPrimal;
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
-        call_status = callSolveLp(original_hmo,
+        call_status = callSolveLp(hmos_[original_hmo],
                                   "Solving the original LP with primal simplex "
                                   "to determine infeasible or unbounded");
         timer_.stop(timer_.solve_clock);
@@ -913,8 +913,7 @@ HighsStatus Highs::run() {
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
           timer_.start(timer_.solve_clock);
-          call_status = callSolveLp(
-              solved_hmo,
+          call_status = callSolveLp(hmos_[solved_hmo],
               "Solving the original LP from the solution after postsolve");
           timer_.stop(timer_.solve_clock);
           this_solve_original_lp_time += timer_.read(timer_.solve_clock);
@@ -2200,33 +2199,26 @@ void Highs::clearInfo() { info_.clear(); }
 // The method below runs calls solveLp to solve the LP associated with
 // a particular model, integrating the iteration counts into the
 // overall values in HighsInfo
-HighsStatus Highs::callSolveLp(const HighsInt model_index,
+HighsStatus Highs::callSolveLp(HighsModelObject& highs_model_object, 
                                const string message) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
 
-  // Check that the model index is OK
-  bool model_index_ok =
-      model_index >= 0 && model_index < (HighsInt)hmos_.size();
-  assert(model_index_ok);
-  if (!model_index_ok) return HighsStatus::kError;
-
-  HighsModelObject& model = hmos_[model_index];
   // Check that the model isn't row-wise
   assert(model_.lp_.orientation_ != MatrixOrientation::kRowwise);
 
   // Copy the LP solver iteration counts to this model so that they
   // are updated
-  hmos_[model_index].iteration_counts_ = iteration_counts_;
+  highs_model_object.iteration_counts_ = iteration_counts_;
 
   // Solve the LP
-  call_status = solveLp(model, message);
+  call_status = solveLp(highs_model_object, message);
   return_status = interpretCallStatus(call_status, return_status, "solveLp");
   if (return_status == HighsStatus::kError) return return_status;
 
   // Copy this model's iteration counts to the LP solver iteration counts so
   // that they are updated
-  iteration_counts_ = hmos_[model_index].iteration_counts_;
+  iteration_counts_ = highs_model_object.iteration_counts_;
   return return_status;
 }
 
