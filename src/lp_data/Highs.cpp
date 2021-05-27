@@ -1026,6 +1026,38 @@ HighsStatus Highs::run() {
   return returnFromRun(return_status);
 }
 
+HighsStatus Highs::postsolve(const HighsSolution& solution,
+                             const HighsBasis& basis) {
+  const bool can_run_postsolve =
+    model_presolve_status_ == HighsPresolveStatus::kNotPresolved ||
+    model_presolve_status_ == HighsPresolveStatus::kReduced ||
+    model_presolve_status_ == HighsPresolveStatus::kReducedToEmpty ||
+    model_presolve_status_ == HighsPresolveStatus::kTimeout;
+  if (!can_run_postsolve) {
+    highsLogUser(options_.log_options, HighsLogType::kWarning,
+		 "Cannot run postsolve with presolve status: %s\n",
+		 presolve_.presolveStatusToString(model_presolve_status_).c_str());
+    return HighsStatus::kWarning;
+  }
+  HighsStatus return_status = callRunPostsolve(solution, basis);
+  return returnFromHighs(return_status);
+}
+
+HighsStatus Highs::writeSolution(const std::string filename,
+                                 const bool pretty) const {
+  HighsStatus return_status = HighsStatus::kOk;
+  HighsStatus call_status;
+  FILE* file;
+  bool html;
+  call_status = openWriteFile(filename, "writeSolution", file, html);
+  return_status =
+      interpretCallStatus(call_status, return_status, "openWriteFile");
+  if (return_status == HighsStatus::kError) return return_status;
+  writeSolutionToFile(file, model_.lp_, basis_, solution_, pretty);
+  if (file != stdout) fclose(file);
+  return HighsStatus::kOk;
+}
+
 const HighsModelStatus& Highs::getModelStatus(const bool scaled_model) const {
   if (scaled_model) {
     return scaled_model_status_;
@@ -2360,24 +2392,9 @@ HighsStatus Highs::callSolveMip() {
   return return_status;
 }
 
-HighsStatus Highs::postsolve(const HighsSolution& solution,
-                             const HighsBasis& basis) {
-  return HighsStatus::kOk;
-}
-
-HighsStatus Highs::writeSolution(const std::string filename,
-                                 const bool pretty) const {
-  HighsStatus return_status = HighsStatus::kOk;
-  HighsStatus call_status;
-  FILE* file;
-  bool html;
-  call_status = openWriteFile(filename, "writeSolution", file, html);
-  return_status =
-      interpretCallStatus(call_status, return_status, "openWriteFile");
-  if (return_status == HighsStatus::kError) return return_status;
-  writeSolutionToFile(file, model_.lp_, basis_, solution_, pretty);
-  if (file != stdout) fclose(file);
-  return HighsStatus::kOk;
+HighsStatus Highs::callRunPostsolve(const HighsSolution& solution,
+				    const HighsBasis& basis) {
+  return HighsStatus::kError;
 }
 
 void Highs::reportModel() {

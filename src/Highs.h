@@ -1001,7 +1001,6 @@ class Highs {
   HighsBasis basis_;
   HighsModel model_;
   HighsModel presolved_model_;
-  //  HighsModel presolve_;
   HighsTimer timer_;
 
   HighsOptions options_;
@@ -1030,6 +1029,8 @@ class Highs {
   HighsStatus callSolveLp(const HighsInt model_index, const string message);
   HighsStatus callSolveQp();
   HighsStatus callSolveMip();
+  HighsStatus callRunPostsolve(const HighsSolution& solution,
+			       const HighsBasis& basis);
 
   PresolveComponent presolve_;
   HighsPresolveStatus runPresolve(const bool force_presolve = false);
