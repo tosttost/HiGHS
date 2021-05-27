@@ -1030,7 +1030,7 @@ class Highs {
   HighsStatus callSolveQp();
   HighsStatus callSolveMip();
   HighsStatus callRunPostsolve(const HighsSolution& solution,
-			       const HighsBasis& basis);
+                               const HighsBasis& basis);
 
   PresolveComponent presolve_;
   HighsPresolveStatus runPresolve(const bool force_presolve = false);

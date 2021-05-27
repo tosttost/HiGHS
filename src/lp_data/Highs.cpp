@@ -1029,14 +1029,15 @@ HighsStatus Highs::run() {
 HighsStatus Highs::postsolve(const HighsSolution& solution,
                              const HighsBasis& basis) {
   const bool can_run_postsolve =
-    model_presolve_status_ == HighsPresolveStatus::kNotPresolved ||
-    model_presolve_status_ == HighsPresolveStatus::kReduced ||
-    model_presolve_status_ == HighsPresolveStatus::kReducedToEmpty ||
-    model_presolve_status_ == HighsPresolveStatus::kTimeout;
+      model_presolve_status_ == HighsPresolveStatus::kNotPresolved ||
+      model_presolve_status_ == HighsPresolveStatus::kReduced ||
+      model_presolve_status_ == HighsPresolveStatus::kReducedToEmpty ||
+      model_presolve_status_ == HighsPresolveStatus::kTimeout;
   if (!can_run_postsolve) {
-    highsLogUser(options_.log_options, HighsLogType::kWarning,
-		 "Cannot run postsolve with presolve status: %s\n",
-		 presolve_.presolveStatusToString(model_presolve_status_).c_str());
+    highsLogUser(
+        options_.log_options, HighsLogType::kWarning,
+        "Cannot run postsolve with presolve status: %s\n",
+        presolve_.presolveStatusToString(model_presolve_status_).c_str());
     return HighsStatus::kWarning;
   }
   HighsStatus return_status = callRunPostsolve(solution, basis);
@@ -2393,7 +2394,7 @@ HighsStatus Highs::callSolveMip() {
 }
 
 HighsStatus Highs::callRunPostsolve(const HighsSolution& solution,
-				    const HighsBasis& basis) {
+                                    const HighsBasis& basis) {
   return HighsStatus::kError;
 }
 
