@@ -42,7 +42,7 @@
 
 Highs::Highs() {
   hmos_.clear();
-  hmos_.push_back(HighsModelObject(model_.lp_, basis_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_, options_, timer_));
 }
 
 void Highs::clear() {
@@ -61,7 +61,7 @@ void Highs::clearSolver() {
   hmos_.clear();
   // Clear any HighsModelObject instances and create a fresh one for
   // the incumbent model
-  hmos_.push_back(HighsModelObject(model_.lp_, basis_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_, options_, timer_));
   // By clearing everything, there should be nothing to verify in
   // returnFromHighs() that could yield an error
   HighsStatus return_status = HighsStatus::kOk;
@@ -637,7 +637,6 @@ HighsStatus Highs::run() {
       // in the HMO to be solved after refining any status values that
       // are simply HighsBasisStatus::kNonbasic
       refineBasis(hmos_[solved_hmo].lp_, solution_, basis_);
-      //      hmos_[solved_hmo].basis_ = basis_;
     }
     this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
     timer_.start(timer_.solve_clock);
@@ -728,7 +727,7 @@ HighsStatus Highs::run() {
         // Add reduced lp object to vector of HighsModelObject,
         // so the last one in lp_ is the presolved one.
 
-        hmos_.push_back(HighsModelObject(reduced_lp, basis_, options_, timer_));
+        hmos_.push_back(HighsModelObject(reduced_lp, solution_, basis_, options_, timer_));
         // Log the presolve reductions
         reportPresolveReductions(options_.log_options,
                                  hmos_[original_hmo].lp_,
@@ -767,8 +766,8 @@ HighsStatus Highs::run() {
         reportPresolveReductions(options_.log_options,
                                  hmos_[original_hmo].lp_, true);
         // Create a trivial optimal solution for postsolve to use
-        clearSolutionUtil(hmos_[original_hmo].solution_);
-        clearBasisUtil(hmos_[original_hmo].basis_);
+        clearSolutionUtil(solution_);
+        clearBasisUtil(basis_);
         have_optimal_solution = true;
         break;
       }
@@ -842,11 +841,8 @@ HighsStatus Highs::run() {
         // the solution and basis for postsolve to use to generate a
         // solution(?) and basis that is, hopefully, optimal. This is
         // confirmed or corrected by hot-starting the simplex solver
-        presolve_.data_.recovered_solution_ = hmos_[solved_hmo].solution_;
-        presolve_.data_.recovered_basis_.col_status =
-            hmos_[solved_hmo].basis_.col_status;
-        presolve_.data_.recovered_basis_.row_status =
-            hmos_[solved_hmo].basis_.row_status;
+        presolve_.data_.recovered_solution_ = solution_;
+        presolve_.data_.recovered_basis_ = basis_;
 
         this_postsolve_time = -timer_.read(timer_.postsolve_clock);
         timer_.start(timer_.postsolve_clock);
@@ -865,16 +861,13 @@ HighsStatus Highs::run() {
           // parameters
           resetModelStatusAndSolutionParams(hmos_[original_hmo]);
           // Set solution and its status
-          hmos_[original_hmo].solution_ = presolve_.data_.recovered_solution_;
-          hmos_[original_hmo].solution_.value_valid = true;
-          hmos_[original_hmo].solution_.dual_valid = true;
+          solution_ = presolve_.data_.recovered_solution_;
+          solution_.value_valid = true;
+          solution_.dual_valid = true;
 
           // Set basis and its status
-          hmos_[original_hmo].basis_.valid = true;
-          hmos_[original_hmo].basis_.col_status =
-              presolve_.data_.recovered_basis_.col_status;
-          hmos_[original_hmo].basis_.row_status =
-              presolve_.data_.recovered_basis_.row_status;
+          basis_ = presolve_.data_.recovered_basis_;
+          basis_.valid = true;
 
           // Possibly force debug to perform KKT check on what's
           // returned from postsolve
@@ -882,8 +875,8 @@ HighsStatus Highs::run() {
           HighsInt save_highs_debug_level = options_.highs_debug_level;
           if (force_debug) options_.highs_debug_level = kHighsDebugLevelCostly;
           if (debugHighsSolution("After returning from postsolve", options_,
-                                 model_.lp_, hmos_[original_hmo].solution_,
-                                 hmos_[original_hmo].basis_) ==
+                                 model_.lp_, solution_,
+                                 basis_) ==
               HighsDebugStatus::kLogicalError)
             return returnFromRun(HighsStatus::kError);
           options_.highs_debug_level = save_highs_debug_level;
@@ -908,8 +901,8 @@ HighsStatus Highs::run() {
 
           // The basis returned from postsolve is just basic/nonbasic
           // and EKK expects a refined basis, so set it up now
-          refineBasis(model_.lp_, hmos_[original_hmo].solution_,
-                      hmos_[original_hmo].basis_);
+          refineBasis(model_.lp_, solution_,
+                      basis_);
           assert(solved_hmo == original_hmo);
           model_.lp_.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
@@ -2016,8 +2009,6 @@ void Highs::reportModelStatusSolutionBasis(const std::string message,
                                            const HighsInt hmo_ix) {
   HighsModelStatus& model_status = model_status_;
   HighsModelStatus& scaled_model_status = scaled_model_status_;
-  HighsSolution& solution = solution_;
-  HighsBasis& basis = basis_;
   HighsInt unscaled_primal_solution_status = info_.primal_solution_status;
   HighsInt unscaled_dual_solution_status = info_.dual_solution_status;
   HighsLp& lp = model_.lp_;
@@ -2025,8 +2016,6 @@ void Highs::reportModelStatusSolutionBasis(const std::string message,
     assert(hmo_ix < (HighsInt)hmos_.size());
     model_status = hmos_[hmo_ix].unscaled_model_status_;
     scaled_model_status = hmos_[hmo_ix].scaled_model_status_;
-    solution = hmos_[hmo_ix].solution_;
-    basis = hmos_[hmo_ix].basis_;
     unscaled_primal_solution_status =
         hmos_[hmo_ix].solution_params_.primal_solution_status;
     unscaled_dual_solution_status =
@@ -2044,11 +2033,11 @@ void Highs::reportModelStatusSolutionBasis(const std::string message,
       "(%" HIGHSINT_FORMAT ", %" HIGHSINT_FORMAT ")\n\n",
       message.c_str(), modelStatusToString(model_status).c_str(),
       modelStatusToString(scaled_model_status).c_str(), lp.numCol_, lp.numRow_,
-      unscaled_primal_solution_status, (HighsInt)solution.col_value.size(),
-      (HighsInt)solution.row_value.size(), unscaled_dual_solution_status,
-      (HighsInt)solution.col_dual.size(), (HighsInt)solution.row_dual.size(),
-      basis.valid, (HighsInt)basis.col_status.size(),
-      (HighsInt)basis.row_status.size());
+      unscaled_primal_solution_status, (HighsInt)solution_.col_value.size(),
+      (HighsInt)solution_.row_value.size(), unscaled_dual_solution_status,
+      (HighsInt)solution_.col_dual.size(), (HighsInt)solution_.row_dual.size(),
+      basis_.valid, (HighsInt)basis_.col_status.size(),
+      (HighsInt)basis_.row_status.size());
 }
 #endif
 
@@ -2408,8 +2397,7 @@ HighsStatus Highs::callRunPostsolve(const HighsSolution& solution,
     return HighsStatus::kError;
   }
   presolve_.data_.recovered_solution_ = solution;
-  presolve_.data_.recovered_basis_.col_status = basis.col_status;
-  presolve_.data_.recovered_basis_.row_status = basis.row_status;
+  presolve_.data_.recovered_basis_ = basis;
 
   HighsInt postsolve_iteration_count = -1;
   HighsPostsolveStatus postsolve_status = runPostsolve();
@@ -2418,18 +2406,17 @@ HighsStatus Highs::callRunPostsolve(const HighsSolution& solution,
                 "Postsolve finished\n");
     resetModelStatusAndSolutionParams(hmos_[0]);
 
-    hmos_[0].solution_ = presolve_.data_.recovered_solution_;
-    hmos_[0].solution_.value_valid = true;
-    hmos_[0].solution_.dual_valid = true;
+    solution_ = presolve_.data_.recovered_solution_;
+    solution_.value_valid = true;
+    solution_.dual_valid = true;
 
     // Set basis and its status
-    hmos_[0].basis_.valid = true;
-    hmos_[0].basis_.col_status = presolve_.data_.recovered_basis_.col_status;
-    hmos_[0].basis_.row_status = presolve_.data_.recovered_basis_.row_status;
+    basis_ = presolve_.data_.recovered_basis_;
+    basis_.valid = true;
 
     // The basis returned from postsolve is just basic/nonbasic
     // and EKK expects a refined basis, so set it up now
-    refineBasis(model_.lp_, hmos_[0].solution_, hmos_[0].basis_);
+    refineBasis(model_.lp_, solution_, basis_);
 
     HighsOptions save_options = options_;
     const bool full_logging = false;
@@ -2485,8 +2472,6 @@ void Highs::reportModel() {
 // Actions to take if there is a new Highs basis
 void Highs::newHighsBasis() {
   if (hmos_.size() > 0) {
-    // Copy this basis to the HMO basis
-    //    hmos_[0].basis_ = basis_;
     // Clear any simplex basis
     clearBasisInterface();
   }
@@ -2525,18 +2510,14 @@ void Highs::setHighsModelStatusAndInfo(const HighsModelStatus model_status) {
 
 void Highs::setHighsModelStatusBasisSolutionAndInfo() {
   assert(haveHmo("setHighsModelStatusBasisSolutionAndInfo"));
-  // Was clearUserSolverData(); but don't clear everything now that
-  // more user solver data are there  
+  // Was clearUserSolverData(); but just clear ModelStatus and Info
+  // now that solution and basis in HMO are references to the Highs
+  // solution and basis
   clearModelStatus();
-  clearSolution();
-  //  clearBasis(); Since hmos_[0].basis_ is reference to basis_
   clearInfo();
 
   model_status_ = hmos_[0].unscaled_model_status_;
   scaled_model_status_ = hmos_[0].scaled_model_status_;
-
-  //  basis_ = hmos_[0].basis_;
-  solution_ = hmos_[0].solution_;
 
   info_.simplex_iteration_count = iteration_counts_.simplex;
   info_.ipm_iteration_count = iteration_counts_.ipm;

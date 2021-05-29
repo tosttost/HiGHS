@@ -40,13 +40,12 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
       return HighsStatus::kError;
 
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsScale& scale = highs_model_object.scale_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   HighsLp& simplex_lp = ekk_instance.lp_;
   SimplexBasis& simplex_basis = ekk_instance.basis_;
 
-  bool& valid_basis = basis.valid;
+  bool& valid_basis = basis_.valid;
   bool& valid_simplex_lp = simplex_status.valid;
   bool& valid_simplex_basis = simplex_status.has_basis;
   bool& scaled_simplex_lp = scale.is_scaled;
@@ -186,7 +185,7 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
     }
   }
   // Update the basis correponding to new nonbasic columns
-  if (valid_basis) appendNonbasicColsToBasis(lp, basis, XnumNewCol);
+  if (valid_basis) appendNonbasicColsToBasis(lp, basis_, XnumNewCol);
   if (valid_simplex_basis)
     appendNonbasicColsToBasis(simplex_lp, simplex_basis, XnumNewCol);
 
@@ -229,14 +228,13 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
       return HighsStatus::kError;
 
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsScale& scale = highs_model_object.scale_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   HighsLp& simplex_lp = ekk_instance.lp_;
   SimplexBasis& simplex_basis = ekk_instance.basis_;
 
   // Query: should simplex_status.valid be simplex_status.valid_?
-  bool& valid_basis = basis.valid;
+  bool& valid_basis = basis_.valid;
   bool& valid_simplex_lp = simplex_status.valid;
   bool& valid_simplex_basis = simplex_status.has_basis;
   bool& scaled_simplex_lp = scale.is_scaled;
@@ -365,7 +363,7 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
     }
   }
   // Update the basis correponding to new basic rows
-  if (valid_basis) appendBasicRowsToBasis(lp, basis, XnumNewRow);
+  if (valid_basis) appendBasicRowsToBasis(lp, basis_, XnumNewRow);
   if (valid_simplex_basis)
     appendBasicRowsToBasis(simplex_lp, simplex_basis, XnumNewRow);
 
@@ -389,7 +387,6 @@ HighsStatus Highs::deleteColsInterface(HighsIndexCollection& index_collection) {
   HighsModelObject& highs_model_object = hmos_[0];
   HEkk& ekk_instance = highs_model_object.ekk_instance_;
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   // Query: should simplex_status.valid be simplex_status.valid_?
   // Ensure that the LP (and any simplex LP) is column-wise
@@ -412,7 +409,7 @@ HighsStatus Highs::deleteColsInterface(HighsIndexCollection& index_collection) {
     highs_model_object.scaled_model_status_ = HighsModelStatus::kNotset;
     highs_model_object.unscaled_model_status_ =
         highs_model_object.scaled_model_status_;
-    basis.valid = false;
+    basis_.valid = false;
   }
   return_status = interpretCallStatus(
       deleteScale(options_.log_options, highs_model_object.scale_.col,
@@ -454,7 +451,6 @@ HighsStatus Highs::deleteRowsInterface(HighsIndexCollection& index_collection) {
   HighsModelObject& highs_model_object = hmos_[0];
   HEkk& ekk_instance = highs_model_object.ekk_instance_;
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   // Query: should simplex_status.valid be simplex_status.valid_?
   // Ensure that the LP (and any simplex LP) is column-wise
@@ -477,7 +473,7 @@ HighsStatus Highs::deleteRowsInterface(HighsIndexCollection& index_collection) {
     highs_model_object.scaled_model_status_ = HighsModelStatus::kNotset;
     highs_model_object.unscaled_model_status_ =
         highs_model_object.scaled_model_status_;
-    basis.valid = false;
+    basis_.valid = false;
   }
 
   if (highs_model_object.scale_.is_scaled) {
@@ -1044,7 +1040,6 @@ HighsStatus Highs::scaleColInterface(const HighsInt col,
   HEkk& ekk_instance = highs_model_object.ekk_instance_;
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   HighsLp& simplex_lp = ekk_instance.lp_;
   SimplexBasis& simplex_basis = ekk_instance.basis_;
@@ -1059,12 +1054,12 @@ HighsStatus Highs::scaleColInterface(const HighsInt col,
       return_status, "applyScalingToLpCol");
   if (return_status == HighsStatus::kError) return return_status;
 
-  if (scaleval < 0 && basis.valid) {
+  if (scaleval < 0 && basis_.valid) {
     // Negative, so flip any nonbasic status
-    if (basis.col_status[col] == HighsBasisStatus::kLower) {
-      basis.col_status[col] = HighsBasisStatus::kUpper;
-    } else if (basis.col_status[col] == HighsBasisStatus::kUpper) {
-      basis.col_status[col] = HighsBasisStatus::kLower;
+    if (basis_.col_status[col] == HighsBasisStatus::kLower) {
+      basis_.col_status[col] = HighsBasisStatus::kUpper;
+    } else if (basis_.col_status[col] == HighsBasisStatus::kUpper) {
+      basis_.col_status[col] = HighsBasisStatus::kLower;
     }
   }
   if (simplex_status.valid) {
@@ -1097,7 +1092,6 @@ HighsStatus Highs::scaleRowInterface(const HighsInt row,
   HEkk& ekk_instance = highs_model_object.ekk_instance_;
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   HighsSimplexStatus& simplex_status = ekk_instance.status_;
   HighsLp& simplex_lp = ekk_instance.lp_;
   SimplexBasis& simplex_basis = ekk_instance.basis_;
@@ -1112,12 +1106,12 @@ HighsStatus Highs::scaleRowInterface(const HighsInt row,
       return_status, "applyScalingToLpRow");
   if (return_status == HighsStatus::kError) return return_status;
 
-  if (scaleval < 0 && basis.valid) {
+  if (scaleval < 0 && basis_.valid) {
     // Negative, so flip any nonbasic status
-    if (basis.row_status[row] == HighsBasisStatus::kLower) {
-      basis.row_status[row] = HighsBasisStatus::kUpper;
-    } else if (basis.row_status[row] == HighsBasisStatus::kUpper) {
-      basis.row_status[row] = HighsBasisStatus::kLower;
+    if (basis_.row_status[row] == HighsBasisStatus::kLower) {
+      basis_.row_status[row] = HighsBasisStatus::kUpper;
+    } else if (basis_.row_status[row] == HighsBasisStatus::kUpper) {
+      basis_.row_status[row] = HighsBasisStatus::kLower;
     }
   }
   if (simplex_status.valid) {
@@ -1152,10 +1146,9 @@ HighsStatus Highs::setNonbasicStatusInterface(
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   HighsLp& lp = model_.lp_;
-  HighsBasis& basis = highs_model_object.basis_;
   SimplexBasis& simplex_basis = ekk_instance.basis_;
 
-  assert(basis.valid);
+  assert(basis_.valid);
   const bool has_simplex_basis = ekk_instance.status_.has_basis;
 
   if (!assessIndexCollection(options_.log_options, index_collection))
@@ -1198,16 +1191,16 @@ HighsStatus Highs::setNonbasicStatusInterface(
     assert(ignore_to_ix < ix_dim);
     if (columns) {
       for (HighsInt iCol = set_from_ix; iCol <= set_to_ix; iCol++) {
-        if (basis.col_status[iCol] == HighsBasisStatus::kBasic) continue;
+        if (basis_.col_status[iCol] == HighsBasisStatus::kBasic) continue;
         // Nonbasic column
         double lower = lp.colLower_[iCol];
         double upper = lp.colUpper_[iCol];
         if (!highs_isInfinity(-lower)) {
-          basis.col_status[iCol] = HighsBasisStatus::kLower;
+          basis_.col_status[iCol] = HighsBasisStatus::kLower;
         } else if (!highs_isInfinity(upper)) {
-          basis.col_status[iCol] = HighsBasisStatus::kUpper;
+          basis_.col_status[iCol] = HighsBasisStatus::kUpper;
         } else {
-          basis.col_status[iCol] = HighsBasisStatus::kZero;
+          basis_.col_status[iCol] = HighsBasisStatus::kZero;
         }
         if (has_simplex_basis) {
           // todo @ Julian this assert fails on glass4
@@ -1241,16 +1234,16 @@ HighsStatus Highs::setNonbasicStatusInterface(
       }
     } else {
       for (HighsInt iRow = set_from_ix; iRow <= set_to_ix; iRow++) {
-        if (basis.row_status[iRow] == HighsBasisStatus::kBasic) continue;
+        if (basis_.row_status[iRow] == HighsBasisStatus::kBasic) continue;
         // Nonbasic column
         double lower = lp.rowLower_[iRow];
         double upper = lp.rowUpper_[iRow];
         if (!highs_isInfinity(-lower)) {
-          basis.row_status[iRow] = HighsBasisStatus::kLower;
+          basis_.row_status[iRow] = HighsBasisStatus::kLower;
         } else if (!highs_isInfinity(upper)) {
-          basis.row_status[iRow] = HighsBasisStatus::kUpper;
+          basis_.row_status[iRow] = HighsBasisStatus::kUpper;
         } else {
-          basis.row_status[iRow] = HighsBasisStatus::kZero;
+          basis_.row_status[iRow] = HighsBasisStatus::kZero;
         }
         if (has_simplex_basis) {
           assert(simplex_basis.nonbasicFlag_[lp.numCol_ + iRow] ==
@@ -1319,9 +1312,8 @@ HighsStatus Highs::getBasicVariablesInterface(HighsInt* basic_variables) {
     //
     // Arguable that a warning should be issued and a logical basis
     // set up
-    HighsBasis& basis = highs_model_object.basis_;
-    if (basis.valid) {
-      return_status = interpretCallStatus(ekk_instance.setBasis(basis),
+      if (basis_.valid) {
+      return_status = interpretCallStatus(ekk_instance.setBasis(basis_),
                                           return_status, "setBasis");
       if (return_status == HighsStatus::kError) return return_status;
     } else {

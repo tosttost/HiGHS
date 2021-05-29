@@ -30,14 +30,16 @@
 // include essential data.
 class HighsModelObject {
  public:
-  HighsModelObject(const HighsLp& lp, HighsBasis& basis, HighsOptions& options, HighsTimer& timer)
+  HighsModelObject(const HighsLp& lp, HighsSolution& solution, HighsBasis& basis, HighsOptions& options, HighsTimer& timer)
       : lp_(lp),
+        solution_(solution),
         basis_(basis),
         options_(options),
         timer_(timer),
         ekk_instance_(options, timer) {}
 
   const HighsLp& lp_;
+  HighsSolution& solution_;
   HighsBasis& basis_;
   HighsOptions& options_;
   HighsTimer& timer_;
@@ -47,7 +49,6 @@ class HighsModelObject {
 
   HighsSolutionParams solution_params_;
   HighsIterationCounts iteration_counts_;
-  HighsSolution solution_;
 
   HighsScale scale_;
   HEkk ekk_instance_;
