@@ -88,8 +88,8 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
   if (return_status == HighsStatus::kError) return return_status;
   // Assess the column bounds
   return_status = interpretCallStatus(
-      assessBounds(options_, "Col", lp.numCol_, index_collection, local_colLower,
-                   local_colUpper, options_.infinite_bound),
+      assessBounds(options_, "Col", lp.numCol_, index_collection,
+                   local_colLower, local_colUpper, options_.infinite_bound),
       return_status, "assessBounds");
   if (return_status == HighsStatus::kError) return return_status;
   // Append the columns to the LP vectors and matrix
@@ -266,8 +266,8 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
   std::vector<double> local_rowUpper{XrowUpper, XrowUpper + XnumNewRow};
 
   return_status = interpretCallStatus(
-      assessBounds(options_, "Row", lp.numRow_, index_collection, local_rowLower,
-                   local_rowUpper, options_.infinite_bound),
+      assessBounds(options_, "Row", lp.numRow_, index_collection,
+                   local_rowLower, local_rowUpper, options_.infinite_bound),
       return_status, "assessBounds");
   if (return_status == HighsStatus::kError) return return_status;
 
@@ -1312,7 +1312,7 @@ HighsStatus Highs::getBasicVariablesInterface(HighsInt* basic_variables) {
     //
     // Arguable that a warning should be issued and a logical basis
     // set up
-      if (basis_.valid) {
+    if (basis_.valid) {
       return_status = interpretCallStatus(ekk_instance.setBasis(basis_),
                                           return_status, "setBasis");
       if (return_status == HighsStatus::kError) return return_status;

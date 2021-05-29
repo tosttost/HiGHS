@@ -42,7 +42,8 @@
 
 Highs::Highs() {
   hmos_.clear();
-  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_,
+                                   iteration_counts_, options_, timer_));
 }
 
 void Highs::clear() {
@@ -61,7 +62,8 @@ void Highs::clearSolver() {
   hmos_.clear();
   // Clear any HighsModelObject instances and create a fresh one for
   // the incumbent model
-  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, solution_, basis_,
+                                   iteration_counts_, options_, timer_));
   // By clearing everything, there should be nothing to verify in
   // returnFromHighs() that could yield an error
   HighsStatus return_status = HighsStatus::kOk;
@@ -608,6 +610,7 @@ HighsStatus Highs::run() {
   }
 
   // Solve the model as an LP
+  HighsLp& lp = model_.lp_;
   //
   // Record the initial time and set the component times and postsolve
   // iteration count to -1 to identify whether they are not required
@@ -631,12 +634,12 @@ HighsStatus Highs::run() {
   if (basis_.valid || options_.presolve == kHighsOffString) {
     // There is a valid basis for the problem or presolve is off
     solved_hmo = original_hmo;
-    model_.lp_.lp_name_ = "LP without presolve or with basis";
+    lp.lp_name_ = "LP without presolve or with basis";
     if (basis_.valid) {
       // There is a valid HiGHS basis, so use it to initialise the basis
       // in the HMO to be solved after refining any status values that
       // are simply HighsBasisStatus::kNonbasic
-      refineBasis(hmos_[solved_hmo].lp_, solution_, basis_);
+      refineBasis(lp, solution_, basis_);
     }
     this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
     timer_.start(timer_.solve_clock);
@@ -677,7 +680,7 @@ HighsStatus Highs::run() {
     switch (model_presolve_status_) {
       case HighsPresolveStatus::kNotPresolved: {
         assert(solved_hmo == original_hmo);
-        model_.lp_.lp_name_ = "Original LP";
+        lp.lp_name_ = "Original LP";
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
         call_status =
@@ -692,10 +695,9 @@ HighsStatus Highs::run() {
       }
       case HighsPresolveStatus::kNotReduced: {
         assert(solved_hmo == original_hmo);
-        model_.lp_.lp_name_ = "Unreduced LP";
+        lp.lp_name_ = "Unreduced LP";
         // Log the presolve reductions
-        reportPresolveReductions(options_.log_options,
-                                 hmos_[original_hmo].lp_, false);
+        reportPresolveReductions(options_.log_options, lp, false);
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
         call_status =
@@ -727,11 +729,10 @@ HighsStatus Highs::run() {
         // Add reduced lp object to vector of HighsModelObject,
         // so the last one in lp_ is the presolved one.
 
-        hmos_.push_back(HighsModelObject(reduced_lp, solution_, basis_, options_, timer_));
+        hmos_.push_back(HighsModelObject(reduced_lp, solution_, basis_,
+                                         iteration_counts_, options_, timer_));
         // Log the presolve reductions
-        reportPresolveReductions(options_.log_options,
-                                 hmos_[original_hmo].lp_,
-                                 hmos_[presolve_hmo].lp_);
+        reportPresolveReductions(options_.log_options, lp, reduced_lp);
         // Record the HMO to be solved
         solved_hmo = presolve_hmo;
         // Don't try dual cut-off when solving the presolved LP, as the
@@ -763,8 +764,7 @@ HighsStatus Highs::run() {
         break;
       }
       case HighsPresolveStatus::kReducedToEmpty: {
-        reportPresolveReductions(options_.log_options,
-                                 hmos_[original_hmo].lp_, true);
+        reportPresolveReductions(options_.log_options, lp, true);
         // Create a trivial optimal solution for postsolve to use
         clearSolutionUtil(solution_);
         clearBasisUtil(basis_);
@@ -874,10 +874,9 @@ HighsStatus Highs::run() {
           const bool force_debug = false;
           HighsInt save_highs_debug_level = options_.highs_debug_level;
           if (force_debug) options_.highs_debug_level = kHighsDebugLevelCostly;
-          if (debugHighsSolution("After returning from postsolve", options_,
-                                 model_.lp_, solution_,
-                                 basis_) ==
-              HighsDebugStatus::kLogicalError)
+          if (debugHighsSolution("After returning from postsolve", options_, lp,
+                                 solution_,
+                                 basis_) == HighsDebugStatus::kLogicalError)
             return returnFromRun(HighsStatus::kError);
           options_.highs_debug_level = save_highs_debug_level;
 
@@ -901,10 +900,9 @@ HighsStatus Highs::run() {
 
           // The basis returned from postsolve is just basic/nonbasic
           // and EKK expects a refined basis, so set it up now
-          refineBasis(model_.lp_, solution_,
-                      basis_);
+          refineBasis(lp, solution_, basis_);
           assert(solved_hmo == original_hmo);
-          model_.lp_.lp_name_ = "Postsolve LP";
+          lp.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
           timer_.start(timer_.solve_clock);
@@ -975,7 +973,7 @@ HighsStatus Highs::run() {
               this_solve_original_lp_time);
   if (this_solve_time > 0) {
     highsLogDev(options_.log_options, HighsLogType::kInfo, "For LP %16s",
-                hmos_[original_hmo].lp_.model_name_.c_str());
+                lp.model_name_.c_str());
     double sum_time = 0;
     if (this_presolve_time > 0) {
       sum_time += this_presolve_time;
@@ -2199,18 +2197,11 @@ HighsStatus Highs::callSolveLp(HighsModelObject& highs_model_object,
   // Check that the model isn't row-wise
   assert(model_.lp_.orientation_ != MatrixOrientation::kRowwise);
 
-  // Copy the LP solver iteration counts to this model so that they
-  // are updated
-  highs_model_object.iteration_counts_ = iteration_counts_;
-
   // Solve the LP
   call_status = solveLp(highs_model_object, message);
   return_status = interpretCallStatus(call_status, return_status, "solveLp");
   if (return_status == HighsStatus::kError) return return_status;
 
-  // Copy this model's iteration counts to the LP solver iteration counts so
-  // that they are updated
-  iteration_counts_ = highs_model_object.iteration_counts_;
   return return_status;
 }
 
