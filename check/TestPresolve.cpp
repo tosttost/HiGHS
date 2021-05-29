@@ -16,6 +16,7 @@ TEST_CASE("PresolveSolvePostsolve", "[highs_test_presolve]") {
   HighsStatus return_status;
   highs0.readModel(model_file);
   return_status = highs0.presolve();
+  REQUIRE(return_status == HighsStatus::kOk);
   HighsPresolveStatus model_presolve_status = highs0.getModelPresolveStatus();
   if (model_presolve_status == HighsPresolveStatus::kTimeout) {
     if (dev_run)
@@ -27,7 +28,10 @@ TEST_CASE("PresolveSolvePostsolve", "[highs_test_presolve]") {
   highs1.run();
   HighsBasis basis = highs1.getBasis();
   HighsSolution solution = highs1.getSolution();
-  highs0.postsolve(solution, basis);
+  return_status = highs0.postsolve(solution, basis);
+  REQUIRE(return_status == HighsStatus::kOk);
+  HighsModelStatus model_status = highs0.getModelStatus();
+  REQUIRE(model_status == HighsModelStatus::kOptimal);
 }
 
 TEST_CASE("Presolve", "[highs_test_presolve]") {
