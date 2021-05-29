@@ -42,7 +42,7 @@
 
 Highs::Highs() {
   hmos_.clear();
-  hmos_.push_back(HighsModelObject(model_.lp_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, basis_, options_, timer_));
 }
 
 void Highs::clear() {
@@ -61,7 +61,7 @@ void Highs::clearSolver() {
   hmos_.clear();
   // Clear any HighsModelObject instances and create a fresh one for
   // the incumbent model
-  hmos_.push_back(HighsModelObject(model_.lp_, options_, timer_));
+  hmos_.push_back(HighsModelObject(model_.lp_, basis_, options_, timer_));
   // By clearing everything, there should be nothing to verify in
   // returnFromHighs() that could yield an error
   HighsStatus return_status = HighsStatus::kOk;
@@ -637,7 +637,7 @@ HighsStatus Highs::run() {
       // in the HMO to be solved after refining any status values that
       // are simply HighsBasisStatus::kNonbasic
       refineBasis(hmos_[solved_hmo].lp_, solution_, basis_);
-      hmos_[solved_hmo].basis_ = basis_;
+      //      hmos_[solved_hmo].basis_ = basis_;
     }
     this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
     timer_.start(timer_.solve_clock);
@@ -695,7 +695,7 @@ HighsStatus Highs::run() {
         assert(solved_hmo == original_hmo);
         model_.lp_.lp_name_ = "Unreduced LP";
         // Log the presolve reductions
-        reportPresolveReductions(hmos_[original_hmo].options_.log_options,
+        reportPresolveReductions(options_.log_options,
                                  hmos_[original_hmo].lp_, false);
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
@@ -728,9 +728,9 @@ HighsStatus Highs::run() {
         // Add reduced lp object to vector of HighsModelObject,
         // so the last one in lp_ is the presolved one.
 
-        hmos_.push_back(HighsModelObject(reduced_lp, options_, timer_));
+        hmos_.push_back(HighsModelObject(reduced_lp, basis_, options_, timer_));
         // Log the presolve reductions
-        reportPresolveReductions(hmos_[original_hmo].options_.log_options,
+        reportPresolveReductions(options_.log_options,
                                  hmos_[original_hmo].lp_,
                                  hmos_[presolve_hmo].lp_);
         // Record the HMO to be solved
@@ -764,7 +764,7 @@ HighsStatus Highs::run() {
         break;
       }
       case HighsPresolveStatus::kReducedToEmpty: {
-        reportPresolveReductions(hmos_[original_hmo].options_.log_options,
+        reportPresolveReductions(options_.log_options,
                                  hmos_[original_hmo].lp_, true);
         // Create a trivial optimal solution for postsolve to use
         clearSolutionUtil(hmos_[original_hmo].solution_);
@@ -892,20 +892,19 @@ HighsStatus Highs::run() {
           solved_hmo = original_hmo;
           // Save the options to allow the best simplex strategy to
           // be used
-          HighsOptions& options = hmos_[solved_hmo].options_;
-          HighsOptions save_options = options;
+          HighsOptions save_options = options_;
           const bool full_logging = false;
-          if (full_logging) options.log_dev_level = kHighsLogDevLevelVerbose;
+          if (full_logging) options_.log_dev_level = kHighsLogDevLevelVerbose;
           // Force the use of simplex to clean up if IPM has been used
           // to solve the presolved problem
-          if (options.solver == kIpmString) options.solver = kSimplexString;
-          options.simplex_strategy = kSimplexStrategyChoose;
+          if (options_.solver == kIpmString) options_.solver = kSimplexString;
+          options_.simplex_strategy = kSimplexStrategyChoose;
           // Ensure that the parallel solver isn't used
-          options.highs_min_threads = 1;
-          options.highs_max_threads = 1;
+          options_.highs_min_threads = 1;
+          options_.highs_max_threads = 1;
           // Use any pivot threshold resulting from solving the presolved LP
           if (factor_pivot_threshold > 0)
-            options.factor_pivot_threshold = factor_pivot_threshold;
+            options_.factor_pivot_threshold = factor_pivot_threshold;
 
           // The basis returned from postsolve is just basic/nonbasic
           // and EKK expects a refined basis, so set it up now
@@ -924,7 +923,7 @@ HighsStatus Highs::run() {
           return_status =
               interpretCallStatus(call_status, return_status, "callSolveLp");
           // Recover the options
-          options = save_options;
+          options_ = save_options;
           if (return_status == HighsStatus::kError)
             return returnFromRun(return_status);
           postsolve_iteration_count =
@@ -2487,7 +2486,7 @@ void Highs::reportModel() {
 void Highs::newHighsBasis() {
   if (hmos_.size() > 0) {
     // Copy this basis to the HMO basis
-    hmos_[0].basis_ = basis_;
+    //    hmos_[0].basis_ = basis_;
     // Clear any simplex basis
     clearBasisInterface();
   }
@@ -2526,12 +2525,17 @@ void Highs::setHighsModelStatusAndInfo(const HighsModelStatus model_status) {
 
 void Highs::setHighsModelStatusBasisSolutionAndInfo() {
   assert(haveHmo("setHighsModelStatusBasisSolutionAndInfo"));
-  clearUserSolverData();
+  // Was clearUserSolverData(); but don't clear everything now that
+  // more user solver data are there  
+  clearModelStatus();
+  clearSolution();
+  //  clearBasis(); Since hmos_[0].basis_ is reference to basis_
+  clearInfo();
 
   model_status_ = hmos_[0].unscaled_model_status_;
   scaled_model_status_ = hmos_[0].scaled_model_status_;
 
-  basis_ = hmos_[0].basis_;
+  //  basis_ = hmos_[0].basis_;
   solution_ = hmos_[0].solution_;
 
   info_.simplex_iteration_count = iteration_counts_.simplex;
