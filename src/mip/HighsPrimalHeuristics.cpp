@@ -1095,3 +1095,38 @@ void HighsPrimalHeuristics::flushStatistics() {
   mipsolver.mipdata_->total_lp_iterations += lp_iterations;
   lp_iterations = 0;
 }
+
+void HighsPrimalHeuristics::cliqueFixing() {
+
+  auto localdom = mipsolver.mipdata_->domain;
+  //select clique with maximum cardinality
+
+  //find cheapest variable to fix in this clique
+  
+
+  //solve remaining LP or return solution if no non-integer variable exist
+  if (int(mipsolver.mipdata_->integer_cols.size()) != mipsolver.numCol()) {
+    HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);
+    lprelax.getLpSolver().changeColsBounds(0, mipsolver.numCol() - 1,
+                                           localdom.colLower_.data(),
+                                           localdom.colUpper_.data());
+    HighsLpRelaxation::Status st = lprelax.resolveLp();
+
+    if (st == HighsLpRelaxation::Status::kInfeasible) {
+      std::vector<HighsInt> inds;
+      std::vector<double> vals;
+      double rhs;
+      if (lprelax.computeDualInfProof(mipsolver.mipdata_->domain, inds, vals,
+                                      rhs)) {
+        HighsCutGeneration cutGen(lprelax, mipsolver.mipdata_->cutpool);
+        cutGen.generateConflict(localdom, inds, vals, rhs);
+      }
+
+    } else if (lprelax.unscaledPrimalFeasible(st))
+      mipsolver.mipdata_->addIncumbent(
+          lprelax.getLpSolver().getSolution().col_value, lprelax.getObjective(),
+          'R');
+  } else {
+    mipsolver.mipdata_->trySolution(localdom.colLower_, 'R');
+  }
+}
