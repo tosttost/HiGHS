@@ -81,12 +81,14 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
       }
     }
     lp.Astart_.push_back(nz);
+    lp.orientation_ = MatrixOrientation::kColwise;
     lp.sense_ = m.sense == ObjectiveSense::MIN ? ObjSense::kMinimize
                                                : ObjSense::kMaximize;
   } catch (std::invalid_argument& ex) {
     return FilereaderRetcode::kParserError;
   }
-  setOrientation(lp);
+  if (setOrientation(lp) != HighsStatus::kOk)
+    return FilereaderRetcode::kParserError;
   return FilereaderRetcode::kOk;
 }
 
