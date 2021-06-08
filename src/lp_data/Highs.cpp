@@ -234,7 +234,7 @@ HighsStatus Highs::writeInfo(const std::string filename) {
 // Methods below change the incumbent model or solver infomation
 // associated with it. Hence returnFromHighs is called at the end of
 // each
-HighsStatus Highs::passModel(const HighsModel model) {
+HighsStatus Highs::passModel(HighsModel model) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   HighsHessian& hessian = model_.hessian_;
@@ -242,35 +242,46 @@ HighsStatus Highs::passModel(const HighsModel model) {
   lp = std::move(model.lp_);
   hessian = std::move(model.hessian_);
   // Ensure that the LP is column-wise
-  setOrientation(lp);
+  return_status =
+      interpretCallStatus(setOrientation(lp), return_status, "setOrientation");
+  if (return_status == HighsStatus::kError) return return_status;
   // Check validity of the LP, normalising its values
   return_status =
       interpretCallStatus(assessLp(lp, options_), return_status, "assessLp");
   if (return_status == HighsStatus::kError) return return_status;
-  // Check validity of the Hessian, normalising its entries
+  // Check validity of any Hessian, normalising its entries
   return_status = interpretCallStatus(assessHessian(hessian, options_),
                                       return_status, "assessHessian");
   if (return_status == HighsStatus::kError) return return_status;
+  if (hessian.dim_) {
+    // Clear any zero Hessian
+    if (hessian.q_start_[hessian.dim_] == 0) {
+      highsLogUser(options_.log_options, HighsLogType::kInfo,
+                   "Hessian has dimension %" HIGHSINT_FORMAT
+                   " but no nonzeros, so is ignored\n",
+                   hessian.dim_);
+      hessian.clear();
+    }
+  }
 
   clearSolver();
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::passModel(const HighsLp lp) {
+HighsStatus Highs::passModel(HighsLp lp) {
   HighsModel model;
   model.lp_ = std::move(lp);
-  return passModel(model);
+  return passModel(std::move(model));
 }
 
-HighsStatus Highs::passModel(const HighsInt num_col, const HighsInt num_row,
-                             const HighsInt num_nz, const bool rowwise,
-                             const HighsInt hessian_num_nz, const double* costs,
-                             const double* col_lower, const double* col_upper,
-                             const double* row_lower, const double* row_upper,
-                             const HighsInt* astart, const HighsInt* aindex,
-                             const double* avalue, const HighsInt* q_start,
-                             const HighsInt* q_index, const double* q_value,
-                             const HighsInt* integrality) {
+HighsStatus Highs::passModel(
+    const HighsInt num_col, const HighsInt num_row, const HighsInt num_nz,
+    const bool rowwise, const HighsInt hessian_num_nz, const HighsInt sense,
+    const double offset, const double* costs, const double* col_lower,
+    const double* col_upper, const double* row_lower, const double* row_upper,
+    const HighsInt* astart, const HighsInt* aindex, const double* avalue,
+    const HighsInt* q_start, const HighsInt* q_index, const double* q_value,
+    const HighsInt* integrality) {
   HighsModel model;
   HighsLp& lp = model.lp_;
   lp.numCol_ = num_col;
@@ -312,6 +323,12 @@ HighsStatus Highs::passModel(const HighsInt num_col, const HighsInt num_row,
     lp.Astart_[num_col] = num_nz;
     lp.orientation_ = MatrixOrientation::kColwise;
   }
+  if (sense == (HighsInt)ObjSense::kMaximize) {
+    lp.sense_ = ObjSense::kMaximize;
+  } else {
+    lp.sense_ = ObjSense::kMinimize;
+  }
+  lp.offset_ = offset;
   if (num_col > 0 && integrality != NULL) {
     lp.integrality_.resize(num_col);
     for (HighsInt iCol = 0; iCol < num_col; iCol++) {
@@ -339,14 +356,15 @@ HighsStatus Highs::passModel(const HighsInt num_col, const HighsInt num_row,
 
 HighsStatus Highs::passModel(const HighsInt num_col, const HighsInt num_row,
                              const HighsInt num_nz, const bool rowwise,
+                             const HighsInt sense, const double offset,
                              const double* costs, const double* col_lower,
                              const double* col_upper, const double* row_lower,
                              const double* row_upper, const HighsInt* astart,
                              const HighsInt* aindex, const double* avalue,
                              const HighsInt* integrality) {
-  return passModel(num_col, num_row, num_nz, rowwise, 0, costs, col_lower,
-                   col_upper, row_lower, row_upper, astart, aindex, avalue,
-                   NULL, NULL, NULL, integrality);
+  return passModel(num_col, num_row, num_nz, rowwise, 0, sense, offset, costs,
+                   col_lower, col_upper, row_lower, row_upper, astart, aindex,
+                   avalue, NULL, NULL, NULL, integrality);
 }
 
 HighsStatus Highs::readModel(const std::string filename) {
@@ -370,8 +388,8 @@ HighsStatus Highs::readModel(const std::string filename) {
     if (return_status == HighsStatus::kError) return return_status;
   }
   model.lp_.model_name_ = extractModelName(filename);
-  return_status =
-      interpretCallStatus(passModel(model), return_status, "passModel");
+  return_status = interpretCallStatus(passModel(std::move(model)),
+                                      return_status, "passModel");
   return returnFromHighs(return_status);
 }
 
@@ -403,7 +421,9 @@ HighsStatus Highs::writeModel(const std::string filename) {
   HighsStatus return_status = HighsStatus::kOk;
 
   // Ensure that the LP is column-wise
-  setOrientation(model_.lp_);
+  return_status = interpretCallStatus(setOrientation(model_.lp_), return_status,
+                                      "setOrientation");
+  if (return_status == HighsStatus::kError) return return_status;
   if (filename == "") {
     // Empty file name: report model on logging stream
     reportModel();
@@ -573,9 +593,15 @@ HighsStatus Highs::run() {
   }
 
   // Ensure that the LP (and any simplex LP) has the matrix column-wise
-  setOrientation(model_.lp_);
-  if (hmos_[0].ekk_instance_.status_.valid)
-    setOrientation(hmos_[0].ekk_instance_.lp_);
+  return_status = interpretCallStatus(setOrientation(model_.lp_), return_status,
+                                      "setOrientation");
+  if (return_status == HighsStatus::kError) return return_status;
+  if (hmos_[0].ekk_instance_.status_.valid) {
+    return_status =
+        interpretCallStatus(setOrientation(hmos_[0].ekk_instance_.lp_),
+                            return_status, "setOrientation");
+    if (return_status == HighsStatus::kError) return return_status;
+  }
 #ifdef HIGHSDEV
   // Shouldn't have to check validity of the LP since this is done when it is
   // loaded or modified
@@ -631,7 +657,8 @@ HighsStatus Highs::run() {
   if (basis_.valid || options_.presolve == kHighsOffString) {
     // There is a valid basis for the problem or presolve is off
     solved_hmo = original_hmo;
-    model_.lp_.lp_name_ = "LP without presolve or with basis";
+    hmos_[solved_hmo].ekk_instance_.lp_name_ =
+        "LP without presolve or with basis";
     if (basis_.valid) {
       // There is a valid HiGHS basis, so use it to initialise the basis
       // in the HMO to be solved after refining any status values that
@@ -677,8 +704,7 @@ HighsStatus Highs::run() {
     bool have_optimal_solution = false;
     switch (model_presolve_status_) {
       case HighsPresolveStatus::kNotPresolved: {
-        assert(solved_hmo == original_hmo);
-        model_.lp_.lp_name_ = "Original LP";
+        hmos_[solved_hmo].ekk_instance_.lp_name_ = "Original LP";
         this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
         call_status =
@@ -693,7 +719,7 @@ HighsStatus Highs::run() {
       }
       case HighsPresolveStatus::kNotReduced: {
         assert(solved_hmo == original_hmo);
-        model_.lp_.lp_name_ = "Unreduced LP";
+        hmos_[solved_hmo].ekk_instance_.lp_name_ = "Unreduced LP";
         // Log the presolve reductions
         reportPresolveReductions(hmos_[original_hmo].options_.log_options,
                                  hmos_[original_hmo].lp_, false);
@@ -735,6 +761,7 @@ HighsStatus Highs::run() {
                                  hmos_[presolve_hmo].lp_);
         // Record the HMO to be solved
         solved_hmo = presolve_hmo;
+        hmos_[solved_hmo].ekk_instance_.lp_name_ = "Presolved LP";
         // Don't try dual cut-off when solving the presolved LP, as the
         // objective values aren't correct
         //	HighsOptions& options = hmos_[solved_hmo].options_;
@@ -912,7 +939,7 @@ HighsStatus Highs::run() {
           refineBasis(model_.lp_, hmos_[original_hmo].solution_,
                       hmos_[original_hmo].basis_);
           assert(solved_hmo == original_hmo);
-          model_.lp_.lp_name_ = "Postsolve LP";
+          hmos_[solved_hmo].ekk_instance_.lp_name_ = "Postsolve LP";
           HighsInt iteration_count0 = info_.simplex_iteration_count;
           this_solve_original_lp_time = -timer_.read(timer_.solve_clock);
           timer_.start(timer_.solve_clock);
@@ -1234,7 +1261,10 @@ HighsStatus Highs::getReducedRow(const HighsInt row, double* row_vector,
                                  const double* pass_basis_inverse_row_vector) {
   if (!haveHmo("getReducedRow")) return HighsStatus::kError;
   // Ensure that the LP is column-wise
-  setOrientation(model_.lp_);
+  HighsStatus return_status = HighsStatus::kOk;
+  return_status = interpretCallStatus(setOrientation(model_.lp_), return_status,
+                                      "setOrientation");
+  if (return_status == HighsStatus::kError) return return_status;
   HighsLp& lp = model_.lp_;
   if (row_vector == NULL) {
     highsLogUser(options_.log_options, HighsLogType::kError,
@@ -1292,7 +1322,10 @@ HighsStatus Highs::getReducedColumn(const HighsInt col, double* col_vector,
                                     HighsInt* col_indices) {
   if (!haveHmo("getReducedColumn")) return HighsStatus::kError;
   // Ensure that the LP is column-wise
-  setOrientation(model_.lp_);
+  HighsStatus return_status = HighsStatus::kOk;
+  return_status = interpretCallStatus(setOrientation(model_.lp_), return_status,
+                                      "setOrientation");
+  if (return_status == HighsStatus::kError) return return_status;
   HighsLp& lp = model_.lp_;
   if (col_vector == NULL) {
     highsLogUser(options_.log_options, HighsLogType::kError,
@@ -1391,73 +1424,75 @@ HighsStatus Highs::setBasis() {
   return HighsStatus::kOk;
 }
 
-bool Highs::addRow(const double lower_bound, const double upper_bound,
-                   const HighsInt num_new_nz, const HighsInt* indices,
-                   const double* values) {
+HighsStatus Highs::addRow(const double lower_bound, const double upper_bound,
+                          const HighsInt num_new_nz, const HighsInt* indices,
+                          const double* values) {
   HighsInt starts = 0;
   return addRows(1, &lower_bound, &upper_bound, num_new_nz, &starts, indices,
                  values);
 }
 
-bool Highs::addRows(const HighsInt num_new_row, const double* lower_bounds,
-                    const double* upper_bounds, const HighsInt num_new_nz,
-                    const HighsInt* starts, const HighsInt* indices,
-                    const double* values) {
+HighsStatus Highs::addRows(const HighsInt num_new_row,
+                           const double* lower_bounds,
+                           const double* upper_bounds,
+                           const HighsInt num_new_nz, const HighsInt* starts,
+                           const HighsInt* indices, const double* values) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   // Check that there is a HighsModelObject
-  if (!haveHmo("addRows")) return false;
+  if (!haveHmo("addRows")) return HighsStatus::kError;
   return_status = interpretCallStatus(
       addRowsInterface(num_new_row, lower_bounds, upper_bounds, num_new_nz,
                        starts, indices, values),
       return_status, "addRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::addCol(const double cost, const double lower_bound,
-                   const double upper_bound, const HighsInt num_new_nz,
-                   const HighsInt* indices, const double* values) {
+HighsStatus Highs::addCol(const double cost, const double lower_bound,
+                          const double upper_bound, const HighsInt num_new_nz,
+                          const HighsInt* indices, const double* values) {
   HighsInt starts = 0;
   return addCols(1, &cost, &lower_bound, &upper_bound, num_new_nz, &starts,
                  indices, values);
 }
 
-bool Highs::addCols(const HighsInt num_new_col, const double* costs,
-                    const double* lower_bounds, const double* upper_bounds,
-                    const HighsInt num_new_nz, const HighsInt* starts,
-                    const HighsInt* indices, const double* values) {
+HighsStatus Highs::addCols(const HighsInt num_new_col, const double* costs,
+                           const double* lower_bounds,
+                           const double* upper_bounds,
+                           const HighsInt num_new_nz, const HighsInt* starts,
+                           const HighsInt* indices, const double* values) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
-  if (!haveHmo("addCols")) return false;
+  if (!haveHmo("addCols")) return HighsStatus::kError;
   return_status = interpretCallStatus(
       addColsInterface(num_new_col, costs, lower_bounds, upper_bounds,
                        num_new_nz, starts, indices, values),
       return_status, "addCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeObjectiveSense(const ObjSense sense) {
+HighsStatus Highs::changeObjectiveSense(const ObjSense sense) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
-  if (!haveHmo("changeObjectiveSense")) return false;
+  if (!haveHmo("changeObjectiveSense")) return HighsStatus::kError;
   HighsStatus call_status;
   call_status = changeObjectiveSenseInterface(sense);
   return_status =
       interpretCallStatus(call_status, return_status, "changeObjectiveSense");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColIntegrality(const HighsInt col,
-                                 const HighsVarType integrality) {
+HighsStatus Highs::changeColIntegrality(const HighsInt col,
+                                        const HighsVarType integrality) {
   return changeColsIntegrality(1, &col, &integrality);
 }
 
-bool Highs::changeColsIntegrality(const HighsInt from_col,
-                                  const HighsInt to_col,
-                                  const HighsVarType* integrality) {
+HighsStatus Highs::changeColsIntegrality(const HighsInt from_col,
+                                         const HighsInt to_col,
+                                         const HighsVarType* integrality) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1466,18 +1501,18 @@ bool Highs::changeColsIntegrality(const HighsInt from_col,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_col;
   index_collection.to_ = to_col;
-  if (!haveHmo("changeColsIntegrality")) return false;
+  if (!haveHmo("changeColsIntegrality")) return HighsStatus::kError;
   call_status = changeIntegralityInterface(index_collection, integrality);
   return_status =
       interpretCallStatus(call_status, return_status, "changeIntegrality");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsIntegrality(const HighsInt num_set_entries,
-                                  const HighsInt* set,
-                                  const HighsVarType* integrality) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::changeColsIntegrality(const HighsInt num_set_entries,
+                                         const HighsInt* set,
+                                         const HighsVarType* integrality) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1489,16 +1524,16 @@ bool Highs::changeColsIntegrality(const HighsInt num_set_entries,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("changeColsIntegrality")) return false;
+  if (!haveHmo("changeColsIntegrality")) return HighsStatus::kError;
   call_status = changeIntegralityInterface(index_collection, integrality);
   return_status =
       interpretCallStatus(call_status, return_status, "changeIntegrality");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsIntegrality(const HighsInt* mask,
-                                  const HighsVarType* integrality) {
+HighsStatus Highs::changeColsIntegrality(const HighsInt* mask,
+                                         const HighsVarType* integrality) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1510,20 +1545,20 @@ bool Highs::changeColsIntegrality(const HighsInt* mask,
   index_collection.dimension_ = model_.lp_.numCol_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("changeColsIntegrality")) return false;
+  if (!haveHmo("changeColsIntegrality")) return HighsStatus::kError;
   call_status = changeIntegralityInterface(index_collection, integrality);
   return_status =
       interpretCallStatus(call_status, return_status, "changeIntegrality");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColCost(const HighsInt col, const double cost) {
+HighsStatus Highs::changeColCost(const HighsInt col, const double cost) {
   return changeColsCost(1, &col, &cost);
 }
 
-bool Highs::changeColsCost(const HighsInt from_col, const HighsInt to_col,
-                           const double* cost) {
+HighsStatus Highs::changeColsCost(const HighsInt from_col,
+                                  const HighsInt to_col, const double* cost) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1532,17 +1567,17 @@ bool Highs::changeColsCost(const HighsInt from_col, const HighsInt to_col,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_col;
   index_collection.to_ = to_col;
-  if (!haveHmo("changeColsCost")) return false;
+  if (!haveHmo("changeColsCost")) return HighsStatus::kError;
   call_status = changeCostsInterface(index_collection, cost);
   return_status =
       interpretCallStatus(call_status, return_status, "changeCosts");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsCost(const HighsInt num_set_entries, const HighsInt* set,
-                           const double* cost) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::changeColsCost(const HighsInt num_set_entries,
+                                  const HighsInt* set, const double* cost) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1554,15 +1589,15 @@ bool Highs::changeColsCost(const HighsInt num_set_entries, const HighsInt* set,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("changeColsCost")) return false;
+  if (!haveHmo("changeColsCost")) return HighsStatus::kError;
   call_status = changeCostsInterface(index_collection, cost);
   return_status =
       interpretCallStatus(call_status, return_status, "changeCosts");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsCost(const HighsInt* mask, const double* cost) {
+HighsStatus Highs::changeColsCost(const HighsInt* mask, const double* cost) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1574,21 +1609,22 @@ bool Highs::changeColsCost(const HighsInt* mask, const double* cost) {
   index_collection.dimension_ = model_.lp_.numCol_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("changeColsCost")) return false;
+  if (!haveHmo("changeColsCost")) return HighsStatus::kError;
   call_status = changeCostsInterface(index_collection, cost);
   return_status =
       interpretCallStatus(call_status, return_status, "changeCosts");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColBounds(const HighsInt col, const double lower,
-                            const double upper) {
+HighsStatus Highs::changeColBounds(const HighsInt col, const double lower,
+                                   const double upper) {
   return changeColsBounds(1, &col, &lower, &upper);
 }
 
-bool Highs::changeColsBounds(const HighsInt from_col, const HighsInt to_col,
-                             const double* lower, const double* upper) {
+HighsStatus Highs::changeColsBounds(const HighsInt from_col,
+                                    const HighsInt to_col, const double* lower,
+                                    const double* upper) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1597,18 +1633,18 @@ bool Highs::changeColsBounds(const HighsInt from_col, const HighsInt to_col,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_col;
   index_collection.to_ = to_col;
-  if (!haveHmo("changeColsBounds")) return false;
+  if (!haveHmo("changeColsBounds")) return HighsStatus::kError;
   call_status = changeColBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeColBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsBounds(const HighsInt num_set_entries,
-                             const HighsInt* set, const double* lower,
-                             const double* upper) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::changeColsBounds(const HighsInt num_set_entries,
+                                    const HighsInt* set, const double* lower,
+                                    const double* upper) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1620,16 +1656,16 @@ bool Highs::changeColsBounds(const HighsInt num_set_entries,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("changeColsBounds")) return false;
+  if (!haveHmo("changeColsBounds")) return HighsStatus::kError;
   call_status = changeColBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeColBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeColsBounds(const HighsInt* mask, const double* lower,
-                             const double* upper) {
+HighsStatus Highs::changeColsBounds(const HighsInt* mask, const double* lower,
+                                    const double* upper) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1641,21 +1677,22 @@ bool Highs::changeColsBounds(const HighsInt* mask, const double* lower,
   index_collection.dimension_ = model_.lp_.numCol_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("changeColsBounds")) return false;
+  if (!haveHmo("changeColsBounds")) return HighsStatus::kError;
   call_status = changeColBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeColBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeRowBounds(const HighsInt row, const double lower,
-                            const double upper) {
+HighsStatus Highs::changeRowBounds(const HighsInt row, const double lower,
+                                   const double upper) {
   return changeRowsBounds(1, &row, &lower, &upper);
 }
 
-bool Highs::changeRowsBounds(const HighsInt from_row, const HighsInt to_row,
-                             const double* lower, const double* upper) {
+HighsStatus Highs::changeRowsBounds(const HighsInt from_row,
+                                    const HighsInt to_row, const double* lower,
+                                    const double* upper) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1664,18 +1701,18 @@ bool Highs::changeRowsBounds(const HighsInt from_row, const HighsInt to_row,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_row;
   index_collection.to_ = to_row;
-  if (!haveHmo("changeRowsBounds")) return false;
+  if (!haveHmo("changeRowsBounds")) return HighsStatus::kError;
   call_status = changeRowBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeRowBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeRowsBounds(const HighsInt num_set_entries,
-                             const HighsInt* set, const double* lower,
-                             const double* upper) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::changeRowsBounds(const HighsInt num_set_entries,
+                                    const HighsInt* set, const double* lower,
+                                    const double* upper) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1687,16 +1724,16 @@ bool Highs::changeRowsBounds(const HighsInt num_set_entries,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("changeRowsBounds")) return false;
+  if (!haveHmo("changeRowsBounds")) return HighsStatus::kError;
   call_status = changeRowBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeRowBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeRowsBounds(const HighsInt* mask, const double* lower,
-                             const double* upper) {
+HighsStatus Highs::changeRowsBounds(const HighsInt* mask, const double* lower,
+                                    const double* upper) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1708,36 +1745,36 @@ bool Highs::changeRowsBounds(const HighsInt* mask, const double* lower,
   index_collection.dimension_ = model_.lp_.numRow_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("changeRowsBounds")) return false;
+  if (!haveHmo("changeRowsBounds")) return HighsStatus::kError;
   call_status = changeRowBoundsInterface(index_collection, lower, upper);
   return_status =
       interpretCallStatus(call_status, return_status, "changeRowBounds");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::changeCoeff(const HighsInt row, const HighsInt col,
-                        const double value) {
+HighsStatus Highs::changeCoeff(const HighsInt row, const HighsInt col,
+                               const double value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
-  if (!haveHmo("changeCoeff")) return false;
+  if (!haveHmo("changeCoeff")) return HighsStatus::kError;
   call_status = changeCoefficientInterface(row, col, value);
   return_status =
       interpretCallStatus(call_status, return_status, "changeCoefficient");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getObjectiveSense(ObjSense& sense) {
-  if (!haveHmo("getObjectiveSense")) return false;
+HighsStatus Highs::getObjectiveSense(ObjSense& sense) {
+  if (!haveHmo("getObjectiveSense")) return HighsStatus::kError;
   sense = model_.lp_.sense_;
-  return true;
+  return HighsStatus::kOk;
 }
 
-bool Highs::getCols(const HighsInt from_col, const HighsInt to_col,
-                    HighsInt& num_col, double* costs, double* lower,
-                    double* upper, HighsInt& num_nz, HighsInt* start,
-                    HighsInt* index, double* value) {
+HighsStatus Highs::getCols(const HighsInt from_col, const HighsInt to_col,
+                           HighsInt& num_col, double* costs, double* lower,
+                           double* upper, HighsInt& num_nz, HighsInt* start,
+                           HighsInt* index, double* value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   HighsIndexCollection index_collection;
@@ -1745,19 +1782,19 @@ bool Highs::getCols(const HighsInt from_col, const HighsInt to_col,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_col;
   index_collection.to_ = to_col;
-  if (!haveHmo("getCols")) return false;
+  if (!haveHmo("getCols")) return HighsStatus::kError;
   call_status = getColsInterface(index_collection, num_col, costs, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getCols(const HighsInt num_set_entries, const HighsInt* set,
-                    HighsInt& num_col, double* costs, double* lower,
-                    double* upper, HighsInt& num_nz, HighsInt* start,
-                    HighsInt* index, double* value) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::getCols(const HighsInt num_set_entries, const HighsInt* set,
+                           HighsInt& num_col, double* costs, double* lower,
+                           double* upper, HighsInt& num_nz, HighsInt* start,
+                           HighsInt* index, double* value) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   // Create a local set that is not const since index_collection.set_
@@ -1768,17 +1805,18 @@ bool Highs::getCols(const HighsInt num_set_entries, const HighsInt* set,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("getCols")) return false;
+  if (!haveHmo("getCols")) return HighsStatus::kError;
   call_status = getColsInterface(index_collection, num_col, costs, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getCols(const HighsInt* mask, HighsInt& num_col, double* costs,
-                    double* lower, double* upper, HighsInt& num_nz,
-                    HighsInt* start, HighsInt* index, double* value) {
+HighsStatus Highs::getCols(const HighsInt* mask, HighsInt& num_col,
+                           double* costs, double* lower, double* upper,
+                           HighsInt& num_nz, HighsInt* start, HighsInt* index,
+                           double* value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   // Create a local mask that is not const since
@@ -1789,18 +1827,18 @@ bool Highs::getCols(const HighsInt* mask, HighsInt& num_col, double* costs,
   index_collection.dimension_ = model_.lp_.numCol_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("getCols")) return false;
+  if (!haveHmo("getCols")) return HighsStatus::kError;
   call_status = getColsInterface(index_collection, num_col, costs, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getRows(const HighsInt from_row, const HighsInt to_row,
-                    HighsInt& num_row, double* lower, double* upper,
-                    HighsInt& num_nz, HighsInt* start, HighsInt* index,
-                    double* value) {
+HighsStatus Highs::getRows(const HighsInt from_row, const HighsInt to_row,
+                           HighsInt& num_row, double* lower, double* upper,
+                           HighsInt& num_nz, HighsInt* start, HighsInt* index,
+                           double* value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   HighsIndexCollection index_collection;
@@ -1808,19 +1846,19 @@ bool Highs::getRows(const HighsInt from_row, const HighsInt to_row,
   index_collection.is_interval_ = true;
   index_collection.from_ = from_row;
   index_collection.to_ = to_row;
-  if (!haveHmo("getRows")) return false;
+  if (!haveHmo("getRows")) return HighsStatus::kError;
   call_status = getRowsInterface(index_collection, num_row, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getRows(const HighsInt num_set_entries, const HighsInt* set,
-                    HighsInt& num_row, double* lower, double* upper,
-                    HighsInt& num_nz, HighsInt* start, HighsInt* index,
-                    double* value) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::getRows(const HighsInt num_set_entries, const HighsInt* set,
+                           HighsInt& num_row, double* lower, double* upper,
+                           HighsInt& num_nz, HighsInt* start, HighsInt* index,
+                           double* value) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   // Create a local set that is not const since index_collection.set_
@@ -1831,17 +1869,17 @@ bool Highs::getRows(const HighsInt num_set_entries, const HighsInt* set,
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("getRows")) return false;
+  if (!haveHmo("getRows")) return HighsStatus::kError;
   call_status = getRowsInterface(index_collection, num_row, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getRows(const HighsInt* mask, HighsInt& num_row, double* lower,
-                    double* upper, HighsInt& num_nz, HighsInt* start,
-                    HighsInt* index, double* value) {
+HighsStatus Highs::getRows(const HighsInt* mask, HighsInt& num_row,
+                           double* lower, double* upper, HighsInt& num_nz,
+                           HighsInt* start, HighsInt* index, double* value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
   // Create a local mask that is not const since
@@ -1852,26 +1890,27 @@ bool Highs::getRows(const HighsInt* mask, HighsInt& num_row, double* lower,
   index_collection.dimension_ = model_.lp_.numRow_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &local_mask[0];
-  if (!haveHmo("getRows")) return false;
+  if (!haveHmo("getRows")) return HighsStatus::kError;
   call_status = getRowsInterface(index_collection, num_row, lower, upper,
                                  num_nz, start, index, value);
   return_status = interpretCallStatus(call_status, return_status, "getRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::getCoeff(const HighsInt row, const HighsInt col, double& value) {
+HighsStatus Highs::getCoeff(const HighsInt row, const HighsInt col,
+                            double& value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsStatus call_status;
-  if (!haveHmo("getCoeff")) return false;
+  if (!haveHmo("getCoeff")) return HighsStatus::kError;
   call_status = getCoefficientInterface(row, col, value);
   return_status =
       interpretCallStatus(call_status, return_status, "getCoefficient");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteCols(const HighsInt from_col, const HighsInt to_col) {
+HighsStatus Highs::deleteCols(const HighsInt from_col, const HighsInt to_col) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1880,15 +1919,16 @@ bool Highs::deleteCols(const HighsInt from_col, const HighsInt to_col) {
   index_collection.is_interval_ = true;
   index_collection.from_ = from_col;
   index_collection.to_ = to_col;
-  if (!haveHmo("deleteCols")) return false;
+  if (!haveHmo("deleteCols")) return HighsStatus::kError;
   call_status = deleteColsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteCols(const HighsInt num_set_entries, const HighsInt* set) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::deleteCols(const HighsInt num_set_entries,
+                              const HighsInt* set) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1900,14 +1940,14 @@ bool Highs::deleteCols(const HighsInt num_set_entries, const HighsInt* set) {
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("deleteCols")) return false;
+  if (!haveHmo("deleteCols")) return HighsStatus::kError;
   call_status = deleteColsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteCols(HighsInt* mask) {
+HighsStatus Highs::deleteCols(HighsInt* mask) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1915,14 +1955,14 @@ bool Highs::deleteCols(HighsInt* mask) {
   index_collection.dimension_ = model_.lp_.numCol_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &mask[0];
-  if (!haveHmo("deleteCols")) return false;
+  if (!haveHmo("deleteCols")) return HighsStatus::kError;
   call_status = deleteColsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteCols");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteRows(const HighsInt from_row, const HighsInt to_row) {
+HighsStatus Highs::deleteRows(const HighsInt from_row, const HighsInt to_row) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1931,15 +1971,16 @@ bool Highs::deleteRows(const HighsInt from_row, const HighsInt to_row) {
   index_collection.is_interval_ = true;
   index_collection.from_ = from_row;
   index_collection.to_ = to_row;
-  if (!haveHmo("deleteRows")) return false;
+  if (!haveHmo("deleteRows")) return HighsStatus::kError;
   call_status = deleteRowsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteRows(const HighsInt num_set_entries, const HighsInt* set) {
-  if (num_set_entries <= 0) return true;
+HighsStatus Highs::deleteRows(const HighsInt num_set_entries,
+                              const HighsInt* set) {
+  if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1951,14 +1992,14 @@ bool Highs::deleteRows(const HighsInt num_set_entries, const HighsInt* set) {
   index_collection.is_set_ = true;
   index_collection.set_ = &local_set[0];
   index_collection.set_num_entries_ = num_set_entries;
-  if (!haveHmo("deleteRows")) return false;
+  if (!haveHmo("deleteRows")) return HighsStatus::kError;
   call_status = deleteRowsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::deleteRows(HighsInt* mask) {
+HighsStatus Highs::deleteRows(HighsInt* mask) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
@@ -1966,33 +2007,33 @@ bool Highs::deleteRows(HighsInt* mask) {
   index_collection.dimension_ = model_.lp_.numRow_;
   index_collection.is_mask_ = true;
   index_collection.mask_ = &mask[0];
-  if (!haveHmo("deleteRows")) return false;
+  if (!haveHmo("deleteRows")) return HighsStatus::kError;
   call_status = deleteRowsInterface(index_collection);
   return_status = interpretCallStatus(call_status, return_status, "deleteRows");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::scaleCol(const HighsInt col, const double scaleval) {
+HighsStatus Highs::scaleCol(const HighsInt col, const double scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
-  if (!haveHmo("scaleCol")) return false;
+  if (!haveHmo("scaleCol")) return HighsStatus::kError;
   call_status = scaleColInterface(col, scaleval);
   return_status = interpretCallStatus(call_status, return_status, "scaleCol");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
-bool Highs::scaleRow(const HighsInt row, const double scaleval) {
+HighsStatus Highs::scaleRow(const HighsInt row, const double scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status;
-  if (!haveHmo("scaleRow")) return false;
+  if (!haveHmo("scaleRow")) return HighsStatus::kError;
   call_status = scaleRowInterface(row, scaleval);
   return_status = interpretCallStatus(call_status, return_status, "scaleRow");
-  if (return_status == HighsStatus::kError) return false;
-  return returnFromHighs(return_status) != HighsStatus::kError;
+  if (return_status == HighsStatus::kError) return HighsStatus::kError;
+  return returnFromHighs(return_status);
 }
 
 double Highs::getInfinity() { return kHighsInf; }
@@ -2060,10 +2101,6 @@ std::string Highs::modelStatusToString(
 
 std::string Highs::solutionStatusToString(const HighsInt solution_status) {
   return utilSolutionStatusToString(solution_status);
-}
-
-void Highs::setMatrixOrientation(const MatrixOrientation& desired_orientation) {
-  setOrientation(model_.lp_, desired_orientation);
 }
 
 // Private methods
@@ -2447,7 +2484,7 @@ HighsStatus Highs::callRunPostsolve(const HighsSolution& solution,
     //      options_.factor_pivot_threshold = factor_pivot_threshold;
 
     HighsInt iteration_count0 = info_.simplex_iteration_count;
-    model_.lp_.lp_name_ = "Postsolve LP";
+    hmos_[0].ekk_instance_.lp_name_ = "Postsolve LP";
     HighsStatus call_status = callSolveLp(
         hmos_[0], "Solving the original LP from the solution after postsolve");
     return_status =
