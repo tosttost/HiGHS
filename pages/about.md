@@ -47,7 +47,7 @@ HiGHS solves large scale sparse linear optimization problems of the form
 
 ```
 
-and, when the matrix Q is zero, HiGHS can solve the general mixed-integer (MIP) problem in which (some) variables are required to take integer values.
+When the matrix Q is zero, HiGHS can solve the general mixed-integer (MIP) problem in which (some) variables are required to take integer values.
 
 The HiGHS core solver implementes the dual revised simplex method in parallel C++ using OpenMP directives to solve linear programming (LP) problems. It also has serial primal simplex and interior point solvers for LP problems. MIP problems are solved by branch-and-cut, and quadratic programming (QP) problems are solved using an active set method.
 

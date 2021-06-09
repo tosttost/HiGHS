@@ -129,6 +129,12 @@ $(document).ready(function() {
               <a class="td-sidebar-link td-sidebar-link__page " id="m-highs-running-command-line-options" href="/HiGHS/run-executable#command-line-options">Command line options</a>
               </li></ul>
           <li class="td-sidebar-nav__section-title">
+            <a href="/HiGHS/guide" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guide</a>
+          </li>
+          <ul><li class="collapse show" id="">
+              <a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-model-definition" href="/HiGHS/guide#model-definition">Model definition</a><a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-model-solution" href="/HiGHS/guide#model-solution">Model solution</a><a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-model-extraction" href="/HiGHS/guide#model-extraction">Model extraction</a><a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-model-modification" href="/HiGHS/guide#model-modification">Model modification</a><a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-other-features" href="/HiGHS/guide#other-features">Other features</a><a class="td-sidebar-link td-sidebar-link__page " id="m-highs-guide-options" href="/HiGHS/guide#options">Options</a>
+              </li></ul>
+          <li class="td-sidebar-nav__section-title">
             <a href="/HiGHS/interfaces" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">HiGHS Interfaces</a>
           </li>
           <ul><li class="collapse show" id=""></li></ul>
@@ -211,7 +217,7 @@ We would be pleased to learn about users’ experience and give advice, to get i
 
 </code></pre></div></div>
 
-<p>and, when the matrix Q is zero, HiGHS can solve the general mixed-integer (MIP) problem in which (some) variables are required to take integer values.</p>
+<p>When the matrix Q is zero, HiGHS can solve the general mixed-integer (MIP) problem in which (some) variables are required to take integer values.</p>
 
 <p>The HiGHS core solver implementes the dual revised simplex method in parallel C++ using OpenMP directives to solve linear programming (LP) problems. It also has serial primal simplex and interior point solvers for LP problems. MIP problems are solved by branch-and-cut, and quadratic programming (QP) problems are solved using an active set method.</p>
 

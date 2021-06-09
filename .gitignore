@@ -31,7 +31,8 @@ build/
 build32/
 build64/
 check/
-docs/
+docs/latex/
+docs/html/
 htdocs/
 ml.lp
 ml.mps
