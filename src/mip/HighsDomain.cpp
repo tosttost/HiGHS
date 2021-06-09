@@ -165,6 +165,7 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
         domain->infeasible_ = true;
         domain->infeasible_pos = domain->domchgstack_.size();
         domain->infeasible_reason = Reason::cut(cutpoolindex, row);
+        cutpool->resetAge(row);
         return false;
       }
 
@@ -250,6 +251,7 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
         domain->infeasible_ = true;
         domain->infeasible_pos = domain->domchgstack_.size();
         domain->infeasible_reason = Reason::cut(cutpoolindex, row);
+        cutpool->resetAge(row);
         return false;
       }
 
