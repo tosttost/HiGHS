@@ -1099,11 +1099,78 @@ void HighsPrimalHeuristics::flushStatistics() {
 void HighsPrimalHeuristics::cliqueFixing() {
 
   auto localdom = mipsolver.mipdata_->domain;
-  //select clique with maximum cardinality
 
-  //find cheapest variable to fix in this clique
+  ///select clique with maximum cardinality
+  //set solution to 0.5 so that each variable has equal weight
+  std::vector<double> dummysol(mipsolver.numCol(),0.5);
+
+  //just for safety, normally the cliques.size()<1 should break the while loop
+  HighsInt safeiterations = 0;
+  HighsInt maxit = 2*mipsolver.numCol();
+  while(safeiterations < maxit){
+    safeiterations++;
+
+    //this gives maximum cardinality clique found
+    std::vector<std::vector<HighsCliqueTable::CliqueVar>> 
+    cliques = mipsolver.mipdata_->cliquetable.separateCliques(
+                        dummysol, localdom, mipsolver.mipdata_->feastol, 0.75);
+    //found no clique so abort
+    if(cliques.size()<1) break;
+    //only consider cliques with size 2 or more
+    if(cliques[0].size()<2) break;
+
+    bool flagMoreCliques = true;
+    while(flagMoreCliques){
+
+      if(cliques.size() <= 1) {
+        flagMoreCliques = false;
+      }
+
+      HighsInt maxsizeClique = 0;
+      std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
+      for(std::vector<HighsCliqueTable::CliqueVar> clique : cliques){
+        if(clique.size()>maxsizeClique){
+          maxsizeClique = clique.size();
+          cliqueMaxsize = clique;
+        }
+      }
+
+      ///find cheapest variable to fix in this clique
+      HighsInt indexFixing = 0;
+      double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
+      for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
+        if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
+          indexFixing = i;
+          objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
+        }
+      }
+      ///fix value and clean up cliques set
+      localdom.fixCol(cliqueMaxsize[indexFixing].col, 1, HighsDomain::Reason::cliqueTable());
+      dummysol[indexFixing] = 1;
+      
+      if(flagMoreCliques){
+        cliques.erase(std::remove(cliques.begin(), cliques.end(), cliqueMaxsize), cliques.end());
+        for(HighsInt i = 1; i<cliques.size();i++){
+          for(HighsInt ii=0; ii<cliques[i].size(); ii++){
+            if(cliques[i][ii].col == cliqueMaxsize[indexFixing].col){
+              cliques[i].erase(cliques[i].begin()+ii);
+              if(cliques[i].size()<2){
+                cliques.erase(cliques.begin()+i);
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      if (localdom.infeasible()) return;
+      localdom.propagate();
+      if (localdom.infeasible()) return;
+    }
+        
+  }
   
-
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\n3\n");
   //solve remaining LP or return solution if no non-integer variable exist
   if (int(mipsolver.mipdata_->integer_cols.size()) != mipsolver.numCol()) {
     HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);

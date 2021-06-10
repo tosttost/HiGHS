@@ -746,6 +746,12 @@ bool HighsMipSolverData::rootSeparationRound(
 
 void HighsMipSolverData::evaluateRootNode() {
   HighsInt maxSepaRounds = mipsolver.submip ? 5 : kHighsIInf;
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nTest\n");
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\n%-14.9g\n",upper_bound);
+  //call primal heuristic clique fixing
+  heuristics.cliqueFixing();
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nDone primal heuristic\n");
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\n%-14.9g\n",upper_bound);
 restart:
   // solve the first root lp
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
