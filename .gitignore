@@ -25,6 +25,7 @@ _site/modules/
 _site/releaseDocs/
 _site/src/
 _site/test64/
+_site
 app/
 bin/
 build/
