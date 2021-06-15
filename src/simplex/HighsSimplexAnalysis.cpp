@@ -13,13 +13,12 @@
 /**@file simplex/HighsSimplexAnalysis.cpp
  * @brief
  */
-#include "simplex/HighsSimplexAnalysis.h"
-
 #include <cmath>
 #include <iomanip>
 
 #include "HConfig.h"
 #include "simplex/FactorTimer.h"
+#include "simplex/HighsSimplexAnalysis.h"
 #include "simplex/HEkkDebug.h"
 #include "simplex/HFactor.h"
 #include "simplex/SimplexTimer.h"
@@ -35,7 +34,8 @@ void HighsSimplexAnalysis::setup(const std::string lp_name, const HighsLp& lp,
   numRow = lp.numRow_;
   numCol = lp.numCol_;
   numTot = numRow + numCol;
-  num_nz = lp.Astart_[numCol];
+  num_nz = 0;
+  if (numCol) num_nz = lp.Astart_[numCol];
   model_name_ = lp.model_name_;
   lp_name_ = lp_name;
   // Set up analysis logic short-cuts
