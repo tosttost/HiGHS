@@ -13,15 +13,15 @@
 /**@file simplex/HighsSimplexAnalysis.cpp
  * @brief
  */
+#include "simplex/HighsSimplexAnalysis.h"
+
 #include <cmath>
-//#include <cstdio>
 #include <iomanip>
 
 #include "HConfig.h"
 #include "simplex/FactorTimer.h"
 #include "simplex/HEkkDebug.h"
 #include "simplex/HFactor.h"
-#include "simplex/HighsSimplexAnalysis.h"
 #include "simplex/SimplexTimer.h"
 
 #ifdef OPENMP
@@ -35,6 +35,7 @@ void HighsSimplexAnalysis::setup(const std::string lp_name, const HighsLp& lp,
   numRow = lp.numRow_;
   numCol = lp.numCol_;
   numTot = numRow + numCol;
+  num_nz = lp.Astart_[numCol];
   model_name_ = lp.model_name_;
   lp_name_ = lp_name;
   // Set up analysis logic short-cuts
@@ -684,6 +685,10 @@ void HighsSimplexAnalysis::iterationRecord() {
         lcAnIter.AnIterTraceCostlyDse = 0;
       }
       lcAnIter.AnIterTrace_dual_edge_weight_mode = (HighsInt)edge_weight_mode;
+      lcAnIter.AnIterTrace_kernel_dim = running_average_kernel_dim;
+      lcAnIter.AnIterTrace_kernel_fill_factor =
+          running_average_kernel_fill_factor;
+      lcAnIter.AnIterTrace_phase = solve_phase;
     }
   }
   AnIterPrevIt = AnIterCuIt;
@@ -967,6 +972,10 @@ void HighsSimplexAnalysis::summaryReport() {
         lcAnIter.AnIterTraceCostlyDse = 0;
       }
       lcAnIter.AnIterTrace_dual_edge_weight_mode = (HighsInt)edge_weight_mode;
+      lcAnIter.AnIterTrace_kernel_dim = running_average_kernel_dim;
+      lcAnIter.AnIterTrace_kernel_fill_factor =
+          running_average_kernel_fill_factor;
+      lcAnIter.AnIterTrace_phase = solve_phase;
     }
     // Determine whether the Multi and steepest edge columns should be reported
     double su_multi_values = 0;
@@ -1033,6 +1042,13 @@ void HighsSimplexAnalysis::summaryReport() {
           lcAnIter.AnIterTraceDensity[ANALYSIS_OPERATION_TYPE_BTRAN_EP]);
       printOneDensity(
           lcAnIter.AnIterTraceDensity[ANALYSIS_OPERATION_TYPE_PRICE_AP]);
+      std::string ftran_density = densityToString(
+          lcAnIter.AnIterTraceDensity[ANALYSIS_OPERATION_TYPE_FTRAN]);
+      std::string btran_density = densityToString(
+          lcAnIter.AnIterTraceDensity[ANALYSIS_OPERATION_TYPE_BTRAN_EP]);
+      std::string price_density = densityToString(
+          lcAnIter.AnIterTraceDensity[ANALYSIS_OPERATION_TYPE_PRICE_AP]);
+      std::string dse_density = "";
       double use_row_DSE_density;
       if (rp_dual_steepest_edge) {
         if (lc_dual_edge_weight_mode ==
@@ -1043,6 +1059,7 @@ void HighsSimplexAnalysis::summaryReport() {
           use_row_DSE_density = 0;
         }
         printOneDensity(use_row_DSE_density);
+        dse_density = densityToString(use_row_DSE_density);
       }
       printf(" |  %3s ", str_dual_edge_weight_mode.c_str());
       if (rp_dual_steepest_edge) {
@@ -1056,7 +1073,23 @@ void HighsSimplexAnalysis::summaryReport() {
         }
         printOneDensity(use_costly_dse);
       }
-      printf("\n");
+      const bool greppable_output = false;
+      if (greppable_output) {
+        const double kernel_dim_pct =
+            lcAnIter.AnIterTrace_kernel_dim / (0.01 * numRow);
+        const double kernel_fill_factor =
+            lcAnIter.AnIterTrace_kernel_fill_factor;
+        const HighsInt phase = lcAnIter.AnIterTrace_phase;
+        printf("| %9.7f %9.4f |", kernel_dim_pct, kernel_fill_factor);
+        printf("\n");
+        printf("grep_AnIter,%" HIGHSINT_FORMAT ",%" HIGHSINT_FORMAT
+               ",%s,%s,%s,%s,%g,%g,%" HIGHSINT_FORMAT "\n",
+               toIter, iterSpeed, ftran_density.c_str(), btran_density.c_str(),
+               price_density.c_str(), dse_density.c_str(), kernel_dim_pct,
+               kernel_fill_factor, phase);
+      } else {
+        printf("\n");
+      }
       fmIter = toIter;
       fmTime = toTime;
     }
@@ -1288,6 +1321,20 @@ void HighsSimplexAnalysis::reportOneDensity(const double density) {
   } else {
     *analysis_log << highsFormatToString("     ");
   }
+}
+
+std::string HighsSimplexAnalysis::densityToString(const double density) {
+  assert(analyse_simplex_data);
+  std::string to_string = "    ";
+  char to_char[20];
+  double log_10_density = log(density) / log(10.0);
+  if (log_10_density > -99) {
+    sprintf(to_char, "%g10.4", log_10_density);
+    to_string = to_char;
+  } else {
+    to_string = "";
+  }
+  return to_string;
 }
 
 void HighsSimplexAnalysis::printOneDensity(const double density) {

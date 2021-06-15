@@ -66,7 +66,7 @@ struct TranStageAnalysis {
   HighsInt num_wrong_new_hyper_decision_;
 };
 
-const HighsInt kAnIterTraceMaxNumRec = 20;
+const HighsInt kAnIterTraceMaxNumRec = 50;
 const HighsLogType kIterationReportLogType = HighsLogType::kVerbose;
 
 /**
@@ -177,6 +177,7 @@ class HighsSimplexAnalysis {
   HighsInt numRow;
   HighsInt numCol;
   HighsInt numTot;
+  HighsInt num_nz;
   std::string model_name_;
   std::string lp_name_;
 
@@ -281,6 +282,7 @@ class HighsSimplexAnalysis {
   void reportMulti(const bool header);
   void reportOneDensity(const double density);
   void printOneDensity(const double density);
+  std::string densityToString(const double density);
   void reportDensity(const bool header);
   void reportInvert(const bool header);
   //  void reportCondition(const bool header);
@@ -355,6 +357,9 @@ class HighsSimplexAnalysis {
     double AnIterTraceCostlyDse;
     HighsInt AnIterTraceIter;
     HighsInt AnIterTrace_dual_edge_weight_mode;
+    double AnIterTrace_kernel_dim;
+    double AnIterTrace_kernel_fill_factor;
+    HighsInt AnIterTrace_phase;
   };
 
   HighsInt AnIterTraceNumRec;
