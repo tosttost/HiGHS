@@ -17,6 +17,8 @@
       children:
         - title: "Command line options"
           url: "run-executable#command-line-options"
+    - title: Guide 
+      url: "guide"
     - title: "HiGHS Interfaces"
       url: "interfaces"
     - title: Tags
