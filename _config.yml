@@ -37,9 +37,9 @@ github_user: "ERGO-Code"
 github_repo: "HiGHS"
 
 # Optional
-twitter: vsoch
-linkedin: vsochat
-dockerhub: vanessa
+twitter: HighsOpt
+#linkedin: vsochat
+#dockerhub: vanessa
 
 # Should there be feedback buttons at the bottom of pages?
 feedback: false
@@ -51,7 +51,8 @@ feedback: false
 # Image and (square) dimension for logo (don't start with /)
 # If commented, will use material hat theme
 # logo: "assets/img/logo/SRCC-square-red.png"
-logo_pixels: 34
+logo: "assets/img/logo/logo.png"
+logo_pixels: 512
 color: "#d2232a"
 # color: "#8c1515" # primary color for header, buttons
 
