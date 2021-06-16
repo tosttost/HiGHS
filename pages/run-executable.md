@@ -1,14 +1,20 @@
 ---
-title: Running the HiGHS executable
 permalink: /run-executable/
 ---
+
+## Running the executable
+
 #### Input file formats
 
 HiGHS can parse .mps and .lp files. Models can also be loaded at runtime from another program using the library interface.
 
-# Running the executable
-
-Assuming the executable was created following the [build]() instructions, and the lp model is specified in `model.mps` (see more on LP [Input file formats])In the following discussion, the name of the executable file created in build/bin when building HiGHS is assumed to be highs. HiGHS can read plain text MPS files and LP files (but not compressed files), and the following command solves the model in model.mps
+Assuming the executable was created following the [build]()
+instructions, and the lp model is specified in `model.mps` (see more
+on LP [Input file formats])In the following discussion, the name of
+the executable file created in build/bin when building HiGHS is
+assumed to be highs. HiGHS can read plain text MPS files and LP files
+(but not compressed files), and the following command solves the model
+in model.mps
 
 ```bash
   /build/bin/highs /path/to/model.mps
@@ -27,15 +33,15 @@ HiGHS options
 Usage:
   ./build/bin/highs [OPTION...] [file]
 
-      --model_file arg    File of model to solve.
+      --model_file arg    File of model to solve
       --presolve arg      Presolve: "choose" by default - "on"/"off" are
-                          alternatives.
+                          alternatives
       --solver arg        Solver: "choose" by default - "simplex"/"ipm" are
-                          alternatives.
+                          alternatives
       --parallel arg      Parallel solve: "choose" by default - "on"/"off"
-                          are alternatives.
-      --time_limit arg    Run time limit (double).
-      --options_file arg  File containing HiGHS options.
-  -h, --help              Print help.
+                          are alternatives
+      --time_limit arg    Run time limit
+      --options_file arg  File containing HiGHS options
+  -h, --help              Print help
 ```
 

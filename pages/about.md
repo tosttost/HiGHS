@@ -1,5 +1,4 @@
 ---
-title: About HiGHS
 permalink: /about/
 ---
 
@@ -16,7 +15,7 @@ More information about HiGHS can be found at the [website](http://www.highs.dev)
 
 #### Release
 
-Latest Release Version 1.0.
+Latest Release Version 1.0.0.
 
 #### Requirements
 
@@ -47,22 +46,29 @@ HiGHS solves large scale sparse linear optimization problems of the form
 
 ```
 
-When the matrix Q is zero, HiGHS can solve the general mixed-integer (MIP) problem in which (some) variables are required to take integer values.
+When the matrix Q is zero, HiGHS can solve the general mixed-integer
+(MIP) problem in which (some) variables are required to take integer
+values.
 
-The HiGHS core solver implementes the dual revised simplex method in parallel C++ using OpenMP directives to solve linear programming (LP) problems. It also has serial primal simplex and interior point solvers for LP problems. MIP problems are solved by branch-and-cut, and quadratic programming (QP) problems are solved using an active set method.
+The HiGHS core solver is an implementation of the dual revised simplex
+method in parallel C++ using OpenMP directives to solve linear
+programming (LP) problems. It also has serial primal simplex and
+interior point solvers for LP problems. MIP problems are solved by
+branch-and-cut, and quadratic programming (QP) problems are solved
+using an active set method.
 
 ##### Reference
 
-Parallelizing the dual revised simplex method
+[Parallelizing the dual revised simplex method
 Q. Huangfu and J. A. J. Hall
 Mathematical Programming Computation, 10 (1), 119-142, 2018.
-DOI: 10.1007/s12532-017-0130-5
-
-http://www.maths.ed.ac.uk/hall/HuHa13/
+DOI: 10.1007/s12532-017-0130-5](http://www.maths.ed.ac.uk/hall/HuHa13/)
 
 ### Performance
 
-The performance of HiGHS relative to some commercial and open-source simplex solvers may be assessed via the Mittelmann benchmarks on http://plato.asu.edu/ftp/lpsimp.html
+The performance of HiGHS relative to some commercial and open-source
+simplex solvers may be assessed via the [Mittelmann
+benchmarks](http://plato.asu.edu/ftp/lpsimp.html).
 
 ### Documentation
 

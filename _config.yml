@@ -16,7 +16,7 @@
 
 title: HiGHS Documentation
 email: highsopt@gmail.com
-author: Ivet Galabova 
+author: HiGHS Optimization
 description: > # this means to ignore newlines until "baseurl:"
   HiGHS is a high performance serial and parallel solver for large-scale sparse
   linear programming (LP) models. This is the GitHub Pages documentation Jekyll
@@ -52,7 +52,7 @@ feedback: false
 # If commented, will use material hat theme
 # logo: "assets/img/logo/SRCC-square-red.png"
 logo_pixels: 34
-color: "#30638e"
+color: "#d2232a"
 # color: "#8c1515" # primary color for header, buttons
 
 # Build settings

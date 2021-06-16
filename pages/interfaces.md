@@ -1,12 +1,16 @@
 ---
-title: Interfaces
 permalink: /interfaces/
 ---
+
+## Interfaces
+
 ### Language interfaces
 
 There are HiGHS interfaces for C, C#, FORTRAN, Julia and Python in `HiGHS/src/interfaces`, with example driver files in `HiGHS/examples`. 
 
 Further documentation will be published after the refactoring currently in progress is complete.
+
+### Application interfaces
 
 #### GAMS
 
@@ -32,3 +36,4 @@ gmsgenux.out
 * `OSI_ROOT` :
 
     path to COIN-OR/Osi build/install folder (OSI_ROOT/lib/pkg-config/osi.pc should exist)
+

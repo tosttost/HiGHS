@@ -1,25 +1,32 @@
 ---
-title: Getting Started
 permalink: /
 ---
 
-# HiGHS - Linear optimization software
+## HiGHS
 
 [![Build Status](https://travis-ci.org/ERGO-Code/HiGHS.svg?branch=master)](https://travis-ci.org/ERGO-Code/HiGHS)
 
-HiGHS is a high performance serial and parallel solver for large scale sparse
-linear programming (LP) problems of the form
+HiGHS is a high performance solver for large scale sparse linear optimization problems of the form
+``` 
 
-    Minimize c^Tx subject to L <= Ax <= U; l <= x <= u
+    Minimize (1/2)x^TQx + c^Tx subject to L <= Ax <= U; l <= x <= u
 
-It is written in C++ with OpenMP directives, and has been developed and tested on various linux and Windows installations using both the GNU (g++) and Intel (icc) C++ compilers. Note that HiGHS requires (at least) version 4.9 of the GNU compiler. It has no third-party dependencies.
+```
+When the matrix Q is zero, HiGHS can solve the general
+mixed-integer (MIP) problem in which (some) variables are required to
+take integer values.
 
-HiGHS is based on the dual revised simplex method implemented in HSOL, which was originally written by Qi Huangfu. Features such as presolve, crash and advanced basis start have been added by Julian Hall, Ivet Galabova. Other features, and interfaces to C, C#, FORTRAN, Julia and Python, have been written by Michael Feldmeier.
+It is written in C++ with OpenMP directives, and has been developed
+and tested on various linux and Windows installations using both the
+GNU (g++) and Intel (icc) C++ compilers. Note that HiGHS requires (at
+least) version 4.9 of the GNU compiler. It has no third-party
+dependencies.
 
-Although HiGHS is freely available under the MIT license, we would be pleased to learn about users' experience and give advice via email sent to highsopt@gmail.com. 
+Although HiGHS is freely available under the MIT license, we would be
+pleased to learn about users' experience and give advice via email
+sent to highsopt@gmail.com.
 
-Reference
----------
+### Reference
 
 Parallelizing the dual revised simplex method
 Q. Huangfu and J. A. J. Hall
@@ -28,18 +35,15 @@ DOI: 10.1007/s12532-017-0130-5
 
 http://www.maths.ed.ac.uk/hall/HuHa13/
 
-Performance
------------
+### Performance
 
 The performance of HiGHS relative to some commercial and open-source simplex solvers may be assessed via the Mittelmann benchmarks on http://plato.asu.edu/ftp/lpsimp.html
 
-Documentation
--------------
+### Documentation
 
 The rest of this file gives brief documentation for HiGHS. Comprehensive documentation is available from https://www.highs.dev.
 
-Compilation
------------
+### Compilation
 
 HiGHS uses CMake as build system. First setup
 a build folder and call CMake as follows
@@ -54,15 +58,13 @@ Then compile the code using
 
 This installs the executable `bin/highs`. 
 
-Testing
--------
+### Testing
 
 To perform a quick test whether the compilation was successful, run
 
     ctest
 
-Run-time options
-----------------
+### Run-time options
 
 In the following discussion, the name of the executable file generated is
 assumed to be `highs`.
@@ -72,8 +74,8 @@ solves the model in `ml.mps`
 
     highs ml.mps
 
-HiGHS options
--------------
+### HiGHS options
+
 Usage:
     highs [OPTION...] [file]
 
@@ -86,13 +88,16 @@ Usage:
 
   -h, --help                 Print help.
 
-Language interfaces and further documentation
----------------------------------------------
+### Language interfaces and further documentation
 
-There are HiGHS interfaces for C, C#, FORTRAN, Julia and Python in HiGHS/src/interfaces, with example driver files in HiGHS/examples. Documentation beyond what is in this file is "work in progress", but we expect to have some available before the end of 2019. However, we are happy to give a reasonable level of support via email sent to highsopt@gmail.com.
+There are HiGHS interfaces for C, C#, FORTRAN, Julia and Python in
+HiGHS/src/interfaces, with example driver files in
+HiGHS/examples. Documentation beyond what is in this file is "work in
+progress", but we expect to have some available before the end of
+2019. However, we are happy to give a reasonable level of support via
+email sent to highsopt@gmail.com.
 
-Parallel code
--------------
+### Parallel code
 
 At the moment the parallel option is temporarily unavailable due to a large
 refactoring in progress. This document will be updated once we have completed
@@ -127,8 +132,7 @@ will be problem and architecture dependent, `OMP_NUM_THREADS=8` is typically a
 good choice. Although HiGHS is slower when run in parallel than in serial for
 some problems, it is typically faster in parallel.
 
-HiGHS Library
--------------
+### HiGHS Library
 
 HiGHS is compiled in a shared library. Running
 
@@ -149,8 +153,7 @@ To use the library from a CMake project use
 
 and add the correct path to HIGHS_DIR.
 
-Compiling and linking without CMake
------------------------------------
+### Compiling and linking without CMake
 
 An executable defined in the file `use_highs.cpp` is linked with the HiGHS library as follows. After running the code above, compile and run with
 
@@ -158,11 +161,9 @@ An executable defined in the file `use_highs.cpp` is linked with the HiGHS libra
 
 `LD_LIBRARY_PATH=install_folder/lib/ ./use_highs`
 
-Interfaces
-----------
+### Interfaces
 
-GAMS
-----
+### GAMS
 
 Set custom options with `-D<option>=<value>` during the configuration step (`cmake ..`):
 
@@ -178,7 +179,9 @@ gmsgenus.run
 gmsgenux.out
 /path/to/libhighs.so his 1 1
 ```
-OSI
----
+
+### OSI
+
 - `OSI_ROOT`:
     path to COIN-OR/Osi build/install folder (OSI_ROOT/lib/pkg-config/osi.pc should exist)
+
