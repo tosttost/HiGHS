@@ -13,16 +13,16 @@ We would be pleased to learn about users' experience and give advice, to get in 
 
 More information about HiGHS can be found at the [website](http://www.highs.dev) and in the README.md in the [GitHub repo](https://www.github.com/ERGO-COde/HiGHS).
 
-#### Release
+### Release
 
 Latest Release Version 1.0.0.
 
-#### Requirements
+### Requirements
 
-##### OS
+#### OS
 HiGHS can be used on Windows, Linux and MacOS.
 
-##### Compilers
+#### Compilers
 
 HiGHS has been tested and used with the following compilers: 
 
@@ -30,13 +30,13 @@ HiGHS has been tested and used with the following compilers:
 * Intel ` icc ` version
 * Clang ` clang ` version
 
-##### Dependencies
+#### Dependencies
 
-No third party sortware is required by HiGHS.
+No third party software is required by HiGHS.
 
 In order to build HiGHS from source CMake 3.15 is required. For precompiled executables and libraries please contact us at [highsopt@gmail.com](mailto:highsopt@gmail.com).
 
-#### Specification
+### Specification
 
 HiGHS solves large scale sparse linear optimization problems of the form
 
@@ -57,7 +57,7 @@ interior point solvers for LP problems. MIP problems are solved by
 branch-and-cut, and quadratic programming (QP) problems are solved
 using an active set method.
 
-##### Reference
+#### Reference
 
 [Parallelizing the dual revised simplex method
 Q. Huangfu and J. A. J. Hall
@@ -114,7 +114,7 @@ For usage and runtime option information see
 
 More details on HiGHS options and how to use the library see todo: docsy link
 
-##### Parallel code
+#### Parallel code
 
 At the moment the parallel option is temporarily unavailable due to a large
 refactoring in progress. Once the refactoring is complete the updated documentation will be published.

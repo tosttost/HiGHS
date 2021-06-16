@@ -13,7 +13,7 @@ controlled, is [available](../docs/HighsDocumentation.pdf "HiGHS
 Documentation"). The methods in the FORTRAN 90 and C# interfaces are
 functionally identical to the methods in the C interface.
 
-### Model defintion
+### Model definition
 
 Models are either passed to HiGHS directly, read from data files, or
 built within HiGHS by adding columns and rows to an empty model. When
@@ -33,7 +33,7 @@ scalar and array data as parameters.
 #### Reading from a data file
 
 HiGHS can read a model from files in the MPS or CPLEX LP formats. If
-an MPS file contains a section corresponding to an extnesion not
+an MPS file contains a section corresponding to an extension not
 supported by HiGHS, an error will be returned. For models in the CPLEX
 LP format, HiGHS will read no further than the standard maximum line
 length of 255 characters. HiGHS will return with an error if longer

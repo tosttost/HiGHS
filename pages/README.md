@@ -17,7 +17,7 @@ mixed-integer (MIP) problem in which (some) variables are required to
 take integer values.
 
 It is written in C++ with OpenMP directives, and has been developed
-and tested on various linux and Windows installations using both the
+and tested on various Linux and Windows installations using both the
 GNU (g++) and Intel (icc) C++ compilers. Note that HiGHS requires (at
 least) version 4.9 of the GNU compiler. It has no third-party
 dependencies.
