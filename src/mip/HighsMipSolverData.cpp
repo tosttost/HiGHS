@@ -752,6 +752,7 @@ void HighsMipSolverData::evaluateRootNode() {
   heuristics.cliqueFixing();
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nDone primal heuristic\n");
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\n%-14.9g\n",upper_bound);
+  exit(0);
 restart:
   // solve the first root lp
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,

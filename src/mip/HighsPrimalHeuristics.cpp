@@ -1107,6 +1107,8 @@ void HighsPrimalHeuristics::cliqueFixing() {
   //just for safety, normally the cliques.size()<1 should break the while loop
   HighsInt safeiterations = 0;
   HighsInt maxit = 2*mipsolver.numCol();
+  HighsInt fixed = 0;
+  HighsInt fixedIndirect = 0;
   while(safeiterations < maxit){
     safeiterations++;
 
@@ -1119,58 +1121,57 @@ void HighsPrimalHeuristics::cliqueFixing() {
     //only consider cliques with size 2 or more
     if(cliques[0].size()<2) break;
 
-    bool flagMoreCliques = true;
-    while(flagMoreCliques){
+    
 
-      if(cliques.size() <= 1) {
-        flagMoreCliques = false;
-      }
+    
+    std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize = cliques[0];
+    
 
-      HighsInt maxsizeClique = 0;
-      std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
-      for(std::vector<HighsCliqueTable::CliqueVar> clique : cliques){
-        if(clique.size()>maxsizeClique){
-          maxsizeClique = clique.size();
-          cliqueMaxsize = clique;
-        }
+    ///find cheapest variable to fix in this clique
+    HighsInt indexFixing = 0;
+    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
+    for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
+      if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
+        indexFixing = i;
+        objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
       }
-
-      ///find cheapest variable to fix in this clique
-      HighsInt indexFixing = 0;
-      double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
-      for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
-        if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
-          indexFixing = i;
-          objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
-        }
-      }
-      ///fix value and clean up cliques set
-      localdom.fixCol(cliqueMaxsize[indexFixing].col, 1, HighsDomain::Reason::cliqueTable());
-      dummysol[indexFixing] = 1;
-      
-      if(flagMoreCliques){
-        cliques.erase(std::remove(cliques.begin(), cliques.end(), cliqueMaxsize), cliques.end());
-        for(HighsInt i = 1; i<cliques.size();i++){
-          for(HighsInt ii=0; ii<cliques[i].size(); ii++){
-            if(cliques[i][ii].col == cliqueMaxsize[indexFixing].col){
-              cliques[i].erase(cliques[i].begin()+ii);
-              if(cliques[i].size()<2){
-                cliques.erase(cliques.begin()+i);
-              }
-              break;
-            }
-          }
-        }
-      }
-      
-      if (localdom.infeasible()) return;
-      localdom.propagate();
-      if (localdom.infeasible()) return;
     }
-        
+
+
+
+
+    ///fix value and clean up cliques set
+    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+    //set all other values to 0
+    for(HighsInt i=0; i<cliqueMaxsize.size(); i++){
+      if(i!=indexFixing){
+        fixedIndirect = fixedIndirect + 1;
+        localdom.fixCol(cliqueMaxsize[i].col,cliqueMaxsize[indexFixing].complement().val,HighsDomain::Reason::branching());
+        dummysol[i] = cliqueMaxsize[indexFixing].complement().val;
+      }
+    }
+    
+    fixed = fixed + 1;
+    highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nVariables fixed: %4i\n",fixed);
+    printf("Variables fixed indirect %4i\n",fixedIndirect);
+
+     
+    
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected"); 
+      return;
+    }
+    localdom.propagate();
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected after propagation"); 
+      return;
+    }
   }
+        
   
-  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\n3\n");
+  
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nFixing all integer variables feasible\n");
   //solve remaining LP or return solution if no non-integer variable exist
   if (int(mipsolver.mipdata_->integer_cols.size()) != mipsolver.numCol()) {
     HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);
