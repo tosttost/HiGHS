@@ -1111,6 +1111,10 @@ void HighsPrimalHeuristics::cliqueFixing() {
   HighsInt fixedIndirect = 0;
   while(safeiterations < maxit){
     safeiterations++;
+    if(safeiterations > maxit-3){
+      printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!!");
+    }
+
 
     //this gives maximum cardinality clique found
     std::vector<std::vector<HighsCliqueTable::CliqueVar>> 
@@ -1124,26 +1128,39 @@ void HighsPrimalHeuristics::cliqueFixing() {
     
 
     
-    std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize = cliques[0];
+    std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
     
 
-    ///find cheapest variable to fix in this clique
-    HighsInt indexFixing = 0;
-    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
-    for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
-      if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
-        indexFixing = i;
-        objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
+    ///fix var depending on up/down locks
+    HighsInt indexFixing = -1;
+    bool foundFixing = false;
+    for(HighsInt i=0; i<cliques.size(); i++){
+      for (HighsInt ii=0; ii<cliques[i].size(); ii++){
+        if(mipsolver.mipdata_->uplocks[cliques[i][ii].col]==0){
+          localdom.fixCol(cliques[i][ii].col,1, HighsDomain::Reason::branching()); //1 because 0.5 rounded above is always 1
+          dummysol[cliques[i][ii].col] = 1;
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          foundFixing=true;
+          fixed = fixed + 1;
+          break;
+        }else if(mipsolver.mipdata_->downlocks[cliques[i][ii].col]==0){
+          localdom.fixCol(cliques[i][ii].col,0, HighsDomain::Reason::branching()); //0 because 0.5 rounded below is always 0
+          dummysol[cliques[i][ii].col] = 0;
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          foundFixing=true;
+          fixed = fixed + 1;
+          break;
+        }
       }
+      if(foundFixing) break;
     }
+    
 
 
 
-
-    ///fix value and clean up cliques set
-    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
-    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
-    //set all other values to 0
+    //set all other values
     for(HighsInt i=0; i<cliqueMaxsize.size(); i++){
       if(i!=indexFixing){
         fixedIndirect = fixedIndirect + 1;
@@ -1152,7 +1169,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
       }
     }
     
-    fixed = fixed + 1;
+    
     highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nVariables fixed: %4i\n",fixed);
     printf("Variables fixed indirect %4i\n",fixedIndirect);
 
