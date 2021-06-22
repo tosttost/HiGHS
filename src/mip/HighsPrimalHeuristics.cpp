@@ -1112,7 +1112,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
   while(safeiterations < maxit){
     safeiterations++;
     if(safeiterations > maxit-3){
-      printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!!");
+      printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!! THIS SHOULDNT HAPPEN");
     }
 
 
@@ -1131,31 +1131,14 @@ void HighsPrimalHeuristics::cliqueFixing() {
     std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
     
 
-    ///fix var depending on up/down locks
+    ///fix var randomly
     HighsInt indexFixing = -1;
-    bool foundFixing = false;
-    for(HighsInt i=0; i<cliques.size(); i++){
-      for (HighsInt ii=0; ii<cliques[i].size(); ii++){
-        if(mipsolver.mipdata_->uplocks[cliques[i][ii].col]==0){
-          localdom.fixCol(cliques[i][ii].col,1, HighsDomain::Reason::branching()); //1 because 0.5 rounded above is always 1
-          dummysol[cliques[i][ii].col] = 1;
-          cliqueMaxsize = cliques[i];
-          indexFixing = ii;
-          foundFixing=true;
-          fixed = fixed + 1;
-          break;
-        }else if(mipsolver.mipdata_->downlocks[cliques[i][ii].col]==0){
-          localdom.fixCol(cliques[i][ii].col,0, HighsDomain::Reason::branching()); //0 because 0.5 rounded below is always 0
-          dummysol[cliques[i][ii].col] = 0;
-          cliqueMaxsize = cliques[i];
-          indexFixing = ii;
-          foundFixing=true;
-          fixed = fixed + 1;
-          break;
-        }
-      }
-      if(foundFixing) break;
-    }
+    cliqueMaxsize = cliques[randgen.integer(cliques.size())];
+    indexFixing = randgen.integer(cliqueMaxsize.size());
+
+    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+    fixed++;
     
 
 
@@ -1163,7 +1146,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
     //set all other values
     for(HighsInt i=0; i<cliqueMaxsize.size(); i++){
       if(i!=indexFixing){
-        fixedIndirect = fixedIndirect + 1;
+        fixedIndirect++;
         localdom.fixCol(cliqueMaxsize[i].col,cliqueMaxsize[indexFixing].complement().val,HighsDomain::Reason::branching());
         dummysol[i] = cliqueMaxsize[indexFixing].complement().val;
       }
@@ -1172,6 +1155,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
     
     highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nVariables fixed: %4i\n",fixed);
     printf("Variables fixed indirect %4i\n",fixedIndirect);
+    printf("Total variables fixed: %4i\n", fixed+fixedIndirect);
 
      
     
@@ -1188,7 +1172,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
         
   
   
-  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nFixing all integer variables feasible\n");
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nFixing all integer variables feasible\n\n");
   //solve remaining LP or return solution if no non-integer variable exist
   if (int(mipsolver.mipdata_->integer_cols.size()) != mipsolver.numCol()) {
     HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);
