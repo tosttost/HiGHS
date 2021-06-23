@@ -1131,16 +1131,39 @@ void HighsPrimalHeuristics::cliqueFixing() {
     std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
     
 
-    ///fix var randomly
+    ///fix var with least number of locks
     HighsInt indexFixing = -1;
-    cliqueMaxsize = cliques[randgen.integer(cliques.size())];
-    indexFixing = randgen.integer(cliqueMaxsize.size());
+    bool foundFixing = false;
+    bool uplocks = false;
+    HighsInt leastLocks = mipsolver.numRow()+1; //num of locks will always be smaller than number of rows
+    for(HighsInt i=0; i<cliques.size();i++){
+      for(HighsInt ii=0; ii<cliques[i].size();ii++){
+        if(mipsolver.mipdata_->uplocks[cliques[i][ii].col]<leastLocks){
+          uplocks = true;
+          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+          cliqueMaxsize = cliques[i];
+          indexFixing=ii;
+          printf("Found uplock: %4i\n", leastLocks);
+        }else if(mipsolver.mipdata_->downlocks[cliques[i][ii].col]<leastLocks){
+          uplocks = false;
+          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+          cliqueMaxsize = cliques[i];
+          indexFixing=ii;
+          printf("Found downlock: %4i\n", leastLocks);
+        }
+      }
+    }
 
-    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
-    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+    if(uplocks){
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,1,HighsDomain::Reason::branching());
+      dummysol[indexFixing] = 1;
+    } else{
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,0,HighsDomain::Reason::branching());
+      dummysol[indexFixing] = 0;
+    }
     fixed++;
     
-
+    
 
 
     //set all other values
@@ -1157,7 +1180,6 @@ void HighsPrimalHeuristics::cliqueFixing() {
     printf("Variables fixed indirect %4i\n",fixedIndirect);
     printf("Total variables fixed: %4i\n", fixed+fixedIndirect);
 
-     
     
     if (localdom.infeasible()) {
       printf("Infeasibility detected"); 
