@@ -45,6 +45,10 @@ class HighsPrimalHeuristics {
                    std::vector<double> colUpper, HighsInt maxleaves,
                    HighsInt maxnodes, HighsInt stallnodes);
 
+  bool solveSubMip(const HighsLp& lp, double fixingRate,
+                   std::vector<double> colLower, std::vector<double> colUpper,
+                   HighsInt maxleaves, HighsInt maxnodes, HighsInt stallnodes);
+
   double determineTargetFixingRate();
 
   void RENS(const std::vector<double>& relaxationsol);

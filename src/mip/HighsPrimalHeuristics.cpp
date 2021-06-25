@@ -62,6 +62,15 @@ void HighsPrimalHeuristics::setupIntCols() {
                            HighsHashHelpers::hash(uint64_t(c2)), c2);
   });
 }
+bool HighsPrimalHeuristics::solveSubMip(const HighsLp& lp, double fixingRate,
+                                        std::vector<double> colLower,
+                                        std::vector<double> colUpper,
+                                        HighsInt maxleaves, HighsInt maxnodes,
+                                        HighsInt stallnodes) {
+  HighsBasis basis_;
+  return solveSubMip(lp, basis_, fixingRate, colLower, colUpper, maxleaves,
+                     maxnodes, stallnodes);
+}
 
 bool HighsPrimalHeuristics::solveSubMip(
     const HighsLp& lp, const HighsBasis& basis, double fixingRate,
@@ -92,7 +101,7 @@ bool HighsPrimalHeuristics::solveSubMip(
   solution.value_valid = false;
   solution.dual_valid = false;
   HighsMipSolver submipsolver(submipoptions, submip, solution, true);
-  submipsolver.rootbasis = &basis;
+  if (basis.valid) submipsolver.rootbasis = &basis;
   HighsPseudocostInitialization pscostinit(mipsolver.mipdata_->pseudocost, 1);
   submipsolver.pscostinit = &pscostinit;
   submipsolver.clqtableinit = &mipsolver.mipdata_->cliquetable;
@@ -1097,76 +1106,50 @@ void HighsPrimalHeuristics::flushStatistics() {
 }
 
 void HighsPrimalHeuristics::cliqueFixing() {
-
   auto localdom = mipsolver.mipdata_->domain;
 
-  ///select clique with maximum cardinality
-  //set solution to 0.5 so that each variable has equal weight
-  std::vector<double> dummysol(mipsolver.numCol(),0.5);
+  /// select clique with maximum cardinality
+  // set solution to 0.5 so that each variable has equal weight
+  std::vector<double> dummysol(mipsolver.numCol(), 0.5);
 
-  //just for safety, normally the cliques.size()<1 should break the while loop
+  // just for safety, normally the cliques.size()<1 should break the while loop
   HighsInt safeiterations = 0;
-  HighsInt maxit = 2*mipsolver.numCol();
+  HighsInt maxit = 2 * mipsolver.numCol();
   HighsInt fixed = 0;
   HighsInt fixedIndirect = 0;
-  while(safeiterations < maxit){
+  while (safeiterations < maxit) {
     safeiterations++;
-    if(safeiterations > maxit-3){
+    if (safeiterations > maxit - 3) {
       printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!! THIS SHOULDNT HAPPEN");
     }
 
+    // this gives maximum cardinality clique found
+    std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliques =
+        mipsolver.mipdata_->cliquetable.separateCliques(
+            dummysol, localdom, mipsolver.mipdata_->feastol, 0.75);
+    // found no clique so abort
+    if (cliques.size() < 1) break;
+    // only consider cliques with size 2 or more
+    if (cliques[0].size() < 2) break;
 
-    //this gives maximum cardinality clique found
-    std::vector<std::vector<HighsCliqueTable::CliqueVar>> 
-    cliques = mipsolver.mipdata_->cliquetable.separateCliques(
-                        dummysol, localdom, mipsolver.mipdata_->feastol, 0.75);
-    //found no clique so abort
-    if(cliques.size()<1) break;
-    //only consider cliques with size 2 or more
-    if(cliques[0].size()<2) break;
-
-    
-
-    
-    std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
-    
-
-    ///fix var with least number of locks
-    HighsInt indexFixing = -1;
-    bool foundFixing = false;
-    bool uplocks = false;
-    HighsInt leastLocks = mipsolver.numRow()+1; //num of locks will always be smaller than number of rows
-    for(HighsInt i=0; i<cliques.size();i++){
-      for(HighsInt ii=0; ii<cliques[i].size();ii++){
-        if(mipsolver.mipdata_->uplocks[cliques[i][ii].col]<leastLocks){
-          uplocks = true;
-          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
-          cliqueMaxsize = cliques[i];
-          indexFixing=ii;
-          printf("Found uplock: %4i\n", leastLocks);
-        }else if(mipsolver.mipdata_->downlocks[cliques[i][ii].col]<leastLocks){
-          uplocks = false;
-          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
-          cliqueMaxsize = cliques[i];
-          indexFixing=ii;
-          printf("Found downlock: %4i\n", leastLocks);
-        }
+    std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;  // = cliques[0];
+#if 0
+    ///find cheapest variable to fix in this clique
+    HighsInt indexFixing = 0;
+    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
+    for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
+      if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
+        indexFixing = i;
+        objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
       }
     }
 
-    if(uplocks){
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,1,HighsDomain::Reason::branching());
-      dummysol[indexFixing] = 1;
-    } else{
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,0,HighsDomain::Reason::branching());
-      dummysol[indexFixing] = 0;
-    }
+
+    ///fix value and clean up cliques set
+    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
     fixed++;
-    
-    
-
-
-    //set all other values
+    //set all other values to 0
     for(HighsInt i=0; i<cliqueMaxsize.size(); i++){
       if(i!=indexFixing){
         fixedIndirect++;
@@ -1174,28 +1157,68 @@ void HighsPrimalHeuristics::cliqueFixing() {
         dummysol[i] = cliqueMaxsize[indexFixing].complement().val;
       }
     }
-    
-    
-    highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nVariables fixed: %4i\n",fixed);
-    printf("Variables fixed indirect %4i\n",fixedIndirect);
-    printf("Total variables fixed: %4i\n", fixed+fixedIndirect);
 
-    
+#endif
+    //#if 0
+    /// fix var with least number of locks
+    HighsInt indexFixing = -1;
+    bool foundFixing = false;
+    bool uplocks = false;
+    HighsInt leastLocks =
+        mipsolver.numRow() + 1;  // num of locks will always be smaller than number of rows
+    for (HighsInt i = 0; i < cliques.size(); i++) {
+      for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
+        if (mipsolver.mipdata_->uplocks[cliques[i][ii].col] < leastLocks) {
+          uplocks = true;
+          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          printf("Found uplock: %4i\n", leastLocks);
+        } else if (mipsolver.mipdata_->downlocks[cliques[i][ii].col] <
+                   leastLocks) {
+          uplocks = false;
+          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          printf("Found downlock: %4i\n", leastLocks);
+        }
+      }
+    }
+
+    if (uplocks) {
+      localdom.fixCol(cliqueMaxsize[indexFixing].col, 1,
+                      HighsDomain::Reason::branching());
+      dummysol[indexFixing] = 1;
+    } else {
+      localdom.fixCol(cliqueMaxsize[indexFixing].col, 0,
+                      HighsDomain::Reason::branching());
+      dummysol[indexFixing] = 0;
+    }
+    fixed++;
+
     if (localdom.infeasible()) {
-      printf("Infeasibility detected"); 
+      printf("Infeasibility detected");
       return;
     }
     localdom.propagate();
     if (localdom.infeasible()) {
-      printf("Infeasibility detected after propagation"); 
+      printf("Infeasibility detected after propagation");
       return;
     }
+
+    //#endif
+
+    highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+                 "\nVariables fixed: %4i\n", fixed);
+    printf("Variables fixed indirect %4i\n", fixedIndirect);
+    printf("Total variables fixed: %4i\n", fixed + fixedIndirect);
+
+    
   }
-        
-  
-  
-  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,"\nFixing all integer variables feasible\n\n");
-  //solve remaining LP or return solution if no non-integer variable exist
+
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+               "\nno more cliques\n\n");
+  // solve remaining LP or return solution if no non-integer variable exist
   if (int(mipsolver.mipdata_->integer_cols.size()) != mipsolver.numCol()) {
     HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);
     lprelax.getLpSolver().changeColsBounds(0, mipsolver.numCol() - 1,
