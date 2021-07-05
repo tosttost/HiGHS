@@ -67,7 +67,7 @@ bool HighsPrimalHeuristics::solveSubMip(const HighsLp& lp, double fixingRate,
                                         std::vector<double> colUpper,
                                         HighsInt maxleaves, HighsInt maxnodes,
                                         HighsInt stallnodes) {
-  HighsBasis basis_;
+  HighsBasis basis_ = {};
   return solveSubMip(lp, basis_, fixingRate, colLower, colUpper, maxleaves,
                      maxnodes, stallnodes);
 }
@@ -102,6 +102,77 @@ bool HighsPrimalHeuristics::solveSubMip(
   solution.dual_valid = false;
   HighsMipSolver submipsolver(submipoptions, submip, solution, true);
   if (basis.valid) submipsolver.rootbasis = &basis;
+  HighsPseudocostInitialization pscostinit(mipsolver.mipdata_->pseudocost, 1);
+  submipsolver.pscostinit = &pscostinit;
+  submipsolver.clqtableinit = &mipsolver.mipdata_->cliquetable;
+  submipsolver.implicinit = &mipsolver.mipdata_->implications;
+  submipsolver.run();
+  if (submipsolver.mipdata_) {
+    double adjustmentfactor =
+        submipsolver.numNonzero() / (double)mipsolver.numNonzero();
+    size_t adjusted_lp_iterations =
+        (size_t)(adjustmentfactor * adjustmentfactor *
+                 submipsolver.mipdata_->total_lp_iterations);
+    lp_iterations += adjusted_lp_iterations;
+
+    if (mipsolver.submip)
+      mipsolver.mipdata_->num_nodes += std::max(
+          size_t{1}, size_t(adjustmentfactor * submipsolver.node_count_));
+  }
+
+  if (submipsolver.modelstatus_ == HighsModelStatus::kInfeasible) {
+    infeasObservations += fixingRate;
+    ++numInfeasObservations;
+  }
+  if (submipsolver.node_count_ <= 1 &&
+      submipsolver.modelstatus_ == HighsModelStatus::kInfeasible)
+    return false;
+  HighsInt oldNumImprovingSols = mipsolver.mipdata_->numImprovingSols;
+  if (submipsolver.modelstatus_ != HighsModelStatus::kInfeasible &&
+      !submipsolver.solution_.empty()) {
+    mipsolver.mipdata_->trySolution(submipsolver.solution_, 'L');
+  }
+
+  if (mipsolver.mipdata_->numImprovingSols != oldNumImprovingSols) {
+    // remember fixing rate as good
+    successObservations += fixingRate;
+    ++numSuccessObservations;
+  }
+
+  return true;
+}
+
+bool HighsPrimalHeuristics::solveandprintSubMip(
+    const HighsLp& lp, double fixingRate, std::vector<double> colLower,
+    std::vector<double> colUpper, HighsInt maxleaves, HighsInt maxnodes,
+    HighsInt stallnodes) {
+  HighsOptions submipoptions = *mipsolver.options_mip_;
+  HighsLp submip = lp;
+
+  // set bounds and restore integrality of the lp relaxation copy
+  submip.colLower_ = std::move(colLower);
+  submip.colUpper_ = std::move(colUpper);
+  submip.integrality_ = mipsolver.model_->integrality_;
+  submip.offset_ = 0;
+
+  // set limits
+  submipoptions.mip_max_leaves = maxleaves;
+  submipoptions.output_flag = true;  // changed to true
+  submipoptions.mip_max_nodes = maxnodes;
+  submipoptions.mip_max_stall_nodes = stallnodes;
+  submipoptions.mip_pscost_minreliable = 0;
+  submipoptions.time_limit -=
+      mipsolver.timer_.read(mipsolver.timer_.solve_clock);
+  submipoptions.objective_bound = kHighsIInf;  // changed upperlimit to inf
+  submipoptions.presolve = "on";
+  // setup solver and run it
+
+  HighsSolution solution;
+  solution.value_valid = false;
+  solution.dual_valid = false;
+  HighsMipSolver submipsolver(submipoptions, submip, solution, true);
+  HighsBasis basis_ = {};
+  if (basis_.valid) submipsolver.rootbasis = &basis_;
   HighsPseudocostInitialization pscostinit(mipsolver.mipdata_->pseudocost, 1);
   submipsolver.pscostinit = &pscostinit;
   submipsolver.clqtableinit = &mipsolver.mipdata_->cliquetable;
@@ -1133,39 +1204,134 @@ void HighsPrimalHeuristics::cliqueFixing() {
     if (cliques[0].size() < 2) break;
 
     std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;  // = cliques[0];
-#if 0
-    ///find cheapest variable to fix in this clique
+
+#if 1
     HighsInt indexFixing = 0;
-    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col]; 
-    for(HighsInt i=1; i<cliqueMaxsize.size(); i++) {
-      if(mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
+    HighsInt leastLocks = kHighsIInf;
+    for (HighsInt i = 0; i < cliques.size(); i++) {
+      for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
+        if (mipsolver.mipdata_->downlocks[cliques[i][ii].col] -
+                mipsolver.mipdata_->uplocks[cliques[i][ii].col] <
+            leastLocks) {
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col] -
+                       mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+          printf("Found better lock: %14i\n", leastLocks);
+        }
+      }
+    }
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].val,
+                    HighsDomain::Reason::branching());
+
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+    fixed++;
+
+    // set all other values to 0
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected");
+      return;
+    }
+    localdom.propagate();
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected after propagation");
+      return;
+    }
+
+    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
+      if (mipsolver.mipdata_->domain.isFixed(i)) {
+        dummysol[i] = mipsolver.mipdata_->domain
+                          .colLower_[i];  // colLower == colUpper == value
+      }
+    }
+#endif
+#if 0
+    HighsInt indexFixing = 0;
+    HighsInt leastLocks = kHighsIInf;
+    for (HighsInt i = 0; i < cliques.size(); i++) {
+      for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
+        if (mipsolver.mipdata_->uplocks[cliques[i][ii].col] -
+                mipsolver.mipdata_->downlocks[cliques[i][ii].col] <
+            leastLocks) {
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col] -
+                       mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+          printf("Found better lock: %14i\n", leastLocks);
+        }
+      }
+    }
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].complement().val,
+                    HighsDomain::Reason::branching());
+
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
+    fixed++;
+
+    // set all other values to 0
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected");
+      return;
+    }
+    localdom.propagate();
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected after propagation");
+      return;
+    }
+
+    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
+      if (mipsolver.mipdata_->domain.isFixed(i)) {
+        dummysol[i] = mipsolver.mipdata_->domain
+                          .colLower_[i];  // colLower == colUpper == value
+      }
+    }
+#endif
+
+#if 0
+    /// find cheapest variable to fix in this clique
+    HighsInt indexFixing = 0;
+    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col];
+    for (HighsInt i = 1; i < cliqueMaxsize.size(); i++) {
+      if (mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
         indexFixing = i;
         objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
       }
     }
 
-
-    ///fix value and clean up cliques set
-    localdom.fixCol(cliqueMaxsize[indexFixing].col, cliqueMaxsize[indexFixing].val, HighsDomain::Reason::branching());
+    /// fix value and clean up cliques set
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].val,
+                    HighsDomain::Reason::branching());
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
     fixed++;
-    //set all other values to 0
-    for(HighsInt i=0; i<cliqueMaxsize.size(); i++){
-      if(i!=indexFixing){
-        fixedIndirect++;
-        localdom.fixCol(cliqueMaxsize[i].col,cliqueMaxsize[indexFixing].complement().val,HighsDomain::Reason::branching());
-        dummysol[i] = cliqueMaxsize[indexFixing].complement().val;
+    // set all other values to 0
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected");
+      return;
+    }
+    localdom.propagate();
+    if (localdom.infeasible()) {
+      printf("Infeasibility detected after propagation");
+      return;
+    }
+
+    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
+      if (mipsolver.mipdata_->domain.isFixed(i)) {
+        dummysol[i] = mipsolver.mipdata_->domain
+                          .colLower_[i];  // colLower == colUpper == value
       }
     }
 
 #endif
-    //#if 0
+#if 0
     /// fix var with least number of locks
     HighsInt indexFixing = -1;
     bool foundFixing = false;
     bool uplocks = false;
     HighsInt leastLocks =
-        mipsolver.numRow() + 1;  // num of locks will always be smaller than number of rows
+        mipsolver.numRow() +
+        1;  // num of locks will always be smaller than number of rows
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
         if (mipsolver.mipdata_->uplocks[cliques[i][ii].col] < leastLocks) {
@@ -1186,13 +1352,15 @@ void HighsPrimalHeuristics::cliqueFixing() {
     }
 
     if (uplocks) {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col, 1,
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                      cliqueMaxsize[indexFixing].val,
                       HighsDomain::Reason::branching());
-      dummysol[indexFixing] = 1;
+      dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
     } else {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col, 0,
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                      cliqueMaxsize[indexFixing].complement().val,
                       HighsDomain::Reason::branching());
-      dummysol[indexFixing] = 0;
+      dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
     }
     fixed++;
 
@@ -1206,14 +1374,56 @@ void HighsPrimalHeuristics::cliqueFixing() {
       return;
     }
 
-    //#endif
+    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
+      if (mipsolver.mipdata_->domain.isFixed(i)) {
+        dummysol[i] = mipsolver.mipdata_->domain
+                          .colLower_[i];  // colLower == colUpper == value
+      }
+    }
 
-    highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
-                 "\nVariables fixed: %4i\n", fixed);
+#endif
+
+    printf("\nVariables fixed: %4i\n", fixed);
     printf("Variables fixed indirect %4i\n", fixedIndirect);
     printf("Total variables fixed: %4i\n", fixed + fixedIndirect);
+    printf("Cliquesize: %4i\n", int(cliqueMaxsize.size()));
 
-    
+    // copied for getFixingRate()
+    HighsHashTable<HighsInt> fixedCols;
+    HighsInt numGlobalFixed = 0;
+    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
+      // skip fixed and continuous variables
+      if (mipsolver.mipdata_->domain.colLower_[i] ==
+          mipsolver.mipdata_->domain.colUpper_[i])
+        ++numGlobalFixed;
+
+      // count locally fixed variable
+      if (localdom.isFixed(i)) fixedCols.insert(i);
+    }
+    printf("Total integers fixed: %4i\n", numGlobalFixed);
+    HighsInt ntotal = mipsolver.mipdata_->integral_cols.size() - numGlobalFixed;
+    size_t nCheckedChanges = 0;
+    auto getFixingRate = [&]() {
+      while (nCheckedChanges < localdom.getDomainChangeStack().size()) {
+        HighsInt col =
+            localdom.getDomainChangeStack()[nCheckedChanges++].column;
+        if (mipsolver.variableType(col) == HighsVarType::kContinuous) continue;
+
+        if (localdom.isFixed(col)) fixedCols.insert(col);
+      }
+
+      return fixedCols.size() / (double)ntotal;
+    };
+    // end copied
+    getFixingRate();
+    // solve submip
+    double preobj = mipsolver.mipdata_->upper_bound;
+    printf("\nSTARTING SUBMIP SOLVER -------------------------------\n");
+    solveandprintSubMip(*mipsolver.model_, getFixingRate(), localdom.colLower_,
+                        localdom.colUpper_, 500,
+                        200 + int(0.05 * (mipsolver.mipdata_->num_nodes)), 12);
+    printf("\nENDING SUBMIP SOLVER ---------------------------------\n");
+    double postobj = mipsolver.mipdata_->upper_bound;
   }
 
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
