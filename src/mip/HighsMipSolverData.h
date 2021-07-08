@@ -141,6 +141,8 @@ struct HighsMipSolverData {
   }
 
   bool checkLimits() const;
+
+  void removeBounds();
 };
 
 #endif

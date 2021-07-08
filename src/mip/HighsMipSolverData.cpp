@@ -586,11 +586,17 @@ const std::vector<double>& HighsMipSolverData::getSolution() const {
 
 bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
                                       double solobj, char source) {
+  printf("best solobj: %10f\nupper_bound: %10f\nupper_limit: %10f\n", solobj,
+         upper_bound, upper_limit);
+  upper_bound = kHighsInf;
+  upper_limit = kHighsInf;
+  printDisplayLine('Z');
   if (solobj < upper_bound) {
     if (solobj <= upper_limit) {
       solobj = transformNewIncumbent(sol);
       if (solobj >= upper_bound) return false;
     }
+    printf("Transformed solobj: %10f\n", solobj);
     upper_bound = solobj;
     incumbent = sol;
     double new_upper_limit;
@@ -621,7 +627,7 @@ bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
     }
   } else if (incumbent.empty())
     incumbent = sol;
-
+  printDisplayLine('X');
   return true;
 }
 
@@ -756,6 +762,14 @@ void HighsMipSolverData::evaluateRootNode() {
                "\nDone primal heuristic\n");
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\n%-14.9g\n", upper_bound);
+  /*
+  if (!mipsolver.submip) {
+    printf("Best solution is: \n");
+    for (HighsInt i = 0; i < incumbent.size(); i++) {
+      std::cout << i+1<<" "<<incumbent[i] << "\n";
+    }
+  }
+  */
   if (!mipsolver.submip) exit(0);
 restart:
   // solve the first root lp
@@ -1167,4 +1181,11 @@ void HighsMipSolverData::setupDomainPropagation() {
 
   domain = HighsDomain(mipsolver);
   domain.computeRowActivities();
+}
+
+void HighsMipSolverData::removeBounds() {
+  printf("DEBUG\n");
+  printf("%10f\n", upper_bound);
+  upper_bound = kHighsInf;
+  upper_limit = kHighsInf;
 }
