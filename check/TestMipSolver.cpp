@@ -186,7 +186,8 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
   lp.colLower_ = {-inf};
   lp.colUpper_ = {1.5};
   lp.integrality_ = {HighsVarType::kInteger};
-
+  //  lp.orientation_ = MatrixOrientation::kRowwise;
+  //  lp.Astart_.resize(1, 0);
   double required_objective_value = -2;
   double required_x0_value = 1;
 
@@ -212,7 +213,7 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
 
   HighsModelStatus model_status = highs.getModelStatus();
 
-  const bool issue0 = false;
+  const bool issue0 = true;
   if (issue0) {
     REQUIRE(model_status == HighsModelStatus::kOptimal);
     REQUIRE(fabs(info.objective_function_value - required_objective_value) <

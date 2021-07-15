@@ -1099,13 +1099,6 @@ HighsInt Highs_setHighsBoolOptionValue(
     const HighsInt value  //!< new value of option
 );
 
-/**
- * @brief Runs crossover and loads basis. If no basis is found, the values of
- * Highs solution will not be modified. If basis is found they are updated
- * to reflect the corresponding Highs basis.
- * status
- */
-
 // /**
 //  * @brief Returns the current model
 //  */
