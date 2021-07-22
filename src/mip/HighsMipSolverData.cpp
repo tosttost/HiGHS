@@ -291,7 +291,10 @@ void HighsMipSolverData::runSetup() {
     }
   }
   numintegercols = integer_cols.size();
-
+  if (numRestarts == 0) {
+    numintegercolsfirst = numintegercols;
+    // printf("numintegercols: %4i\n", numintegercolsfirst);
+  }
   heuristics.setupIntCols();
   debugSolution.activate();
 }
@@ -586,17 +589,11 @@ const std::vector<double>& HighsMipSolverData::getSolution() const {
 
 bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
                                       double solobj, char source) {
-  printf("best solobj: %10f\nupper_bound: %10f\nupper_limit: %10f\n", solobj,
-         upper_bound, upper_limit);
-  upper_bound = kHighsInf;
-  upper_limit = kHighsInf;
-  printDisplayLine('Z');
   if (solobj < upper_bound) {
     if (solobj <= upper_limit) {
       solobj = transformNewIncumbent(sol);
       if (solobj >= upper_bound) return false;
     }
-    printf("Transformed solobj: %10f\n", solobj);
     upper_bound = solobj;
     incumbent = sol;
     double new_upper_limit;
@@ -627,7 +624,6 @@ bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
     }
   } else if (incumbent.empty())
     incumbent = sol;
-  printDisplayLine('X');
   return true;
 }
 
@@ -757,7 +753,22 @@ void HighsMipSolverData::evaluateRootNode() {
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\n%-14.9g\n", upper_bound);
   // call primal heuristic clique fixing
-  if (!mipsolver.submip) heuristics.cliqueFixing();
+
+  if (!mipsolver.submip) {
+    file = fopen(("/home/tim/Documents/Results/1_down-up_locks/Output-" +
+                  mipsolver.model_->model_name_ + ".txt")
+                     .c_str(),
+                 "w");
+    // print header
+    fprintf(file,
+            "iteration, cliquesize, val fixing var, numcliques clique table, "
+            "fixed integer cols, numintegercols, unfixed integer cols before "
+            "submip, unfixed integer cols after presolve submip, submip "
+            "status, submip best found objective\n");
+    heuristics.cliqueFixing(file);
+    fclose(file);
+  }
+
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\nDone primal heuristic\n");
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
@@ -770,7 +781,9 @@ void HighsMipSolverData::evaluateRootNode() {
     }
   }
   */
+
   if (!mipsolver.submip) exit(0);
+
 restart:
   // solve the first root lp
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
@@ -795,8 +808,8 @@ restart:
   if (firstrootbasis.valid) lp.getLpSolver().setBasis(firstrootbasis);
   lp.getLpSolver().setOptionValue("presolve", "on");
 
-  lp.getLpSolver().setOptionValue("output_flag",
-                                  mipsolver.options_mip_->output_flag);
+  // lp.getLpSolver().setOptionValue("output_flag",
+  //                               mipsolver.options_mip_->output_flag);
   //  lp.getLpSolver().setOptionValue("log_dev_level", kHighsLogDevLevelInfo);
   //  lp.getLpSolver().setOptionValue("log_file",
   //  mipsolver.options_mip_->log_file);
@@ -809,7 +822,9 @@ restart:
   lp.getLpSolver().setOptionValue("presolve", "off");
   avgrootlpiters = lp.getAvgSolveIters();
   if (numRestarts == 0) firstrootlpiters = lpIters;
-
+  // if (numRestarts == 0)
+  // printf("DEBUG20: %4i\n", mipsolver.mipdata_->presolvedModel.numCol_);
+  // fprintf(file, "%4i,",mipsolver.mipdata_->presolvedModel.numCol_);
   total_lp_iterations += lpIters;
 
   lp.setIterationLimit(std::max(10000, int(10 * avgrootlpiters)));

@@ -51,8 +51,7 @@ class HighsPrimalHeuristics {
 
   bool solveandprintSubMip(const HighsLp& lp, double fixingRate,
                            std::vector<double> colLower,
-                           std::vector<double> colUpper, HighsInt maxleaves,
-                           HighsInt maxnodes, HighsInt stallnodes);
+                           std::vector<double> colUpper, FILE* file);
 
   double determineTargetFixingRate();
 
@@ -73,7 +72,7 @@ class HighsPrimalHeuristics {
 
   void randomizedRounding(const std::vector<double>& relaxationsol);
 
-  void cliqueFixing();
+  void cliqueFixing(FILE* file);
 };
 
 #endif
