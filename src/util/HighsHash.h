@@ -197,6 +197,39 @@ struct HighsHashHelpers {
     assert(hash < M61());
   }
 
+  /// overload that is not taking a value and saves one multiplication call
+  /// useful for sparse hashing of bit vectors
+  static void sparse_combine(u64& hash, HighsInt index) {
+    u64 a = c[index & 15] & M61();
+    HighsInt degree = (index / 16) + 1;
+
+    hash += modexp_M61(a, degree);
+    hash = (hash >> 61) + (hash & M61());
+    if (hash >= M61()) hash -= M61();
+    assert(hash < M61());
+  }
+
+  /// overload that is not taking a value and saves one multiplication call
+  /// useful for sparse hashing of bit vectors
+  static void sparse_inverse_combine(u64& hash, HighsInt index) {
+    // same hash algorithm as sparse_combine(), but for updating a hash value to
+    // the state before it was changed with a call to sparse_combine(). This is
+    // easily possible as the hash value just uses finite field arithmetic. We
+    // can simply add the additive inverse of the previous hash value. This is a
+    // very useful routine for symmetry detection. During partition refinement
+    // the hashes do not need to be recomputed but can be updated with this
+    // procedure.
+
+    u64 a = c[index & 15] & M61();
+    HighsInt degree = (index / 16) + 1;
+    // add the additive inverse (M61() - hashvalue) instead of the hash value
+    // itself
+    hash += M61() - modexp_M61(a, degree);
+    hash = (hash >> 61) + (hash & M61());
+    if (hash >= M61()) hash -= M61();
+    assert(hash < M61());
+  }
+
   static void sparse_combine32(u32& hash, HighsInt index, u32 value) {
     // we take each value of the sparse hash as coefficient for a polynomial
     // of the finite field modulo the mersenne prime 2^61-1 where the monomial

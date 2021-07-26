@@ -248,7 +248,7 @@ HighsStatus HEkk::setBasis() {
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = num_col + iRow;
     basis_.nonbasicFlag_[iVar] = kNonbasicFlagFalse;
-    HighsHashHelpers::sparse_combine(basis_.hash, iVar, 2147483648);
+    HighsHashHelpers::sparse_combine(basis_.hash, iVar);
     basis_.basicIndex_[iRow] = iVar;
   }
   info_.num_basic_logicals = num_row;
@@ -285,7 +285,7 @@ HighsStatus HEkk::setBasis(const HighsBasis& highs_basis) {
       basis_.nonbasicFlag_[iVar] = kNonbasicFlagFalse;
       basis_.nonbasicMove_[iVar] = 0;
       basis_.basicIndex_[num_basic_variables++] = iVar;
-      HighsHashHelpers::sparse_combine(basis_.hash, iVar, 2147483648);
+      HighsHashHelpers::sparse_combine(basis_.hash, iVar);
     } else {
       basis_.nonbasicFlag_[iVar] = kNonbasicFlagTrue;
       if (highs_basis.col_status[iCol] == HighsBasisStatus::kLower) {
@@ -310,7 +310,7 @@ HighsStatus HEkk::setBasis(const HighsBasis& highs_basis) {
       basis_.nonbasicFlag_[iVar] = kNonbasicFlagFalse;
       basis_.nonbasicMove_[iVar] = 0;
       basis_.basicIndex_[num_basic_variables++] = iVar;
-      HighsHashHelpers::sparse_combine(basis_.hash, iVar, 2147483648);
+      HighsHashHelpers::sparse_combine(basis_.hash, iVar);
     } else {
       basis_.nonbasicFlag_[iVar] = kNonbasicFlagTrue;
       if (highs_basis.row_status[iRow] == HighsBasisStatus::kLower) {
@@ -1820,9 +1820,8 @@ void HEkk::updatePivots(const HighsInt variable_in, const HighsInt row_out,
   HighsInt variable_out = basis_.basicIndex_[row_out];
 
   // update hash value of basis
-  HighsHashHelpers::sparse_inverse_combine(basis_.hash, variable_out,
-                                           2147483648);
-  HighsHashHelpers::sparse_combine(basis_.hash, variable_in, 2147483648);
+  HighsHashHelpers::sparse_inverse_combine(basis_.hash, variable_out);
+  HighsHashHelpers::sparse_combine(basis_.hash, variable_in);
   visited_basis_.insert(basis_.hash);
 
   // Incoming variable
@@ -1867,8 +1866,8 @@ bool HEkk::checkForCycling(const HighsInt variable_in, const HighsInt row_out) {
   uint64_t currhash = basis_.hash;
   HighsInt variable_out = basis_.basicIndex_[row_out];
 
-  HighsHashHelpers::sparse_inverse_combine(currhash, variable_out, 2147483648);
-  HighsHashHelpers::sparse_combine(currhash, variable_in, 2147483648);
+  HighsHashHelpers::sparse_inverse_combine(currhash, variable_out);
+  HighsHashHelpers::sparse_combine(currhash, variable_in);
 
   return visited_basis_.find(currhash) != nullptr;
 }
