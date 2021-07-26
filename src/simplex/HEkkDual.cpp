@@ -1128,6 +1128,13 @@ void HEkkDual::iterate() {
       ekk_instance_.info_.workCost_[variable_in] =
           oldCost - workDual[variable_in];
       workDual[variable_in] = 0;
+
+      // todo@Julian: this is hacky but allows the current solve loop to not
+      // bail out. In some cases it causes infinite looping because the solve
+      // loop continuous to rebuild but it works, e.g. to prevent cycling on
+      // neos-5052403-cygnet where otherwise the LP solve returns with an error
+      // very quickly because it cycles after a fresh rebuild. So the solver
+      // just needs proper handling of the case when cycling is detected.
       // ekk_instance_.status_.has_fresh_rebuild = false;
     }
 
