@@ -1078,16 +1078,20 @@ void HighsMipSolverData::evaluateRootNode() {
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\n%-14.9g\n", upper_bound);
   if (!mipsolver.submip) {
-    file = fopen(("/home/tim/Documents/Results/1_down-up_locks/Output-" +
-                  mipsolver.model_->model_name_ + ".txt")
-                     .c_str(),
+    file = fopen(("Output-" + mipsolver.model_->model_name_ + ".txt").c_str(),
                  "w");
     // print header
     fprintf(file,
-            "iteration, cliquesize, val fixing var, numcliques clique table, "
-            "fixed integer cols, numintegercols, unfixed integer cols before "
-            "submip, unfixed integer cols after presolve submip, submip "
-            "status, submip best found objective\n");
+            "iteration, cliquesize, numcliques clique table, "
+            "fixed cols down-up, fixed cols up-down, fixed cols obj, fixed "
+            "cols locks, numintegercols, "
+            "presolve down-up, status down-up, best objective down-up, "
+            "presolve up-down, status up-down, best objective up-down, "
+            "presolve objective, status objective, best objective objective, "
+            "presolve locks, status locks, best objective locks, "
+            "best objective achieved down-up, best objective achieved up-down, "
+            "best objective achieved objective, best objective achieved locks, "
+            "fixed cols best method\n");
     heuristics.cliqueFixing(file);
     fclose(file);
   }
