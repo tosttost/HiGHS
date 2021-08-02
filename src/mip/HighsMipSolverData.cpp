@@ -390,6 +390,10 @@ void HighsMipSolverData::runSetup() {
                  (HighsInt)continuous_cols.size(), mipsolver.numNonzero());
   }
 
+  if (numRestarts == 0) {
+    numintegercolsfirst = numintegercols;
+  }
+
   heuristics.setupIntCols();
 
 #ifdef HIGHS_DEBUGSOL
@@ -1068,6 +1072,32 @@ HighsLpRelaxation::Status HighsMipSolverData::evaluateRootLp() {
 
 void HighsMipSolverData::evaluateRootNode() {
   HighsInt maxSepaRounds = mipsolver.submip ? 5 : kHighsIInf;
+
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+               "\nTest\n");
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+               "\n%-14.9g\n", upper_bound);
+  if (!mipsolver.submip) {
+    file = fopen(("/home/tim/Documents/Results/1_down-up_locks/Output-" +
+                  mipsolver.model_->model_name_ + ".txt")
+                     .c_str(),
+                 "w");
+    // print header
+    fprintf(file,
+            "iteration, cliquesize, val fixing var, numcliques clique table, "
+            "fixed integer cols, numintegercols, unfixed integer cols before "
+            "submip, unfixed integer cols after presolve submip, submip "
+            "status, submip best found objective\n");
+    heuristics.cliqueFixing(file);
+    fclose(file);
+  }
+
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+               "\nDone primal heuristic\n");
+  highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
+               "\n%-14.9g\n", upper_bound);
+  if (!mipsolver.submip) exit(0);
+
 restart:
   // lp.getLpSolver().setOptionValue(
   //     "dual_simplex_cost_perturbation_multiplier", 10.0);

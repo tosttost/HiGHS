@@ -80,6 +80,7 @@ struct HighsMipSolverData {
   HighsBasis firstrootbasis;
   double rootlpsolobj;
   HighsInt numintegercols;
+  HighsInt numintegercolsfirst;
 
   HighsCDouble pruned_treeweight;
   double avgrootlpiters;
@@ -108,6 +109,8 @@ struct HighsMipSolverData {
   HighsNodeQueue nodequeue;
 
   HighsDebugSol debugSolution;
+
+  FILE* file;
 
   HighsMipSolverData(HighsMipSolver& mipsolver)
       : mipsolver(mipsolver),
