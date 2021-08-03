@@ -1285,15 +1285,15 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     // down-up locks
     auto localdom_down_up = localdom;
     HighsInt indexFixing_down_up = 0;
-    HighsInt leastLocks = kHighsIInf;
+    HighsInt leastLocks_down_up = kHighsIInf;
     for (HighsInt i = 0; i < clique.size(); i++) {
       if (mipsolver.mipdata_->downlocks[clique[i].col] -
               mipsolver.mipdata_->uplocks[clique[i].col] <
-          leastLocks) {
+          leastLocks_down_up) {
         indexFixing_down_up = i;
-        leastLocks = mipsolver.mipdata_->downlocks[clique[i].col] -
+        leastLocks_down_up = mipsolver.mipdata_->downlocks[clique[i].col] -
                      mipsolver.mipdata_->uplocks[clique[i].col];
-        printf("Found better lock (down-up): %14i\n", leastLocks);
+        printf("Found better lock (down-up): %14i\n", leastLocks_down_up);
       }
     }
 
@@ -1314,15 +1314,15 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     // up-down locks
     auto localdom_up_down = localdom;
     HighsInt indexFixing_up_down = 0;
-    leastLocks = kHighsIInf;
+    HighsInt leastLocks_up_down = kHighsIInf;
     for (HighsInt i = 0; i < clique.size(); i++) {
       if (mipsolver.mipdata_->uplocks[clique[i].col] -
               mipsolver.mipdata_->downlocks[clique[i].col] <
-          leastLocks) {
+          leastLocks_up_down) {
         indexFixing_up_down = i;
-        leastLocks = mipsolver.mipdata_->uplocks[clique[i].col] -
+        leastLocks_up_down = mipsolver.mipdata_->uplocks[clique[i].col] -
                      mipsolver.mipdata_->downlocks[clique[i].col];
-        printf("Found better lock (up-down): %14i\n", leastLocks);
+        printf("Found better lock (up-down): %14i\n", leastLocks_up_down);
       }
     }
 
@@ -1370,7 +1370,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     HighsInt indexFixing_locks = 0;
     bool foundFixing = false;
     bool uplocks = false;
-    leastLocks = kHighsIInf;
+    HighsInt leastLocks = kHighsIInf;
 
     for (HighsInt i = 0; i < clique.size(); i++) {
       if (mipsolver.mipdata_->uplocks[clique[i].col] < leastLocks) {
@@ -1472,21 +1472,26 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     // solve submip
     printf("\nSTARTING SUBMIP SOLVER -------------------------------\n");
 
+    fprintf(file, "%5i,", leastLocks_down_up);
     mipsolver.mipdata_->upper_bound = kHighsInf;
     double bestObj_down_up = solveandprintSubMip(
         *mipsolver.model_, getFixingRate(), localdom_down_up.col_lower_,
         localdom_down_up.col_upper_, file);
 
+    fprintf(file, "%5i,", leastLocks_up_down);
     mipsolver.mipdata_->upper_bound = kHighsInf;
     double bestObj_up_down = solveandprintSubMip(
         *mipsolver.model_, getFixingRate(), localdom_up_down.col_lower_,
         localdom_up_down.col_upper_, file);
 
+    fprintf(file, "%10f,", objvalue);
     mipsolver.mipdata_->upper_bound = kHighsInf;
     double bestObj_obj = solveandprintSubMip(*mipsolver.model_, getFixingRate(),
                                              localdom_obj.col_lower_,
                                              localdom_obj.col_upper_, file);
 
+    fprintf(file, "%5i,", leastLocks);
+    fprintf(file, "%d,", uplocks);
     mipsolver.mipdata_->upper_bound = kHighsInf;
     double bestObj_locks = solveandprintSubMip(
         *mipsolver.model_, getFixingRate(), localdom_locks.col_lower_,

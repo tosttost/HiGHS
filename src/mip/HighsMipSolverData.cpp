@@ -1081,17 +1081,20 @@ void HighsMipSolverData::evaluateRootNode() {
     file = fopen(("Output-" + mipsolver.model_->model_name_ + ".txt").c_str(),
                  "w");
     // print header
-    fprintf(file,
-            "iteration, cliquesize, numcliques clique table, "
-            "fixed cols down-up, fixed cols up-down, fixed cols obj, fixed "
-            "cols locks, numintegercols, "
-            "presolve down-up, status down-up, best objective down-up, "
-            "presolve up-down, status up-down, best objective up-down, "
-            "presolve objective, status objective, best objective objective, "
-            "presolve locks, status locks, best objective locks, "
-            "best objective achieved down-up, best objective achieved up-down, "
-            "best objective achieved objective, best objective achieved locks, "
-            "fixed cols best method\n");
+    fprintf(
+        file,
+        "iteration, cliquesize, numcliques clique table, "
+        "fixed cols down-up, fixed cols up-down, fixed cols obj, fixed "
+        "cols locks, numintegercols, "
+        "var value, presolve down-up, status down-up, best objective down-up, "
+        "var value, presolve up-down, status up-down, best objective up-down, "
+        "var value, presolve objective, status objective, best objective "
+        "objective, "
+        "var value, var type, presolve locks, status locks, best objective "
+        "locks, "
+        "best objective achieved down-up, best objective achieved up-down, "
+        "best objective achieved objective, best objective achieved locks, "
+        "fixed cols best method\n");
     heuristics.cliqueFixing(file);
     fclose(file);
   }
