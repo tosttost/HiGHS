@@ -1174,6 +1174,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     safeiterations++;
     if (safeiterations > maxit - 3) {
       printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!! THIS SHOULDNT HAPPEN");
+      return;
     }
 
     // this gives maximum cardinality clique found
@@ -1190,16 +1191,19 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 #if 0
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
+    HighsInt uplocks;
+    HighsInt downlocks;
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
-        if (mipsolver.mipdata_->downlocks[cliques[i][ii].col] -
-                mipsolver.mipdata_->uplocks[cliques[i][ii].col] <
-            leastLocks) {
+        uplocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+        downlocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+        if (!cliques[i][ii].val) std::swap(uplocks, downlocks);
+
+        if (downlocks - uplocks < leastLocks) {
           cliqueMaxsize = cliques[i];
           indexFixing = ii;
-          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col] -
-                       mipsolver.mipdata_->uplocks[cliques[i][ii].col];
-          printf("Found better lock: %14i\n", leastLocks);
+          leastLocks = downlocks - uplocks;
+          printf("Found better lock (down-up): %14i\n", leastLocks);
         }
       }
     }
@@ -1210,48 +1214,50 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
-#if 1
+#if 0
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
+    HighsInt uplocks;
+    HighsInt downlocks;
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
-        if (mipsolver.mipdata_->uplocks[cliques[i][ii].col] -
-                mipsolver.mipdata_->downlocks[cliques[i][ii].col] <
-            leastLocks) {
+        uplocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+        downlocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+        if (!cliques[i][ii].val) std::swap(uplocks, downlocks);
+
+        if (uplocks - downlocks < leastLocks) {
           cliqueMaxsize = cliques[i];
           indexFixing = ii;
-          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col] -
-                       mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+          leastLocks = uplocks - downlocks;
           printf("Found better lock(up-down): %14i\n", leastLocks);
         }
       }
     }
 
-    if (leastLocks >= 0) {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,
-                      cliqueMaxsize[indexFixing].val,
-                      HighsDomain::Reason::branching());
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].val,
+                    HighsDomain::Reason::branching());
 
-      dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
-    } else {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,
-                      cliqueMaxsize[indexFixing].complement().val,
-                      HighsDomain::Reason::branching());
-
-      dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
-    }
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
 
-#if 0
-    cliqueMaxsize = cliques[0];
+#if 1
+    // cliqueMaxsize = cliques[0];
     /// find cheapest variable to fix in this clique
     HighsInt indexFixing = 0;
-    double objvalue = mipsolver.model_->colCost_[cliqueMaxsize[0].col];
-    for (HighsInt i = 1; i < cliqueMaxsize.size(); i++) {
-      if (mipsolver.model_->colCost_[cliqueMaxsize[i].col] < objvalue) {
-        indexFixing = i;
-        objvalue = mipsolver.model_->colCost_[cliqueMaxsize[i].col];
+    double objvalue = kHighsInf;
+    double obj;
+    for (HighsInt i = 0; i < cliques.size(); i++) {
+      for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
+        obj = mipsolver.model_->colCost_[cliques[i][ii].col];
+        if (!cliques[i][ii].val) obj = -1 * obj;
+
+        if (obj < objvalue) {
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          objvalue = obj;
+        }
       }
     }
 
@@ -1264,24 +1270,23 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 #endif
 #if 0
     /// fix var with least number of locks
-    HighsInt indexFixing = -1;
-    bool foundFixing = false;
-    bool uplocks = false;
-    HighsInt leastLocks =
-        mipsolver.numRow() +
-        1;  // num of locks will always be smaller than number of rows
+    HighsInt uplocks;
+    HighsInt downlocks;
+    HighsInt indexFixing = 0;
+    HighsInt leastLocks = kHighsIInf;  
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
-        if (mipsolver.mipdata_->uplocks[cliques[i][ii].col] < leastLocks) {
-          uplocks = true;
-          leastLocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+        uplocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
+        downlocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+        if (!cliques[i][ii].val) std::swap(uplocks, downlocks);
+
+        if (uplocks < leastLocks) {
+          leastLocks = uplocks;
           cliqueMaxsize = cliques[i];
           indexFixing = ii;
           printf("Found uplock: %4i\n", leastLocks);
-        } else if (mipsolver.mipdata_->downlocks[cliques[i][ii].col] <
-                   leastLocks) {
-          uplocks = false;
-          leastLocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
+        } else if (downlocks < leastLocks) {
+          leastLocks = downlocks;
           cliqueMaxsize = cliques[i];
           indexFixing = ii;
           printf("Found downlock: %4i\n", leastLocks);
@@ -1289,17 +1294,10 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
       }
     }
 
-    if (uplocks) {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,
-                      cliqueMaxsize[indexFixing].val,
-                      HighsDomain::Reason::branching());
-      dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
-    } else {
-      localdom.fixCol(cliqueMaxsize[indexFixing].col,
-                      cliqueMaxsize[indexFixing].complement().val,
-                      HighsDomain::Reason::branching());
-      dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
-    }
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].val,
+                    HighsDomain::Reason::branching());
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
 
