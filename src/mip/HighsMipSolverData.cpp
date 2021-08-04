@@ -755,7 +755,8 @@ void HighsMipSolverData::evaluateRootNode() {
   // call primal heuristic clique fixing
 
   if (!mipsolver.submip) {
-    file = fopen(("/home/tim/Documents/Results/1_down-up_locks/Output-" +
+    // /home/tim/Documents/Results/1_down-up_locks/
+    file = fopen(("Output-" +
                   mipsolver.model_->model_name_ + ".txt")
                      .c_str(),
                  "w");
