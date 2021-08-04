@@ -1279,13 +1279,11 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     if (cliques[0].size() < 2) break;
 
     std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
-
+    fixed++;
     printf("\nVariables fixed directly: %4i\n", fixed);
     printf("Cliquesize: %4i\n", int(clique.size()));
     printf("Clique table size: %4i\n",
            mipsolver.mipdata_->cliquetable.numCliques());
-
-    fixed++;
 
     // solve submips
     printf("\nSTARTING SUBMIP SOLVER -------------------------------\n");
@@ -1351,6 +1349,13 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     if (localdom.infeasible()) {
       fprintf(file, "Infeasibility detected after propagation");
       return;
+    }
+
+    for (HighsInt i : mipsolver.mipdata_->integer_cols) {
+      if (localdom.isFixed(i)) {
+        dummysol[i] = mipsolver.mipdata_->domain
+                          .col_lower_[i];  // col_lower == col_upper == value
+      }
     }
 
     // pause the program to inspect submip
