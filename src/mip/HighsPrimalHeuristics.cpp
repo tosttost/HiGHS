@@ -143,7 +143,6 @@ bool HighsPrimalHeuristics::solveSubMip(
 }
 
 double HighsPrimalHeuristics::solveandprintSubMip(const HighsLp& lp,
-                                                  double fixingRate,
                                                   std::vector<double> colLower,
                                                   std::vector<double> colUpper,
                                                   FILE* file) {
@@ -187,7 +186,7 @@ double HighsPrimalHeuristics::solveandprintSubMip(const HighsLp& lp,
            submipsolver.solution_objective_ + mipsolver.model_->offset_);
     fprintf(file, utilModelStatusToString(submipsolver.modelstatus_).c_str());
     fprintf(file, ",");
-    fprintf(file, "%10f,",
+    fprintf(file, "%10f",
             submipsolver.solution_objective_ + mipsolver.model_->offset_);
   }
 
@@ -1264,7 +1263,6 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
   HighsInt safeiterations = 0;
   HighsInt maxit = 2 * mipsolver.numCol() + 2;
   HighsInt fixed = 0;
-  HighsInt fixedIndirect = 0;
   while (safeiterations < maxit) {
     safeiterations++;
     if (safeiterations > maxit - 3) {
@@ -1282,289 +1280,78 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
     std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
 
-    // down-up locks
-    auto localdom_down_up = localdom;
-    HighsInt indexFixing_down_up = 0;
-    HighsInt leastLocks_down_up = kHighsIInf;
-    for (HighsInt i = 0; i < clique.size(); i++) {
-      if (mipsolver.mipdata_->downlocks[clique[i].col] -
-              mipsolver.mipdata_->uplocks[clique[i].col] <
-          leastLocks_down_up) {
-        indexFixing_down_up = i;
-        leastLocks_down_up = mipsolver.mipdata_->downlocks[clique[i].col] -
-                     mipsolver.mipdata_->uplocks[clique[i].col];
-        printf("Found better lock (down-up): %14i\n", leastLocks_down_up);
-      }
-    }
-
-    localdom_down_up.fixCol(clique[indexFixing_down_up].col,
-                            clique[indexFixing_down_up].val,
-                            HighsDomain::Reason::branching());
-
-    if (localdom_down_up.infeasible()) {
-      printf("Infeasibility detected\n");
-      localdom_down_up.markInfeasible();
-    }
-    localdom_down_up.propagate();
-    if (localdom_down_up.infeasible()) {
-      printf("Infeasibility detected after propagation\n");
-      localdom_down_up.markInfeasible();
-    }
-
-    // up-down locks
-    auto localdom_up_down = localdom;
-    HighsInt indexFixing_up_down = 0;
-    HighsInt leastLocks_up_down = kHighsIInf;
-    for (HighsInt i = 0; i < clique.size(); i++) {
-      if (mipsolver.mipdata_->uplocks[clique[i].col] -
-              mipsolver.mipdata_->downlocks[clique[i].col] <
-          leastLocks_up_down) {
-        indexFixing_up_down = i;
-        leastLocks_up_down = mipsolver.mipdata_->uplocks[clique[i].col] -
-                     mipsolver.mipdata_->downlocks[clique[i].col];
-        printf("Found better lock (up-down): %14i\n", leastLocks_up_down);
-      }
-    }
-
-    localdom_up_down.fixCol(clique[indexFixing_up_down].col,
-                            clique[indexFixing_up_down].complement().val,
-                            HighsDomain::Reason::branching());
-
-    if (localdom_up_down.infeasible()) {
-      printf("Infeasibility detected\n");
-      localdom_up_down.markInfeasible();
-    }
-    localdom_up_down.propagate();
-    if (localdom_up_down.infeasible()) {
-      printf("Infeasibility detected after propagation\n");
-      localdom_up_down.markInfeasible();
-    }
-
-    // objective
-    auto localdom_obj = localdom;
-    HighsInt indexFixing_objective = 0;
-    double objvalue = mipsolver.model_->col_cost_[clique[0].col];
-    for (HighsInt i = 1; i < clique.size(); i++) {
-      if (mipsolver.model_->col_cost_[clique[i].col] < objvalue) {
-        indexFixing_objective = i;
-        objvalue = mipsolver.model_->col_cost_[clique[i].col];
-      }
-    }
-
-    /// fix value and clean up cliques set
-    localdom_obj.fixCol(clique[indexFixing_objective].col,
-                        clique[indexFixing_objective].val,
-                        HighsDomain::Reason::branching());
-    if (localdom_obj.infeasible()) {
-      printf("Infeasibility detected\n");
-      localdom_obj.markInfeasible();
-    }
-    localdom_obj.propagate();
-    if (localdom_obj.infeasible()) {
-      printf("Infeasibility detected after propagation\n");
-      localdom_obj.markInfeasible();
-    }
-
-    /// less strict locks
-    auto localdom_locks = localdom;
-    HighsInt indexFixing_locks = 0;
-    bool foundFixing = false;
-    bool uplocks = false;
-    HighsInt leastLocks = kHighsIInf;
-
-    for (HighsInt i = 0; i < clique.size(); i++) {
-      if (mipsolver.mipdata_->uplocks[clique[i].col] < leastLocks) {
-        uplocks = true;
-        leastLocks = mipsolver.mipdata_->uplocks[clique[i].col];
-        indexFixing_locks = i;
-        printf("Found uplock: %4i\n", leastLocks);
-      } else if (mipsolver.mipdata_->downlocks[clique[i].col] < leastLocks) {
-        uplocks = false;
-        leastLocks = mipsolver.mipdata_->downlocks[clique[i].col];
-        indexFixing_locks = i;
-        printf("Found downlock: %4i\n", leastLocks);
-      }
-    }
-
-    if (uplocks) {
-      localdom_locks.fixCol(clique[indexFixing_locks].col,
-                            clique[indexFixing_locks].val,
-                            HighsDomain::Reason::branching());
-    } else {
-      localdom_locks.fixCol(clique[indexFixing_locks].col,
-                            clique[indexFixing_locks].complement().val,
-                            HighsDomain::Reason::branching());
-    }
-    if (localdom_locks.infeasible()) {
-      printf("Infeasibility detected\n");
-      localdom_locks.markInfeasible();
-    }
-    localdom_locks.propagate();
-    if (localdom_locks.infeasible()) {
-      printf("Infeasibility detected after propagation\n");
-      localdom_locks.markInfeasible();
-    }
+    printf("\nVariables fixed directly: %4i\n", fixed);
+    printf("Cliquesize: %4i\n", int(clique.size()));
+    printf("Clique table size: %4i\n",
+           mipsolver.mipdata_->cliquetable.numCliques());
 
     fixed++;
 
-    HighsInt fixedVar_down_up = 0;
-    HighsInt fixedVar_up_down = 0;
-    HighsInt fixedVar_obj = 0;
-    HighsInt fixedVar_locks = 0;
-    for (HighsInt i : mipsolver.mipdata_->integer_cols) {
-      if (!localdom_down_up.infeasible() && localdom_down_up.isFixed(i)) {
-        fixedVar_down_up++;
-      }
-      if (!localdom_up_down.infeasible() && localdom_up_down.isFixed(i)) {
-        fixedVar_up_down++;
-      }
-      if (!localdom_obj.infeasible() && localdom_obj.isFixed(i)) {
-        fixedVar_obj++;
-      }
-      if (!localdom_locks.infeasible() && localdom_locks.isFixed(i)) {
-        fixedVar_locks++;
-      }
-    }
-
-    printf("\nVariables fixed directly: %4i\n", fixed);
-    fprintf(file, "%4i,", fixed);
-    // printf("Variables fixed indirect %4i\n", fixedIndirect);
-    // printf("Total variables fixed: %4i\n", fixed + fixedIndirect);
-    printf("Cliquesize: %4i\n", int(clique.size()));
-    fprintf(file, "%4i,", int(clique.size()));
-    printf("Clique table size: %4i\n",
-           mipsolver.mipdata_->cliquetable.numCliques());
-    fprintf(file, "%5i,", mipsolver.mipdata_->cliquetable.numCliques());
-    fprintf(file, "%5i,", fixedVar_down_up);
-    fprintf(file, "%5i,", fixedVar_up_down);
-    fprintf(file, "%5i,", fixedVar_obj);
-    fprintf(file, "%5i,", fixedVar_locks);
-    fprintf(file, "%5i,", mipsolver.mipdata_->numintegercols);
-
-    // copied for getFixingRate()
-    HighsHashTable<HighsInt> fixedCols;
-    HighsInt numGlobalFixed = 0;
-    for (HighsInt i : mipsolver.mipdata_->integral_cols) {
-      // skip fixed and continuous variables
-      if (mipsolver.mipdata_->domain.col_lower_[i] ==
-          mipsolver.mipdata_->domain.col_upper_[i])
-        ++numGlobalFixed;
-
-      // count locally fixed variable
-      if (localdom.isFixed(i)) fixedCols.insert(i);
-    }
-    // printf("Total integral fixed: %4i\n", int(fixedCols.size()));
-    HighsInt ntotal = mipsolver.mipdata_->integral_cols.size() - numGlobalFixed;
-    size_t nCheckedChanges = 0;
-    auto getFixingRate = [&]() {
-      while (nCheckedChanges < localdom.getDomainChangeStack().size()) {
-        HighsInt col =
-            localdom.getDomainChangeStack()[nCheckedChanges++].column;
-        if (mipsolver.variableType(col) == HighsVarType::kContinuous) continue;
-
-        if (localdom.isFixed(col)) fixedCols.insert(col);
-      }
-
-      return fixedCols.size() / (double)ntotal;
-    };
-    // end copied
-    // getFixingRate();
-    // solve submip
+    // solve submips
     printf("\nSTARTING SUBMIP SOLVER -------------------------------\n");
+    HighsInt cliqueVarNumber = 0;
+    std::vector<double> bestSolutions;
 
-    fprintf(file, "%5i,", leastLocks_down_up);
-    mipsolver.mipdata_->upper_bound = kHighsInf;
-    double bestObj_down_up = solveandprintSubMip(
-        *mipsolver.model_, getFixingRate(), localdom_down_up.col_lower_,
-        localdom_down_up.col_upper_, file);
+    for (HighsCliqueTable::CliqueVar v : clique) {
+      // standard output to group data in data analysis
+      fprintf(file, "%4i,", fixed);
+      fprintf(file, "%4i,", int(clique.size()));
+      fprintf(file, "%5i,", mipsolver.mipdata_->cliquetable.numCliques());
+      fprintf(file, "%5i,", mipsolver.mipdata_->numintegercols);
 
-    fprintf(file, "%5i,", leastLocks_up_down);
-    mipsolver.mipdata_->upper_bound = kHighsInf;
-    double bestObj_up_down = solveandprintSubMip(
-        *mipsolver.model_, getFixingRate(), localdom_up_down.col_lower_,
-        localdom_up_down.col_upper_, file);
+      // data for x axis of plots
+      fprintf(file, "%5i,", cliqueVarNumber);
+      cliqueVarNumber++;
 
-    fprintf(file, "%10f,", objvalue);
-    mipsolver.mipdata_->upper_bound = kHighsInf;
-    double bestObj_obj = solveandprintSubMip(*mipsolver.model_, getFixingRate(),
-                                             localdom_obj.col_lower_,
-                                             localdom_obj.col_upper_, file);
+      // decision numbers
+      HighsInt uplocks = mipsolver.mipdata_->uplocks[v.col];
+      HighsInt downlocks = mipsolver.mipdata_->downlocks[v.col];
+      double objvalue = mipsolver.model_->col_cost_[v.col];
+      if (!v.val) {
+        std::swap(uplocks, downlocks);
+        objvalue = -1 * objvalue;
+      }
+      fprintf(file, "%5i,", downlocks - uplocks);
+      fprintf(file, "%5i,", uplocks - downlocks);
+      fprintf(file, "%14f,", objvalue);
+      fprintf(file, "%5i,", std::min({uplocks, downlocks}));
 
-    fprintf(file, "%5i,", leastLocks);
-    fprintf(file, "%d,", uplocks);
-    mipsolver.mipdata_->upper_bound = kHighsInf;
-    double bestObj_locks = solveandprintSubMip(
-        *mipsolver.model_, getFixingRate(), localdom_locks.col_lower_,
-        localdom_locks.col_upper_, file);
+      auto localdom_var = localdom;
+      localdom_var.fixCol(v.col, v.val, HighsDomain::Reason::branching());
+      localdom_var.propagate();
+
+      HighsInt fixedVar = 0;
+      for (HighsInt i : mipsolver.mipdata_->integer_cols) {
+        if (localdom_var.isFixed(i)) fixedVar++;
+      }
+      fprintf(file, "%5i,", fixedVar);
+
+      mipsolver.mipdata_->upper_bound = kHighsInf;
+      double bestObj =
+          solveandprintSubMip(*mipsolver.model_, localdom_var.col_lower_,
+                              localdom_var.col_upper_, file);
+      bestSolutions.push_back(bestObj);
+      fprintf(file, "\n");
+    }
 
     printf("\nENDING SUBMIP SOLVER ---------------------------------\n");
 
-    double bestObj = std::min(
-        {bestObj_down_up, bestObj_up_down, bestObj_obj, bestObj_locks});
-    bool first = true;
-    if (bestObj == bestObj_down_up) {
-      fprintf(file, "1,");
-      if (first) {
-        localdom.fixCol(clique[indexFixing_down_up].col,
-                        clique[indexFixing_down_up].val,
-                        HighsDomain::Reason::branching());
-        first = false;
-      }
-    } else {
-      fprintf(file, "0,");
-    }
+    // fix var which has minimum objective, so optimal or best found solution
+    std::vector<double>::iterator result =
+        std::min_element(bestSolutions.begin(), bestSolutions.end());
+    HighsInt pos = std::distance(bestSolutions.begin(), result);
+    localdom.fixCol(clique[pos].col, clique[pos].val,
+                    HighsDomain::Reason::branching());
 
-    if (bestObj == bestObj_up_down) {
-      fprintf(file, "1,");
-      if (first) {
-        localdom.fixCol(clique[indexFixing_up_down].col,
-                        clique[indexFixing_up_down].complement().val,
-                        HighsDomain::Reason::branching());
-        first = false;
-      }
-    } else {
-      fprintf(file, "0,");
+    if (localdom.infeasible()) {
+      fprintf(file, "Infeasibility detected");
+      return;
     }
-
-    if (bestObj == bestObj_obj) {
-      fprintf(file, "1,");
-      if (first) {
-        localdom.fixCol(clique[indexFixing_objective].col,
-                        clique[indexFixing_objective].val,
-                        HighsDomain::Reason::branching());
-        first = false;
-      }
-    } else {
-      fprintf(file, "0,");
-    }
-
-    if (bestObj == bestObj_locks) {
-      fprintf(file, "1,");
-      if (first) {
-        localdom.fixCol(clique[indexFixing_locks].col,
-                        clique[indexFixing_locks].val,
-                        HighsDomain::Reason::branching());
-        first = false;
-      }
-    } else {
-      fprintf(file, "0,");
-    }
-
-    if (localdom.infeasible()) return;
     localdom.propagate();
-    if (localdom.infeasible()) return;
-
-    HighsInt fixedVar = 0;
-    for (HighsInt i : mipsolver.mipdata_->integer_cols) {
-      if (localdom.isFixed(i)) {
-        dummysol[i] = mipsolver.mipdata_->domain
-                          .col_lower_[i];  // col_lower == col_upper == value
-        fixedVar++;
-      }
+    if (localdom.infeasible()) {
+      fprintf(file, "Infeasibility detected after propagation");
+      return;
     }
-    fprintf(file, "%5i", fixedVar);
-
-    fprintf(file, "\n");
 
     // pause the program to inspect submip
     // char foo[10];

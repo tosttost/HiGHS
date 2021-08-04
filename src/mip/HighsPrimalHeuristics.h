@@ -45,9 +45,8 @@ class HighsPrimalHeuristics {
                    std::vector<double> colUpper, HighsInt maxleaves,
                    HighsInt maxnodes, HighsInt stallnodes);
 
-  double solveandprintSubMip(const HighsLp& lp, double fixingRate,
-                           std::vector<double> colLower,
-                           std::vector<double> colUpper, FILE* file);
+  double solveandprintSubMip(const HighsLp& lp, std::vector<double> colLower,
+                             std::vector<double> colUpper, FILE* file);
 
   double determineTargetFixingRate();
 
