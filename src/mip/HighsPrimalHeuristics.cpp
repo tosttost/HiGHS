@@ -1187,7 +1187,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
     std::vector<HighsCliqueTable::CliqueVar> cliqueMaxsize;
 
-#if 1
+#if 0
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
     for (HighsInt i = 0; i < cliques.size(); i++) {
@@ -1210,7 +1210,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
-#if 0
+#if 1
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
     for (HighsInt i = 0; i < cliques.size(); i++) {
@@ -1226,11 +1226,20 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
         }
       }
     }
-    localdom.fixCol(cliqueMaxsize[indexFixing].col,
-                    cliqueMaxsize[indexFixing].complement().val,
-                    HighsDomain::Reason::branching());
 
-    dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
+    if (leastLocks >= 0) {
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                      cliqueMaxsize[indexFixing].val,
+                      HighsDomain::Reason::branching());
+
+      dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+    } else {
+      localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                      cliqueMaxsize[indexFixing].complement().val,
+                      HighsDomain::Reason::branching());
+
+      dummysol[indexFixing] = cliqueMaxsize[indexFixing].complement().val;
+    }
 
 #endif
 
