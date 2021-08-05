@@ -33,7 +33,7 @@ static const std::string getFilenameExt(const std::string filename) {
 Filereader* Filereader::getFilereader(const std::string filename) {
   Filereader* reader;
   const std::string extension = getFilenameExt(filename);
-  if (extension.compare("mps") == 0) {
+  if (extension.compare("mps") == 0 || extension.compare("QPS") == 0) {
     reader = new FilereaderMps();
   } else if (extension.compare("lp") == 0) {
     reader = new FilereaderLp();
