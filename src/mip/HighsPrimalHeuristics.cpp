@@ -1301,6 +1301,8 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
       fprintf(file, "%5i,", cliqueVarNumber);
       cliqueVarNumber++;
 
+      fprintf(file, "%5i,", v.col);
+
       // decision numbers
       HighsInt uplocks = mipsolver.mipdata_->uplocks[v.col];
       HighsInt downlocks = mipsolver.mipdata_->downlocks[v.col];

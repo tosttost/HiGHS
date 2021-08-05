@@ -1085,7 +1085,7 @@ void HighsMipSolverData::evaluateRootNode() {
     // print header
     fprintf(file,
             "iteration, cliquesize, numcliques clique table, numintegercols, "
-            "cliqueVarNumber, down-up value, up-down value, objective value, "
+            "cliqueVarNumber, col, down-up value, up-down value, objective value, "
             "locks value, presolve pre, presolve post, submip status, best "
             "found objective \n");
     heuristics.cliqueFixing(file);

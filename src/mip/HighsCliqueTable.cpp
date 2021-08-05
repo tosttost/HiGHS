@@ -1619,6 +1619,8 @@ HighsCliqueTable::separateCliques(const std::vector<double>& sol,
   for (HighsInt i = 0; i != numcols; ++i) {
     if (colsubstituted[i]) continue;
 
+    if (!domain.isBinary(i)) continue;
+
     if (numcliquesvar[CliqueVar(i, 0).index()] != 0 &&
         CliqueVar(i, 0).weight(sol) > feastol)
       data.P.emplace_back(i, 0);
