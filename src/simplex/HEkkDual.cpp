@@ -1100,18 +1100,19 @@ void HEkkDual::iterate() {
 
     // todo@ Julian: there is bad cycling from which highs does not break out by
     // itself, e.g. due to numerical differences, in the second LP on
-    // satellites2-40 when setting highs_random_seed=1261. With the code below
-    // it only prints "cycling detected" once and solves the
-    // LP even though it needs quite some iterations. I don't know whether I
-    // reset set all data correctly but I think because I return rebuild reason
-    // and set has_fresh_rebuild=false it will set everything up correctly
-    // in iteration loop during the rebuild. This could probably be done in a
-    // better way but this was the least invasive for me to add to the solver
-    // code. Also I am unsure about what to do in phase1 which is why I added
-    // the solvePhase check to the if condition. I am sure you can add some
-    // better way to resolve the cycling than going to rebuild. Maybe you can
-    // incorporate the hash information into the choose* functions so that no
-    // row/column that closes a cycle is chosen in the first place.
+    // satellites2-60-fs when setting highs_random_seed=5 (updated instance/seed
+    // to the current state on hash 68c6f15e). With the code below it only
+    // prints "cycling detected" once and solves the LP even though it needs
+    // quite some iterations. I don't know whether I reset set all data
+    // correctly but I think because I return rebuild reason and set
+    // has_fresh_rebuild=false it will set everything up correctly in iteration
+    // loop during the rebuild. This could probably be done in a better way but
+    // this was the least invasive for me to add to the solver code. Also I am
+    // unsure about what to do in phase1 which is why I added the solvePhase
+    // check to the if condition. I am sure you can add some better way to
+    // resolve the cycling than going to rebuild. Maybe you can incorporate the
+    // hash information into the choose* functions so that no row/column that
+    // closes a cycle is chosen in the first place.
 
     // Apart from the cycling: Since the random initialisation is only reset for
     // a new LP it could be good to also change the randomization and
