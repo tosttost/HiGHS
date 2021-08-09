@@ -1330,6 +1330,79 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
       fprintf(file, "%14f,", objvalue);
       fprintf(file, "%5i,", std::min({uplocks, downlocks}));
 
+      // fractional lock calculations
+      HighsInt fractionalUpLock = 0;
+      HighsInt fractionalDownLock = 0;
+      for (HighsInt j = mipsolver.model_->a_start_[v.col];
+           j < mipsolver.model_->a_start_[v.col + 1]; j++) {
+        HighsInt row = mipsolver.model_->a_index_[j];
+        double coefficientOfColumnInRow = mipsolver.model_->a_value_[j];
+        double capacity;
+        double fractionalLock;
+
+        // check what type of constraint it is
+        if (mipsolver.model_->row_lower_[row] != kHighsIInf &&
+            mipsolver.model_->row_upper_[row] == kHighsIInf) {
+          // constraint is Ax>b
+          capacity =
+              localdom.getMaxActivity(row) - mipsolver.model_->row_lower_[row];
+          fractionalLock = coefficientOfColumnInRow / capacity;
+
+          if (fractionalLock > 1) {
+            printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION: %10f\n",
+                   fractionalLock);
+            exit(0);
+          }
+          if (capacity <= 0) {
+            printf("SPECIAL CASE: %10f\n", capacity);
+            exit(0);
+          }
+          if (capacity == kHighsInf || capacity == -kHighsInf) {
+            continue;
+          }
+
+          if (coefficientOfColumnInRow < 0) {
+            fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+          } else if (coefficientOfColumnInRow > 0) {
+            fractionalDownLock = fractionalDownLock + std::abs(fractionalLock);
+          } else {
+            printf("coefficientOfColumnInRow is zero\n");
+            exit(0);
+          }
+
+        } else {
+          // constraint is Ax<b or Ax=b
+          capacity =
+              mipsolver.model_->row_upper_[row] - localdom.getMinActivity(row);
+          fractionalLock = coefficientOfColumnInRow / capacity;
+
+          if (fractionalLock > 1) {
+            printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION\n");
+            exit(0);
+          }
+          if (capacity == 0) {
+            printf("SEPCIAL CASE\n");
+            exit(0);
+          }
+          if (capacity == kHighsInf || capacity == -kHighsInf) {
+            continue;
+          }
+
+          if (coefficientOfColumnInRow > 0) {
+            fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+          } else if (coefficientOfColumnInRow < 0) {
+            fractionalDownLock = fractionalDownLock + std::abs(fractionalLock);
+          } else {
+            printf("coefficientOfColumnInRow is zero\n");
+            exit(0);
+          }
+        }
+      }
+
+      if (!v.val) std::swap(fractionalUpLock, fractionalDownLock);
+
+      fprintf(file, "%10d,", fractionalUpLock - fractionalDownLock);
+
       auto localdom_var = localdom;
       localdom_var.fixCol(v.col, v.val, HighsDomain::Reason::branching());
       localdom_var.propagate();

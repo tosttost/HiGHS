@@ -1078,7 +1078,7 @@ void HighsMipSolverData::evaluateRootNode() {
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\n%-14.9g\n", upper_bound);
   if (!mipsolver.submip) {
-    file = fopen(("/home/tim/Documents/Results/together/Output-" +
+    file = fopen(("/home/tim/Documents/Results/togetherV2/Output-" +
                   mipsolver.model_->model_name_ + ".txt")
                      .c_str(),
                  "w");
@@ -1086,7 +1086,7 @@ void HighsMipSolverData::evaluateRootNode() {
     fprintf(file,
             "iteration, cliquesize, numcliques clique table, numintegercols, "
             "cliqueVarNumber, col, down-up value, up-down value, objective value, "
-            "locks value, presolve pre, presolve post, submip status, best "
+            "locks value, fractional value, presolve pre, presolve post, submip status, best "
             "found objective \n");
     heuristics.cliqueFixing(file);
     fclose(file);
