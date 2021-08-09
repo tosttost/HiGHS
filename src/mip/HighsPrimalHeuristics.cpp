@@ -1319,8 +1319,8 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
-        HighsInt fractionalUpLock = 0;
-        HighsInt fractionalDownLock = 0;
+        double fractionalUpLock = 0;
+        double fractionalDownLock = 0;
         for (HighsInt j = mipsolver.model_->Astart_[cliques[i][ii].col];
              j < mipsolver.model_->Astart_[cliques[i][ii].col + 1]; j++) {
           HighsInt row = mipsolver.model_->Aindex_[j];
@@ -1396,7 +1396,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           cliqueMaxsize = cliques[i];
           indexFixing = ii;
           bestFractionalLock = fractionalUpLock - fractionalDownLock;
-          printf("Found better fractional up-down lock: %10d\n",
+          printf("Found better fractional up-down lock: %10f\n",
                  fractionalUpLock - fractionalDownLock);
         }
       }

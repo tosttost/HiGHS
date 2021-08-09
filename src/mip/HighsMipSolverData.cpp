@@ -756,7 +756,7 @@ void HighsMipSolverData::evaluateRootNode() {
 
   if (!mipsolver.submip) {
     // /home/tim/Documents/Results/1_down-up_locks/
-    file = fopen(("/home/tim/Documents/Results/Output-" +
+    file = fopen(("/home/tim/Documents/Results/6_fractional_lock/Output-" +
                   mipsolver.model_->model_name_ + ".txt")
                      .c_str(),
                  "w");
