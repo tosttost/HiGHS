@@ -1289,6 +1289,20 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     printf("\nSTARTING SUBMIP SOLVER -------------------------------\n");
     HighsInt cliqueVarNumber = 0;
     std::vector<double> bestSolutions;
+#if 0
+    for (HighsInt j = mipsolver.model_->a_start_[v.col];
+         j < mipsolver.model_->a_start_[v.col + 1]; j++) {
+           HighsInt row = mipsolver.model_->a_index_[j];
+           double coefficientOfColumnInRow = mipsolver.model_->a_value_[j];
+
+           mipsolver.model_->row_lower_[row];
+
+           localdom.getMinActivity(row);
+           
+
+
+    }
+#endif
 
     for (HighsCliqueTable::CliqueVar v : clique) {
       // standard output to group data in data analysis
