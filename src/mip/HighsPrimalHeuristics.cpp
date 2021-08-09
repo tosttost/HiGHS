@@ -1331,8 +1331,8 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
       fprintf(file, "%5i,", std::min({uplocks, downlocks}));
 
       // fractional lock calculations
-      HighsInt fractionalUpLock = 0;
-      HighsInt fractionalDownLock = 0;
+      double fractionalUpLock = 0;
+      double fractionalDownLock = 0;
       for (HighsInt j = mipsolver.model_->a_start_[v.col];
            j < mipsolver.model_->a_start_[v.col + 1]; j++) {
         HighsInt row = mipsolver.model_->a_index_[j];
@@ -1401,7 +1401,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
       if (!v.val) std::swap(fractionalUpLock, fractionalDownLock);
 
-      fprintf(file, "%10d,", fractionalUpLock - fractionalDownLock);
+      fprintf(file, "%10f,", fractionalUpLock - fractionalDownLock);
 
       auto localdom_var = localdom;
       localdom_var.fixCol(v.col, v.val, HighsDomain::Reason::branching());
