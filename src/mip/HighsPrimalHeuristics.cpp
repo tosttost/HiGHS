@@ -1242,7 +1242,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
 #endif
 
-#if 1
+#if 0
     // cliqueMaxsize = cliques[0];
     /// find cheapest variable to fix in this clique
     HighsInt indexFixing = 0;
@@ -1309,6 +1309,103 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     localdom.fixCol(cliqueMaxsize[indexFixing].col,
                     cliqueMaxsize[indexFixing].val,
                     HighsDomain::Reason::branching());
+    dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
+
+#endif
+
+#if 1
+    HighsInt indexFixing = 0;
+    HighsInt bestFractionalLock = kHighsIInf;
+
+    for (HighsInt i = 0; i < cliques.size(); i++) {
+      for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
+        HighsInt fractionalUpLock = 0;
+        HighsInt fractionalDownLock = 0;
+        for (HighsInt j = mipsolver.model_->Astart_[cliques[i][ii].col];
+             j < mipsolver.model_->Astart_[cliques[i][ii].col + 1]; j++) {
+          HighsInt row = mipsolver.model_->Aindex_[j];
+          double coefficientOfColumnInRow = mipsolver.model_->Avalue_[j];
+          double capacity;
+          double fractionalLock;
+
+          // check what type of constraint it is
+          if (mipsolver.model_->rowLower_[row] != kHighsIInf &&
+              mipsolver.model_->rowUpper_[row] == kHighsIInf) {
+            // constraint is Ax>b
+            capacity =
+                localdom.getMaxActivity(row) - mipsolver.model_->rowLower_[row];
+            fractionalLock = coefficientOfColumnInRow / capacity;
+
+            if (fractionalLock > 1) {
+              printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION: %10f\n",
+                     fractionalLock);
+              exit(0);
+            }
+            if (capacity <= 0) {
+              printf("SPECIAL CASE: %10f\n", capacity);
+              exit(0);
+            }
+            if (capacity == kHighsInf || capacity == -kHighsInf) {
+              continue;
+            }
+
+            if (coefficientOfColumnInRow < 0) {
+              fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+            } else if (coefficientOfColumnInRow > 0) {
+              fractionalDownLock =
+                  fractionalDownLock + std::abs(fractionalLock);
+            } else {
+              printf("coefficientOfColumnInRow is zero\n");
+              exit(0);
+            }
+
+          } else {
+            // constraint is Ax<b or Ax=b
+            capacity =
+                mipsolver.model_->rowUpper_[row] - localdom.getMinActivity(row);
+            fractionalLock = coefficientOfColumnInRow / capacity;
+
+            if (fractionalLock > 1) {
+              printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION\n");
+              exit(0);
+            }
+            if (capacity == 0) {
+              printf("SEPCIAL CASE\n");
+              exit(0);
+            }
+            if (capacity == kHighsInf || capacity == -kHighsInf) {
+              continue;
+            }
+
+            if (coefficientOfColumnInRow > 0) {
+              fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+            } else if (coefficientOfColumnInRow < 0) {
+              fractionalDownLock =
+                  fractionalDownLock + std::abs(fractionalLock);
+            } else {
+              printf("coefficientOfColumnInRow is zero\n");
+              exit(0);
+            }
+          }
+        }
+
+        if (!cliques[i][ii].val)
+          std::swap(fractionalUpLock, fractionalDownLock);
+
+        if (fractionalUpLock - fractionalDownLock < bestFractionalLock) {
+          cliqueMaxsize = cliques[i];
+          indexFixing = ii;
+          bestFractionalLock = fractionalUpLock - fractionalDownLock;
+          printf("Found better fractional up-down lock: %10d\n",
+                 fractionalUpLock - fractionalDownLock);
+        }
+      }
+    }
+
+    localdom.fixCol(cliqueMaxsize[indexFixing].col,
+                    cliqueMaxsize[indexFixing].val,
+                    HighsDomain::Reason::branching());
+
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
