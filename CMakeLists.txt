@@ -355,7 +355,7 @@ option(JULIA "Build library and executable for Julia" OFF)
 add_subdirectory(app)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
-    target_link_libraries (libhighs "pthread")
+    target_link_libraries (libhighs PRIVATE "pthread")
 endif()
 
 target_include_directories(highs PUBLIC ${HIGHS_SOURCE_DIR})
