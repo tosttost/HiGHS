@@ -1315,7 +1315,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
 #if 1
     HighsInt indexFixing = 0;
-    HighsInt bestFractionalLock = kHighsIInf;
+    double bestFractionalLock = kHighsIInf;
 
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
