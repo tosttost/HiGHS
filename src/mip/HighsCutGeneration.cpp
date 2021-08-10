@@ -1240,7 +1240,8 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
   rhs_ = (double)rhs;
   vals_.resize(rowlen);
   inds_.resize(rowlen);
-  if (!transLp.untransform(vals_, inds_, rhs_)) return false;
+  if (!transLp.untransform(vals_, inds_, rhs_, localBoundStrengthening))
+    return false;
 
   rowlen = inds_.size();
   inds = inds_.data();

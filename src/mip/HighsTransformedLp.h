@@ -44,11 +44,16 @@ class HighsTransformedLp {
   std::vector<double> lbDist;
   std::vector<double> ubDist;
   std::vector<double> boundDist;
+
+  std::vector<HighsDomainChange> localIntBounds;
+
   enum class BoundType : uint8_t {
     kSimpleUb,
     kSimpleLb,
     kVariableUb,
     kVariableLb,
+    kLocalLb,
+    kLocalUb,
   };
   std::vector<BoundType> boundTypes;
   HighsSparseVectorSum vectorsum;
@@ -63,8 +68,10 @@ class HighsTransformedLp {
                  std::vector<double>& solval, std::vector<HighsInt>& inds,
                  double& rhs, bool& integralPositive, bool preferVbds = false);
 
-  bool untransform(std::vector<double>& vals, std::vector<HighsInt>& inds,
-                   double& rhs, bool integral = false);
+  bool untransform(
+      std::vector<double>& vals, std::vector<HighsInt>& inds, double& rhs,
+      std::vector<std::pair<double, HighsDomainChange>>& localBoundStrengthenings,
+      bool integral = false);
 };
 
 #endif
