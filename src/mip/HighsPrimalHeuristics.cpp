@@ -1315,7 +1315,8 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
 #if 1
     HighsInt indexFixing = 0;
-    double bestFractionalLock = kHighsIInf;
+    double bestFractionalLock = kHighsInf;
+    double bestObjValue = kHighsInf;
 
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
@@ -1329,8 +1330,8 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           double fractionalLock;
 
           // check what type of constraint it is
-          if (mipsolver.model_->rowLower_[row] != kHighsIInf &&
-              mipsolver.model_->rowUpper_[row] == kHighsIInf) {
+          if (mipsolver.model_->rowLower_[row] != kHighsInf &&
+              mipsolver.model_->rowUpper_[row] == kHighsInf) {
             // constraint is Ax>b
             capacity =
                 localdom.getMaxActivity(row) - mipsolver.model_->rowLower_[row];
@@ -1389,15 +1390,22 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           }
         }
 
-        if (!cliques[i][ii].val)
-          std::swap(fractionalUpLock, fractionalDownLock);
+        double obj = mipsolver.model_->colCost_[cliques[i][ii].col];
 
-        if (fractionalUpLock - fractionalDownLock < bestFractionalLock) {
-          cliqueMaxsize = cliques[i];
-          indexFixing = ii;
-          bestFractionalLock = fractionalUpLock - fractionalDownLock;
-          printf("Found better fractional up-down lock: %10f\n",
-                 fractionalUpLock - fractionalDownLock);
+        if (!cliques[i][ii].val) {
+          std::swap(fractionalUpLock, fractionalDownLock);
+          obj = -1 * obj;
+        }
+
+        if (fractionalUpLock - fractionalDownLock <= bestFractionalLock) {
+          if (obj < bestObjValue) {
+            cliqueMaxsize = cliques[i];
+            indexFixing = ii;
+            bestFractionalLock = fractionalUpLock - fractionalDownLock;
+            bestObjValue = obj;
+            printf("Found better fractional up-down lock: %10f\n",
+                   fractionalUpLock - fractionalDownLock);
+          }
         }
       }
     }
