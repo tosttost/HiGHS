@@ -142,7 +142,8 @@ void HPresolve::setInput(HighsMipSolver& mipsolver) {
 bool HPresolve::rowCoefficientsIntegral(HighsInt row, double scale) const {
   for (const HighsSliceNonzero& nz : getRowVector(row)) {
     double val = nz.value() * scale;
-    if (std::abs(val - std::round(val)) > options->small_matrix_value) return false;
+    if (std::abs(val - std::round(val)) > options->small_matrix_value)
+      return false;
   }
 
   return true;
@@ -2985,7 +2986,8 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
           rowCoefsInt.push_back(rowUpper);
 
           double intScale = HighsIntegers::integralScale(
-              rowCoefsInt, options->small_matrix_value, options->small_matrix_value);
+              rowCoefsInt, options->small_matrix_value,
+              options->small_matrix_value);
 
           if (intScale != 0 && intScale <= 1e3) {
             double scale = 1.0 / std::abs(continuousCoef * intScale);
@@ -3017,7 +3019,8 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
           }
         } else {
           double intScale = HighsIntegers::integralScale(
-              rowCoefsInt, options->small_matrix_value, options->small_matrix_value);
+              rowCoefsInt, options->small_matrix_value,
+              options->small_matrix_value);
 
           if (intScale != 0.0 && intScale <= 1e3) {
             double rhs = rowUpper * intScale;
@@ -3171,7 +3174,8 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             if (success) {
               HighsCDouble roundRhs =
                   floor(rhs + options->mip_feasibility_tolerance);
-              if (rhs - roundRhs >= minRhsTightening - options->small_matrix_value) {
+              if (rhs - roundRhs >=
+                  minRhsTightening - options->small_matrix_value) {
                 // scaled and rounded is not weaker than the original constraint
                 if (maxVal <= 1000.0 || intScale <= 100.0) {
                   // printf(
@@ -3235,7 +3239,8 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             if (success) {
               HighsCDouble roundRhs =
                   ceil(rhs - options->mip_feasibility_tolerance);
-              if (rhs - roundRhs <= minRhsTightening + options->small_matrix_value) {
+              if (rhs - roundRhs <=
+                  minRhsTightening + options->small_matrix_value) {
                 // scaled and rounded is not weaker than the original constraint
                 if (maxVal <= 1000.0 || intScale <= 100.0) {
                   // printf(
@@ -3325,9 +3330,11 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
               if (roundRhs - roundLhs < -0.5) return Result::kPrimalInfeasible;
 
               if (roundLhs >= intScale * model->row_lower_[row] +
-                                  minLhsTightening - options->small_matrix_value &&
+                                  minLhsTightening -
+                                  options->small_matrix_value &&
                   roundRhs <= intScale * model->row_upper_[row] -
-                                  minRhsTightening + options->small_matrix_value) {
+                                  minRhsTightening +
+                                  options->small_matrix_value) {
                 // scaled row with adjusted coefficients and sides is not weaker
                 // than the original row
                 if (maxVal <= 1000.0 || intScale <= 100.0) {
@@ -5077,7 +5084,8 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
         double scaleCand = colMax[duplicateCol].first / colMax[col].first;
         colScale = std::round(scaleCand);
         assert(std::abs(colScale) >= 1.0);
-        if (std::abs(colScale - scaleCand) > options->small_matrix_value) continue;
+        if (std::abs(colScale - scaleCand) > options->small_matrix_value)
+          continue;
 
         // if the scale is larger than 1, duplicate column cannot compensate for
         // all values of scaled col due to integrality as the scaled column
