@@ -1214,22 +1214,30 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
-#if 0
+#if 1
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
+    double objvalue = kHighsInf;
     HighsInt uplocks;
     HighsInt downlocks;
     for (HighsInt i = 0; i < cliques.size(); i++) {
       for (HighsInt ii = 0; ii < cliques[i].size(); ii++) {
         uplocks = mipsolver.mipdata_->uplocks[cliques[i][ii].col];
         downlocks = mipsolver.mipdata_->downlocks[cliques[i][ii].col];
-        if (!cliques[i][ii].val) std::swap(uplocks, downlocks);
+        double obj = mipsolver.model_->colCost_[cliques[i][ii].col];
+        if (!cliques[i][ii].val) {
+          std::swap(uplocks, downlocks);
+          obj = -1 * obj;
+        }
 
-        if (uplocks - downlocks < leastLocks) {
-          cliqueMaxsize = cliques[i];
-          indexFixing = ii;
-          leastLocks = uplocks - downlocks;
-          printf("Found better lock(up-down): %14i\n", leastLocks);
+        if (uplocks - downlocks <= leastLocks + 1e-9) {
+          if (obj < objvalue) {
+            cliqueMaxsize = cliques[i];
+            indexFixing = ii;
+            leastLocks = uplocks - downlocks;
+            objvalue = obj;
+            printf("Found better lock(up-down): %14i\n", leastLocks);
+          }
         }
       }
     }
@@ -1313,7 +1321,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
 #endif
 
-#if 1
+#if 0
     HighsInt indexFixing = 0;
     double bestFractionalLock = kHighsInf;
     double bestObjValue = kHighsInf;
@@ -1330,12 +1338,11 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           double fractionalLock;
 
           // check what type of constraint it is
-          if (mipsolver.model_->rowLower_[row] != kHighsInf &&
-              mipsolver.model_->rowUpper_[row] == kHighsInf) {
+          if (mipsolver.model_->rowLower_[row] != -kHighsInf) {
             // constraint is Ax>b
             capacity =
                 localdom.getMaxActivity(row) - mipsolver.model_->rowLower_[row];
-            fractionalLock = coefficientOfColumnInRow / capacity;
+            fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
 
             if (fractionalLock > 1) {
               printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION: %10f\n",
@@ -1351,20 +1358,20 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
             }
 
             if (coefficientOfColumnInRow < 0) {
-              fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+              fractionalUpLock = fractionalUpLock + fractionalLock;
             } else if (coefficientOfColumnInRow > 0) {
               fractionalDownLock =
-                  fractionalDownLock + std::abs(fractionalLock);
+                  fractionalDownLock + fractionalLock;
             } else {
               printf("coefficientOfColumnInRow is zero\n");
               exit(0);
             }
-
-          } else {
-            // constraint is Ax<b or Ax=b
+          }
+          if (mipsolver.model_->rowUpper_[row] != kHighsInf) {
+            // constraint is Ax<b
             capacity =
                 mipsolver.model_->rowUpper_[row] - localdom.getMinActivity(row);
-            fractionalLock = coefficientOfColumnInRow / capacity;
+            fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
 
             if (fractionalLock > 1) {
               printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION\n");
@@ -1379,10 +1386,10 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
             }
 
             if (coefficientOfColumnInRow > 0) {
-              fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+              fractionalUpLock = fractionalUpLock + fractionalLock;
             } else if (coefficientOfColumnInRow < 0) {
               fractionalDownLock =
-                  fractionalDownLock + std::abs(fractionalLock);
+                  fractionalDownLock + fractionalLock;
             } else {
               printf("coefficientOfColumnInRow is zero\n");
               exit(0);
@@ -1397,7 +1404,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           obj = -1 * obj;
         }
 
-        if (fractionalUpLock - fractionalDownLock <= bestFractionalLock) {
+        if (fractionalUpLock - fractionalDownLock <= bestFractionalLock + 1e-9) {
           if (obj < bestObjValue) {
             cliqueMaxsize = cliques[i];
             indexFixing = ii;
