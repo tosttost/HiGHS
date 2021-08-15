@@ -1078,7 +1078,7 @@ void HighsMipSolverData::evaluateRootNode() {
   highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
                "\n%-14.9g\n", upper_bound);
   if (!mipsolver.submip) {
-    file = fopen(("/home/tim/Documents/Results/togetherV2/Output-" +
+    file = fopen(("/home/tim/Documents/Results/together_withBounds/Output-" +
                   mipsolver.model_->model_name_ + ".txt")
                      .c_str(),
                  "w");

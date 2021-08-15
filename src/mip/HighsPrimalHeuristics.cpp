@@ -186,6 +186,13 @@ double HighsPrimalHeuristics::solveandprintSubMip(const HighsLp& lp,
            submipsolver.solution_objective_ + mipsolver.model_->offset_);
     fprintf(file, utilModelStatusToString(submipsolver.modelstatus_).c_str());
     fprintf(file, ",");
+    // dual bound
+    fprintf(file, "%10f,",
+            submipsolver.dual_bound_ + mipsolver.model_->offset_);
+    // primal bound
+    fprintf(file, "%10f,",
+            submipsolver.primal_bound_ + mipsolver.model_->offset_);
+    // solution objective
     fprintf(file, "%10f",
             submipsolver.solution_objective_ + mipsolver.model_->offset_);
   }
@@ -1341,12 +1348,11 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
         double fractionalLock;
 
         // check what type of constraint it is
-        if (mipsolver.model_->row_lower_[row] != kHighsIInf &&
-            mipsolver.model_->row_upper_[row] == kHighsIInf) {
+        if (mipsolver.model_->row_lower_[row] != -kHighsIInf) {
           // constraint is Ax>b
           capacity =
               localdom.getMaxActivity(row) - mipsolver.model_->row_lower_[row];
-          fractionalLock = coefficientOfColumnInRow / capacity;
+          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
 
           if (fractionalLock > 1) {
             printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION: %10f\n",
@@ -1362,26 +1368,28 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           }
 
           if (coefficientOfColumnInRow < 0) {
-            fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+            fractionalUpLock = fractionalUpLock + fractionalLock;
           } else if (coefficientOfColumnInRow > 0) {
-            fractionalDownLock = fractionalDownLock + std::abs(fractionalLock);
+            fractionalDownLock = fractionalDownLock + fractionalLock;
           } else {
             printf("coefficientOfColumnInRow is zero\n");
             exit(0);
           }
+        }
 
-        } else {
-          // constraint is Ax<b or Ax=b
+        if (mipsolver.model_->row_upper_[row] != kHighsInf) {
+          // constraint is Ax<b
           capacity =
               mipsolver.model_->row_upper_[row] - localdom.getMinActivity(row);
-          fractionalLock = coefficientOfColumnInRow / capacity;
+          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
 
           if (fractionalLock > 1) {
-            printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION\n");
+            printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION: %10f\n",
+                   fractionalLock);
             exit(0);
           }
-          if (capacity == 0) {
-            printf("SEPCIAL CASE\n");
+          if (capacity <= 0) {
+            printf("SPECIAL CASE: %10f\n", capacity);
             exit(0);
           }
           if (capacity == kHighsInf || capacity == -kHighsInf) {
@@ -1389,9 +1397,9 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
           }
 
           if (coefficientOfColumnInRow > 0) {
-            fractionalUpLock = fractionalUpLock + std::abs(fractionalLock);
+            fractionalUpLock = fractionalUpLock + fractionalLock;
           } else if (coefficientOfColumnInRow < 0) {
-            fractionalDownLock = fractionalDownLock + std::abs(fractionalLock);
+            fractionalDownLock = fractionalDownLock + fractionalLock;
           } else {
             printf("coefficientOfColumnInRow is zero\n");
             exit(0);
