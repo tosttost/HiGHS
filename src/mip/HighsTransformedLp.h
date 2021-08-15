@@ -34,6 +34,7 @@ class HighsLpRelaxation;
 class HighsTransformedLp {
  private:
   const HighsLpRelaxation& lprelaxation;
+  HighsCutPool& cutpool;
 
   std::vector<const std::pair<const HighsInt, HighsImplications::VarBound>*>
       bestVub;
@@ -45,7 +46,22 @@ class HighsTransformedLp {
   std::vector<double> ubDist;
   std::vector<double> boundDist;
 
-  std::vector<HighsDomainChange> localIntBounds;
+  struct ExtendedCol {
+    double splitPos;
+    HighsInt splitCol;
+    HighsInt dynamicColIndex;
+
+    ExtendedCol(HighsInt splitCol)
+        : splitPos(0), splitCol(splitCol), dynamicColIndex(0) {}
+    ExtendedCol(double splitPos, HighsInt splitCol)
+        : splitPos(splitPos), splitCol(splitCol), dynamicColIndex(0) {}
+
+    bool operator<(const ExtendedCol& other) const {
+      return splitCol < other.splitCol;
+    }
+  };
+
+  std::vector<ExtendedCol> extendedCols;
 
   enum class BoundType : uint8_t {
     kSimpleUb,
@@ -60,7 +76,9 @@ class HighsTransformedLp {
 
  public:
   HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
-                     HighsImplications& implications);
+                     HighsCutPool& cutpool, HighsImplications& implications);
+
+  ~HighsTransformedLp();
 
   double boundDistance(HighsInt col) const { return boundDist[col]; }
 
@@ -68,10 +86,8 @@ class HighsTransformedLp {
                  std::vector<double>& solval, std::vector<HighsInt>& inds,
                  double& rhs, bool& integralPositive, bool preferVbds = false);
 
-  bool untransform(
-      std::vector<double>& vals, std::vector<HighsInt>& inds, double& rhs,
-      std::vector<std::pair<double, HighsDomainChange>>& localBoundStrengthenings,
-      bool integral = false);
+  bool untransform(std::vector<double>& vals, std::vector<HighsInt>& inds,
+                   double& rhs, bool integral = false);
 };
 
 #endif

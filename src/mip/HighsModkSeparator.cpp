@@ -128,8 +128,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
     if (!lpRelaxation.isRowIntegral(row)) {
       for (HighsInt i = 0; i != rowlen; ++i) {
-        if (mipsolver.variableType(inds[i]) == HighsVarType::kContinuous)
-          continue;
+        if (inds[i] < 0 || !lpRelaxation.isColIntegral(inds[i])) continue;
         if (transLp.boundDistance(inds[i]) > 0) scaleVals.push_back(vals[i]);
       }
       scaleVals.push_back(-rhs);
@@ -153,7 +152,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       intrhs = (int64_t)std::round(rhs);
 
       for (HighsInt i = 0; i != rowlen; ++i) {
-        if (transLp.boundDistance(inds[i]) > 0) {
+        if (inds[i] >= 0 && transLp.boundDistance(inds[i]) > 0) {
           intSystemIndex.push_back(inds[i]);
           intSystemValue.push_back((int64_t)std::round(vals[i]));
         }

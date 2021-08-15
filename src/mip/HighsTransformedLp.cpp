@@ -18,14 +18,16 @@
 #include "util/HighsCDouble.h"
 
 HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
+                                       HighsCutPool& cutpool,
                                        HighsImplications& implications)
-    : lprelaxation(lprelaxation) {
+    : lprelaxation(lprelaxation), cutpool(cutpool) {
   assert(lprelaxation.scaledOptimal(lprelaxation.getStatus()));
   const HighsMipSolver& mipsolver = implications.mipsolver;
   const HighsSolution& lpSolution = lprelaxation.getLpSolver().getSolution();
 
   HighsInt numTransformedCol = lprelaxation.numCols() + lprelaxation.numRows() +
                                mipsolver.mipdata_->integral_cols.size();
+  HighsInt extendedColOffset = lprelaxation.numCols() + lprelaxation.numRows();
 
   boundDist.resize(numTransformedCol);
   simpleLbDist.resize(numTransformedCol);
@@ -35,7 +37,7 @@ HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
   bestVlb.resize(numTransformedCol);
   bestVub.resize(numTransformedCol);
   boundTypes.resize(numTransformedCol);
-  vectorsum.setDimension(numTransformedCol);
+  vectorsum.setDimension(numTransformedCol, -cutpool.minExtendedColIndex());
 
   for (HighsInt col : mipsolver.mipdata_->continuous_cols) {
     mipsolver.mipdata_->implications.cleanupVarbounds(col);
@@ -127,8 +129,9 @@ HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
         lpSolution.col_value[col] < bestub - mipsolver.mipdata_->feastol) {
       if (lprelaxation.getLpSolver().getBasis().col_status[col] ==
           HighsBasisStatus::kLower) {
-        localIntBounds.emplace_back(HighsDomainChange{
-            lprelaxation.colLower(col), col, HighsBoundType::kLower});
+        extendedCols.emplace_back(lprelaxation.colLower(col), col);
+        extendedCols.back().dynamicColIndex = cutpool.acquireExtendedCol(
+            extendedCols.back().splitCol, extendedCols.back().splitPos);
         boundDist[col] = 0.0;
         lbDist[col] = 0.0;
         ubDist[col] = bestub - lprelaxation.colLower(col);
@@ -136,8 +139,10 @@ HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
         simpleUbDist[col] = ubDist[col];
         boundTypes[col] = BoundType::kLocalLb;
       } else {
-        localIntBounds.emplace_back(HighsDomainChange{
-            lprelaxation.colUpper(col), col, HighsBoundType::kUpper});
+        extendedCols.emplace_back(std::ceil(lprelaxation.colUpper(col) + 0.5),
+                                  col);
+        extendedCols.back().dynamicColIndex = cutpool.acquireExtendedCol(
+            extendedCols.back().splitCol, extendedCols.back().splitPos);
         boundDist[col] = 0.0;
         lbDist[col] = lprelaxation.colUpper(col) - bestlb;
         ubDist[col] = 0.0;
@@ -256,20 +261,34 @@ HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
     boundDist[slackIndex] = std::min(lbDist[slackIndex], ubDist[slackIndex]);
   }
 
-  pdqsort(localIntBounds.begin(), localIntBounds.end());
+  pdqsort_branchless(extendedCols.begin(), extendedCols.end());
 
   // setup information of local bound indicator variables
-  HighsInt numLocalBounds = localIntBounds.size();
-  indexOffset = lprelaxation.numRows() + mipsolver.numCol();
-  for (HighsInt k = 0; k != numLocalBounds; ++k) {
-    HighsInt localBdIndex = indexOffset + k;
+  HighsInt numExtendedCols = extendedCols.size();
+  indexOffset = lprelaxation.numRows() + lprelaxation.numCols();
+  for (HighsInt k = 0; k != numExtendedCols; ++k) {
+    HighsInt extendedColIndex = indexOffset + k;
 
-    lbDist[localBdIndex] = 1.0;
-    simpleLbDist[localBdIndex] = 1.0;
-    ubDist[localBdIndex] = 0.0;
-    simpleUbDist[localBdIndex] = 0.0;
-    boundDist[localBdIndex] = 0.0;
+    if (boundTypes[extendedCols[k].splitCol] == BoundType::kLocalLb) {
+      lbDist[extendedColIndex] = 1.0;
+      simpleLbDist[extendedColIndex] = 1.0;
+      ubDist[extendedColIndex] = 0.0;
+      simpleUbDist[extendedColIndex] = 0.0;
+      boundDist[extendedColIndex] = 0.0;
+    } else {
+      assert(boundTypes[extendedCols[k].splitCol] == BoundType::kLocalUb);
+      lbDist[extendedColIndex] = 0.0;
+      simpleLbDist[extendedColIndex] = 0.0;
+      ubDist[extendedColIndex] = 1.0;
+      simpleUbDist[extendedColIndex] = 1.0;
+      boundDist[extendedColIndex] = 0.0;
+    }
   }
+}
+
+HighsTransformedLp::~HighsTransformedLp() {
+  for (const ExtendedCol& extCol : extendedCols)
+    cutpool.releaseExtendedCol(extCol.dynamicColIndex);
 }
 
 bool HighsTransformedLp::transform(std::vector<double>& vals,
@@ -392,11 +411,11 @@ bool HighsTransformedLp::transform(std::vector<double>& vals,
       case BoundType::kLocalLb: {
         integersPositive = false;
         double localLb = lprelaxation.colLower(col);
-        HighsDomainChange localChg{localLb, col, HighsBoundType::kLower};
-        HighsInt pos = std::lower_bound(localIntBounds.begin(),
-                                        localIntBounds.end(), localChg) -
-                       localIntBounds.begin();
-        assert(localIntBounds[pos] == localChg);
+        HighsInt pos = std::lower_bound(extendedCols.begin(),
+                                        extendedCols.end(), ExtendedCol(col)) -
+                       extendedCols.begin();
+        assert(extendedCols[pos].splitCol == col);
+        assert(extendedCols[pos].splitPos == localLb);
         double constant = lb;
         double coef = (localLb - lb);
         assert(coef > 0);
@@ -407,14 +426,14 @@ bool HighsTransformedLp::transform(std::vector<double>& vals,
       case BoundType::kLocalUb: {
         integersPositive = false;
         double localUb = lprelaxation.colUpper(col);
-        HighsDomainChange localChg{localUb, col, HighsBoundType::kUpper};
-        HighsInt pos = std::lower_bound(localIntBounds.begin(),
-                                        localIntBounds.end(), localChg) -
-                       localIntBounds.begin();
-        assert(localIntBounds[pos] == localChg);
-        double constant = ub;
-        double coef = (localUb - ub);
-        assert(coef < 0);
+        HighsInt pos = std::lower_bound(extendedCols.begin(),
+                                        extendedCols.end(), ExtendedCol(col)) -
+                       extendedCols.begin();
+        assert(extendedCols[pos].splitCol == col);
+        assert(extendedCols[pos].splitPos == std::ceil(localUb + 0.5));
+        double constant = localUb;
+        double coef = (ub - localUb);
+        assert(coef > 0);
         tmpRhs -= constant * vals[i];
         vectorsum.add(localBoundOffset + pos, vals[i] * coef);
         vals[i] = -vals[i];
@@ -552,10 +571,9 @@ bool HighsTransformedLp::transform(std::vector<double>& vals,
   return true;
 }
 
-bool HighsTransformedLp::untransform(
-    std::vector<double>& vals, std::vector<HighsInt>& inds, double& rhs,
-    std::vector<std::pair<double, HighsDomainChange>>& localBoundStrengthenings,
-    bool integral) {
+bool HighsTransformedLp::untransform(std::vector<double>& vals,
+                                     std::vector<HighsInt>& inds, double& rhs,
+                                     bool integral) {
   HighsCDouble tmpRhs = rhs;
   const HighsMipSolver& mip = lprelaxation.getMipSolver();
   const HighsInt slackOffset = mip.numCol();
@@ -596,8 +614,6 @@ bool HighsTransformedLp::untransform(
 
           for (HighsInt j = 0; j != rowlen; ++j)
             vectorsum.add(rowinds[j], vals[i] * rowvals[j]);
-        } else {
-          assert(false);
         }
         break;
       }
@@ -627,11 +643,11 @@ bool HighsTransformedLp::untransform(
         // printf("got nonzero coefficient of integer sitting at local
         // bound\n");
         double localLb = lprelaxation.colLower(col);
-        HighsDomainChange localChg{localLb, col, HighsBoundType::kLower};
-        HighsInt pos = std::lower_bound(localIntBounds.begin(),
-                                        localIntBounds.end(), localChg) -
-                       localIntBounds.begin();
-        assert(localIntBounds[pos] == localChg);
+        HighsInt pos = std::lower_bound(extendedCols.begin(),
+                                        extendedCols.end(), ExtendedCol(col)) -
+                       extendedCols.begin();
+        assert(extendedCols[pos].splitCol == col);
+        assert(extendedCols[pos].splitPos == localLb);
         double constant = mip.mipdata_->domain.col_lower_[col];
         double coef = (localLb - mip.mipdata_->domain.col_lower_[col]);
 
@@ -644,43 +660,19 @@ bool HighsTransformedLp::untransform(
         // printf("got nonzero coefficient of integer sitting at local
         // bound\n");
         double localUb = lprelaxation.colUpper(col);
-        HighsDomainChange localChg{localUb, col, HighsBoundType::kUpper};
-        HighsInt pos = std::lower_bound(localIntBounds.begin(),
-                                        localIntBounds.end(), localChg) -
-                       localIntBounds.begin();
-        assert(localIntBounds[pos] == localChg);
-        double constant = mip.mipdata_->domain.col_upper_[col];
-        double coef = (localUb - mip.mipdata_->domain.col_upper_[col]);
+        HighsInt pos = std::lower_bound(extendedCols.begin(),
+                                        extendedCols.end(), ExtendedCol(col)) -
+                       extendedCols.begin();
+        assert(extendedCols[pos].splitCol == col);
+        assert(extendedCols[pos].splitPos == std::ceil(localUb + 0.5));
+        double constant = localUb;
+        double coef = mip.mipdata_->domain.col_upper_[col] - localUb;
 
         tmpRhs -= constant * vals[i];
         vectorsum.add(localBoundOffset + pos, vals[i] * coef);
         vectorsum.add(col, -vals[i]);
         break;
       }
-    }
-  }
-
-  localBoundStrengthenings.clear();
-  numNz = vectorsum.getNonzeros().size();
-  for (HighsInt i = 0; i < numNz; ++i) {
-    HighsInt col = vectorsum.getNonzeros()[i];
-    if (col >= localBoundOffset) {
-      double val = vectorsum.getValue(col);
-      // printf("localbound inidicator with coef %g\n", val);
-      if (std::abs(val) > mip.options_mip_->small_matrix_value) {
-        if (val < 0) {
-          tmpRhs -= val;
-          val = -val;
-          localBoundStrengthenings.emplace_back(
-              val, mip.mipdata_->domain.flip(
-                       localIntBounds[col - localBoundOffset]));
-        } else {
-          localBoundStrengthenings.emplace_back(
-              val, localIntBounds[col - localBoundOffset]);
-        }
-      }
-
-      vectorsum.set(col, 0.0);
     }
   }
 
@@ -706,15 +698,18 @@ bool HighsTransformedLp::untransform(
     auto IsZero = [&](HighsInt col, double val) {
       double absval = std::abs(val);
       if (absval <= mip.options_mip_->small_matrix_value) return true;
-      assert(col < mip.numCol());
 
       if (absval <= mip.mipdata_->feastol) {
         if (val > 0) {
+          double lb =
+              col < mip.numCol() ? mip.mipdata_->domain.col_lower_[col] : 0;
           if (mip.mipdata_->domain.col_lower_[col] == -kHighsInf)
             abort = true;
           else
             tmpRhs -= val * mip.mipdata_->domain.col_lower_[col];
         } else {
+          double ub =
+              col < mip.numCol() ? mip.mipdata_->domain.col_upper_[col] : 1;
           if (mip.mipdata_->domain.col_upper_[col] == kHighsInf)
             abort = true;
           else
@@ -743,6 +738,12 @@ bool HighsTransformedLp::untransform(
   else
     for (HighsInt i = 0; i != numNz; ++i) vals[i] = vectorsum.getValue(inds[i]);
   vectorsum.clear();
+
+  for (HighsInt& col : inds) {
+    if (col >= localBoundOffset) {
+      col = extendedCols[col - localBoundOffset].dynamicColIndex;
+    }
+  }
 
   return true;
 }

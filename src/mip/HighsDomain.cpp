@@ -357,6 +357,9 @@ HighsDomain::CutpoolPropagation::CutpoolPropagation(
     : cutpoolindex(other.cutpoolindex),
       domain(other.domain),
       cutpool(other.cutpool),
+      cutRhsChangeStack_(other.cutRhsChangeStack_),
+      cutRhs_(other.cutRhs_),
+      rhsPos_(other.rhsPos_),
       activitycuts_(other.activitycuts_),
       activitycutsinf_(other.activitycutsinf_),
       propagatecutflags_(other.propagatecutflags_),
@@ -370,7 +373,8 @@ HighsDomain::CutpoolPropagation::~CutpoolPropagation() {
 }
 
 void HighsDomain::CutpoolPropagation::recomputeCapacityThreshold(HighsInt cut) {
-  HighsInt start = cutpool->getMatrix().getRowStart(cut);
+  HighsInt start =
+      cutpool->getMatrix().getRowStart(cut) + cutpool->getNumDynamicCols(cut);
   HighsInt end = cutpool->getMatrix().getRowEnd(cut);
   const HighsInt* arindex = cutpool->getMatrix().getARindex();
   const double* arvalue = cutpool->getMatrix().getARvalue();
@@ -394,9 +398,41 @@ void HighsDomain::CutpoolPropagation::recomputeCapacityThreshold(HighsInt cut) {
   }
 }
 
+void HighsDomain::CutpoolPropagation::tightenCutRhs(HighsInt cut, double delta,
+                                                    HighsInt reasonPos) {
+  double newRhs = cutRhs_[cut] - delta;
+
+  HighsInt currPos = rhsPos_[cut];
+  rhsPos_[cut] = cutRhsChangeStack_.size();
+
+  cutRhsChangeStack_.emplace_back(
+      HighsCutRhsChange{cutRhs_[cut], newRhs, cut, reasonPos, currPos});
+  cutRhs_[cut] = newRhs;
+}
+
+void HighsDomain::CutpoolPropagation::backtrackCutRhs(
+    HighsInt backtrackStackSize) {
+  for (HighsInt i = cutRhsChangeStack_.size() - 1; i >= 0; --i) {
+    if (cutRhsChangeStack_[i].reasonPos < backtrackStackSize) {
+      cutRhsChangeStack_.resize(i + 1);
+      break;
+    }
+    cutRhs_[cutRhsChangeStack_[i].cutindex] = cutRhsChangeStack_[i].rhsVal;
+    rhsPos_[cutRhsChangeStack_[i].cutindex] = cutRhsChangeStack_[i].prevRhsPos;
+  }
+}
+
+void HighsDomain::CutpoolPropagation::explainCutRhs(
+    HighsInt cut, std::vector<HighsInt>& resolvedDomainChanges) {
+  HighsInt i = rhsPos_[cut];
+  while (i != -1) {
+    resolvedDomainChanges.push_back(cutRhsChangeStack_[i].reasonPos);
+    i = cutRhsChangeStack_[i].prevRhsPos;
+  }
+}
+
 void HighsDomain::CutpoolPropagation::cutAdded(HighsInt cut, bool propagate) {
   if (!propagate) {
-    if (domain != &domain->mipsolver->mipdata_->domain) return;
     HighsInt start = cutpool->getMatrix().getRowStart(cut);
     HighsInt end = cutpool->getMatrix().getRowEnd(cut);
     const HighsInt* arindex = cutpool->getMatrix().getARindex();
@@ -407,10 +443,46 @@ void HighsDomain::CutpoolPropagation::cutAdded(HighsInt cut, bool propagate) {
       activitycutsinf_.resize(cut + 1);
       propagatecutflags_.resize(cut + 1, 2);
       capacityThreshold_.resize(cut + 1);
+      cutRhs_.resize(cut + 1);
+      rhsPos_.resize(cut + 1, -1);
     }
 
+    HighsInt dynColEnd = start + cutpool->getNumDynamicCols(cut);
+    double rhs = cutpool->getRhs()[cut];
+    for (HighsInt i = start; i < dynColEnd; ++i)
+      rhs -= std::min(0.0, arvalue[i]);
+
+    cutRhs_[cut] = rhs;
+    rhsPos_[cut] = -1;
+
+    if (domain != &domain->mipsolver->mipdata_->domain) return;
+
+    std::set<std::pair<HighsInt, double>> rhsTightening;
+
+    for (HighsInt i = start; i < dynColEnd; ++i) {
+      std::pair<HighsInt, double> split =
+          cutpool->getExtendedColSplit(arindex[i]);
+
+      if (arvalue[i] > 0) {
+        HighsInt pos;
+        double lb = domain->getColLowerPos(split.first,
+                                           domain->domchgstack_.size(), pos);
+
+        // extended col fixed to 1.0, tighten rhs by arvalue[i]
+        if (lb >= split.second) rhsTightening.emplace(pos, arvalue[i]);
+      } else {
+        HighsInt pos;
+        double ub = domain->getColUpperPos(split.first,
+                                           domain->domchgstack_.size(), pos);
+        // extended col fixed to 0.0, tighten rhs by -arvalue[i]
+        if (ub < split.second - 0.5) rhsTightening.emplace(pos, -arvalue[i]);
+      }
+    }
+
+    for (const auto& i : rhsTightening) tightenCutRhs(cut, i.second, i.first);
+
     propagatecutflags_[cut] &= ~uint8_t{2};
-    domain->computeMinActivity(start, end, arindex, arvalue,
+    domain->computeMinActivity(dynColEnd, end, arindex, arvalue,
                                activitycutsinf_[cut], activitycuts_[cut]);
   } else {
     HighsInt start = cutpool->getMatrix().getRowStart(cut);
@@ -423,10 +495,44 @@ void HighsDomain::CutpoolPropagation::cutAdded(HighsInt cut, bool propagate) {
       activitycutsinf_.resize(cut + 1);
       propagatecutflags_.resize(cut + 1, 2);
       capacityThreshold_.resize(cut + 1);
+      cutRhs_.resize(cut + 1);
+      rhsPos_.resize(cut + 1, -1);
     }
 
+    HighsInt dynColEnd = start + cutpool->getNumDynamicCols(cut);
+    double rhs = cutpool->getRhs()[cut];
+    for (HighsInt i = start; i < dynColEnd; ++i)
+      rhs -= std::min(0.0, arvalue[i]);
+
+    cutRhs_[cut] = rhs;
+    rhsPos_[cut] = -1;
+
+    std::set<std::pair<HighsInt, double>> rhsTightening;
+
+    for (HighsInt i = start; i < dynColEnd; ++i) {
+      std::pair<HighsInt, double> split =
+          cutpool->getExtendedColSplit(arindex[i]);
+
+      if (arvalue[i] > 0) {
+        HighsInt pos;
+        double lb = domain->getColLowerPos(split.first,
+                                           domain->domchgstack_.size(), pos);
+
+        // extended col fixed to 1.0, tighten rhs by arvalue[i]
+        if (lb >= split.second) rhsTightening.emplace(pos, arvalue[i]);
+      } else {
+        HighsInt pos;
+        double ub = domain->getColUpperPos(split.first,
+                                           domain->domchgstack_.size(), pos);
+        // extended col fixed to 0.0, tighten rhs by -arvalue[i]
+        if (ub < split.second - 0.5) rhsTightening.emplace(pos, -arvalue[i]);
+      }
+    }
+
+    for (const auto& i : rhsTightening) tightenCutRhs(cut, i.second, i.first);
+
     propagatecutflags_[cut] &= ~uint8_t{2};
-    domain->computeMinActivity(start, end, arindex, arvalue,
+    domain->computeMinActivity(dynColEnd, end, arindex, arvalue,
                                activitycutsinf_[cut], activitycuts_[cut]);
 
     recomputeCapacityThreshold(cut);
@@ -1605,6 +1711,8 @@ void HighsDomain::backtrackToGlobal() {
     --k;
   }
 
+  for (auto& cutpoolprop : cutpoolpropagation) cutpoolprop.backtrackCutRhs(0);
+
   if (old_infeasible) {
     markPropagateCut(old_reason);
     infeasible_reason = Reason::unspecified();
@@ -1666,6 +1774,8 @@ HighsDomainChange HighsDomain::backtrack() {
 
     --k;
   }
+
+  for (auto& cutpoolprop : cutpoolpropagation) cutpoolprop.backtrackCutRhs(k);
 
   if (old_infeasible) {
     markPropagateCut(old_reason);
@@ -1834,7 +1944,8 @@ bool HighsDomain::propagate() {
           HighsInt cut = propagateinds[i];
           cutpoolprop.propagatecutflags_[cut] &= 2;
           propnnz += cutpoolprop.cutpool->getMatrix().getRowEnd(cut) -
-                     cutpoolprop.cutpool->getMatrix().getRowStart(cut);
+                     cutpoolprop.cutpool->getMatrix().getRowStart(cut) -
+                     cutpoolprop.cutpool->getNumDynamicCols(cut);
         }
 
         if (!infeasible_) {
@@ -1853,7 +1964,7 @@ bool HighsDomain::propagate() {
             cutpoolprop.activitycuts_[i].renormalize();
 
             propRowNumChangedBounds_[k].first = propagateRowUpper(
-                Rindex, Rvalue, Rlen, cutpoolprop.cutpool->getRhs()[i],
+                Rindex, Rvalue, Rlen, cutpoolprop.cutRhs_[i],
                 cutpoolprop.activitycuts_[i], cutpoolprop.activitycutsinf_[i],
                 &changedbounds[cutpoolprop.cutpool->getMatrix().getRowStart(
                     i)]);
@@ -1885,6 +1996,17 @@ bool HighsDomain::propagate() {
   }
 
   return true;
+}
+
+double HighsDomain::getCutRhs(const HighsCutPool& cutpool, HighsInt cut) const {
+  for (const auto& cutpoolprop : cutpoolpropagation) {
+    if (cutpoolprop.cutpool == &cutpool) {
+      return cutpoolprop.cutRhs_[cut];
+    }
+  }
+
+  assert(false);
+  return kHighsInf;
 }
 
 double HighsDomain::getColLowerPos(HighsInt col, HighsInt stackpos,
@@ -1968,13 +2090,15 @@ void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
 
   for (HighsInt i = 0; i != len; ++i) {
     if (vals[i] > 0) {
-      if (col_upper_[inds[i]] == kHighsInf) return;
+      double ub = inds[i] < 0 ? 1.0 : col_upper_[inds[i]];
+      if (ub == kHighsInf) return;
 
-      maxactivity += col_upper_[inds[i]] * vals[i];
+      maxactivity += ub * vals[i];
     } else {
-      if (col_lower_[inds[i]] == -kHighsInf) return;
+      double lb = inds[i] < 0 ? 0.0 : col_lower_[inds[i]];
+      if (lb == -kHighsInf) return;
 
-      maxactivity += col_lower_[inds[i]] * vals[i];
+      maxactivity += lb * vals[i];
     }
   }
 
@@ -1983,16 +2107,19 @@ void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
     HighsCDouble upper = rhs;
     HighsInt tightened = 0;
     for (HighsInt i = 0; i != len; ++i) {
-      if (mipsolver->variableType(inds[i]) == HighsVarType::kContinuous)
+      if (inds[i] >= 0 &&
+          mipsolver->variableType(inds[i]) == HighsVarType::kContinuous)
         continue;
       if (vals[i] > maxabscoef) {
+        double ub = inds[i] < 0 ? 1.0 : col_upper_[inds[i]];
         HighsCDouble delta = vals[i] - maxabscoef;
-        upper -= delta * col_upper_[inds[i]];
+        upper -= delta * ub;
         vals[i] = double(maxabscoef);
         ++tightened;
       } else if (vals[i] < -maxabscoef) {
+        double lb = inds[i] < 0 ? 0.0 : col_lower_[inds[i]];
         HighsCDouble delta = -vals[i] - maxabscoef;
-        upper += delta * col_lower_[inds[i]];
+        upper += delta * lb;
         vals[i] = -double(maxabscoef);
         ++tightened;
       }
@@ -2247,10 +2374,15 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
         double minAct = globaldom.getMinCutActivity(
             *localdom.cutpoolpropagation[cutpoolIndex].cutpool, cutIndex);
 
-        return explainInfeasibilityLeq(inds, vals, len,
-                                       localdom.cutpoolpropagation[cutpoolIndex]
-                                           .cutpool->getRhs()[cutIndex],
-                                       minAct);
+        if (!explainInfeasibilityLeq(
+                inds, vals, len,
+                localdom.cutpoolpropagation[cutpoolIndex].cutRhs_[cutIndex],
+                minAct))
+          return false;
+
+        localdom.cutpoolpropagation[cutpoolIndex].explainCutRhs(
+            cutIndex, resolvedDomainChanges);
+        return true;
       } else {
         HighsInt conflictPoolIndex = localdom.infeasible_reason.type -
                                      localdom.cutpoolpropagation.size();
@@ -2516,11 +2648,15 @@ bool HighsDomain::ConflictSet::explainBoundChange(HighsInt pos) {
         double minAct = globaldom.getMinCutActivity(
             *localdom.cutpoolpropagation[cutpoolIndex].cutpool, cutIndex);
 
-        return explainBoundChangeLeq(localdom.domchgstack_[pos], pos, inds,
-                                     vals, len,
-                                     localdom.cutpoolpropagation[cutpoolIndex]
-                                         .cutpool->getRhs()[cutIndex],
-                                     minAct);
+        if (!explainBoundChangeLeq(
+                localdom.domchgstack_[pos], pos, inds, vals, len,
+                localdom.cutpoolpropagation[cutpoolIndex].cutRhs_[cutIndex],
+                minAct))
+          return false;
+
+        localdom.cutpoolpropagation[cutpoolIndex].explainCutRhs(
+            cutIndex, resolvedDomainChanges);
+        return true;
       } else {
         HighsInt conflictPoolIndex = localdom.domchgreason_[pos].type -
                                      localdom.cutpoolpropagation.size();

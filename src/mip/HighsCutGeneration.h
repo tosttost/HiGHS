@@ -46,7 +46,6 @@ class HighsCutGeneration {
   std::vector<double> solval;
   std::vector<uint8_t> complementation;
   std::vector<uint8_t> isintegral;
-  std::vector<std::pair<double, HighsDomainChange>> localBoundStrengthening;
   const double feastol;
   const double epsilon;
 

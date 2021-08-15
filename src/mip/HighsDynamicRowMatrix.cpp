@@ -83,19 +83,30 @@ HighsInt HighsDynamicRowMatrix::addRow(HighsInt* Rindex, double* Rvalue,
 
   for (HighsInt i = start; i != end; ++i) {
     HighsInt col = ARindex_[i];
-    ++Asize_[col];
+    HighsInt* headPos;
+    HighsInt* headNeg;
+    if (col < 0) {
+      auto& dynCol = dynamicCols[col];
+      ++dynCol.size;
+      headPos = &dynCol.headPos_;
+      headNeg = &dynCol.headNeg_;
+    } else {
+      ++Asize_[col];
+      headPos = &AheadPos_[col];
+      headNeg = &AheadNeg_[col];
+    }
 
     if (ARvalue_[i] > 0) {
       AprevPos_[i] = -1;
-      HighsInt head = AheadPos_[col];
-      AheadPos_[col] = i;
+      HighsInt head = *headPos;
+      *headPos = i;
       AnextPos_[i] = head;
 
       if (head != -1) AprevPos_[head] = i;
     } else {
       AprevNeg_[i] = -1;
-      HighsInt head = AheadNeg_[col];
-      AheadNeg_[col] = i;
+      HighsInt head = *headNeg;
+      *headNeg = i;
       AnextNeg_[i] = head;
 
       if (head != -1) AprevNeg_[head] = i;
@@ -113,7 +124,20 @@ void HighsDynamicRowMatrix::unlinkColumns(HighsInt rowindex) {
   HighsInt end = ARrange_[rowindex].second;
   for (HighsInt i = start; i != end; ++i) {
     HighsInt col = ARindex_[i];
-    --Asize_[col];
+    HighsInt* headPos;
+    HighsInt* headNeg;
+    bool delDynCol = false;
+    if (col < 0) {
+      auto& dynCol = dynamicCols[col];
+      --dynCol.size;
+      headPos = &dynCol.headPos_;
+      headNeg = &dynCol.headNeg_;
+      delDynCol = (dynCol.size == 0);
+    } else {
+      --Asize_[col];
+      headPos = &AheadPos_[col];
+      headNeg = &AheadNeg_[col];
+    }
 
     if (ARvalue_[i] > 0) {
       HighsInt prev = AprevPos_[i];
@@ -128,8 +152,8 @@ void HighsDynamicRowMatrix::unlinkColumns(HighsInt rowindex) {
         assert(AnextPos_[prev] == i);
         AnextPos_[prev] = next;
       } else {
-        assert(AheadPos_[col] == i);
-        AheadPos_[col] = next;
+        assert(*headPos == i);
+        *headPos = next;
       }
     } else {
       HighsInt prev = AprevNeg_[i];
@@ -144,10 +168,12 @@ void HighsDynamicRowMatrix::unlinkColumns(HighsInt rowindex) {
         assert(AnextNeg_[prev] == i);
         AnextNeg_[prev] = next;
       } else {
-        assert(AheadNeg_[col] == i);
-        AheadNeg_[col] = next;
+        assert(*headNeg == i);
+        *headNeg = next;
       }
     }
+
+    if (delDynCol) dynamicCols.erase(col);
   }
 }
 
@@ -160,7 +186,20 @@ void HighsDynamicRowMatrix::removeRow(HighsInt rowindex) {
   if (colsLinked[rowindex]) {
     for (HighsInt i = start; i != end; ++i) {
       HighsInt col = ARindex_[i];
-      --Asize_[col];
+      HighsInt* headPos;
+      HighsInt* headNeg;
+      bool delDynCol = false;
+      if (col < 0) {
+        auto& dynCol = dynamicCols[col];
+        --dynCol.size;
+        headPos = &dynCol.headPos_;
+        headNeg = &dynCol.headNeg_;
+        delDynCol = (dynCol.size == 0);
+      } else {
+        --Asize_[col];
+        headPos = &AheadPos_[col];
+        headNeg = &AheadNeg_[col];
+      }
 
       if (ARvalue_[i] > 0) {
         HighsInt prev = AprevPos_[i];
@@ -175,8 +214,8 @@ void HighsDynamicRowMatrix::removeRow(HighsInt rowindex) {
           assert(AnextPos_[prev] == i);
           AnextPos_[prev] = next;
         } else {
-          assert(AheadPos_[col] == i);
-          AheadPos_[col] = next;
+          assert(*headPos == i);
+          *headPos = next;
         }
       } else {
         HighsInt prev = AprevNeg_[i];
@@ -191,10 +230,12 @@ void HighsDynamicRowMatrix::removeRow(HighsInt rowindex) {
           assert(AnextNeg_[prev] == i);
           AnextNeg_[prev] = next;
         } else {
-          assert(AheadNeg_[col] == i);
-          AheadNeg_[col] = next;
+          assert(*headNeg == i);
+          *headNeg = next;
         }
       }
+
+      if (delDynCol) dynamicCols.erase(col);
     }
   }
 

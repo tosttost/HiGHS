@@ -91,6 +91,51 @@ bool HighsCutPool::isDuplicate(size_t hash, double norm, const HighsInt* Rindex,
   return false;
 }
 
+HighsInt HighsCutPool::acquireExtendedCol(HighsInt col, double splitpoint) {
+  std::map<double, ExtendedColumn>& splitpoints = extendedCols[col];
+
+  auto insertRes = splitpoints.emplace(splitpoint, ExtendedColumn());
+  if (insertRes.second) {
+    HighsInt newindex;
+
+    if (freeExtendedColIndex.empty()) {
+      newindex = -(extendedColReverseMap.size() + 1);
+      extendedColReverseMap.insert(newindex, std::make_pair(col, splitpoint));
+    } else {
+      newindex = freeExtendedColIndex.back();
+      freeExtendedColIndex.pop_back();
+    }
+
+    insertRes.first->second.index = newindex;
+  }
+
+  ++insertRes.first->second.numUses;
+
+  return insertRes.first->second.index;
+}
+
+void HighsCutPool::acquireExtendedCol(HighsInt extCol) {
+  auto splitPoint = extendedColReverseMap[extCol];
+  std::map<double, ExtendedColumn>& splitpoints =
+      extendedCols[splitPoint.first];
+  auto it = splitpoints.find(splitPoint.second);
+  assert(it != splitpoints.end());
+  ++it->second.numUses;
+}
+
+void HighsCutPool::releaseExtendedCol(HighsInt extCol) {
+  auto splitPoint = extendedColReverseMap[extCol];
+  std::map<double, ExtendedColumn>& splitpoints =
+      extendedCols[splitPoint.first];
+  auto it = splitpoints.find(splitPoint.second);
+  --it->second.numUses;
+  if (it->second.numUses == 0) {
+    extendedColReverseMap.erase(extCol);
+    freeExtendedColIndex.push_back(extCol);
+    splitpoints.erase(it);
+  }
+}
+
 double HighsCutPool::getParallelism(HighsInt row1, HighsInt row2) const {
   HighsInt i1 = matrix_.getRowStart(row1);
   const HighsInt end1 = matrix_.getRowEnd(row1);
@@ -178,7 +223,7 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
 
   assert(cutset.empty());
 
-  std::vector<std::pair<double, int>> efficacious_cuts;
+  std::vector<std::pair<double, HighsInt>> efficacious_cuts;
 
   HighsInt agelim = agelim_;
 
@@ -192,13 +237,14 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
     // cuts with an age of -1 are already in the LP and are therefore skipped
     if (ages_[i] < 0) continue;
 
-    HighsInt start = matrix_.getRowStart(i);
+    HighsInt start = matrix_.getRowStart(i) + numDynamicCols_[i];
     HighsInt end = matrix_.getRowEnd(i);
 
-    double viol(-rhs_[i]);
+    double viol(-domain.getCutRhs((*this), i));
 
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
+      assert(col >= 0);
       double solval = sol[col];
 
       viol += ARvalue[j] * solval;
@@ -253,6 +299,7 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
     HighsInt numActiveNzs = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
+      assert(col >= 0);
       double solval = sol[col];
       if (ARvalue[j] > 0) {
         if (solval > domain.col_lower_[col] + feastol) {
@@ -278,8 +325,8 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
   if (efficacious_cuts.empty()) return;
 
   pdqsort(efficacious_cuts.begin(), efficacious_cuts.end(),
-          [&efficacious_cuts](const std::pair<double, int>& a,
-                              const std::pair<double, int>& b) {
+          [&efficacious_cuts](const std::pair<double, HighsInt>& a,
+                              const std::pair<double, HighsInt>& b) {
             if (a.first > b.first) return true;
             if (a.first < b.first) return false;
             return std::make_pair(
@@ -298,7 +345,7 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
   HighsInt numefficacious =
       std::upper_bound(efficacious_cuts.begin(), efficacious_cuts.end(),
                        minScore,
-                       [](double mscore, std::pair<double, int> const& c) {
+                       [](double mscore, std::pair<double, HighsInt> const& c) {
                          return mscore > c.first;
                        }) -
       efficacious_cuts.begin();
@@ -320,7 +367,7 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
 
   assert(cutset.empty());
 
-  for (const std::pair<double, int>& p : efficacious_cuts) {
+  for (const std::pair<double, HighsInt>& p : efficacious_cuts) {
     bool discard = false;
     double maxpar = 0.1;
     for (HighsInt k : cutset.cutindices) {
@@ -340,7 +387,8 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
     }
     ages_[p.second] = -1;
     cutset.cutindices.push_back(p.second);
-    selectednnz += matrix_.getRowEnd(p.second) - matrix_.getRowStart(p.second);
+    selectednnz += matrix_.getRowEnd(p.second) - matrix_.getRowStart(p.second) -
+                   numDynamicCols_[p.second];
   }
 
   cutset.resize(selectednnz);
@@ -352,9 +400,9 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
   for (HighsInt i = 0; i != cutset.numCuts(); ++i) {
     cutset.ARstart_[i] = offset;
     HighsInt cut = cutset.cutindices[i];
-    HighsInt start = matrix_.getRowStart(cut);
+    HighsInt start = matrix_.getRowStart(cut) + numDynamicCols_[cut];
     HighsInt end = matrix_.getRowEnd(cut);
-    cutset.upper_[i] = rhs_[cut];
+    cutset.upper_[i] = domain.getCutRhs(*this, cut);
 
     for (HighsInt j = start; j != end; ++j) {
       assert(offset < selectednnz);
@@ -429,7 +477,10 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
       sortBuffer.begin(), sortBuffer.end(),
       [](const std::pair<HighsInt, double>& a,
          const std::pair<HighsInt, double>& b) { return a.first < b.first; });
+
+  HighsInt numDynamicColsInCut = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
+    numDynamicColsInCut += sortBuffer[i].first < 0;
     Rindex[i] = sortBuffer[i].first;
     Rvalue[i] = sortBuffer[i].second;
   }
@@ -437,6 +488,9 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
   double normalization = 1.0 / double(sqrt(norm));
 
   if (isDuplicate(h, normalization, Rindex, Rvalue, Rlen, rhs)) return -1;
+
+  for (HighsInt i = 0; i < numDynamicColsInCut; ++i)
+    acquireExtendedCol(Rindex[i]);
 
   // if (Rlen > 0.15 * matrix_.numCols())
   //   printf("cut with len %d not propagated\n", Rlen);
@@ -503,11 +557,13 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
     rownormalization_.resize(rowindex + 1);
     maxabscoef_.resize(rowindex + 1);
     rowintegral.resize(rowindex + 1);
+    numDynamicCols_.resize(rowindex + 1);
   }
 
   // set the right hand side and reset the age
   rhs_[rowindex] = rhs;
   ages_[rowindex] = std::max((HighsInt)0, agelim_ - 5);
+  numDynamicCols_[rowindex] = numDynamicColsInCut;
   ++ageDistribution[ages_[rowindex]];
   rowintegral[rowindex] = integral;
   if (propagate) propRows.emplace(ages_[rowindex], rowindex);
@@ -523,8 +579,10 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
   if (extractCliques && this == &mipsolver.mipdata_->cutpool) {
     // if this is the global cutpool extract cliques from the cut
     if (Rlen <= 100)
-      mipsolver.mipdata_->cliquetable.extractCliquesFromCut(mipsolver, Rindex,
-                                                            Rvalue, Rlen, rhs);
+      mipsolver.mipdata_->cliquetable.extractCliquesFromCut(
+          mipsolver, Rindex + numDynamicCols_[rowindex], Rvalue,
+          Rlen - numDynamicCols_[rowindex],
+          mipsolver.mipdata_->domain.getCutRhs(*this, rowindex));
   }
 
   return rowindex;

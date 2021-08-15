@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "util/HighsHash.h"
 #include "util/HighsInt.h"
 
 class HighsDynamicRowMatrix {
@@ -42,7 +43,13 @@ class HighsDynamicRowMatrix {
 
   std::vector<uint8_t> colsLinked;
 
+  struct DynamicCol {
+    HighsInt headPos_ = -1;
+    HighsInt headNeg_ = -1;
+    HighsInt size = 0;
+  };
   /// vector of column sizes
+  HighsHashTable<HighsInt, DynamicCol> dynamicCols;
 
   /// keep an ordered set ofof free spaces in the row arrays so that they can be
   /// reused efficiently

@@ -103,7 +103,7 @@ HighsInt HighsSeparation::separationRound(HighsDomain& propdomain,
   else
     ncuts += numboundchgs;
 
-  HighsTransformedLp transLp(*lp, mipdata.implications);
+  HighsTransformedLp transLp(*lp, mipdata.cutpool, mipdata.implications);
   if (mipdata.domain.infeasible()) {
     status = HighsLpRelaxation::Status::kInfeasible;
     return 0;

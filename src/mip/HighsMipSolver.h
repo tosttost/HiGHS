@@ -72,6 +72,7 @@ class HighsMipSolver {
   }
 
   HighsVarType variableType(HighsInt col) const {
+    assert(col >= 0 && col < model_->num_col_);
     return model_->integrality_[col];
   }
 

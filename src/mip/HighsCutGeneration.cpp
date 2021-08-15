@@ -757,13 +757,13 @@ bool HighsCutGeneration::postprocessCut() {
     if (vals[i] == 0) continue;
     if (std::abs(vals[i]) <= minCoefficientValue) {
       if (vals[i] < 0) {
-        double ub = globaldomain.col_upper_[inds[i]];
+        double ub = inds[i] < 0 ? 1.0 : globaldomain.col_upper_[inds[i]];
         if (ub == kHighsInf)
           return false;
         else
           rhs -= ub * vals[i];
       } else {
-        double lb = globaldomain.col_lower_[inds[i]];
+        double lb = inds[i] < 0 ? 0.0 : globaldomain.col_lower_[inds[i]];
         if (lb == -kHighsInf)
           return false;
         else
@@ -774,7 +774,7 @@ bool HighsCutGeneration::postprocessCut() {
       continue;
     }
 
-    if (integralSupport && !lpRelaxation.isColIntegral(inds[i]))
+    if (integralSupport && inds[i] > 0 && !lpRelaxation.isColIntegral(inds[i]))
       integralSupport = false;
   }
 
@@ -788,7 +788,9 @@ bool HighsCutGeneration::postprocessCut() {
   }
 
   if (integralSupport) {
-    // integral support -> determine scale to make all coefficients integral
+    // todo, include boundIndicator coefficients in scale computation to be
+    // integral too integral support -> determine scale to make all coefficients
+    // integral
     double intscale =
         HighsIntegers::integralScale(vals, rowlen, feastol, epsilon);
 
@@ -816,12 +818,12 @@ bool HighsCutGeneration::postprocessCut() {
         // upperbound constraint to make it exactly integral instead and
         // therefore weaken the right hand side
         if (delta < 0.0) {
-          double ub = globaldomain.col_upper_[inds[i]];
+          double ub = inds[i] < 0 ? 1.0 : globaldomain.col_upper_[inds[i]];
           if (ub == kHighsInf) return false;
 
           rhs -= delta * ub;
         } else {
-          double lb = globaldomain.col_lower_[inds[i]];
+          double lb = inds[i] < 0 ? 0.0 : globaldomain.col_lower_[inds[i]];
           if (lb == -kHighsInf) return false;
 
           rhs -= delta * lb;
@@ -1240,8 +1242,7 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
   rhs_ = (double)rhs;
   vals_.resize(rowlen);
   inds_.resize(rowlen);
-  if (!transLp.untransform(vals_, inds_, rhs_, localBoundStrengthening))
-    return false;
+  if (!transLp.untransform(vals_, inds_, rhs_)) return false;
 
   rowlen = inds_.size();
   inds = inds_.data();
@@ -1263,7 +1264,24 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
   // finally determine the violation of the cut in the original space
   HighsCDouble violation = -rhs_;
   const auto& sol = lpRelaxation.getSolution().col_value;
-  for (HighsInt i = 0; i != rowlen; ++i) violation += sol[inds[i]] * vals_[i];
+  for (HighsInt i = 0; i != rowlen; ++i) {
+    if (inds_[i] < 0) {
+      std::pair<HighsInt, double> split = cutpool.getExtendedColSplit(inds_[i]);
+
+      double lb =
+          lpRelaxation.colLower(split.first) >= split.second ? 1.0 : 0.0;
+      double ub =
+          lpRelaxation.colUpper(split.first) < split.second - 0.5 ? 0.0 : 1.0;
+
+      if (vals_[i] < 0)
+        violation += ub * vals_[i];
+      else
+        violation += lb * vals_[i];
+
+      continue;
+    }
+    violation += sol[inds_[i]] * vals_[i];
+  }
 
   if (violation <= 10 * feastol) return false;
 

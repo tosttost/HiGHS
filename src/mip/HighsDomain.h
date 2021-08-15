@@ -121,6 +121,9 @@ class HighsDomain {
     HighsInt cutpoolindex;
     HighsDomain* domain;
     HighsCutPool* cutpool;
+    std::vector<HighsCutRhsChange> cutRhsChangeStack_;
+    std::vector<double> cutRhs_;
+    std::vector<HighsInt> rhsPos_;
     std::vector<HighsCDouble> activitycuts_;
     std::vector<HighsInt> activitycutsinf_;
     std::vector<uint8_t> propagatecutflags_;
@@ -135,6 +138,12 @@ class HighsDomain {
     ~CutpoolPropagation();
 
     void recomputeCapacityThreshold(HighsInt cut);
+
+    void tightenCutRhs(HighsInt cut, double delta, HighsInt reasonPos);
+
+    void backtrackCutRhs(HighsInt backtrackStackSize);
+
+    void explainCutRhs(HighsInt cut, std::vector<HighsInt>& resolvedDomainChanges);
 
     void cutAdded(HighsInt cut, bool propagate);
 
@@ -431,6 +440,11 @@ class HighsDomain {
                             const std::vector<HighsInt>& branchingPositions);
 
   bool propagate();
+
+  double getCutRhs(const HighsCutPool& cutpool, HighsInt cut) const;
+
+  double tightenCutRhs(const HighsCutPool& cutpool, HighsInt cut, double delta,
+                       HighsInt reasonPos);
 
   double getColLowerPos(HighsInt col, HighsInt stackpos, HighsInt& pos) const;
 

@@ -16,7 +16,7 @@
 
 #include "util/HighsInt.h"
 
-enum class HighsBoundType { kLower, kUpper };
+enum class HighsBoundType : HighsInt { kLower, kUpper };
 
 struct HighsDomainChange {
   double boundval;
@@ -41,6 +41,14 @@ struct HighsDomainChange {
     return boundtype != other.boundtype || column != other.column ||
            boundval != other.boundval;
   }
+};
+
+struct HighsCutRhsChange {
+  double rhsVal;
+  double newRhsval;
+  HighsInt cutindex;
+  HighsInt reasonPos;
+  HighsInt prevRhsPos;
 };
 
 struct HighsSubstitution {

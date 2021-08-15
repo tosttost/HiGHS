@@ -61,9 +61,19 @@ class HighsCutPool {
   std::vector<double> rownormalization_;
   std::vector<double> maxabscoef_;
   std::vector<uint8_t> rowintegral;
+  std::vector<HighsInt> numDynamicCols_;
   std::unordered_multimap<uint64_t, int> hashToCutMap;
   std::vector<HighsDomain::CutpoolPropagation*> propagationDomains;
   std::set<std::pair<HighsInt, HighsInt>> propRows;
+
+  struct ExtendedColumn {
+    HighsInt index = 0;
+    HighsInt numUses = 0;
+  };
+
+  HighsHashTable<HighsInt, std::map<double, ExtendedColumn>> extendedCols;
+  HighsHashTable<HighsInt, std::pair<HighsInt, double>> extendedColReverseMap;
+  std::vector<HighsInt> freeExtendedColIndex;
 
   double bestObservedScore;
   double minScoreFactor;
@@ -93,7 +103,29 @@ class HighsCutPool {
     bestObservedScore = 0.0;
     minDensityLim = 0.1 * ncols;
   }
+
+  HighsInt acquireExtendedCol(HighsInt col, double splitpoint);
+
+  void acquireExtendedCol(HighsInt extCol);
+
+  void releaseExtendedCol(HighsInt extCol);
+
+  HighsInt minExtendedColIndex() const {
+    return -(extendedColReverseMap.size() + HighsInt(freeExtendedColIndex.size()) + 1);
+  }
+
+  std::pair<HighsInt, double> getExtendedColSplit(HighsInt extCol) const {
+    const std::pair<HighsInt, double>* splitPoint =
+        extendedColReverseMap.find(extCol);
+    assert(splitPoint != nullptr);
+    return *splitPoint;
+  }
+
   const HighsDynamicRowMatrix& getMatrix() const { return matrix_; }
+
+  HighsInt getNumDynamicCols(HighsInt cut) const {
+    return numDynamicCols_[cut];
+  }
 
   const std::vector<double>& getRhs() const { return rhs_; }
 

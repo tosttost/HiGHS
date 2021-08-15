@@ -14,11 +14,14 @@
 #include "mip/HighsLpAggregator.h"
 
 #include "mip/HighsLpRelaxation.h"
+#include "mip/HighsMipSolverData.h"
 
 HighsLpAggregator::HighsLpAggregator(const HighsLpRelaxation& lprelaxation)
     : lprelaxation(lprelaxation) {
-  vectorsum.setDimension(lprelaxation.getLp().num_row_ +
-                         lprelaxation.getLp().num_col_);
+  HighsInt offset =
+      -lprelaxation.getMipSolver().mipdata_->cutpool.minExtendedColIndex();
+  vectorsum.setDimension(
+      lprelaxation.getLp().num_row_ + lprelaxation.getLp().num_col_, offset);
 }
 
 void HighsLpAggregator::addRow(HighsInt row, double weight) {
