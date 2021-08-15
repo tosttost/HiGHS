@@ -1214,7 +1214,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
     dummysol[indexFixing] = cliqueMaxsize[indexFixing].val;
 
 #endif
-#if 1
+#if 0
     HighsInt indexFixing = 0;
     HighsInt leastLocks = kHighsIInf;
     double objvalue = kHighsInf;
@@ -1321,7 +1321,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
 
 #endif
 
-#if 0
+#if 1
     HighsInt indexFixing = 0;
     double bestFractionalLock = kHighsInf;
     double bestObjValue = kHighsInf;
@@ -1377,7 +1377,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
               printf("THIS SHOULDNT HAPPEN, BECAUSE OF THE PROPAGATION\n");
               exit(0);
             }
-            if (capacity == 0) {
+            if (capacity <= 0) {
               printf("SEPCIAL CASE\n");
               exit(0);
             }
@@ -1412,6 +1412,7 @@ void HighsPrimalHeuristics::cliqueFixing(FILE* file) {
             bestObjValue = obj;
             printf("Found better fractional up-down lock: %10f\n",
                    fractionalUpLock - fractionalDownLock);
+            printf("with objective coefficient: %10f\n", obj);
           }
         }
       }
