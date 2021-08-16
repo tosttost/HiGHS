@@ -235,8 +235,8 @@ class HighsCliqueTable {
                        double feastol);
 
   std::vector<std::vector<CliqueVar>> separateCliques(
-      const std::vector<double>& sol, const HighsDomain& globaldom,
-      double feastol);
+      const std::vector<double>& sol, const HighsDomain& domain, double feastol,
+      double minWeight);
 
   void cleanupFixed(HighsDomain& globaldom);
 

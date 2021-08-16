@@ -1608,15 +1608,18 @@ void HighsCliqueTable::separateCliques(const HighsMipSolver& mipsolver,
 
 std::vector<std::vector<HighsCliqueTable::CliqueVar>>
 HighsCliqueTable::separateCliques(const std::vector<double>& sol,
-                                  const HighsDomain& globaldom,
-                                  double feastol) {
+                                  const HighsDomain& domain, double feastol,
+                                  double minWeight) {
   BronKerboschData data(sol);
   data.feastol = feastol;
+  data.minW = minWeight;
 
-  HighsInt numcols = globaldom.col_lower_.size();
+  HighsInt numcols = domain.col_lower_.size();
   assert(int(numcliquesvar.size()) == 2 * numcols);
   for (HighsInt i = 0; i != numcols; ++i) {
     if (colsubstituted[i]) continue;
+
+    if (!domain.isBinary(i)) continue;
 
     if (numcliquesvar[CliqueVar(i, 0).index()] != 0 &&
         CliqueVar(i, 0).weight(sol) > feastol)
