@@ -1068,6 +1068,13 @@ HighsLpRelaxation::Status HighsMipSolverData::evaluateRootLp() {
 
 void HighsMipSolverData::evaluateRootNode() {
   HighsInt maxSepaRounds = mipsolver.submip ? 5 : kHighsIInf;
+
+  if (numRestarts == 0) {
+    // call start heuristics before solving LP relaxation (or later: in
+    // parallel)
+    heuristics.cliqueFixing();
+  }
+
 restart:
   // lp.getLpSolver().setOptionValue(
   //     "dual_simplex_cost_perturbation_multiplier", 10.0);

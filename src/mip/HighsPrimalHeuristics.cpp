@@ -1199,3 +1199,147 @@ void HighsPrimalHeuristics::flushStatistics() {
   mipsolver.mipdata_->total_lp_iterations += lp_iterations;
   lp_iterations = 0;
 }
+
+void HighsPrimalHeuristics::cliqueFixing() {
+  auto localdom = mipsolver.mipdata_->domain;
+
+  HeuristicNeighborhood neighborhood(mipsolver, localdom);
+
+  // select clique with maximum cardinality
+  // set solution to 0.5 so that each variable has equal weight
+  std::vector<double> dummysol(mipsolver.numCol(), 0.5);
+
+  // just for safety, normally the cliques.size()<1 should break the while loop
+  HighsInt safeiterations = 0;
+  HighsInt maxit = 2 * mipsolver.numCol() + 2;
+  HighsInt fixed = 0;
+
+  while (safeiterations < maxit) {
+    safeiterations++;
+    if (safeiterations > maxit - 3) {
+      printf("SAFETY ITERATIONS LIMIT ALMOST REACHED!! THIS SHOULDNT HAPPEN\n");
+    }
+
+    // this gives maximum cardinality clique found
+
+    // todo: keep a set of cliques that was returned here.
+    //       Cleanup the cliques after each round of fixing a variable and
+    //       remove all variables from the cliques that are fixed to zero (more
+    //       precisely fix to (1-cliqueVar.val), which is zero if the value is
+    //       1) At each iteration determine the largest cardinality k of a
+    //       clique that might already be known from previous iterations. Use as
+    //       minimum weight (0.5 * k + 0.25) so that the call to the separate
+    //       cliques algorithm only looks for cliques with a higher cardinality
+    //       than already known cliques.
+    std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliques =
+        mipsolver.mipdata_->cliquetable.separateCliques(
+            dummysol, localdom, mipsolver.mipdata_->feastol, 0.75);
+
+    // todo: After the call to separate cliques add all found cliques to the
+    //       current set of cliques. Then choose the largest cardinality clique
+    //       as next clique.
+
+    // found no clique so abort
+    if (cliques.size() < 1) break;
+    // only consider cliques with size 2 or more
+    if (cliques[0].size() < 2) break;
+
+    // todo: do not create an unnecessary copy of the clique, rather use a
+    // reference like this: const std::vector<HighsCliqueTable::CliqueVar>&
+    // clique = cliques[0];
+    std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
+
+    // todo: no need to count fixed variables, use neighborhood.getFixingRate()
+    //       when you want to get the current rate of fixed integer variables
+    fixed++;
+    printf("\nVariables fixed directly: %4i\n", fixed);
+    printf("Cliquesize: %4i\n", int(clique.size()));
+    printf("Clique table size: %4i\n",
+           mipsolver.mipdata_->cliquetable.numCliques());
+
+    // fix var which has minimum objective, so optimal or best found solution
+    // todo: select proper variable
+    HighsInt pos;
+    localdom.fixCol(clique[pos].col, clique[pos].val,
+                    HighsDomain::Reason::branching());
+
+    if (localdom.infeasible()) {
+      localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+      // todo: maybe backtrack, but this will surely need a limit on the
+      // number of backtracks
+
+#if 0
+        // backtracking could look like this:
+        do {
+          localdom.backtrack();
+          // now the last branching decision was undone. Next we should
+          // propagate again and check for infeasibility again. The reason is
+          // that above call to conflictAnalysis() tried to learn the reason for
+          // the infeasibility as a conflict constraint. The conflict constraint
+          // would have caused clique[pos].col to be fixed to
+          // (1-clique[pos].val) during the call to localdom.propagate() If it
+          // was already known before we decided to fix the column to
+          // clique[pos].val, which caused the infeasibility.
+          localdom.propagate();
+        } while (localdom.infeasible())
+
+            // a call to neighborhood.backtracked() will make sure that
+            // neighborhood.getFixingRate() will return the correct value after
+            // backtracking
+            neighborhood.backtracked();
+
+        // when we add backtracking like this we will surely need a limit on the
+        // number of backtracks and abort the heuristic if we encounter
+        // infeasibility after reaching the backtracking limit. Maybe try
+        // setting the limit to 10.
+#endif
+
+      return;
+    }
+
+    localdom.propagate();
+    if (localdom.infeasible()) {
+      localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+      // todo: maybe backtrack
+      return;
+    }
+
+// todo: I think there is no need to change the values of the dummy solution
+// because the clique table will only include binary columns in the bron
+// kerbosch call. When the variable is fixed then either its lower bound is not
+// 0 or its upper bound is not 1 so isBinary would return false.
+#if 0
+      for (HighsInt i : mipsolver.mipdata_->integer_cols) {
+        if (localdom.isFixed(i)) {
+          dummysol[i] = mipsolver.mipdata_->domain
+                            .col_lower_[i];  // col_lower == col_upper == value
+        }
+      }
+#endif
+
+    // pause the program to inspect submip
+    // char foo[10];
+    // std::cin.getline(foo, 10);
+
+    // todo: check neighborhood.getFixingRate() if it is above the desired
+    // threshold and break the loop if it is
+  }
+
+  double fixingRate = neighborhood.getFixingRate();
+
+  // todo: check if the fixing rate that was achieved is high enough, if not
+  // return without solving a submip
+
+  // finally call solveSubMip with the bounds in localdom
+  bool callResult =
+      solveSubMip(*mipsolver.model_, mipsolver.mipdata_->firstrootbasis,
+                  fixingRate, localdom.col_lower_, localdom.col_upper_,
+                  500,  // std::max(50, int(0.05 *
+                        // (mipsolver.mipdata_->num_leaves))),
+                  200 + int(0.05 * (mipsolver.mipdata_->num_nodes)), 12);
+
+  // todo: when call result is false then it means the problem was determined to
+  //       be infeasible without performing any branch and bound. In that case
+  //       we could see if we want to try again with a lower fixing rate, but
+  //       this would need to be carefully tuned to not take too much time.
+}

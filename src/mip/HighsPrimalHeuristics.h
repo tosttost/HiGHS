@@ -65,6 +65,8 @@ class HighsPrimalHeuristics {
                           const std::vector<double>& point2, char source);
 
   void randomizedRounding(const std::vector<double>& relaxationsol);
+
+  void cliqueFixing();
 };
 
 #endif
