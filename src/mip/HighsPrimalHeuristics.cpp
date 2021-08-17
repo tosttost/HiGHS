@@ -1213,6 +1213,9 @@ void HighsPrimalHeuristics::cliqueFixing() {
   HighsInt safeiterations = 0;
   HighsInt maxit = 2 * mipsolver.numCol() + 2;
   HighsInt fixed = 0;
+  std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliqueStorage;
+  std::vector<HighsInt> cliqueSize;
+  double minWeight;
 
   while (safeiterations < maxit) {
     safeiterations++;
@@ -1231,23 +1234,58 @@ void HighsPrimalHeuristics::cliqueFixing() {
     //       minimum weight (0.5 * k + 0.25) so that the call to the separate
     //       cliques algorithm only looks for cliques with a higher cardinality
     //       than already known cliques.
-    std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliques =
+    HighsInt k = 0;
+    HighsInt maxClique = 0;
+
+    for (auto itr = cliqueStorage.begin(); itr != cliqueStorage.end(); itr++) {
+      // remove all fixed variables form the clique
+      for (auto itr_clique = itr->begin(); itr_clique != itr->end();
+           itr_clique++) {
+        if (localdom.isFixed(itr_clique->col)) {
+          itr_clique = itr->erase(itr_clique);
+        }
+      }
+      // remove clique if it is smaller than 2
+      if (itr->size() < 2) {
+        itr = cliqueStorage.erase(itr);
+        continue;
+      }
+      // keep track of max clique
+      if (itr->size() > k) {
+        maxClique = itr - cliqueStorage.begin();
+        k = itr->size();
+      }
+    }
+
+    if (cliqueStorage.empty()) {
+      minWeight = 0.75;
+    } else {
+      minWeight = 0.5 * k + 0.25;
+    }
+
+    std::vector<std::vector<HighsCliqueTable::CliqueVar>> newCliques =
         mipsolver.mipdata_->cliquetable.separateCliques(
-            dummysol, localdom, mipsolver.mipdata_->feastol, 0.75);
+            dummysol, localdom, mipsolver.mipdata_->feastol, minWeight);
 
     // todo: After the call to separate cliques add all found cliques to the
     //       current set of cliques. Then choose the largest cardinality clique
     //       as next clique.
+    if (!newCliques.empty()) {
+      maxClique = cliqueStorage.size();
+      cliqueStorage.insert(cliqueStorage.end(), newCliques.begin(),
+                           newCliques.end());
+    }
+
+    const std::vector<HighsCliqueTable::CliqueVar>& clique =
+        cliqueStorage[maxClique];
 
     // found no clique so abort
-    if (cliques.size() < 1) break;
-    // only consider cliques with size 2 or more
-    if (cliques[0].size() < 2) break;
+    if (cliqueStorage.size() < 1) break;
 
     // todo: do not create an unnecessary copy of the clique, rather use a
     // reference like this: const std::vector<HighsCliqueTable::CliqueVar>&
     // clique = cliques[0];
-    std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
+    // std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
 
     // todo: no need to count fixed variables, use neighborhood.getFixingRate()
     //       when you want to get the current rate of fixed integer variables
