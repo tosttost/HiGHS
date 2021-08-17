@@ -1392,7 +1392,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
 
 #if 1
       // backtracking could look like this:
-      threshold = 0.5*threshold;
+      threshold = 0.5 * threshold;
       do {
         localdom.backtrack();
         // now the last branching decision was undone. Next we should
@@ -1405,12 +1405,12 @@ void HighsPrimalHeuristics::cliqueFixing() {
         // clique[pos].val, which caused the infeasibility.
         localdom.propagate();
         neighborhood.backtracked();
-      } while (localdom.infeasible() || neighborhood.getFixingRate() > threshold*1.2);
+      } while (localdom.infeasible() ||
+               neighborhood.getFixingRate() > threshold * 1.2);
 
       // a call to neighborhood.backtracked() will make sure that
       // neighborhood.getFixingRate() will return the correct value after
       // backtracking
-      
 
       // when we add backtracking like this we will surely need a limit on the
       // number of backtracks and abort the heuristic if we encounter
@@ -1457,5 +1457,4 @@ void HighsPrimalHeuristics::cliqueFixing() {
   //       be infeasible without performing any branch and bound. In that case
   //       we could see if we want to try again with a lower fixing rate, but
   //       this would need to be carefully tuned to not take too much time.
-
 }
