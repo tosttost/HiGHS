@@ -1212,10 +1212,10 @@ void HighsPrimalHeuristics::cliqueFixing() {
   // just for safety, normally the cliques.size()<1 should break the while loop
   HighsInt safeiterations = 0;
   HighsInt maxit = 2 * mipsolver.numCol() + 2;
-  HighsInt fixed = 0;
   std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliqueStorage;
   std::vector<HighsInt> cliqueSize;
   double minWeight;
+  double threshold = 0.5;
 
   while (safeiterations < maxit) {
     safeiterations++;
@@ -1276,11 +1276,11 @@ void HighsPrimalHeuristics::cliqueFixing() {
                            newCliques.end());
     }
 
-    const std::vector<HighsCliqueTable::CliqueVar>& clique =
-        cliqueStorage[maxClique];
-
     // found no clique so abort
     if (cliqueStorage.size() < 1) break;
+
+    const std::vector<HighsCliqueTable::CliqueVar>& clique =
+        cliqueStorage[maxClique];
 
     // todo: do not create an unnecessary copy of the clique, rather use a
     // reference like this: const std::vector<HighsCliqueTable::CliqueVar>&
@@ -1289,15 +1289,99 @@ void HighsPrimalHeuristics::cliqueFixing() {
 
     // todo: no need to count fixed variables, use neighborhood.getFixingRate()
     //       when you want to get the current rate of fixed integer variables
-    fixed++;
-    printf("\nVariables fixed directly: %4i\n", fixed);
+    printf("\nIteration: %5i\n", safeiterations);
     printf("Cliquesize: %4i\n", int(clique.size()));
-    printf("Clique table size: %4i\n",
-           mipsolver.mipdata_->cliquetable.numCliques());
 
     // fix var which has minimum objective, so optimal or best found solution
     // todo: select proper variable
     HighsInt pos;
+    double lowestFractionalLock = kHighsInf;
+    double lowestObjectiveCoefficient = kHighsInf;
+
+    for (HighsInt i = 0; i < clique.size(); i++) {
+      // fractional lock calculations
+      double fractionalUpLock = 0;
+      double fractionalDownLock = 0;
+      for (HighsInt j = mipsolver.model_->a_start_[clique[i].col];
+           j < mipsolver.model_->a_start_[clique[i].col + 1]; j++) {
+        HighsInt row = mipsolver.model_->a_index_[j];
+        double coefficientOfColumnInRow = mipsolver.model_->a_value_[j];
+        double capacity;
+        double fractionalLock;
+
+        // check what type of constraint it is
+        if (mipsolver.model_->row_lower_[row] != -kHighsIInf) {
+          // constraint is Ax>b
+          capacity =
+              localdom.getMaxActivity(row) - mipsolver.model_->row_lower_[row];
+          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
+
+          if (fractionalLock > 1) {
+            // backtrack?
+            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+            return;
+          }
+          if (capacity <= 0) {
+            // backtrack?
+            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+            return;
+          }
+          if (capacity == kHighsInf || capacity == -kHighsInf) {
+            continue;
+          }
+
+          if (coefficientOfColumnInRow < 0) {
+            fractionalUpLock = fractionalUpLock + fractionalLock;
+          } else if (coefficientOfColumnInRow > 0) {
+            fractionalDownLock = fractionalDownLock + fractionalLock;
+          } else {
+            printf("coefficientOfColumnInRow is zero\n");
+          }
+        }
+
+        if (mipsolver.model_->row_upper_[row] != kHighsInf) {
+          // constraint is Ax<b
+          capacity =
+              mipsolver.model_->row_upper_[row] - localdom.getMinActivity(row);
+          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
+
+          if (fractionalLock > 1) {
+            // backtrack?
+            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+            return;
+          }
+          if (capacity <= 0) {
+            // backtrack?
+            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
+            return;
+          }
+          if (capacity == kHighsInf || capacity == -kHighsInf) {
+            continue;
+          }
+
+          if (coefficientOfColumnInRow > 0) {
+            fractionalUpLock = fractionalUpLock + fractionalLock;
+          } else if (coefficientOfColumnInRow < 0) {
+            fractionalDownLock = fractionalDownLock + fractionalLock;
+          } else {
+            printf("coefficientOfColumnInRow is zero\n");
+          }
+        }
+      }
+
+      if (!clique[i].val) std::swap(fractionalUpLock, fractionalDownLock);
+
+      if (fractionalUpLock - fractionalDownLock <=
+          lowestFractionalLock + 1e-9) {
+        if (mipsolver.model_->col_cost_[clique[i].col] <
+            lowestObjectiveCoefficient) {
+          pos = i;
+          lowestFractionalLock = fractionalUpLock - fractionalDownLock;
+          lowestObjectiveCoefficient =
+              mipsolver.model_->col_cost_[clique[i].col];
+        }
+      }
+    }
     localdom.fixCol(clique[pos].col, clique[pos].val,
                     HighsDomain::Reason::branching());
 
@@ -1306,33 +1390,35 @@ void HighsPrimalHeuristics::cliqueFixing() {
       // todo: maybe backtrack, but this will surely need a limit on the
       // number of backtracks
 
-#if 0
-        // backtracking could look like this:
-        do {
-          localdom.backtrack();
-          // now the last branching decision was undone. Next we should
-          // propagate again and check for infeasibility again. The reason is
-          // that above call to conflictAnalysis() tried to learn the reason for
-          // the infeasibility as a conflict constraint. The conflict constraint
-          // would have caused clique[pos].col to be fixed to
-          // (1-clique[pos].val) during the call to localdom.propagate() If it
-          // was already known before we decided to fix the column to
-          // clique[pos].val, which caused the infeasibility.
-          localdom.propagate();
-        } while (localdom.infeasible())
+#if 1
+      // backtracking could look like this:
+      threshold = 0.5*threshold;
+      do {
+        localdom.backtrack();
+        // now the last branching decision was undone. Next we should
+        // propagate again and check for infeasibility again. The reason is
+        // that above call to conflictAnalysis() tried to learn the reason for
+        // the infeasibility as a conflict constraint. The conflict constraint
+        // would have caused clique[pos].col to be fixed to
+        // (1-clique[pos].val) during the call to localdom.propagate() If it
+        // was already known before we decided to fix the column to
+        // clique[pos].val, which caused the infeasibility.
+        localdom.propagate();
+        neighborhood.backtracked();
+      } while (localdom.infeasible() || neighborhood.getFixingRate() > threshold*1.2);
 
-            // a call to neighborhood.backtracked() will make sure that
-            // neighborhood.getFixingRate() will return the correct value after
-            // backtracking
-            neighborhood.backtracked();
+      // a call to neighborhood.backtracked() will make sure that
+      // neighborhood.getFixingRate() will return the correct value after
+      // backtracking
+      
 
-        // when we add backtracking like this we will surely need a limit on the
-        // number of backtracks and abort the heuristic if we encounter
-        // infeasibility after reaching the backtracking limit. Maybe try
-        // setting the limit to 10.
+      // when we add backtracking like this we will surely need a limit on the
+      // number of backtracks and abort the heuristic if we encounter
+      // infeasibility after reaching the backtracking limit. Maybe try
+      // setting the limit to 10.
 #endif
 
-      return;
+      break;
     }
 
     localdom.propagate();
@@ -1342,32 +1428,23 @@ void HighsPrimalHeuristics::cliqueFixing() {
       return;
     }
 
-// todo: I think there is no need to change the values of the dummy solution
-// because the clique table will only include binary columns in the bron
-// kerbosch call. When the variable is fixed then either its lower bound is not
-// 0 or its upper bound is not 1 so isBinary would return false.
-#if 0
-      for (HighsInt i : mipsolver.mipdata_->integer_cols) {
-        if (localdom.isFixed(i)) {
-          dummysol[i] = mipsolver.mipdata_->domain
-                            .col_lower_[i];  // col_lower == col_upper == value
-        }
-      }
-#endif
-
-    // pause the program to inspect submip
-    // char foo[10];
-    // std::cin.getline(foo, 10);
+    // remove used clique from storage
+    cliqueStorage.erase(cliqueStorage.begin() + maxClique);
 
     // todo: check neighborhood.getFixingRate() if it is above the desired
     // threshold and break the loop if it is
+    printf("Percentage variables fixed total: %8f\n",
+           neighborhood.getFixingRate());
+
+    if (neighborhood.getFixingRate() >= threshold) break;
   }
-
+  printf("1\n");
   double fixingRate = neighborhood.getFixingRate();
-
+  printf("2\n");
   // todo: check if the fixing rate that was achieved is high enough, if not
   // return without solving a submip
-
+  if (fixingRate < threshold) return;
+  printf("3\n");
   // finally call solveSubMip with the bounds in localdom
   bool callResult =
       solveSubMip(*mipsolver.model_, mipsolver.mipdata_->firstrootbasis,
@@ -1375,9 +1452,10 @@ void HighsPrimalHeuristics::cliqueFixing() {
                   500,  // std::max(50, int(0.05 *
                         // (mipsolver.mipdata_->num_leaves))),
                   200 + int(0.05 * (mipsolver.mipdata_->num_nodes)), 12);
-
+  printf("4\n");
   // todo: when call result is false then it means the problem was determined to
   //       be infeasible without performing any branch and bound. In that case
   //       we could see if we want to try again with a lower fixing rate, but
   //       this would need to be carefully tuned to not take too much time.
+
 }
