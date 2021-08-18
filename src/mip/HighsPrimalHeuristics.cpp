@@ -99,7 +99,7 @@ bool HighsPrimalHeuristics::solveSubMip(
   solution.value_valid = false;
   solution.dual_valid = false;
   HighsMipSolver submipsolver(submipoptions, submip, solution, true);
-  submipsolver.rootbasis = &basis;
+  if (basis.valid) submipsolver.rootbasis = &basis;
   HighsPseudocostInitialization pscostinit(mipsolver.mipdata_->pseudocost, 1);
   submipsolver.pscostinit = &pscostinit;
   submipsolver.clqtableinit = &mipsolver.mipdata_->cliquetable;
@@ -1202,6 +1202,7 @@ void HighsPrimalHeuristics::flushStatistics() {
 
 void HighsPrimalHeuristics::cliqueFixing() {
   auto localdom = mipsolver.mipdata_->domain;
+  assert(!localdom.infeasible());
 
   HeuristicNeighborhood neighborhood(mipsolver, localdom);
 
@@ -1216,6 +1217,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
   std::vector<HighsInt> cliqueSize;
   double minWeight;
   double threshold = 0.5;
+  HighsInt numBackTracks = 0;
 
   while (safeiterations < maxit) {
     safeiterations++;
@@ -1234,30 +1236,32 @@ void HighsPrimalHeuristics::cliqueFixing() {
     //       minimum weight (0.5 * k + 0.25) so that the call to the separate
     //       cliques algorithm only looks for cliques with a higher cardinality
     //       than already known cliques.
-    HighsInt k = 0;
-    HighsInt maxClique = 0;
+    HighsInt k = 1;
+    HighsCliqueTable::CliqueVar* maxClique = nullptr;
 
     for (auto itr = cliqueStorage.begin(); itr != cliqueStorage.end(); itr++) {
       // remove all fixed variables form the clique
-      for (auto itr_clique = itr->begin(); itr_clique != itr->end();
-           itr_clique++) {
-        if (localdom.isFixed(itr_clique->col)) {
-          itr_clique = itr->erase(itr_clique);
-        }
-      }
-      // remove clique if it is smaller than 2
-      if (itr->size() < 2) {
-        itr = cliqueStorage.erase(itr);
-        continue;
-      }
+      itr->erase(std::remove_if(itr->begin(), itr->end(),
+                                [&](HighsCliqueTable::CliqueVar v) {
+                                  return localdom.isFixed(v.col);
+                                }),
+                 itr->end());
+
       // keep track of max clique
       if (itr->size() > k) {
-        maxClique = itr - cliqueStorage.begin();
+        maxClique = itr->data();
         k = itr->size();
       }
     }
+    // remove clique if it is smaller than 2
+    cliqueStorage.erase(
+        std::remove_if(cliqueStorage.begin(), cliqueStorage.end(),
+                       [](const std::vector<HighsCliqueTable::CliqueVar>& c) {
+                         return c.size() < 2;
+                       }),
+        cliqueStorage.end());
 
-    if (cliqueStorage.empty()) {
+    if (maxClique != nullptr) {
       minWeight = 0.75;
     } else {
       minWeight = 0.5 * k + 0.25;
@@ -1271,26 +1275,18 @@ void HighsPrimalHeuristics::cliqueFixing() {
     //       current set of cliques. Then choose the largest cardinality clique
     //       as next clique.
     if (!newCliques.empty()) {
-      maxClique = cliqueStorage.size();
-      cliqueStorage.insert(cliqueStorage.end(), newCliques.begin(),
-                           newCliques.end());
+      for (std::vector<HighsCliqueTable::CliqueVar>& c : newCliques) {
+        cliqueStorage.emplace_back(std::move(c));
+      }
+      maxClique = cliqueStorage.back().data();
+      k = cliqueStorage.back().size();
     }
 
     // found no clique so abort
-    if (cliqueStorage.size() < 1) break;
+    if (maxClique == nullptr) break;
 
-    const std::vector<HighsCliqueTable::CliqueVar>& clique =
-        cliqueStorage[maxClique];
-
-    // todo: do not create an unnecessary copy of the clique, rather use a
-    // reference like this: const std::vector<HighsCliqueTable::CliqueVar>&
-    // clique = cliques[0];
-    // std::vector<HighsCliqueTable::CliqueVar> clique = cliques[0];
-
-    // todo: no need to count fixed variables, use neighborhood.getFixingRate()
-    //       when you want to get the current rate of fixed integer variables
     printf("\nIteration: %5i\n", safeiterations);
-    printf("Cliquesize: %4i\n", int(clique.size()));
+    printf("Cliquesize: %4i\n", int(k));
 
     // fix var which has minimum objective, so optimal or best found solution
     // todo: select proper variable
@@ -1298,12 +1294,12 @@ void HighsPrimalHeuristics::cliqueFixing() {
     double lowestFractionalLock = kHighsInf;
     double lowestObjectiveCoefficient = kHighsInf;
 
-    for (HighsInt i = 0; i < clique.size(); i++) {
+    for (HighsInt i = 0; i < k; i++) {
       // fractional lock calculations
       double fractionalUpLock = 0;
       double fractionalDownLock = 0;
-      for (HighsInt j = mipsolver.model_->a_start_[clique[i].col];
-           j < mipsolver.model_->a_start_[clique[i].col + 1]; j++) {
+      for (HighsInt j = mipsolver.model_->a_start_[maxClique[i].col];
+           j < mipsolver.model_->a_start_[maxClique[i].col + 1]; j++) {
         HighsInt row = mipsolver.model_->a_index_[j];
         double coefficientOfColumnInRow = mipsolver.model_->a_value_[j];
         double capacity;
@@ -1314,28 +1310,18 @@ void HighsPrimalHeuristics::cliqueFixing() {
           // constraint is Ax>b
           capacity =
               localdom.getMaxActivity(row) - mipsolver.model_->row_lower_[row];
-          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
-
-          if (fractionalLock > 1) {
-            // backtrack?
-            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-            return;
-          }
-          if (capacity <= 0) {
-            // backtrack?
-            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-            return;
-          }
-          if (capacity == kHighsInf || capacity == -kHighsInf) {
+          if (capacity == kHighsInf) {
             continue;
           }
 
+          fractionalLock =
+              std::min(std::abs(coefficientOfColumnInRow / capacity), 1.0);
+
           if (coefficientOfColumnInRow < 0) {
             fractionalUpLock = fractionalUpLock + fractionalLock;
-          } else if (coefficientOfColumnInRow > 0) {
-            fractionalDownLock = fractionalDownLock + fractionalLock;
           } else {
-            printf("coefficientOfColumnInRow is zero\n");
+            assert(coefficientOfColumnInRow != 0.0);
+            fractionalDownLock = fractionalDownLock + fractionalLock;
           }
         }
 
@@ -1343,46 +1329,36 @@ void HighsPrimalHeuristics::cliqueFixing() {
           // constraint is Ax<b
           capacity =
               mipsolver.model_->row_upper_[row] - localdom.getMinActivity(row);
-          fractionalLock = std::abs(coefficientOfColumnInRow / capacity);
-
-          if (fractionalLock > 1) {
-            // backtrack?
-            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-            return;
-          }
-          if (capacity <= 0) {
-            // backtrack?
-            localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-            return;
-          }
-          if (capacity == kHighsInf || capacity == -kHighsInf) {
+          if (capacity == kHighsInf) {
             continue;
           }
 
+          fractionalLock =
+              std::min(std::abs(coefficientOfColumnInRow / capacity), 1.0);
+
           if (coefficientOfColumnInRow > 0) {
             fractionalUpLock = fractionalUpLock + fractionalLock;
-          } else if (coefficientOfColumnInRow < 0) {
-            fractionalDownLock = fractionalDownLock + fractionalLock;
           } else {
-            printf("coefficientOfColumnInRow is zero\n");
+            assert(coefficientOfColumnInRow != 0.0);
+            fractionalDownLock = fractionalDownLock + fractionalLock;
           }
         }
       }
 
-      if (!clique[i].val) std::swap(fractionalUpLock, fractionalDownLock);
+      if (!maxClique[i].val) std::swap(fractionalUpLock, fractionalDownLock);
 
       if (fractionalUpLock - fractionalDownLock <=
           lowestFractionalLock + 1e-9) {
-        if (mipsolver.model_->col_cost_[clique[i].col] <
+        if (mipsolver.model_->col_cost_[maxClique[i].col] <
             lowestObjectiveCoefficient) {
           pos = i;
           lowestFractionalLock = fractionalUpLock - fractionalDownLock;
           lowestObjectiveCoefficient =
-              mipsolver.model_->col_cost_[clique[i].col];
+              mipsolver.model_->col_cost_[maxClique[i].col];
         }
       }
     }
-    localdom.fixCol(clique[pos].col, clique[pos].val,
+    localdom.fixCol(maxClique[pos].col, maxClique[pos].val,
                     HighsDomain::Reason::branching());
 
     if (localdom.infeasible()) {
@@ -1392,9 +1368,12 @@ void HighsPrimalHeuristics::cliqueFixing() {
 
 #if 1
       // backtracking could look like this:
-      threshold = 0.5 * threshold;
+      if (numBackTracks >= 10) return;
+      numBackTracks++;
+
       do {
         localdom.backtrack();
+
         // now the last branching decision was undone. Next we should
         // propagate again and check for infeasibility again. The reason is
         // that above call to conflictAnalysis() tried to learn the reason for
@@ -1404,9 +1383,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
         // was already known before we decided to fix the column to
         // clique[pos].val, which caused the infeasibility.
         localdom.propagate();
-        neighborhood.backtracked();
-      } while (localdom.infeasible() ||
-               neighborhood.getFixingRate() > threshold * 1.2);
+      } while (localdom.infeasible());
 
       // a call to neighborhood.backtracked() will make sure that
       // neighborhood.getFixingRate() will return the correct value after
@@ -1417,19 +1394,20 @@ void HighsPrimalHeuristics::cliqueFixing() {
       // infeasibility after reaching the backtracking limit. Maybe try
       // setting the limit to 10.
 #endif
-
-      break;
     }
 
     localdom.propagate();
     if (localdom.infeasible()) {
       localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-      // todo: maybe backtrack
-      return;
-    }
 
-    // remove used clique from storage
-    cliqueStorage.erase(cliqueStorage.begin() + maxClique);
+      if (numBackTracks >= 10) return;
+      numBackTracks++;
+
+      do {
+        localdom.backtrack();
+        localdom.propagate();
+      } while (localdom.infeasible());
+    }
 
     // todo: check neighborhood.getFixingRate() if it is above the desired
     // threshold and break the loop if it is
@@ -1438,13 +1416,13 @@ void HighsPrimalHeuristics::cliqueFixing() {
 
     if (neighborhood.getFixingRate() >= threshold) break;
   }
-  printf("1\n");
+
   double fixingRate = neighborhood.getFixingRate();
-  printf("2\n");
+
   // todo: check if the fixing rate that was achieved is high enough, if not
   // return without solving a submip
   if (fixingRate < threshold) return;
-  printf("3\n");
+
   // finally call solveSubMip with the bounds in localdom
   bool callResult =
       solveSubMip(*mipsolver.model_, mipsolver.mipdata_->firstrootbasis,
@@ -1452,7 +1430,13 @@ void HighsPrimalHeuristics::cliqueFixing() {
                   500,  // std::max(50, int(0.05 *
                         // (mipsolver.mipdata_->num_leaves))),
                   200 + int(0.05 * (mipsolver.mipdata_->num_nodes)), 12);
-  printf("4\n");
+  if (mipsolver.mipdata_->upper_limit != kHighsInf) {
+    printf("Found a solution with clique heuristic\n");
+  }
+
+  if (!callResult) {
+    printf("Backtrack until 25%% is reached and solve a submip again\n");
+  }
   // todo: when call result is false then it means the problem was determined to
   //       be infeasible without performing any branch and bound. In that case
   //       we could see if we want to try again with a lower fixing rate, but

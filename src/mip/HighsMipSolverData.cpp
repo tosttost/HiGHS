@@ -1069,7 +1069,7 @@ HighsLpRelaxation::Status HighsMipSolverData::evaluateRootLp() {
 void HighsMipSolverData::evaluateRootNode() {
   HighsInt maxSepaRounds = mipsolver.submip ? 5 : kHighsIInf;
 
-  if (numRestarts == 0) {
+  if (numRestarts == 0 && upper_limit == kHighsInf) {
     // call start heuristics before solving LP relaxation (or later: in
     // parallel)
     heuristics.cliqueFixing();
