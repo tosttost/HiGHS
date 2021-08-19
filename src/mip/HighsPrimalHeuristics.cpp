@@ -1226,16 +1226,6 @@ void HighsPrimalHeuristics::cliqueFixing() {
     }
 
     // this gives maximum cardinality clique found
-
-    // todo: keep a set of cliques that was returned here.
-    //       Cleanup the cliques after each round of fixing a variable and
-    //       remove all variables from the cliques that are fixed to zero (more
-    //       precisely fix to (1-cliqueVar.val), which is zero if the value is
-    //       1) At each iteration determine the largest cardinality k of a
-    //       clique that might already be known from previous iterations. Use as
-    //       minimum weight (0.5 * k + 0.25) so that the call to the separate
-    //       cliques algorithm only looks for cliques with a higher cardinality
-    //       than already known cliques.
     HighsInt k = 1;
     HighsCliqueTable::CliqueVar* maxClique = nullptr;
 
@@ -1271,9 +1261,6 @@ void HighsPrimalHeuristics::cliqueFixing() {
         mipsolver.mipdata_->cliquetable.separateCliques(
             dummysol, localdom, mipsolver.mipdata_->feastol, minWeight);
 
-    // todo: After the call to separate cliques add all found cliques to the
-    //       current set of cliques. Then choose the largest cardinality clique
-    //       as next clique.
     if (!newCliques.empty()) {
       for (std::vector<HighsCliqueTable::CliqueVar>& c : newCliques) {
         cliqueStorage.emplace_back(std::move(c));
@@ -1288,11 +1275,66 @@ void HighsPrimalHeuristics::cliqueFixing() {
     printf("\nIteration: %5i\n", safeiterations);
     printf("Cliquesize: %4i\n", int(k));
 
-    // fix var which has minimum objective, so optimal or best found solution
-    // todo: select proper variable
+    // select which variable to fix
+#if 0
+    // fix variable with lowest up-down locks, using the objective coefficient
+    // as a tiebreaker
+    HighsInt pos;
+    HighsInt leastLocks = kHighsIInf;
+    double lowestObjectiveCoefficient = kHighsInf;
+    double objectiveCoefficient;
+    HighsInt& uplocks = mipsolver.mipdata_->uplocks[maxClique[0].col];
+    HighsInt& downlocks = mipsolver.mipdata_->downlocks[maxClique[0].col];
+
+    for (HighsInt i = 0; i < k; i++) {
+      uplocks = mipsolver.mipdata_->uplocks[maxClique[i].col];
+      downlocks = mipsolver.mipdata_->downlocks[maxClique[i].col];
+      objectiveCoefficient = mipsolver.model_->col_cost_[maxClique[i].col];
+
+      if (!maxClique[i].val) {
+        std::swap(uplocks, downlocks);
+        objectiveCoefficient = -objectiveCoefficient;
+      }
+
+      if (uplocks - downlocks < leastLocks) {
+        if (objectiveCoefficient < lowestObjectiveCoefficient) {
+          pos = i;
+          leastLocks = uplocks - downlocks;
+          lowestObjectiveCoefficient = objectiveCoefficient;
+        }
+      }
+    }
+#endif
+
+#if 0
+    // fix variable with the lowest objective coefficient
+    HighsInt pos;
+    double lowestObjectiveCoefficient = kHighsInf;
+    double objectiveCoefficient;
+
+    for (HighsInt i = 0; i < k; i++) {
+      objectiveCoefficient = mipsolver.model_->col_cost_[maxClique[i].col];
+      if (!maxClique[i].val) objectiveCoefficient = -objectiveCoefficient;
+
+      if (objectiveCoefficient < lowestObjectiveCoefficient) {
+        pos = i;
+        lowestObjectiveCoefficient = objectiveCoefficient;
+      }
+    }
+#endif
+
+#if 0
+    // fix random variable
+    HighsInt pos = randgen.integer(k);
+#endif
+
+#if 1
+    // fix variable with lowest fractional up-down locks, using the objective
+    // coefficient as a tiebreaker
     HighsInt pos;
     double lowestFractionalLock = kHighsInf;
     double lowestObjectiveCoefficient = kHighsInf;
+    double objectiveCoefficient;
 
     for (HighsInt i = 0; i < k; i++) {
       // fractional lock calculations
@@ -1345,58 +1387,43 @@ void HighsPrimalHeuristics::cliqueFixing() {
         }
       }
 
-      if (!maxClique[i].val) std::swap(fractionalUpLock, fractionalDownLock);
+      objectiveCoefficient = mipsolver.model_->col_cost_[maxClique[i].col];
+
+      if (!maxClique[i].val) {
+        std::swap(fractionalUpLock, fractionalDownLock);
+        objectiveCoefficient = -objectiveCoefficient;
+      }
 
       if (fractionalUpLock - fractionalDownLock <=
           lowestFractionalLock + 1e-9) {
-        if (mipsolver.model_->col_cost_[maxClique[i].col] <
-            lowestObjectiveCoefficient) {
+        if (objectiveCoefficient < lowestObjectiveCoefficient) {
           pos = i;
           lowestFractionalLock = fractionalUpLock - fractionalDownLock;
-          lowestObjectiveCoefficient =
-              mipsolver.model_->col_cost_[maxClique[i].col];
+          lowestObjectiveCoefficient = objectiveCoefficient;
         }
       }
     }
+#endif
+
     localdom.fixCol(maxClique[pos].col, maxClique[pos].val,
                     HighsDomain::Reason::branching());
 
     if (localdom.infeasible()) {
       localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
-      // todo: maybe backtrack, but this will surely need a limit on the
-      // number of backtracks
-
-#if 1
-      // backtracking could look like this:
+      // backtracking
       if (numBackTracks >= 10) return;
       numBackTracks++;
 
       do {
         localdom.backtrack();
-
-        // now the last branching decision was undone. Next we should
-        // propagate again and check for infeasibility again. The reason is
-        // that above call to conflictAnalysis() tried to learn the reason for
-        // the infeasibility as a conflict constraint. The conflict constraint
-        // would have caused clique[pos].col to be fixed to
-        // (1-clique[pos].val) during the call to localdom.propagate() If it
-        // was already known before we decided to fix the column to
-        // clique[pos].val, which caused the infeasibility.
         localdom.propagate();
       } while (localdom.infeasible());
 
-      // a call to neighborhood.backtracked() will make sure that
-      // neighborhood.getFixingRate() will return the correct value after
-      // backtracking
-
-      // when we add backtracking like this we will surely need a limit on the
-      // number of backtracks and abort the heuristic if we encounter
-      // infeasibility after reaching the backtracking limit. Maybe try
-      // setting the limit to 10.
-#endif
+      neighborhood.backtracked();
     }
 
     localdom.propagate();
+
     if (localdom.infeasible()) {
       localdom.conflictAnalysis(mipsolver.mipdata_->conflictPool);
 
@@ -1407,10 +1434,10 @@ void HighsPrimalHeuristics::cliqueFixing() {
         localdom.backtrack();
         localdom.propagate();
       } while (localdom.infeasible());
+
+      neighborhood.backtracked();
     }
 
-    // todo: check neighborhood.getFixingRate() if it is above the desired
-    // threshold and break the loop if it is
     printf("Percentage variables fixed total: %8f\n",
            neighborhood.getFixingRate());
 
@@ -1419,8 +1446,6 @@ void HighsPrimalHeuristics::cliqueFixing() {
 
   double fixingRate = neighborhood.getFixingRate();
 
-  // todo: check if the fixing rate that was achieved is high enough, if not
-  // return without solving a submip
   if (fixingRate < threshold) return;
 
   // finally call solveSubMip with the bounds in localdom
