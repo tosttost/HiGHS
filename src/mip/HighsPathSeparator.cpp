@@ -207,7 +207,8 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
       for (HighsInt j = 0; j != baseRowLen; ++j) {
         HighsInt col = baseRowInds[j];
-        if (col >= lp.num_col_ || transLp.boundDistance(col) == 0.0 ||
+        if (col >= lp.num_col_ || col < 0 ||
+            transLp.boundDistance(col) == 0.0 ||
             lpRelaxation.isColIntegral(col))
           continue;
 

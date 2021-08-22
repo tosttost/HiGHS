@@ -415,11 +415,13 @@ void HighsDomain::CutpoolPropagation::backtrackCutRhs(
   for (HighsInt i = cutRhsChangeStack_.size() - 1; i >= 0; --i) {
     if (cutRhsChangeStack_[i].reasonPos < backtrackStackSize) {
       cutRhsChangeStack_.resize(i + 1);
-      break;
+      return;
     }
     cutRhs_[cutRhsChangeStack_[i].cutindex] = cutRhsChangeStack_[i].rhsVal;
     rhsPos_[cutRhsChangeStack_[i].cutindex] = cutRhsChangeStack_[i].prevRhsPos;
   }
+
+  cutRhsChangeStack_.clear();
 }
 
 void HighsDomain::CutpoolPropagation::explainCutRhs(
@@ -728,6 +730,8 @@ void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
     ninfmin = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
+      assert(col >= 0);
+
       double val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
@@ -749,12 +753,23 @@ void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
     ninfmin = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
+      double lb;
+      double ub;
+      if (col < 0) {
+        auto split = mipsolver->mipdata_->cutpool.getExtendedColSplit(col);
+
+        lb = col_lower_[split.first] >= split.second;
+        ub = col_upper_[split.first] < split.second;
+      } else {
+        lb = col_lower_[col];
+        ub = col_upper_[col];
+      }
+
       double val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
 
-      double contributionmin =
-          activityContributionMin(val, col_lower_[col], col_upper_[col]);
+      double contributionmin = activityContributionMin(val, lb, ub);
 
       if (contributionmin == -kHighsInf)
         ++ninfmin;
@@ -1963,6 +1978,14 @@ bool HighsDomain::propagate() {
             cutpoolprop.cutpool->getCut(i, Rlen, Rindex, Rvalue);
             cutpoolprop.activitycuts_[i].renormalize();
 
+            HighsInt numDynCols = cutpoolprop.cutpool->getNumDynamicCols(i);
+
+            if (numDynCols) {
+              Rlen -= numDynCols;
+              Rindex += numDynCols;
+              Rvalue += numDynCols;
+            }
+
             propRowNumChangedBounds_[k].first = propagateRowUpper(
                 Rindex, Rvalue, Rlen, cutpoolprop.cutRhs_[i],
                 cutpoolprop.activitycuts_[i], cutpoolprop.activitycutsinf_[i],
@@ -2374,15 +2397,10 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
         double minAct = globaldom.getMinCutActivity(
             *localdom.cutpoolpropagation[cutpoolIndex].cutpool, cutIndex);
 
-        if (!explainInfeasibilityLeq(
-                inds, vals, len,
-                localdom.cutpoolpropagation[cutpoolIndex].cutRhs_[cutIndex],
-                minAct))
-          return false;
-
-        localdom.cutpoolpropagation[cutpoolIndex].explainCutRhs(
-            cutIndex, resolvedDomainChanges);
-        return true;
+        return explainInfeasibilityLeq(inds, vals, len,
+                                       localdom.cutpoolpropagation[cutpoolIndex]
+                                           .cutpool->getRhs()[cutIndex],
+                                       minAct);
       } else {
         HighsInt conflictPoolIndex = localdom.infeasible_reason.type -
                                      localdom.cutpoolpropagation.size();
@@ -2452,16 +2470,74 @@ bool HighsDomain::ConflictSet::explainInfeasibilityLeq(const HighsInt* inds,
     double delta;
     HighsInt numNodes;
     HighsInt boundpos;
-    if (vals[i] > 0) {
-      double lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
-      if (globaldom.col_lower_[col] >= lb) continue;
-      delta = vals[i] * (lb - globaldom.col_lower_[col]);
-      numNodes = nodequeue.numNodesUp(col);
+    if (col < 0) {
+      // column with negative index is an extended column that splits an integer
+      // column
+      auto split =
+          localdom.mipsolver->mipdata_->cutpool.getExtendedColSplit(col);
+
+      // the extended column is binary and is fixed to 1 if the split columns
+      // lower bound is greater or equal to the split value
+
+      if (vals[i] > 0) {
+        double lb =
+            localdom.getColLowerPos(split.first, infeasible_pos, boundpos);
+
+        if (boundpos == -1) continue;
+
+        while (lb > split.second) {
+          // if the lower bound of the split column is strictly larger than the
+          // split value we can check if there is a previous domain change that
+          // is enough to fix the extended col
+          if (localdom.prevboundval_[boundpos].first < split.second) break;
+
+          lb = localdom.prevboundval_[boundpos].first;
+          boundpos = localdom.prevboundval_[boundpos].second;
+        }
+
+        // the extended column column is not fixed to 1, i.e. has its global
+        // lower bound of 0, if the current lower bound of the split column is
+        // below the split value
+        if (lb < split.second - 0.5) continue;
+
+        delta = vals[i];
+        numNodes = nodequeue.numNodesUp(split.first);
+      } else {
+        double ub =
+            localdom.getColUpperPos(split.first, infeasible_pos, boundpos);
+
+        if (boundpos == -1) continue;
+
+        while (ub < split.second - 1.5) {
+          // if the lower bound of the split column is strictly larger than the
+          // split value we can check if there is a previous domain change that
+          // is enough to fix the extended col
+          if (localdom.prevboundval_[boundpos].first >= split.second) break;
+
+          ub = localdom.prevboundval_[boundpos].first;
+          boundpos = localdom.prevboundval_[boundpos].second;
+        }
+
+        // the extended column column is not fixed to 1, i.e. has its global
+        // lower bound of 0, if the current lower bound of the split column is
+        // below the split value
+        if (ub >= split.second) continue;
+
+        delta = -vals[i];
+        numNodes = nodequeue.numNodesDown(split.first);
+      }
     } else {
-      double ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
-      if (globaldom.col_upper_[col] <= ub) continue;
-      delta = vals[i] * (ub - globaldom.col_upper_[col]);
-      numNodes = nodequeue.numNodesDown(col);
+      if (vals[i] > 0) {
+        double lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
+        if (globaldom.col_lower_[col] >= lb) continue;
+        delta = vals[i] * (lb - globaldom.col_lower_[col]);
+        numNodes = nodequeue.numNodesUp(col);
+      } else {
+        double ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
+        if (globaldom.col_upper_[col] <= ub) continue;
+        delta = vals[i] * (ub - globaldom.col_upper_[col]);
+        numNodes = nodequeue.numNodesDown(col);
+      }
     }
 
     if (boundpos == -1) continue;
@@ -2732,18 +2808,74 @@ bool HighsDomain::ConflictSet::explainBoundChangeLeq(
     double delta;
     HighsInt numNodes;
     HighsInt boundpos;
-    if (vals[i] > 0) {
-      double lb = localdom.getColLowerPos(col, pos, boundpos);
-      if (globaldom.col_lower_[col] >= lb) continue;
-      delta = vals[i] * (lb - globaldom.col_lower_[col]);
-      numNodes = nodequeue.numNodesUp(col);
-    } else {
-      double ub = localdom.getColUpperPos(col, pos, boundpos);
-      if (globaldom.col_upper_[col] <= ub) continue;
-      delta = vals[i] * (ub - globaldom.col_upper_[col]);
-      numNodes = nodequeue.numNodesDown(col);
-    }
 
+    if (col < 0) {
+      // column with negative index is an extended column that splits an integer
+      // column
+      auto split =
+          localdom.mipsolver->mipdata_->cutpool.getExtendedColSplit(col);
+
+      // the extended column is binary and is fixed to 1 if the split columns
+      // lower bound is greater or equal to the split value
+
+      if (vals[i] > 0) {
+        double lb = localdom.getColLowerPos(split.first, pos, boundpos);
+
+        if (boundpos == -1) continue;
+
+        while (lb > split.second) {
+          // if the lower bound of the split column is strictly larger than the
+          // split value we can check if there is a previous domain change that
+          // is enough to fix the extended col
+          if (localdom.prevboundval_[boundpos].first < split.second) break;
+
+          lb = localdom.prevboundval_[boundpos].first;
+          boundpos = localdom.prevboundval_[boundpos].second;
+        }
+
+        // the extended column column is not fixed to 1, i.e. has its global
+        // lower bound of 0, if the current lower bound of the split column is
+        // below the split value
+        if (lb < split.second - 0.5) continue;
+
+        delta = vals[i];
+        numNodes = nodequeue.numNodesUp(split.first);
+      } else {
+        double ub = localdom.getColUpperPos(split.first, pos, boundpos);
+
+        if (boundpos == -1) continue;
+
+        while (ub < split.second - 1.5) {
+          // if the lower bound of the split column is strictly larger than the
+          // split value we can check if there is a previous domain change that
+          // is enough to fix the extended col
+          if (localdom.prevboundval_[boundpos].first >= split.second) break;
+
+          ub = localdom.prevboundval_[boundpos].first;
+          boundpos = localdom.prevboundval_[boundpos].second;
+        }
+
+        // the extended column column is not fixed to 1, i.e. has its global
+        // lower bound of 0, if the current lower bound of the split column is
+        // below the split value
+        if (ub >= split.second) continue;
+
+        delta = -vals[i];
+        numNodes = nodequeue.numNodesDown(split.first);
+      }
+    } else {
+      if (vals[i] > 0) {
+        double lb = localdom.getColLowerPos(col, pos, boundpos);
+        if (globaldom.col_lower_[col] >= lb) continue;
+        delta = vals[i] * (lb - globaldom.col_lower_[col]);
+        numNodes = nodequeue.numNodesUp(col);
+      } else {
+        double ub = localdom.getColUpperPos(col, pos, boundpos);
+        if (globaldom.col_upper_[col] <= ub) continue;
+        delta = vals[i] * (ub - globaldom.col_upper_[col]);
+        numNodes = nodequeue.numNodesDown(col);
+      }
+    }
     if (boundpos == -1) continue;
 
     resolveBuffer.emplace_back(delta, numNodes, boundpos);
@@ -3010,8 +3142,6 @@ void HighsDomain::ConflictSet::conflictAnalysis(
 
   reasonSideFrontier.insert(resolvedDomainChanges.begin(),
                             resolvedDomainChanges.end());
-
-  assert(resolvedDomainChanges.size() == reasonSideFrontier.size());
 
   localdom.mipsolver->mipdata_->debugSolution.checkConflictReasonFrontier(
       reasonSideFrontier, localdom.domchgstack_);

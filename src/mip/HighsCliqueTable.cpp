@@ -1055,7 +1055,14 @@ void HighsCliqueTable::extractCliquesFromCut(const HighsMipSolver& mipsolver,
 
   HighsCDouble minact = 0.0;
   HighsInt nbin = 0;
+  HighsInt numDynCol = 0;
   for (HighsInt i = 0; i != len; ++i) {
+    if (inds[i] < 0) {
+      minact += std::min(0.0, vals[i]);
+      ++numDynCol;
+      continue;
+    }
+
     if (globaldom.isBinary(inds[i])) ++nbin;
 
     if (vals[i] > 0) {
@@ -1071,6 +1078,12 @@ void HighsCliqueTable::extractCliquesFromCut(const HighsMipSolver& mipsolver,
   std::vector<HighsInt> perm;
   perm.resize(len);
   std::iota(perm.begin(), perm.end(), 0);
+
+  if (numDynCol != 0) {
+    perm.erase(std::remove_if(perm.begin(), perm.end(),
+                              [&](HighsInt pos) { return inds[pos] < 0; }),
+               perm.end());
+  }
 
   auto binaryend = std::partition(perm.begin(), perm.end(), [&](HighsInt pos) {
     return globaldom.isBinary(inds[pos]);

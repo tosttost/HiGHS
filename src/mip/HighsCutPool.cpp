@@ -91,6 +91,16 @@ bool HighsCutPool::isDuplicate(size_t hash, double norm, const HighsInt* Rindex,
   return false;
 }
 
+HighsInt HighsCutPool::getExtendedColIndex(HighsInt col, double splitpoint) {
+  std::map<double, ExtendedColumn>& splitpoints = extendedCols[col];
+
+  auto i = splitpoints.find(splitpoint);
+
+  assert(i != splitpoints.end());
+
+  return i->second.index;
+}
+
 HighsInt HighsCutPool::acquireExtendedCol(HighsInt col, double splitpoint) {
   std::map<double, ExtendedColumn>& splitpoints = extendedCols[col];
 
@@ -100,12 +110,12 @@ HighsInt HighsCutPool::acquireExtendedCol(HighsInt col, double splitpoint) {
 
     if (freeExtendedColIndex.empty()) {
       newindex = -(extendedColReverseMap.size() + 1);
-      extendedColReverseMap.insert(newindex, std::make_pair(col, splitpoint));
     } else {
       newindex = freeExtendedColIndex.back();
       freeExtendedColIndex.pop_back();
     }
 
+    extendedColReverseMap.insert(newindex, std::make_pair(col, splitpoint));
     insertRes.first->second.index = newindex;
   }
 

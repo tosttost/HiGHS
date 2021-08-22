@@ -46,6 +46,7 @@ class HighsTransformedLp {
   std::vector<double> ubDist;
   std::vector<double> boundDist;
 
+  HighsHashTable<HighsInt> extColIsComplemented;
   struct ExtendedCol {
     double splitPos;
     HighsInt splitCol;

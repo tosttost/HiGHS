@@ -143,7 +143,8 @@ class HighsDomain {
 
     void backtrackCutRhs(HighsInt backtrackStackSize);
 
-    void explainCutRhs(HighsInt cut, std::vector<HighsInt>& resolvedDomainChanges);
+    void explainCutRhs(HighsInt cut,
+                       std::vector<HighsInt>& resolvedDomainChanges);
 
     void cutAdded(HighsInt cut, bool propagate);
 

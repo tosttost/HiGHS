@@ -159,8 +159,20 @@ void HighsDebugSol::checkCut(const HighsInt* Rindex, const double* Rvalue,
 
   HighsCDouble violation = -rhs;
 
-  for (HighsInt i = 0; i != Rlen; ++i)
-    violation += debugSolution[Rindex[i]] * Rvalue[i];
+  for (HighsInt i = 0; i != Rlen; ++i) {
+    double solval;
+
+    if (Rindex[i] < 0) {
+      auto split = mipsolver->mipdata_->cutpool.getExtendedColSplit(Rindex[i]);
+      if (debugSolution[split.first] > split.second - 0.5)
+        solval = 1.0;
+      else
+        solval = 0.0;
+    } else
+      solval = debugSolution[Rindex[i]];
+
+    violation += solval * Rvalue[i];
+  }
 
   assert(violation <= mipsolver->mipdata_->feastol);
 }

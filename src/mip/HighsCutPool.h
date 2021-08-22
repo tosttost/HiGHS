@@ -104,6 +104,8 @@ class HighsCutPool {
     minDensityLim = 0.1 * ncols;
   }
 
+  HighsInt getExtendedColIndex(HighsInt col, double splitpoint);
+
   HighsInt acquireExtendedCol(HighsInt col, double splitpoint);
 
   void acquireExtendedCol(HighsInt extCol);

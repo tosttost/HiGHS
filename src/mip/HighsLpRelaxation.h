@@ -151,12 +151,13 @@ class HighsLpRelaxation {
   }
 
   bool isColIntegral(HighsInt col) const {
+    if (col < 0) return true;
     return col < lpsolver.getLp().num_col_
                ? mipsolver.variableType(col) != HighsVarType::kContinuous
-               : col >= lpsolver.getLp().num_col_ + lpsolver.getLp().num_row_ ||
-                     isRowIntegral(col - lpsolver.getLp().num_col_);
+               : isRowIntegral(col - lpsolver.getLp().num_col_);
   }
 
+#if 0
   double solutionValue(HighsInt col) const {
     return col < lpsolver.getLp().num_col_
                ? getSolution().col_value[col]
@@ -164,6 +165,7 @@ class HighsLpRelaxation {
                      ? 1.0
                      : getSolution().row_value[col - lpsolver.getLp().num_col_];
   }
+#endif
 
   Status getStatus() const { return status; }
 

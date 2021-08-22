@@ -14,6 +14,7 @@
 
 #include <algorithm>
 
+#include "HighsSparseVectorSum.h"
 #include "mip/HighsCutPool.h"
 #include "mip/HighsDomain.h"
 #include "mip/HighsMipSolver.h"
@@ -76,9 +77,21 @@ double HighsLpRelaxation::LpRow::getMaxAbsVal(
 
 double HighsLpRelaxation::slackLower(HighsInt row) const {
   switch (lprows[row].origin) {
-    case LpRow::kCutPool:
-      return mipsolver.mipdata_->domain.getMinCutActivity(
+    case LpRow::kCutPool: {
+      double minact = mipsolver.mipdata_->domain.getMinCutActivity(
           mipsolver.mipdata_->cutpool, lprows[row].index);
+
+      if (mipsolver.mipdata_->cutpool.getNumDynamicCols(lprows[row].index) !=
+          0) {
+        double initRhs =
+            mipsolver.mipdata_->cutpool.getRhs()[lprows[row].index];
+        double globalRhs = mipsolver.mipdata_->domain.getCutRhs(
+            mipsolver.mipdata_->cutpool, lprows[row].index);
+        minact += initRhs - globalRhs;
+      }
+
+      return minact;
+    }
     case LpRow::kModel:
       double rowlower = rowLower(row);
       if (rowlower != -kHighsInf) return rowlower;
@@ -93,7 +106,7 @@ double HighsLpRelaxation::slackUpper(HighsInt row) const {
   double rowupper = rowUpper(row);
   switch (lprows[row].origin) {
     case LpRow::kCutPool:
-      return rowupper;
+      return mipsolver.mipdata_->cutpool.getRhs()[lprows[row].index];
     case LpRow::kModel:
       if (rowupper != kHighsInf) return rowupper;
       return mipsolver.mipdata_->domain.getMaxActivity(lprows[row].index);
@@ -420,7 +433,7 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
   assert(std::isfinite(upperbound));
   HighsCDouble upper = upperbound;
 
-  for (HighsInt i = 0; i != lp.num_row_; ++i) {
+  for (HighsInt i = 0; i < mipsolver.numRow(); ++i) {
     // @FlipRowDual row_dual[i] < 0 became row_dual[i] > 0
     if (row_dual[i] > 0) {
       if (lp.row_lower_[i] != -kHighsInf)
@@ -438,10 +451,65 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
     }
   }
 
+  std::vector<HighsInt> rowsWithDynamicCols;
+
+  const auto& cutRhs = mipsolver.mipdata_->cutpool.getRhs();
+
+  for (HighsInt i = mipsolver.numRow(); i < lp.num_row_; ++i) {
+    if (row_dual[i] < 0) {
+      assert(lp.row_upper_[i] != kHighsInf);
+      if (mipsolver.mipdata_->cutpool.getNumDynamicCols(lprows[i].index) == 0)
+        upper -= row_dual[i] * lp.row_upper_[i];
+      else {
+        rowsWithDynamicCols.push_back(i);
+        upper -= row_dual[i] * cutRhs[lprows[i].index];
+      }
+    } else if (row_dual[i] > 0) {
+      assert(lp.row_lower_[i] == -kHighsInf);
+      row_dual[i] = 0;
+    }
+  }
+
   inds.clear();
   vals.clear();
   inds.reserve(lp.num_col_);
   vals.reserve(lp.num_col_);
+  if (!rowsWithDynamicCols.empty()) {
+    HighsSparseVectorSum dyncolcoefs(
+        0, -mipsolver.mipdata_->cutpool.minExtendedColIndex());
+
+    for (HighsInt i : rowsWithDynamicCols) {
+      HighsInt cut = lprows[i].index;
+      HighsInt cutLen;
+      const HighsInt* cutinds;
+      const double* cutvals;
+      mipsolver.mipdata_->cutpool.getCut(cut, cutLen, cutinds, cutvals);
+      cutLen = mipsolver.mipdata_->cutpool.getNumDynamicCols(cut);
+
+      for (HighsInt j = 0; j < cutLen; ++j) {
+        assert(cutinds[j] < 0);
+        dyncolcoefs.add(cutinds[j], row_dual[i] * cutvals[j]);
+      }
+    }
+
+    dyncolcoefs.cleanup([&](HighsInt col, double val) {
+      if (std::abs(val) > mipsolver.mipdata_->feastol) return false;
+
+      if (val >= -mipsolver.options_mip_->small_matrix_value) return true;
+
+      upper -= val;
+      return true;
+    });
+
+    inds = dyncolcoefs.getNonzeros();
+    HighsInt numDynCols = inds.size();
+    printf("dual proof has %d dynamic columns\n", numDynCols);
+    vals.resize(numDynCols);
+
+    for (HighsInt j = 0; j < numDynCols; ++j)
+      vals[j] = dyncolcoefs.getValue(inds[j]);
+  }
+
   for (HighsInt i = 0; i != lp.num_col_; ++i) {
     HighsInt start = lp.a_matrix_.start_[i];
     HighsInt end = lp.a_matrix_.start_[i + 1];
@@ -548,7 +616,7 @@ void HighsLpRelaxation::storeDualInfProof() {
     }
   }
 
-  for (HighsInt i = 0; i != lp.num_row_; ++i) {
+  for (HighsInt i = 0; i < mipsolver.numRow(); ++i) {
     if (dualray[i] < 0) {
       assert(lp.row_upper_[i] != kHighsInf);
       upper -= dualray[i] * lp.row_upper_[i];
@@ -556,6 +624,59 @@ void HighsLpRelaxation::storeDualInfProof() {
       assert(lp.row_lower_[i] != -kHighsInf);
       upper -= dualray[i] * lp.row_lower_[i];
     }
+  }
+
+  std::vector<HighsInt> rowsWithDynamicCols;
+
+  const auto& cutRhs = mipsolver.mipdata_->cutpool.getRhs();
+
+  for (HighsInt i = mipsolver.numRow(); i < lp.num_row_; ++i) {
+    assert(dualray[i] <= 0.0);
+    if (dualray[i] == 0.0) continue;
+
+    assert(lp.row_upper_[i] != kHighsInf);
+    if (mipsolver.mipdata_->cutpool.getNumDynamicCols(lprows[i].index) == 0)
+      upper -= dualray[i] * lp.row_upper_[i];
+    else {
+      rowsWithDynamicCols.push_back(i);
+      upper -= dualray[i] * cutRhs[lprows[i].index];
+    }
+  }
+
+  if (!rowsWithDynamicCols.empty()) {
+    HighsSparseVectorSum dyncolcoefs(
+        0, -mipsolver.mipdata_->cutpool.minExtendedColIndex());
+
+    for (HighsInt i : rowsWithDynamicCols) {
+      HighsInt cut = lprows[i].index;
+      HighsInt cutLen;
+      const HighsInt* cutinds;
+      const double* cutvals;
+      mipsolver.mipdata_->cutpool.getCut(cut, cutLen, cutinds, cutvals);
+      cutLen = mipsolver.mipdata_->cutpool.getNumDynamicCols(cut);
+
+      for (HighsInt j = 0; j < cutLen; ++j) {
+        assert(cutinds[j] < 0);
+        dyncolcoefs.add(cutinds[j], dualray[i] * cutvals[j]);
+      }
+    }
+
+    dyncolcoefs.cleanup([&](HighsInt col, double val) {
+      if (std::abs(val) > mipsolver.mipdata_->feastol) return false;
+
+      if (val >= -mipsolver.options_mip_->small_matrix_value) return true;
+
+      upper -= val;
+      return true;
+    });
+
+    dualproofinds = dyncolcoefs.getNonzeros();
+    HighsInt numDynCols = dualproofinds.size();
+    printf("dual inf proof has %d dynamic columns\n", numDynCols);
+    dualproofvals.resize(numDynCols);
+
+    for (HighsInt j = 0; j < numDynCols; ++j)
+      dualproofvals[j] = dyncolcoefs.getValue(dualproofinds[j]);
   }
 
   for (HighsInt i = 0; i != lp.num_col_; ++i) {
@@ -630,6 +751,21 @@ bool HighsLpRelaxation::checkDualProof() const {
 
   for (HighsInt i = 0; i != len; ++i) {
     HighsInt col = dualproofinds[i];
+
+    if (col < 0) {
+      auto split = mipsolver.mipdata_->cutpool.getExtendedColSplit(col);
+
+      if (dualproofvals[i] > 0) {
+        if (lp.col_lower_[split.first] >= split.second)
+          viol += dualproofvals[i];
+      } else {
+        if (lp.col_upper_[split.first] >= split.second)
+          viol += dualproofvals[i];
+      }
+
+      continue;
+    }
+
     if (dualproofvals[i] > 0) {
       if (lp.col_lower_[col] == -kHighsInf) return false;
       viol += dualproofvals[i] * lp.col_lower_[col];

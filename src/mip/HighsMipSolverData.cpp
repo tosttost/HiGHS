@@ -623,6 +623,10 @@ void HighsMipSolverData::performRestart() {
   presolvedModel = lp.getLp();
   presolvedModel.offset_ = offset;
   presolvedModel.integrality_ = std::move(integrality);
+  for( HighsInt i = numModelRows; i < presolvedModel.num_row_; ++i )
+  {
+    
+  }
   const HighsBasis& basis = lp.getLpSolver().getBasis();
   if (basis.valid) {
     // if we have a basis after solving the root LP, we expand it to the

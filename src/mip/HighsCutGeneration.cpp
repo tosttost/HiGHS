@@ -96,11 +96,27 @@ bool HighsCutGeneration::determineCover(bool lpSol) {
               int64_t numNodesA;
               int64_t numNodesB;
 
-              numNodesA = complementation[i] ? nodequeue.numNodesDown(inds[i])
-                                             : nodequeue.numNodesUp(inds[i]);
+              if (inds[i] < 0) {
+                auto split = cutpool.getExtendedColSplit(inds[i]);
 
-              numNodesB = complementation[j] ? nodequeue.numNodesDown(inds[j])
-                                             : nodequeue.numNodesUp(inds[j]);
+                numNodesA = complementation[i]
+                                ? nodequeue.numNodesDown(split.first)
+                                : nodequeue.numNodesUp(split.first);
+              } else {
+                numNodesA = complementation[i] ? nodequeue.numNodesDown(inds[i])
+                                               : nodequeue.numNodesUp(inds[i]);
+              }
+
+              if (inds[j] < 0) {
+                auto split = cutpool.getExtendedColSplit(inds[j]);
+
+                numNodesB = complementation[j]
+                                ? nodequeue.numNodesDown(split.first)
+                                : nodequeue.numNodesUp(split.first);
+              } else {
+                numNodesB = complementation[j] ? nodequeue.numNodesDown(inds[j])
+                                               : nodequeue.numNodesUp(inds[j]);
+              }
 
               if (numNodesA > numNodesB) return true;
               if (numNodesA < numNodesB) return false;
@@ -1026,7 +1042,7 @@ bool HighsCutGeneration::preprocessBaseInequality(bool& hasUnboundedInts,
   return maxact > rhs;
 }
 
-#if 0
+#if 1
 static void checkNumerics(const double* vals, HighsInt len, double rhs) {
   double maxAbsCoef = 0.0;
   double minAbsCoef = kHighsInf;
@@ -1049,7 +1065,7 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
                                      std::vector<HighsInt>& inds_,
                                      std::vector<double>& vals_, double& rhs_,
                                      bool onlyInitialCMIRScale) {
-#if 0
+#if 1
   if (vals_.size() > 1) {
     std::vector<HighsInt> indsCheck_ = inds_;
     std::vector<double> valsCheck_ = vals_;
@@ -1319,21 +1335,43 @@ bool HighsCutGeneration::generateConflict(HighsDomain& localdomain,
   HighsDomain& globaldomain = lpRelaxation.getMipSolver().mipdata_->domain;
   for (HighsInt i = 0; i != rowlen; ++i) {
     HighsInt col = inds[i];
+    double glb;
+    double gub;
+    if (col < 0) {
+      glb = 0.0;
+      gub = 1.0;
 
-    upper[i] = globaldomain.col_upper_[col] - globaldomain.col_lower_[col];
+      auto split = cutpool.getExtendedColSplit(col);
+      if (vals[i] < 0) {
+        // local upper bound of extended column is zero if the local upper bound
+        // of the split column is below the split value
+        solval[i] = localdomain.col_upper_[split.first] < split.second - 0.5
+                        ? 0.0
+                        : 1.0;
+      } else {
+        // local lower bound of extended column is one if the local lower bound
+        // of the split column is greater or equal to the split value
+        solval[i] =
+            localdomain.col_lower_[split.first] >= split.second ? 1.0 : 0.0;
+      }
+    } else {
+      glb = globaldomain.col_lower_[col];
+      gub = globaldomain.col_upper_[col];
+      solval[i] = vals[i] < 0 ? localdomain.col_upper_[col]
+                              : localdomain.col_lower_[col];
+    }
 
-    solval[i] =
-        vals[i] < 0 ? localdomain.col_upper_[col] : localdomain.col_lower_[col];
-    if (vals[i] < 0 && globaldomain.col_upper_[col] != kHighsInf) {
-      rhs -= globaldomain.col_upper_[col] * vals[i];
+    upper[i] = gub - glb;
+    if (vals[i] < 0 && gub != kHighsInf) {
+      rhs -= gub * vals[i];
       vals[i] = -vals[i];
       complementation[i] = 1;
 
-      solval[i] = globaldomain.col_upper_[col] - solval[i];
+      solval[i] = gub - solval[i];
     } else {
-      rhs -= globaldomain.col_lower_[col] * vals[i];
+      rhs -= glb * vals[i];
       complementation[i] = 0;
-      solval[i] = solval[i] - globaldomain.col_lower_[col];
+      solval[i] = solval[i] - glb;
     }
   }
 
@@ -1418,9 +1456,10 @@ bool HighsCutGeneration::generateConflict(HighsDomain& localdomain,
   if (!complementation.empty()) {
     for (HighsInt i = 0; i != rowlen; ++i) {
       if (complementation[i]) {
-        rhs -= globaldomain.col_upper_[inds[i]] * vals[i];
+        double ub = inds[i] < 0 ? 1.0 : globaldomain.col_upper_[inds[i]];
+        rhs -= ub * vals[i];
         vals[i] = -vals[i];
-      } else
+      } else if (inds[i] >= 0)
         rhs += globaldomain.col_lower_[inds[i]] * vals[i];
     }
   }
