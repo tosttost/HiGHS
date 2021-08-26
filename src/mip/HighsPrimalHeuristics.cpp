@@ -1296,7 +1296,7 @@ void HighsPrimalHeuristics::cliqueFixing() {
         objectiveCoefficient = -objectiveCoefficient;
       }
 
-      if (uplocks - downlocks < leastLocks) {
+      if (uplocks - downlocks <= leastLocks) {
         if (objectiveCoefficient < lowestObjectiveCoefficient) {
           pos = i;
           leastLocks = uplocks - downlocks;
