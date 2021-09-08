@@ -342,7 +342,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
     return best;
   };
 
-  bool resetBasis = false;
+  HighsInt freezeBasis = -1;
 
   while (true) {
     bool mustStop = getStrongBranchingLpIterations() >= maxSbIters ||
@@ -352,10 +352,12 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
 
     if ((upscorereliable[candidate] && downscorereliable[candidate]) ||
         mustStop) {
-      if (resetBasis) {
-        lp->setStoredBasis(nodestack.back().nodeBasis);
-        lp->recoverBasis();
+      if (freezeBasis != -1) {
+        lp->getLpSolver().unfreezeBasis(freezeBasis);
+        int64_t numIter = -lp->getNumLpIterations();
         lp->run();
+        numIter += lp->getNumLpIterations();
+        assert(numIter == 0);
       }
       return candidate;
     }
@@ -526,9 +528,9 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
 
       pseudocost.addInferenceObservation(col, inferences, false);
 
+      lp->getLpSolver().freezeBasis(freezeBasis);
       lp->flushDomain(localdom);
 
-      resetBasis = true;
       int64_t numiters = lp->getNumLpIterations();
       HighsLpRelaxation::Status status = lp->run(false);
       numiters = lp->getNumLpIterations() - numiters;
@@ -593,7 +595,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
             depthoffset -= 1;
 
             lp->setStoredBasis(nodestack.back().nodeBasis);
-            if (numiters > basisstart_threshold) lp->recoverBasis();
+            lp->getLpSolver().unfreezeBasis(freezeBasis);
             return -1;
           }
         }
@@ -610,7 +612,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
         depthoffset -= 1;
 
         lp->setStoredBasis(nodestack.back().nodeBasis);
-        if (numiters > basisstart_threshold) lp->recoverBasis();
+        lp->getLpSolver().unfreezeBasis(freezeBasis);
         return -1;
       } else {
         // printf("todo2\n");
@@ -626,7 +628,8 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
 
       localdom.backtrack();
       lp->flushDomain(localdom);
-      if (numiters > basisstart_threshold) lp->recoverBasis();
+      lp->getLpSolver().unfreezeBasis(freezeBasis);
+      freezeBasis = -1;
     } else {
       // evaluate up branch
       int64_t inferences = -(int64_t)localdom.getDomainChangeStack().size() - 1;
@@ -661,9 +664,9 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
 
       pseudocost.addInferenceObservation(col, inferences, true);
 
+      lp->getLpSolver().freezeBasis(freezeBasis);
       lp->flushDomain(localdom);
 
-      resetBasis = true;
       int64_t numiters = lp->getNumLpIterations();
       HighsLpRelaxation::Status status = lp->run(false);
       numiters = lp->getNumLpIterations() - numiters;
@@ -712,7 +715,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
             depthoffset -= 1;
 
             lp->setStoredBasis(nodestack.back().nodeBasis);
-            if (numiters > basisstart_threshold) lp->recoverBasis();
+            lp->getLpSolver().unfreezeBasis(freezeBasis);
             return -1;
           }
         } else if (solobj > getCutoffBound()) {
@@ -729,7 +732,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
             depthoffset -= 1;
 
             lp->setStoredBasis(nodestack.back().nodeBasis);
-            if (numiters > basisstart_threshold) lp->recoverBasis();
+            lp->getLpSolver().unfreezeBasis(freezeBasis);
             return -1;
           }
         }
@@ -746,7 +749,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
         depthoffset -= 1;
 
         lp->setStoredBasis(nodestack.back().nodeBasis);
-        if (numiters > basisstart_threshold) lp->recoverBasis();
+        lp->getLpSolver().unfreezeBasis(freezeBasis);
         return -1;
       } else {
         // printf("todo2\n");
@@ -762,7 +765,8 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
 
       localdom.backtrack();
       lp->flushDomain(localdom);
-      if (numiters > basisstart_threshold) lp->recoverBasis();
+      lp->getLpSolver().unfreezeBasis(freezeBasis);
+      freezeBasis = -1;
     }
   }
 }
@@ -1118,6 +1122,7 @@ HighsSearch::NodeResult HighsSearch::branch() {
     pseudocost.setDegeneracyFactor(degeneracyFac);
     if (degeneracyFac >= 10.0) pseudocost.setMinReliable(0);
     HighsInt branchcand = selectBranchingCandidate(sbmaxiters);
+    assert(lp->getLpSolver().frozenBasisAllDataClear() == HighsStatus::kOk);
     NodeData& currnode = nodestack.back();
     if (branchcand != -1) {
       auto branching = lp->getFractionalIntegers()[branchcand];
