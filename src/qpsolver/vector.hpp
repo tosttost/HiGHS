@@ -32,6 +32,7 @@ struct Vector {
   }
 
   Vector& repopulate(const Vector& other) {
+    dim = other.dim;
     reset();
     for (HighsInt i = 0; i < other.num_nz; i++) {
       index[i] = other.index[i];

@@ -90,14 +90,15 @@ void computerowmove(Runtime& runtime, Basis& basis, Vector& p,
 // VECTOR
 Vector& computesearchdirection_minor(Runtime& rt, Basis& bas,
                                      NewCholeskyFactor& cf,
-                                     ReducedGradient& redgrad, Vector& p) {
-  Vector g2 = -redgrad.get();
-  g2.sanitize();
-  cf.solve(g2);
+                                     ReducedGradient& redgrad, Vector& buffer_g, Vector& p) {
+  buffer_g.repopulate(redgrad.get());
+  buffer_g.scale(-1.0);
+  buffer_g.sanitize();
+  cf.solve(buffer_g);
 
-  g2.sanitize();
+  buffer_g.sanitize();
 
-  return bas.Zprod(g2, p);
+  return bas.Zprod(buffer_g, p);
 }
 
 // VECTOR
@@ -133,19 +134,17 @@ double computemaxsteplength(Runtime& runtime, const Vector& p,
 }
 
 void reduce(Runtime& rt, Basis& basis, const HighsInt newactivecon,
-            Vector& buffer_d, HighsInt& maxabsd, HighsInt& constrainttodrop) {
+            Vector& buffer_d, Vector& buffer_aq, HighsInt& maxabsd, HighsInt& constrainttodrop) {
   HighsInt idx = indexof(basis.getinactive(), newactivecon);
   if (idx != -1) {
     maxabsd = idx;
     constrainttodrop = newactivecon;
     Vector::unit(basis.getinactive().size(), idx, buffer_d);
     return;
-    // return NullspaceReductionResult(true);
   }
 
-  // TODO: this operation is inefficient.
-  Vector aq = rt.instance.A.t().extractcol(newactivecon);
-  basis.Ztprod(aq, buffer_d, true, newactivecon);
+  rt.instance.A.t().extractcol(newactivecon, buffer_aq);
+  basis.Ztprod(buffer_aq, buffer_d, true, newactivecon);
 
   maxabsd = 0;
   for (HighsInt i = 0; i < buffer_d.num_nz; i++) {
@@ -163,7 +162,6 @@ void reduce(Runtime& rt, Basis& basis, const HighsInt newactivecon,
     exit(1);
   }
   return;
-  // return NullspaceReductionResult(idx != -1);
 }
 
 void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
@@ -185,13 +183,22 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
   Vector p(runtime.instance.num_var);
   Vector rowmove(runtime.instance.num_con);
 
+  // buffer for Zep (p=droppedcon)
   Vector buffer_yp(runtime.instance.num_var);
+  // buffer for Qyp
   Vector buffer_gyp(runtime.instance.num_var);
+  // buffer for new row of reduced Cholesky factor
   Vector buffer_l(runtime.instance.num_var);
+  // buffer for reduced gradient
+  Vector buffer_g(runtime.instance.num_var);
 
+  // buffer for a_q (q=newactivecon)
+  Vector buffer_aq(runtime.instance.num_var);
+
+  // buffer for Qp
   Vector buffer_Qp(runtime.instance.num_var);
 
-  // buffers for reduction
+  // buffer for Z'aq (q=newactivecon)
   Vector buffer_d(runtime.instance.num_var);
 
   bool atfsep = basis.getnumactive() == runtime.instance.num_var;
@@ -213,7 +220,6 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
     double maxsteplength = 1.0;
     if (atfsep) {
       HighsInt minidx = pricing->price(runtime.primal, gradient.getGradient());
-      // printf("%u -> ", minidx);
       if (minidx == -1) {
         runtime.status = ProblemStatus::OPTIMAL;
         break;
@@ -231,13 +237,12 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
       tidyup(p, rowmove, basis, runtime);
       maxsteplength = std::numeric_limits<double>::infinity();
       if (runtime.instance.Q.mat.value.size() > 0) {
-        double denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
         maxsteplength = computemaxsteplength(runtime, p, gradient, buffer_Qp);
         factor.expand(buffer_yp, buffer_gyp, buffer_l);
       }
       redgrad.expand(buffer_yp);
     } else {
-      computesearchdirection_minor(runtime, basis, factor, redgrad, p);
+      computesearchdirection_minor(runtime, basis, factor, redgrad, buffer_g, p);
       computerowmove(runtime, basis, p, rowmove);
       tidyup(p, rowmove, basis, runtime);
     }
@@ -253,7 +258,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
       if (stepres.limitingconstraint != -1) {
         HighsInt constrainttodrop;
         HighsInt maxabsd;
-        reduce(runtime, basis, stepres.limitingconstraint, buffer_d, maxabsd,
+        reduce(runtime, basis, stepres.limitingconstraint, buffer_d, buffer_aq, maxabsd,
                constrainttodrop);
         if (runtime.instance.Q.mat.value.size() > 0) {
           factor.reduce(
