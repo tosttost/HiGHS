@@ -77,16 +77,15 @@ class DevexPricing : public Pricing {
                       HighsInt q) {
     HighsInt rowindex_p = basis.getindexinfactor()[p];
     double weight_p = weights[rowindex_p];
-    double aq_p2 = aq.value[rowindex_p] * aq.value[rowindex_p];
+    double aq_p2 = weight_p / (aq.value[rowindex_p] * aq.value[rowindex_p]);
     for (HighsInt i = 0; i < runtime.instance.num_var; i++) {
-      weights[i] += (aq.value[i] * aq.value[i]) /
-                      aq_p2 * weight_p *
-                      weight_p;
+      weights[i] += (aq.value[i] * aq.value[i]) *
+                      aq_p2 * weight_p;
       if (weights[i] > 10E6) {
         weights[i] = 1.0;
       }
     }
-    weights[rowindex_p] = weight_p / aq_p2;
+    weights[rowindex_p] = aq_p2;
   }
 };
 
