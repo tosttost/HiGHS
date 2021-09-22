@@ -143,6 +143,7 @@ void HEkk::clearEkkData() {
 
   this->build_synthetic_tick_ = 0.0;
   this->total_synthetic_tick_ = 0.0;
+  this->debug_solve_call_num_ = 0;
 }
 
 void HEkk::clearEkkDataInfo() {
@@ -1012,6 +1013,7 @@ HighsStatus HEkk::unpermute() {
 }
 
 HighsStatus HEkk::solve() {
+  debug_solve_call_num++;
   initialiseAnalysis();
   initialiseControl();
 
