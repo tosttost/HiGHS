@@ -630,14 +630,17 @@ void HEkkDual::solvePhase1() {
       // the final clean-up
       solve_phase = kSolvePhase2;
     } else {
-      // A negative dual objective value at an optimal solution of
-      // phase 1 means that there are dual infeasibilities. If the
+      // A nonzero dual objective value at an optimal solution of
+      // phase 1 means that there may be dual infeasibilities. If the
       // objective value is very negative, then it's clear
-      // enough. However, if it's small, it could be the sum of
-      // values, all of which are smaller than the dual deasibility
-      // tolerance. Plus there may be cost perturbations to remove
-      // before reliable conclusions on dual infeasibility of the
-      // (scaled) LP being solved can be drawn.
+      // enough. However, if it's small in magnitude, it could be the
+      // sum of values, all of which are smaller than the dual
+      // feasibility tolerance. Plus there may be cost perturbations
+      // to remove before reliable conclusions on dual infeasibility
+      // of the (scaled) LP being solved can be drawn.
+      //
+      // If assessPhase1Optimality() is happy that there are no dual
+      // infeasibilities, it will set solve_phase = kSolvePhase2;
       assessPhase1Optimality();
     }
   } else if (rebuild_reason == kRebuildReasonChooseColumnFail) {
@@ -703,9 +706,14 @@ void HEkkDual::solvePhase1() {
     ekk_instance_.initialiseBound(SimplexAlgorithm::kDual, kSolvePhase2);
     ekk_instance_.initialiseNonbasicValueAndMove();
     if (solve_phase == kSolvePhase2) {
-      // Moving to phase 2 so comment if cost perturbation is not permitted
-      //
-      // It may have been prevented to avoid cleanup-perturbation loops
+      // Moving to phase 2 so possibly reinstate cost perturbation
+      if (ekk_instance_.dual_simplex_phase1_cleanup_level_ <
+          ekk_instance_.options_->max_dual_simplex_phase1_cleanup_level) {
+        // Allow cost perturbation for now, but may have to prevent it
+        // to avoid cleanup-perturbation loops
+        info.allow_cost_perturbation = true;
+      }
+      // Comment if cost perturbation is not permitted
       if (!info.allow_cost_perturbation)
         highsLogDev(ekk_instance_.options_->log_options, HighsLogType::kWarning,
                     "Moving to phase 2, but not allowing cost perturbation\n");
@@ -735,6 +743,16 @@ void HEkkDual::solvePhase2() {
   //
   // kSolvePhaseCleanup => Continue with primal phase 2 iterations to clean up
   // dual infeasibilities
+  //
+  // Have to set multi_chooseAgain = 1 since it may come in set to 0
+  // from the end of Phase 1, implying that there is a set of
+  // attractive candidates to choose from in minorChooseRow() so
+  // majorChooseRow() is unnecessary. If there are no such candidates
+  // optimality may be declared in error. Previously, the forced
+  // reinversion in the rebuild at the start of phase 2 led to
+  // update_count == 0 causing multi_chooseAgain to be set to 1 in
+  // majorChooseRow!
+  multi_chooseAgain = 1;
   HighsSimplexInfo& info = ekk_instance_.info_;
   HighsSimplexStatus& status = ekk_instance_.status_;
   HighsModelStatus& model_status = ekk_instance_.model_status_;
@@ -1005,6 +1023,22 @@ void HEkkDual::rebuild() {
 }
 
 void HEkkDual::cleanup() {
+  if (solve_phase == kSolvePhase1) {
+    // Take action to prevent infinite loop. Shouldn't get to this
+    // stage, since cost perturbation isn't permitted unless the dual
+    // simplex phase 1 cleanup level is less than the limit
+    ekk_instance_.dual_simplex_phase1_cleanup_level_++;
+    const bool excessive_cleanup_calls =
+        ekk_instance_.dual_simplex_phase1_cleanup_level_ >
+        ekk_instance_.options_->max_dual_simplex_phase1_cleanup_level;
+    if (excessive_cleanup_calls) {
+      highsLogDev(
+          ekk_instance_.options_->log_options, HighsLogType::kError,
+          "Dual simplex cleanup level has exceeded limit of %d\n",
+          (int)ekk_instance_.options_->max_dual_simplex_phase1_cleanup_level);
+      assert(!excessive_cleanup_calls);
+    }
+  }
   highsLogDev(ekk_instance_.options_->log_options, HighsLogType::kDetailed,
               "dual-cleanup-shift\n");
   HighsSimplexInfo& info = ekk_instance_.info_;
@@ -1149,6 +1183,8 @@ void HEkkDual::iterateTasks() {
 }
 
 void HEkkDual::iterationAnalysisData() {
+  double cost_scale_factor =
+      pow(2.0, -ekk_instance_.options_->cost_scale_factor);
   HighsSimplexInfo& info = ekk_instance_.info_;
   analysis->simplex_strategy = info.simplex_strategy;
   analysis->edge_weight_mode = dual_edge_weight_mode;
@@ -1164,7 +1200,7 @@ void HEkkDual::iterationAnalysisData() {
   analysis->edge_weight = 0;
   analysis->primal_delta = delta_primal;
   analysis->primal_step = theta_primal;
-  analysis->dual_step = theta_dual;
+  analysis->dual_step = theta_dual * cost_scale_factor;
   analysis->pivot_value_from_column = alpha_col;
   analysis->pivot_value_from_row = alpha_row;
   analysis->factor_pivot_threshold = info.factor_pivot_threshold;
@@ -1220,7 +1256,7 @@ void HEkkDual::iterationAnalysis() {
       initialiseDevexFramework();
     }
   }
-  if (analysis->analyse_simplex_data) analysis->iterationRecord();
+  if (analysis->analyse_simplex_summary_data) analysis->iterationRecord();
 }
 
 void HEkkDual::reportRebuild(const HighsInt reason_for_rebuild) {
@@ -1254,13 +1290,13 @@ void HEkkDual::chooseRow() {
     row_ep.index[0] = row_out;
     row_ep.array[row_out] = 1;
     row_ep.packFlag = true;
-    if (analysis->analyse_simplex_data)
+    if (analysis->analyse_simplex_summary_data)
       analysis->operationRecordBefore(kSimplexNlaBtranEp, row_ep,
                                       ekk_instance_.info_.row_ep_density);
     // Perform BTRAN
     simplex_nla->btran(row_ep, ekk_instance_.info_.row_ep_density,
                        analysis->pointer_serial_factor_clocks);
-    if (analysis->analyse_simplex_data)
+    if (analysis->analyse_simplex_summary_data)
       analysis->operationRecordAfter(kSimplexNlaBtranEp, row_ep);
     analysis->simplexTimerStop(BtranClock);
     // Verify DSE weight
@@ -1315,7 +1351,7 @@ bool HEkkDual::acceptDualSteepestEdgeWeight(const double updated_edge_weight) {
   // computed weight. Excessively large updated weights don't matter!
   const bool accept_weight =
       updated_edge_weight >= kAcceptDseWeightThreshold * computed_edge_weight;
-  //  if (analysis->analyse_simplex_data)
+  //  if (analysis->analyse_simplex_summary_data)
   ekk_instance_.assessDSEWeightError(computed_edge_weight, updated_edge_weight);
   analysis->dualSteepestEdgeWeightError(computed_edge_weight,
                                         updated_edge_weight);
@@ -1461,7 +1497,7 @@ void HEkkDual::chooseColumnSlice(HVector* row_ep) {
   ekk_instance_.choosePriceTechnique(info.price_strategy, local_density,
                                      use_col_price, use_row_price_w_switch);
 
-  if (analysis->analyse_simplex_data) {
+  if (analysis->analyse_simplex_summary_data) {
     const HighsInt row_ep_count = row_ep->count;
     if (use_col_price) {
       analysis->operationRecordBefore(kSimplexNlaPriceAp, row_ep_count, 0.0);
@@ -1530,7 +1566,7 @@ void HEkkDual::chooseColumnSlice(HVector* row_ep) {
   }
 #pragma omp taskwait
 
-  if (analysis->analyse_simplex_data) {
+  if (analysis->analyse_simplex_summary_data) {
     // Determine the nonzero count of the whole row
     HighsInt row_ap_count = 0;
     for (HighsInt i = 0; i < slice_num; i++)
@@ -1610,13 +1646,13 @@ void HEkkDual::updateFtran() {
   // Get the constraint matrix column by combining just one column
   // with unit multiplier
   a_matrix->collectAj(col_aq, variable_in, 1);
-  if (analysis->analyse_simplex_data)
+  if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordBefore(kSimplexNlaFtran, col_aq,
                                     ekk_instance_.info_.col_aq_density);
   // Perform FTRAN
   simplex_nla->ftran(col_aq, ekk_instance_.info_.col_aq_density,
                      analysis->pointer_serial_factor_clocks);
-  if (analysis->analyse_simplex_data)
+  if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordAfter(kSimplexNlaFtran, col_aq);
   const double local_col_aq_density = (double)col_aq.count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
@@ -1648,12 +1684,12 @@ void HEkkDual::updateFtranBFRT() {
   //  update_flip");
 
   if (col_BFRT.count) {
-    if (analysis->analyse_simplex_data)
+    if (analysis->analyse_simplex_summary_data)
       analysis->operationRecordBefore(kSimplexNlaFtranBfrt, col_BFRT,
                                       ekk_instance_.info_.col_BFRT_density);
     simplex_nla->ftran(col_BFRT, ekk_instance_.info_.col_BFRT_density,
                        analysis->pointer_serial_factor_clocks);
-    if (analysis->analyse_simplex_data)
+    if (analysis->analyse_simplex_summary_data)
       analysis->operationRecordAfter(kSimplexNlaFtranBfrt, col_BFRT);
   }
   if (time_updateFtranBFRT) {
@@ -1671,13 +1707,13 @@ void HEkkDual::updateFtranDSE(HVector* DSE_Vector) {
   // If reinversion is needed then skip this method
   if (rebuild_reason) return;
   analysis->simplexTimerStart(FtranDseClock);
-  if (analysis->analyse_simplex_data)
+  if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordBefore(kSimplexNlaFtranDse, *DSE_Vector,
                                     ekk_instance_.info_.row_DSE_density);
   // Perform FTRAN DSE
   simplex_nla->ftran(*DSE_Vector, ekk_instance_.info_.row_DSE_density,
                      analysis->pointer_serial_factor_clocks);
-  if (analysis->analyse_simplex_data)
+  if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordAfter(kSimplexNlaFtranDse, *DSE_Vector);
   analysis->simplexTimerStop(FtranDseClock);
   const double local_row_DSE_density =
@@ -1968,31 +2004,17 @@ void HEkkDual::assessPhase1Optimality() {
   HighsModelStatus& model_status = ekk_instance_.model_status_;
   double& dual_objective_value = info.dual_objective_value;
   bool& costs_perturbed = info.costs_perturbed;
-  //
-  // We still have dual infeasibilities, so clean up any perturbations
+  // There are (possibly insignificant) LP dual infeasibilities that
+  // can't be removed by dual Phase 1, so clean up any perturbations
   // before concluding dual infeasibility
   //
-  // Interesting for Devs to know if this method is called at all,
-  // particularly if the dual objective is positive
-  HighsLogType log_type;
-  if (dual_objective_value > 0) {
-    log_type = HighsLogType::kWarning;
-  } else {
-    log_type = HighsLogType::kInfo;
-  }
-  highsLogDev(ekk_instance_.options_->log_options, log_type,
+  // Interesting for Devs to know if this method is called at all
+  highsLogDev(ekk_instance_.options_->log_options, HighsLogType::kInfo,
               "Optimal in phase 1 but not jumping to phase 2 since "
               "dual objective is %10.4g: Costs perturbed = %" HIGHSINT_FORMAT
               "\n",
-              dual_objective_value, ekk_instance_.info_.costs_perturbed);
-  if (dual_objective_value > 0) {
-    // Can this happen, and what does it mean?
-    // todo@Julian: It seems it can happen, this popped up on rocI-4-11
-    fflush(stdout);
-    assert(dual_objective_value < 0);
-  }
-
-  if (ekk_instance_.info_.costs_perturbed) {
+              dual_objective_value, info.costs_perturbed);
+  if (info.costs_perturbed) {
     // Clean up perturbation
     cleanup();
     assessPhase1OptimalityUnperturbed();
@@ -2032,26 +2054,25 @@ void HEkkDual::assessPhase1OptimalityUnperturbed() {
       // go to phase 2
       highsLogDev(ekk_instance_.options_->log_options, HighsLogType::kInfo,
                   "LP is dual feasible wrt Phase 2 bounds after removing cost "
-                  "perturbations "
-                  "so go to phase 2\n");
+                  "perturbations so go to phase 2\n");
       solve_phase = kSolvePhase2;
     } else {
-      // Nonzero dual objective value
-      HighsLogType log_type;
-      if (dual_objective_value > 0) {
-        log_type = HighsLogType::kWarning;
-      } else {
-        log_type = HighsLogType::kInfo;
-      }
-      highsLogDev(ekk_instance_.options_->log_options, log_type,
+      // Nonzero dual objective value: could be insignificant dual
+      // infeasibilities
+      highsLogDev(ekk_instance_.options_->log_options, HighsLogType::kInfo,
                   "LP is dual feasible wrt Phase 1 bounds after removing cost "
                   "perturbations: "
                   "dual objective is %10.4g\n",
                   dual_objective_value);
-      if (dual_objective_value > 0) {
-        // This hasn't been considered in the code before, but could it happen
-        // and what does it mean?
-        assert(dual_objective_value < 0);
+      ekk_instance_.computeSimplexLpDualInfeasible();
+      const HighsInt num_lp_dual_infeasibilities =
+          ekk_instance_.analysis_.num_dual_phase_1_lp_dual_infeasibility;
+      if (num_lp_dual_infeasibilities == 0) {
+        highsLogDev(
+            ekk_instance_.options_->log_options, HighsLogType::kInfo,
+            "LP is dual feasible wrt Phase 2 bounds after removing cost "
+            "perturbations so go to phase 2\n");
+        solve_phase = kSolvePhase2;
       } else {
         // LP is dual infeasible if the dual objective is sufficiently
         // negative, so no conclusions on the primal LP can be deduced

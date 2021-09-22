@@ -122,10 +122,7 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
                                       &scale.col[lp.num_col_]);
   }
   // Update the basis correponding to new nonbasic columns
-  if (valid_basis) {
-    appendNonbasicColsToBasisInterface(XnumNewCol);
-    basis.refactor_info.clear();
-  }
+  if (valid_basis) appendNonbasicColsToBasisInterface(XnumNewCol);
   // Increase the number of columns in the LP
   lp.num_col_ += XnumNewCol;
   assert(lp.dimensionsOk("addCols"));
@@ -147,9 +144,11 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
   // addRows is fundamentally different from addCols, since the new
   // matrix data are held row-wise, so we have to insert data into the
   // column-wise matrix of the LP.
-  if (ekk_instance_.status_.has_nla)
-    ekk_instance_.debugNlaCheckInvert("Start of Highs::addRowsInterface",
-                                      kHighsDebugLevelExpensive + 1);
+  if (kExtendInvertWhenAddingRows) {
+    if (ekk_instance_.status_.has_nla)
+      ekk_instance_.debugNlaCheckInvert("Start of Highs::addRowsInterface",
+                                        kHighsDebugLevelExpensive + 1);
+  }
   HighsStatus return_status = HighsStatus::kOk;
   HighsOptions& options = options_;
   if (XnumNewRow < 0) return HighsStatus::kError;
@@ -237,10 +236,8 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
                                        &scale.row[lp.num_row_]);
   }
   // Update the basis correponding to new basic rows
-  if (valid_basis) {
-    appendBasicRowsToBasisInterface(XnumNewRow);
-    basis.refactor_info.clear();
-  }
+  if (valid_basis) appendBasicRowsToBasisInterface(XnumNewRow);
+
   // Increase the number of rows in the LP
   lp.num_row_ += XnumNewRow;
   assert(lp.dimensionsOk("addRows"));
@@ -269,7 +266,6 @@ void Highs::deleteColsInterface(HighsIndexCollection& index_collection) {
     scaled_model_status_ = HighsModelStatus::kNotset;
     model_status_ = scaled_model_status_;
     basis.valid = false;
-    basis.refactor_info.clear();
   }
   if (lp.scale_.has_scaling) {
     deleteScale(lp.scale_.col, index_collection);
@@ -315,7 +311,6 @@ void Highs::deleteRowsInterface(HighsIndexCollection& index_collection) {
     scaled_model_status_ = HighsModelStatus::kNotset;
     model_status_ = scaled_model_status_;
     basis.valid = false;
-    basis.refactor_info.clear();
   }
   if (lp.scale_.has_scaling) {
     deleteScale(lp.scale_.row, index_collection);
@@ -727,9 +722,6 @@ HighsStatus Highs::scaleColInterface(const HighsInt col,
       }
     }
   }
-  // Clear any refactorization information
-  if (basis.valid) basis.refactor_info.clear();
-
   // Deduce the consequences of a scaled column
   clearModelStatusSolutionAndInfo();
 
@@ -777,9 +769,6 @@ HighsStatus Highs::scaleRowInterface(const HighsInt row,
       }
     }
   }
-  // Clear any refactorization information
-  if (basis.valid) basis.refactor_info.clear();
-
   // Deduce the consequences of a scaled row
   clearModelStatusSolutionAndInfo();
 
@@ -1011,9 +1000,6 @@ void Highs::appendBasicRowsToBasisInterface(const HighsInt XnumNewRow) {
       simplex_basis.basicIndex_[iRow] = lp.num_col_ + iRow;
     }
   }
-  // Cannot use the refactorization information, even if no basis
-  // changes are made
-  highs_basis.refactor_info.clear();
 }
 
 // Get the basic variables, performing INVERT if necessary
@@ -1036,9 +1022,9 @@ HighsStatus Highs::getBasicVariablesInterface(HighsInt* basic_variables) {
     lp.ensureColwise();
     // Consider scaling the LP
     const bool new_scaling = considerScaling(options_, lp);
-    // If there has been new scaling, clear any refactorization
-    // information.
-    if (new_scaling) ekk_instance_.clearNlaRefactorInfo();
+    // If new scaling is performed, the hot start information is
+    // no longer valid
+    if (new_scaling) ekk_instance_.clearHotStart();
     // Create a HighsLpSolverObject, and then move its LP to EKK
     HighsLpSolverObject solver_object(lp, basis_, solution_, info_,
                                       ekk_instance_, options_, timer_);
@@ -1157,6 +1143,155 @@ HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
       *solution_num_nz = solve_vector.count;
     }
   }
+  return HighsStatus::kOk;
+}
+
+HighsStatus Highs::setHotStartInterface(const HotStart& hot_start) {
+  assert(hot_start.valid);
+  HighsLp& lp = model_.lp_;
+  HighsInt num_col = lp.num_col_;
+  HighsInt num_row = lp.num_row_;
+  HighsInt num_tot = num_col + num_row;
+  bool hot_start_ok = true;
+  HighsInt hot_start_num_row;
+  HighsInt hot_start_num_tot;
+  hot_start_num_row = (int)hot_start.refactor_info.pivot_row.size();
+  if (hot_start_num_row != num_row) {
+    hot_start_ok = false;
+    highsLogDev(options_.log_options, HighsLogType::kError,
+                "setHotStart: refactor_info.pivot_row.size of %d and LP with "
+                "%d rows are incompatible\n",
+                (int)hot_start_num_row, (int)num_row);
+  }
+  hot_start_num_row = (int)hot_start.refactor_info.pivot_var.size();
+  if (hot_start_num_row != num_row) {
+    hot_start_ok = false;
+    highsLogDev(options_.log_options, HighsLogType::kError,
+                "setHotStart: refactor_info.pivot_var.size of %d and LP with "
+                "%d rows are incompatible\n",
+                (int)hot_start_num_row, (int)num_row);
+  }
+  hot_start_num_row = (int)hot_start.refactor_info.pivot_type.size();
+  if (hot_start_num_row != num_row) {
+    hot_start_ok = false;
+    highsLogDev(options_.log_options, HighsLogType::kError,
+                "setHotStart: refactor_info.pivot_type.size of %d and LP with "
+                "%d rows are incompatible\n",
+                (int)hot_start_num_row, (int)num_row);
+  }
+  hot_start_num_tot = (int)hot_start.nonbasicMove.size();
+  if (hot_start_num_tot != num_tot) {
+    hot_start_ok = false;
+    highsLogDev(options_.log_options, HighsLogType::kError,
+                "setHotStart: nonbasicMove.size of %d and LP with %d "
+                "columns+rows are incompatible\n",
+                (int)hot_start_num_tot, (int)num_tot);
+  }
+  if (!hot_start_ok) {
+    highsLogUser(options_.log_options, HighsLogType::kError,
+                 "setHotStart called with incompatible data\n");
+    return HighsStatus::kError;
+  }
+  // Set up the HiGHS and Ekk basis
+  vector<int8_t>& nonbasicFlag = ekk_instance_.basis_.nonbasicFlag_;
+  vector<int8_t>& nonbasicMove = ekk_instance_.basis_.nonbasicMove_;
+  vector<HighsInt>& basicIndex = ekk_instance_.basis_.basicIndex_;
+  basis_.col_status.assign(num_col, HighsBasisStatus::kBasic);
+  basis_.row_status.resize(num_row, HighsBasisStatus::kBasic);
+  basicIndex = hot_start.refactor_info.pivot_var;
+  nonbasicFlag.assign(num_tot, kNonbasicFlagTrue);
+  ekk_instance_.basis_.nonbasicMove_ = hot_start.nonbasicMove;
+  // Complete nonbasicFlag by setting the entries for basic variables
+  for (HighsInt iRow = 0; iRow < num_row; iRow++)
+    nonbasicFlag[basicIndex[iRow]] = kNonbasicFlagFalse;
+  // Complete the HiGHS basis column status and adjust nonbasicMove
+  // for nonbasic variables
+  for (HighsInt iCol = 0; iCol < num_col; iCol++) {
+    if (nonbasicFlag[iCol] == kNonbasicFlagFalse) continue;
+    const double lower = lp.col_lower_[iCol];
+    const double upper = lp.col_upper_[iCol];
+    HighsBasisStatus status = HighsBasisStatus::kNonbasic;
+    HighsInt move = kIllegalMoveValue;
+    if (lower == upper) {
+      // Fixed
+      status = HighsBasisStatus::kLower;
+      move = kNonbasicMoveZe;
+    } else if (!highs_isInfinity(-lower)) {
+      // Finite lower bound so boxed or lower
+      if (!highs_isInfinity(upper)) {
+        // Finite upper bound so boxed: use nonbasicMove to choose
+        if (nonbasicMove[iCol] == kNonbasicMoveUp) {
+          status = HighsBasisStatus::kLower;
+          move = kNonbasicMoveUp;
+        } else {
+          status = HighsBasisStatus::kUpper;
+          move = kNonbasicMoveDn;
+        }
+      } else {
+        // Lower (since upper bound is infinite)
+        status = HighsBasisStatus::kLower;
+        move = kNonbasicMoveUp;
+      }
+    } else if (!highs_isInfinity(upper)) {
+      // Upper
+      status = HighsBasisStatus::kUpper;
+      move = kNonbasicMoveDn;
+    } else {
+      // FREE
+      status = HighsBasisStatus::kZero;
+      move = kNonbasicMoveZe;
+    }
+    assert(status != HighsBasisStatus::kNonbasic);
+    basis_.col_status[iCol] = status;
+    assert(move != kIllegalMoveValue);
+    nonbasicMove[iCol] = move;
+  }
+  // Complete the HiGHS basis row status and adjust nonbasicMove
+  // for nonbasic variables
+  for (HighsInt iRow = 0; iRow < num_row; iRow++) {
+    if (nonbasicFlag[num_col + iRow] == kNonbasicFlagFalse) continue;
+    const double lower = lp.row_lower_[iRow];
+    const double upper = lp.row_upper_[iRow];
+    HighsBasisStatus status = HighsBasisStatus::kNonbasic;
+    HighsInt move = kIllegalMoveValue;
+    if (lower == upper) {
+      // Fixed
+      status = HighsBasisStatus::kLower;
+      move = kNonbasicMoveZe;
+    } else if (!highs_isInfinity(-lower)) {
+      // Finite lower bound so boxed or lower
+      if (!highs_isInfinity(upper)) {
+        // Finite upper bound so boxed: use nonbasicMove to choose
+        if (nonbasicMove[num_col + iRow] == kNonbasicMoveDn) {
+          status = HighsBasisStatus::kLower;
+          move = kNonbasicMoveDn;
+        } else {
+          status = HighsBasisStatus::kUpper;
+          move = kNonbasicMoveUp;
+        }
+      } else {
+        // Lower (since upper bound is infinite)
+        status = HighsBasisStatus::kLower;
+        move = kNonbasicMoveDn;
+      }
+    } else if (!highs_isInfinity(upper)) {
+      // Upper
+      status = HighsBasisStatus::kUpper;
+      move = kNonbasicMoveUp;
+    } else {
+      // FREE
+      status = HighsBasisStatus::kZero;
+      move = kNonbasicMoveZe;
+    }
+    assert(status != HighsBasisStatus::kNonbasic);
+    basis_.row_status[iRow] = status;
+    assert(move != kIllegalMoveValue);
+    nonbasicMove[num_col + iRow] = move;
+  }
+  basis_.valid = true;
+  ekk_instance_.status_.has_basis = true;
+  ekk_instance_.setNlaRefactorInfo();
+  ekk_instance_.updateStatus(LpAction::kHotStart);
   return HighsStatus::kOk;
 }
 

@@ -30,7 +30,9 @@ const std::string kHighsChooseString = "choose";
 const std::string kHighsOnString = "on";
 const HighsInt kHighsThreadLimit = 8;  // 32;
 const double kRunningAverageMultiplier = 0.05;
+
 const HighsInt kHighsPrereleaseRowDualSign = -1;
+const bool kExtendInvertWhenAddingRows = false;
 
 enum SimplexScaleStrategy {
   kSimplexScaleStrategyMin = 0,
@@ -66,15 +68,16 @@ enum class HighsDebugStatus {
 enum HighsAnalysisLevel {
   kHighsAnalysisLevelNone = 0,
   kHighsAnalysisLevelModelData = 1,
-  kHighsAnalysisLevelSolverData = 2,
-  kHighsAnalysisLevelSolverTime = 4,
-  kHighsAnalysisLevelNlaData = 8,
-  kHighsAnalysisLevelNlaTime = 16,
+  kHighsAnalysisLevelSolverSummaryData = 2,
+  kHighsAnalysisLevelSolverRuntimeData = 4,
+  kHighsAnalysisLevelSolverTime = 8,
+  kHighsAnalysisLevelNlaData = 16,
+  kHighsAnalysisLevelNlaTime = 32,
   kHighsAnalysisLevelMin = kHighsAnalysisLevelNone,
   kHighsAnalysisLevelMax =
-      kHighsAnalysisLevelModelData + kHighsAnalysisLevelSolverData +
-      kHighsAnalysisLevelSolverTime + kHighsAnalysisLevelNlaData +
-      kHighsAnalysisLevelNlaTime
+      kHighsAnalysisLevelModelData + kHighsAnalysisLevelSolverSummaryData +
+      kHighsAnalysisLevelSolverRuntimeData + kHighsAnalysisLevelSolverTime +
+      kHighsAnalysisLevelNlaData + kHighsAnalysisLevelNlaTime
 };
 
 enum class HighsVarType : uint8_t {

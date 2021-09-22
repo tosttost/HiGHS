@@ -465,8 +465,6 @@ HighsStatus Highs::readBasis(const std::string filename) {
   basis_.valid = true;
   // Follow implications of a new HiGHS basis
   newHighsBasis();
-  // Clear any refactorization data
-  basis_.refactor_info.clear();
   // Can't use returnFromHighs since...
   return HighsStatus::kOk;
 }
@@ -509,7 +507,7 @@ HighsStatus Highs::writeBasis(const std::string filename) {
 // with callSolveLp(..)
 HighsStatus Highs::run() {
   HighsInt min_highs_debug_level = kHighsDebugLevelMin;
-  //      kHighsDebugLevelCostly;
+  // kHighsDebugLevelCostly;
   // kHighsDebugLevelMax;
   //
   //  if (model_.lp_.num_row_>0 && model_.lp_.num_col_>0)
@@ -855,7 +853,6 @@ HighsStatus Highs::run() {
           basis_.valid = true;
           basis_.col_status = presolve_.data_.recovered_basis_.col_status;
           basis_.row_status = presolve_.data_.recovered_basis_.row_status;
-          basis_.refactor_info.clear();
 
           // Possibly force debug to perform KKT check on what's
           // returned from postsolve
@@ -1294,24 +1291,31 @@ HighsStatus Highs::setBasis(const HighsBasis& basis) {
   basis_.valid = true;
   // Follow implications of a new HiGHS basis
   newHighsBasis();
-  // Check that any refactorization data is consistent with the LP and basis
-  const bool refactor_info_ok = refactorInfoIsOk(model_.lp_, basis_);
-  // If not, clear it.
-  if (!refactor_info_ok) basis_.refactor_info.clear();
   // Can't use returnFromHighs since...
   return HighsStatus::kOk;
 }
 
 HighsStatus Highs::setBasis() {
-  // Invalidate the basis for HiGHS Don't set to logical basis since
-  // that causes presolve to be skipped
+  // Invalidate the basis for HiGHS
+  //
+  // Don't set to logical basis since that causes presolve to be
+  // skipped
   basis_.valid = false;
   // Follow implications of a new HiGHS basis
   newHighsBasis();
-  // Clear any refactorization data
-  basis_.refactor_info.clear();
   // Can't use returnFromHighs since...
   return HighsStatus::kOk;
+}
+
+HighsStatus Highs::setHotStart(const HotStart& hot_start) {
+  // Check that the user-supplied hot start is valid
+  if (!hot_start.valid) {
+    highsLogUser(options_.log_options, HighsLogType::kError,
+                 "setHotStart: invalid hot start\n");
+    return HighsStatus::kError;
+  }
+  HighsStatus return_status = setHotStartInterface(hot_start);
+  return returnFromHighs(return_status);
 }
 
 HighsStatus Highs::freezeBasis(HighsInt& frozen_basis_id) {
@@ -2596,15 +2600,6 @@ HighsStatus Highs::returnFromHighs(HighsStatus highs_return_status) {
     printf("LP Dimension error in returnFromHighs()\n");
   }
   assert(dimensions_ok);
-  // Check that any refactorization data is consistent with the LP and basis
-  const bool refactor_info_ok = refactorInfoIsOk(model_.lp_, basis_);
-  if (!refactor_info_ok) {
-    highsLogUser(options_.log_options, HighsLogType::kError,
-                 "Refactorization data is inconsistent with LP\n");
-    return_status = HighsStatus::kError;
-  }
-  assert(refactor_info_ok);
-
   return return_status;
 }
 

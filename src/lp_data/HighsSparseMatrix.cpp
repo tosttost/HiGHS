@@ -109,9 +109,9 @@ void HighsSparseMatrix::ensureColwise() {
     //
     // Take a copy of the current matrix - that is rowwise - so that
     // the current matrix is filled colwise
-    vector<HighsInt> ARstart = this->start_;
-    vector<HighsInt> ARindex = this->index_;
-    vector<double> ARvalue = this->value_;
+    std::vector<HighsInt> ARstart = this->start_;
+    std::vector<HighsInt> ARindex = this->index_;
+    std::vector<double> ARvalue = this->value_;
     this->start_.resize(num_col + 1);
     this->index_.resize(num_nz);
     this->value_.resize(num_nz);
@@ -199,6 +199,29 @@ void HighsSparseMatrix::ensureRowwise() {
   assert((HighsInt)this->value_.size() >= num_nz);
 }
 
+void HighsSparseMatrix::addVec(const HighsInt num_nz, const HighsInt* index,
+                               const double* value, const double multiple) {
+  HighsInt num_vec = 0;
+  if (this->isColwise()) {
+    num_vec = this->num_col_;
+  } else {
+    num_vec = this->num_row_;
+  }
+  assert((int)this->start_.size() == num_vec + 1);
+  assert((int)this->index_.size() == this->numNz());
+  assert((int)this->value_.size() == this->numNz());
+  for (HighsInt iEl = 0; iEl < num_nz; iEl++) {
+    this->index_.push_back(index[iEl]);
+    this->value_.push_back(multiple * value[iEl]);
+  }
+  this->start_.push_back(this->start_[num_vec] + num_nz);
+  if (this->isColwise()) {
+    this->num_col_++;
+  } else {
+    this->num_row_++;
+  }
+}
+
 void HighsSparseMatrix::addCols(const HighsSparseMatrix new_cols,
                                 const int8_t* in_partition) {
   assert(new_cols.isColwise());
@@ -223,7 +246,6 @@ void HighsSparseMatrix::addCols(const HighsSparseMatrix new_cols,
   if (num_new_col == 0) {
     // No columns are being added, so check that no nonzeros are being
     // added
-    assert(1 == 0);
     assert(num_new_nz == 0);
     return;
   }
@@ -1117,7 +1139,7 @@ void HighsSparseMatrix::priceByRowWithSwitch(
       next_index = ix + 1;
     }
   }
-  if (from_index < column.count) {
+  if (next_index < column.count) {
     // PRICE is not complete: finish without maintaining nonzeros of result
     this->priceByRowDenseResult(result, column, next_index);
   } else {

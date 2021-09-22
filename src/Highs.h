@@ -258,6 +258,11 @@ class Highs {
   const HighsBasis& getBasis() const { return basis_; }
 
   /**
+   * @brief Sets the basis to the supplied hot start basis
+   */
+  const HotStart& getHotStart() const { return ekk_instance_.hot_start_; }
+
+  /**
    * @brief Returns the current model status
    */
   const HighsModelStatus& getModelStatus(
@@ -873,6 +878,11 @@ class Highs {
   HighsStatus setBasis();
 
   /**
+   * @brief Sets the basis to the supplied hot start basis
+   */
+  HighsStatus setHotStart(const HotStart& hot_start);
+
+  /**
    * @brief Freezes the current basis and standard NLA, returning a
    * value to be used to recover this basis and standard NLA at
    * minimal cost
@@ -1186,6 +1196,9 @@ class Highs {
                                   double* solution_vector,
                                   HighsInt* solution_num_nz,
                                   HighsInt* solution_indices, bool transpose);
+
+  HighsStatus setHotStartInterface(const HotStart& hot_start);
+
   void zeroIterationCounts();
 
   HighsStatus getDualRayInterface(bool& has_dual_ray, double* dual_ray_value);

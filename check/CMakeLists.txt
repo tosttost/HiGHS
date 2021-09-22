@@ -13,8 +13,10 @@ target_include_directories(Catch INTERFACE ${HIGHS_SOURCE_DIR}/src/ipm/basiclu/i
 
 # Make test executable
 set(TEST_SOURCES
+    TestDualise.cpp
     TestEkk.cpp
     TestFreezeBasis.cpp
+    TestHotStart.cpp
     TestMain.cpp
     TestOptions.cpp
     TestIO.cpp
@@ -150,12 +152,12 @@ endif (GAMS_FOUND)
 #
 # define the set of feasible instances
 set(successInstances
-    "25fv47\;3148\; 5.5018458883\;"
-    "80bau3b\;3694\; 9.8722419241\;"
+    "25fv47\;3149\; 5.5018458883\;"
+    "80bau3b\;3686\; 9.8722419241\;"
     "adlittle\;74\; 2.2549496316\;"
     "afiro\;22\;-4.6475314286\;"
-    "etamacro\;542\;-7.5571523330\;"
-    "greenbea\;4915\;-7.2555248130\;"
+    "etamacro\;532\;-7.5571523330\;"
+    "greenbea\;4908\;-7.2555248130\;"
     "shell\;623\; 1.2088253460\;"
     "stair\;529\;-2.5126695119\;"
     "standata\;72\; 1.2576995000\;"

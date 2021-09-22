@@ -32,6 +32,7 @@ class HEkk {
   void clear();
   void clearEkkLp();
   void clearEkkData();
+  void clearEkkDualise();
   void clearEkkPointers();
   void clearEkkDataInfo();
   void clearEkkControlInfo();
@@ -39,6 +40,7 @@ class HEkk {
   void clearEkkAllStatus();
   void clearEkkDataStatus();
   void clearNlaStatus();
+  void clearNlaInvertStatus();
   void clearSimplexBasis(SimplexBasis& simplex_basis);
 
   void invalidate();
@@ -49,7 +51,8 @@ class HEkk {
   void updateStatus(LpAction action);
   void setNlaPointersForLpAndScale(const HighsLp& lp);
   void setNlaPointersForTrans(const HighsLp& lp);
-  void clearNlaRefactorInfo();
+  void setNlaRefactorInfo();
+  void clearHotStart();
   void btran(HVector& rhs, const double expected_density);
   void ftran(HVector& rhs, const double expected_density);
 
@@ -59,6 +62,10 @@ class HEkk {
   HighsScale* getScalePointer();
 
   void initialiseEkk();
+  HighsStatus dualise();
+  HighsStatus undualise();
+  HighsStatus permute();
+  HighsStatus unpermute();
   HighsStatus solve();
   HighsStatus cleanup();
   HighsStatus setBasis();
@@ -124,16 +131,39 @@ class HEkk {
   HighsSparseMatrix ar_matrix_;
   HighsSparseMatrix scaled_a_matrix_;
   HSimplexNla simplex_nla_;
+  HotStart hot_start_;
 
   double cost_scale_ = 1;
   HighsInt iteration_count_ = 0;
   HighsInt dual_simplex_cleanup_level_ = 0;
+  HighsInt dual_simplex_phase1_cleanup_level_ = 0;
 
   bool solve_bailout_;
   bool called_return_from_solve_;
   SimplexAlgorithm exit_algorithm_;
   HighsInt return_primal_solution_status_;
   HighsInt return_dual_solution_status_;
+
+  // Data to be retained when dualising
+  HighsInt original_num_col_;
+  HighsInt original_num_row_;
+  HighsInt original_num_nz_;
+  double original_offset_;
+  vector<double> original_col_cost_;
+  vector<double> original_col_lower_;
+  vector<double> original_col_upper_;
+  vector<double> original_row_lower_;
+  vector<double> original_row_upper_;
+  //
+  // The upper_bound_col vector accumulates the indices of boxed
+  // variables, whose upper bounds are treated as additional
+  // constraints.
+  //
+  // The upper_bound_row vector accumulates the indices of boxed
+  // constraints, whose upper bounds are treated as additional
+  // constraints.
+  vector<HighsInt> upper_bound_col_;
+  vector<HighsInt> upper_bound_row_;
 
   double build_synthetic_tick_;
   double total_synthetic_tick_;

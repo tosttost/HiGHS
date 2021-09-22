@@ -57,7 +57,7 @@ HighsStatus returnFromSolveLpSimplex(HighsLpSolverObject& solver_object,
   ekk_instance.setNlaPointersForLpAndScale(incumbent_lp);
   assert(ekk_instance.debugNlaScalingOk(incumbent_lp));
   HighsInt alt_debug_level = -1;
-  // ToDo Need to switch off this forced debug
+  // Forced expensive debug for development work
   //  alt_debug_level = kHighsDebugLevelExpensive;
   if (ekk_instance.debugNlaCheckInvert("HApp: returnFromSolveLpSimplex",
                                        alt_debug_level) ==
@@ -126,17 +126,39 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
   // considering computing scaling factors if there are none - and
   // then move to EKK
   const bool new_scaling = considerScaling(options, incumbent_lp);
-  if (new_scaling) ekk_instance.clearNlaRefactorInfo();
+  // If new scaling is performed, the hot start information is
+  // no longer valid
+  if (new_scaling) ekk_instance.clearHotStart();
   // Move the LP to EKK, updating other EKK pointers and any simplex
   // NLA pointers, since they may have moved if the LP has been
   // modified
   ekk_instance.moveLp(solver_object);
-  // If there is no simplex basis, use the HiGHS basis
-  if (!status.has_basis && basis.valid) {
-    call_status = ekk_instance.setBasis(basis);
-    if (call_status == HighsStatus::kError) {
-      incumbent_lp.moveBackLpAndUnapplyScaling(ekk_lp);
-      return returnFromSolveLpSimplex(solver_object, call_status);
+  if (!status.has_basis) {
+    // There is no simplex basis, so use any HiGHS basis
+    if (basis.valid) {
+      call_status = ekk_instance.setBasis(basis);
+      if (call_status == HighsStatus::kError) {
+        incumbent_lp.moveBackLpAndUnapplyScaling(ekk_lp);
+        return returnFromSolveLpSimplex(solver_object, call_status);
+      }
+    } else {
+      // Starting from a logical basis, so consider dualising and/or
+      // permuting the LP
+      if (options.simplex_dualise_strategy == kHighsOptionChoose ||
+          options.simplex_dualise_strategy == kHighsOptionOn) {
+        // Dualise unless we choose not to
+        bool dualise_lp = true;
+        if (options.simplex_dualise_strategy == kHighsOptionChoose) {
+          if (incumbent_lp.num_row_ < 10 * incumbent_lp.num_col_)
+            dualise_lp = false;
+        }
+        if (dualise_lp) ekk_instance.dualise();
+      }
+      if (options.simplex_permute_strategy == kHighsOptionChoose ||
+          options.simplex_permute_strategy == kHighsOptionOn) {
+        // Permute the LP
+        ekk_instance.permute();
+      }
     }
   }
   // These local illegal values are over-written with correct values
@@ -150,6 +172,17 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
     // Solve the unscaled LP with unscaled NLA
     //
     return_status = ekk_instance.solve();
+    ekk_instance.unpermute();
+    ekk_instance.undualise();
+    assert(!ekk_instance.status_.is_permuted &&
+           !ekk_instance.status_.is_dualised);
+    if (options.cost_scale_factor) {
+      double cost_scale_factor = pow(2.0, -options.cost_scale_factor);
+      printf("Objective = %11.4g\n",
+             cost_scale_factor * ekk_instance.info_.dual_objective_value);
+      ekk_instance.model_status_ = HighsModelStatus::kNotset;
+      return_status = HighsStatus::kError;
+    }
     //
   } else {
     // Indicate that there is no (current) need to refine the solution
@@ -163,7 +196,18 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
       // Solve the scaled LP!
       //
       return_status = ekk_instance.solve();
+      ekk_instance.unpermute();
+      ekk_instance.undualise();
+      assert(!ekk_instance.status_.is_permuted &&
+             !ekk_instance.status_.is_dualised);
       //
+      if (options.cost_scale_factor) {
+        double cost_scale_factor = pow(2.0, -options.cost_scale_factor);
+        printf("Objective = %11.4g\n",
+               cost_scale_factor * ekk_instance.info_.dual_objective_value);
+        ekk_instance.model_status_ = HighsModelStatus::kNotset;
+        return_status = HighsStatus::kError;
+      }
       if (return_status == HighsStatus::kError) {
         incumbent_lp.moveBackLpAndUnapplyScaling(ekk_lp);
         return returnFromSolveLpSimplex(solver_object, return_status);

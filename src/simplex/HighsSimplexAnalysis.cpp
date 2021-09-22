@@ -38,14 +38,18 @@ void HighsSimplexAnalysis::setup(const std::string lp_name, const HighsLp& lp,
   lp_name_ = lp_name;
   // Set up analysis logic short-cuts
   analyse_lp_data = kHighsAnalysisLevelModelData & options.highs_analysis_level;
-  analyse_simplex_data =
-      kHighsAnalysisLevelSolverData & options.highs_analysis_level;
+  analyse_simplex_summary_data =
+      kHighsAnalysisLevelSolverSummaryData & options.highs_analysis_level;
+  analyse_simplex_runtime_data =
+      kHighsAnalysisLevelSolverRuntimeData & options.highs_analysis_level;
   analyse_simplex_time =
       kHighsAnalysisLevelSolverTime & options.highs_analysis_level;
   analyse_factor_data =
       kHighsAnalysisLevelNlaData & options.highs_analysis_level;
   analyse_factor_time =
       kHighsAnalysisLevelNlaTime & options.highs_analysis_level;
+  analyse_simplex_data =
+      analyse_simplex_summary_data || analyse_simplex_runtime_data;
   last_user_log_time = -kHighsInf;
   delta_user_log_time = 5e0;
 
@@ -173,7 +177,7 @@ void HighsSimplexAnalysis::setup(const std::string lp_name, const HighsLp& lp,
   sum_multi_chosen = 0;
   sum_multi_finished = 0;
 
-  if (analyse_simplex_data) {
+  if (analyse_simplex_summary_data) {
     AnIterPrevIt = simplex_iteration_count_;
 
     AnIterOpRec* AnIter;
@@ -287,6 +291,14 @@ void HighsSimplexAnalysis::messaging(const HighsLogOptions& log_options_) {
 }
 
 void HighsSimplexAnalysis::iterationReport() {
+  const bool simple_report = false;
+  if (simple_report) {
+    printf(
+        "Iter %5d: (%6d; %6d) delta_primal = %11.4g; dual_step = %11.4g; "
+        "primal_step = %11.4g\n",
+        (int)simplex_iteration_count, (int)leaving_variable,
+        (int)entering_variable, primal_delta, dual_step, primal_step);
+  }
   if ((HighsInt)kIterationReportLogType > *log_options.log_dev_level) return;
   const bool header = (num_iteration_report_since_last_header < 0) ||
                       (num_iteration_report_since_last_header > 49);
@@ -320,7 +332,7 @@ void HighsSimplexAnalysis::invertReport(const bool header) {
   analysis_log = std::unique_ptr<std::stringstream>(new std::stringstream());
   reportAlgorithmPhase(header);
   reportIterationObjective(header);
-  if (analyse_simplex_data) {
+  if (analyse_simplex_runtime_data) {
     if (simplex_strategy == kSimplexStrategyDualMulti) {
       // Report on threads and PAMI
       reportThreads(header);
@@ -417,7 +429,7 @@ void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
       max(max_sum_average_log_extreme_dual_steepest_edge_weight_error,
           average_log_low_dual_steepest_edge_weight_error +
               average_log_high_dual_steepest_edge_weight_error);
-  if (analyse_simplex_data) {
+  if (analyse_simplex_runtime_data) {
     const bool report_weight_error = false;
     if (report_weight_error && weight_error > 0.5 * kWeightErrorThreshold) {
       printf(
@@ -608,7 +620,7 @@ HighsTimerClock* HighsSimplexAnalysis::getThreadFactorTimerClockPointer() {
 }
 
 void HighsSimplexAnalysis::iterationRecord() {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data);
   HighsInt AnIterCuIt = simplex_iteration_count;
   if (rebuild_reason > 0) AnIterNumInvert[rebuild_reason]++;
   if (AnIterCuIt > AnIterPrevIt)
@@ -664,7 +676,7 @@ void HighsSimplexAnalysis::iterationRecord() {
 }
 
 void HighsSimplexAnalysis::iterationRecordMajor() {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data);
   sum_multi_chosen += multi_chosen;
   sum_multi_finished += multi_finished;
   assert(multi_chosen > 0);
@@ -691,7 +703,7 @@ void HighsSimplexAnalysis::iterationRecordMajor() {
 void HighsSimplexAnalysis::operationRecordBefore(
     const HighsInt operation_type, const HVector& vector,
     const double historical_density) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data);
   operationRecordBefore(operation_type, vector.count, historical_density);
 }
 
@@ -708,7 +720,7 @@ void HighsSimplexAnalysis::operationRecordBefore(
 
 void HighsSimplexAnalysis::operationRecordAfter(const HighsInt operation_type,
                                                 const HVector& vector) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data);
   operationRecordAfter(operation_type, vector.count);
 }
 
@@ -737,7 +749,7 @@ void HighsSimplexAnalysis::operationRecordAfter(const HighsInt operation_type,
 }
 
 void HighsSimplexAnalysis::summaryReport() {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data);
   HighsInt AnIterNumIter = simplex_iteration_count - AnIterIt0;
   if (AnIterNumIter <= 0) return;
   printf("\nAnalysis of %" HIGHSINT_FORMAT " iterations (%" HIGHSINT_FORMAT
@@ -1160,7 +1172,7 @@ void HighsSimplexAnalysis::iterationReport(const bool header) {
   }
   reportAlgorithmPhase(header);
   reportIterationObjective(header);
-  if (analyse_simplex_data) {
+  if (analyse_simplex_runtime_data) {
     reportDensity(header);
     reportIterationData(header);
   }
@@ -1216,7 +1228,7 @@ void HighsSimplexAnalysis::reportInfeasibility(const bool header) {
 }
 
 void HighsSimplexAnalysis::reportThreads(const bool header) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_runtime_data);
   if (header) {
     *analysis_log << highsFormatToString("  Threads");
   } else if (num_threads > 0) {
@@ -1229,7 +1241,7 @@ void HighsSimplexAnalysis::reportThreads(const bool header) {
 }
 
 void HighsSimplexAnalysis::reportMulti(const bool header) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_runtime_data);
   if (header) {
     *analysis_log << highsFormatToString("  Multi");
   } else if (average_fraction_of_possible_minor_iterations_performed >= 0) {
@@ -1243,7 +1255,9 @@ void HighsSimplexAnalysis::reportMulti(const bool header) {
 }
 
 void HighsSimplexAnalysis::reportOneDensity(const double density) {
-  assert(analyse_simplex_data);
+  assert(
+      // analyse_simplex_summary_data ||
+      analyse_simplex_runtime_data);
   const HighsInt log_10_density = intLog10(density);
   if (log_10_density > -99) {
     *analysis_log << highsFormatToString(" %4" HIGHSINT_FORMAT "",
@@ -1254,7 +1268,7 @@ void HighsSimplexAnalysis::reportOneDensity(const double density) {
 }
 
 void HighsSimplexAnalysis::printOneDensity(const double density) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_summary_data || analyse_simplex_runtime_data);
   const HighsInt log_10_density = intLog10(density);
   if (log_10_density > -99) {
     printf(" %4" HIGHSINT_FORMAT "", log_10_density);
@@ -1264,7 +1278,7 @@ void HighsSimplexAnalysis::printOneDensity(const double density) {
 }
 
 void HighsSimplexAnalysis::reportDensity(const bool header) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_runtime_data);
   const bool rp_dual_steepest_edge =
       edge_weight_mode == DualEdgeWeightMode::kSteepestEdge;
   if (header) {
@@ -1298,7 +1312,7 @@ void HighsSimplexAnalysis::reportInvert(const bool header) {
 }
 /*
 void HighsSimplexAnalysis::reportCondition(const bool header) {
-  assert(analyse_simplex_data);
+  assert(analyse_simplex_runtime_data);
   if (header) {
     *analysis_log << highsFormatToString("       k(B)");
   } else {
