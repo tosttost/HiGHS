@@ -1013,7 +1013,7 @@ HighsStatus HEkk::unpermute() {
 }
 
 HighsStatus HEkk::solve() {
-  debug_solve_call_num++;
+  debug_solve_call_num_++;
   initialiseAnalysis();
   initialiseControl();
 
