@@ -155,9 +155,12 @@ void HSimplexNla::update(HVector* aq, HVector* ep, HighsInt* iRow,
   reportPackValue("  pack: aq Bf ", aq);
   reportPackValue("  pack: ep Bf ", ep);
   factor_.refactor_info_.clear();
-  if (last_frozen_basis_id_ == kNoLink) {
+  if (!update_.valid_) {
+    // Perform a standard FT update
     factor_.update(aq, ep, iRow, hint);
   } else {
+    // Using PF updates, so must have a frozen basis
+    assert(last_frozen_basis_id_ != kNoLink);
     *hint = update_.update(aq, iRow);
   }
 }
