@@ -3540,6 +3540,11 @@ std::string HEkk::rebuildReason(const HighsInt rebuild_reason) {
 }
 
 void HEkk::freezeBasis(HighsInt& frozen_basis_id) {
+  if (debug_solve_call_num_ >= 138) {
+    printf("HEkk::  freezeBasis - Solve %d\n", (int)debug_solve_call_num_);
+    //    options_->log_dev_level = 2;
+    //    options_->output_flag = true;
+  }
   assert(this->status_.has_invert);
   frozen_basis_id =
       this->simplex_nla_.freeze(this->basis_, info_.col_aq_density);
@@ -3547,6 +3552,9 @@ void HEkk::freezeBasis(HighsInt& frozen_basis_id) {
 
 HighsStatus HEkk::unfreezeBasis(const HighsInt frozen_basis_id) {
   // Check that the ID passed is valid
+  if (debug_solve_call_num_ >= 136) {
+    printf("HEkk::unfreezeBasis - Solve %d\n", (int)debug_solve_call_num_);
+  }
   const bool valid_id = this->simplex_nla_.frozenBasisIdValid(frozen_basis_id);
   if (!valid_id) return HighsStatus::kError;
   const bool will_have_invert =
