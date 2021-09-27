@@ -578,7 +578,7 @@ HighsInt HighsSearch::selectBranchingCandidate(int64_t maxSbIters) {
             depthoffset -= 1;
 
             lp->setStoredBasis(nodestack.back().nodeBasis);
-            if (numiters > basisstart_threshold) lp->recoverBasis();
+            lp->getLpSolver().unfreezeBasis(freezeBasis);
             return -1;
           }
         } else if (solobj > getCutoffBound()) {
