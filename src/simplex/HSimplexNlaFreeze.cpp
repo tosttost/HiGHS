@@ -32,9 +32,6 @@ bool HSimplexNla::frozenBasisAllDataClear() {
   all_clear = this->last_frozen_basis_id_ == kNoLink && all_clear;
   all_clear = this->frozen_basis_.size() == 0 && all_clear;
   all_clear = !this->update_.valid_ && all_clear;
-  if (!all_clear) {
-    printf("HSimplexNla::frozenBasisAllDataClear - not clear\n");
-  }
   return all_clear;
 }
 
