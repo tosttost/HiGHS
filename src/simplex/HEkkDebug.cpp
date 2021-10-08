@@ -122,10 +122,10 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     if (basis.nonbasicFlag_[iVar] == kNonbasicFlagFalse) continue;
     // For nonbasic variables, check that they are on a bound (or free
     // at 0 with correct nonbasic move. Determine dual infeasibilities
-    HighsFloat dual = info.workDual_[iVar];
-    double lower = info.workLower_[iVar];
-    double upper = info.workUpper_[iVar];
-    HighsFloat value = info.workValue_[iVar];
+    double dual = (double)info.workDual_[iVar];
+    double lower = (double)info.workLower_[iVar];
+    double upper = (double)info.workUpper_[iVar];
+    double value = (double)info.workValue_[iVar];
     double primal_error = 0;
     double dual_infeasibility = 0;
     HighsInt move;
@@ -212,13 +212,13 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       assert(!nonbasicMove_error);
       return HighsDebugStatus::kLogicalError;
     }
-    double workLower = info.workLower_[iVar];
-    double workUpper = info.workUpper_[iVar];
-    double cost = info.workCost_[iVar];
-    HighsFloat dual = info.workDual_[iVar];
-    double lower = info.baseLower_[iRow];
-    double upper = info.baseUpper_[iRow];
-    HighsFloat value = info.baseValue_[iRow];
+    double workLower = (double)info.workLower_[iVar];
+    double workUpper = (double)info.workUpper_[iVar];
+    double cost = (double)info.workCost_[iVar];
+    double dual = (double)info.workDual_[iVar];
+    double lower = (double)info.baseLower_[iRow];
+    double upper = (double)info.baseUpper_[iRow];
+    double value = (double)info.baseValue_[iRow];
     bool baseBound_error = workLower != lower || workUpper != upper;
     if (baseBound_error) {
       highsLogDev(options.log_options, HighsLogType::kError,
@@ -455,19 +455,19 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   vector<double> primal_value(num_tot);
   vector<double> dual_value(num_tot);
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-    primal_value[iVar] = info.workValue_[iVar];
-    dual_value[iVar] = info.workDual_[iVar];
+    primal_value[iVar] = (double)info.workValue_[iVar];
+    dual_value[iVar] = (double)info.workDual_[iVar];
   }
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
-    primal_value[iVar] = info.baseValue_[iRow];
-    dual_value[iVar] = -info.workCost_[iVar];
+    primal_value[iVar] = (double)info.baseValue_[iRow];
+    dual_value[iVar] = -(double)info.workCost_[iVar];
   }
   // Accumulate primal_activities
   double max_dual_residual = 0;
   vector<double> primal_activity(num_row, 0);
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
-    double dual = info.workCost_[iCol];
+    double dual = (double)info.workCost_[iCol];
     double value = primal_value[iCol];
     for (HighsInt iEl = lp.a_matrix_.start_[iCol];
          iEl < lp.a_matrix_.start_[iCol + 1]; iEl++) {
@@ -477,7 +477,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       primal_activity[iRow] += value * Avalue;
       dual += dual_value[iVar] * Avalue;
     }
-    double dual_residual = abs(dual - info.workDual_[iCol]);
+    double dual_residual = abs(dual - (double)info.workDual_[iCol]);
     max_dual_residual = max(dual_residual, max_dual_residual);
   }
   // Remember that simplex row values are the negated row activities
@@ -535,13 +535,13 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
 // Methods below are not called externally
 
 void HEkk::debugReportReinvertOnNumericalTrouble(
-    const std::string method_name, const double numerical_trouble_measure,
-    const double alpha_from_col, const double alpha_from_row,
+    const std::string method_name, const HighsFloat numerical_trouble_measure,
+    const HighsFloat alpha_from_col, const HighsFloat alpha_from_row,
     const double numerical_trouble_tolerance, const bool reinvert) const {
   if (this->options_->highs_debug_level < kHighsDebugLevelCheap) return;
-  const double abs_alpha_from_col = abs(alpha_from_col);
-  const double abs_alpha_from_row = abs(alpha_from_row);
-  const double abs_alpha_diff = abs(abs_alpha_from_col - abs_alpha_from_row);
+  const HighsFloat abs_alpha_from_col = abs(alpha_from_col);
+  const HighsFloat abs_alpha_from_row = abs(alpha_from_row);
+  const HighsFloat abs_alpha_diff = abs(abs_alpha_from_col - abs_alpha_from_row);
   const HighsInt iteration_count = this->iteration_count_;
   const HighsInt update_count = this->info_.update_count;
   const std::string model_name = this->lp_.model_name_;
@@ -580,17 +580,17 @@ void HEkk::debugReportReinvertOnNumericalTrouble(
   }
 }
 
-HighsDebugStatus HEkk::debugUpdatedDual(const double updated_dual,
-                                        const double computed_dual) const {
+HighsDebugStatus HEkk::debugUpdatedDual(const HighsFloat updated_dual,
+                                        const HighsFloat computed_dual) const {
   const HighsOptions& options = *(this->options_);
   if (options.highs_debug_level < kHighsDebugLevelCheap)
     return HighsDebugStatus::kNotChecked;
   HighsDebugStatus return_status = HighsDebugStatus::kOk;
   std::string error_adjective;
   HighsLogType report_level;
-  double updated_dual_absolute_error = abs(updated_dual - computed_dual);
+  double updated_dual_absolute_error = abs(double(updated_dual - computed_dual));
   double updated_dual_relative_error =
-      updated_dual_absolute_error / max(abs(computed_dual), 1.0);
+    updated_dual_absolute_error / max(abs((double)computed_dual), 1.0);
   bool sign_error = updated_dual * computed_dual <= 0;
   bool at_least_small_error =
       sign_error ||
@@ -998,8 +998,8 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
   if (!(dual_phase1 || info.bounds_perturbed)) {
     for (HighsInt col = 0; col < lp.num_col_; ++col) {
       HighsInt var = col;
-      if (!highs_isInfinity(-info.workLower_[var])) {
-        double lp_lower = info.workLower_[var];
+      if (!highs_isInfinity(-(double)info.workLower_[var])) {
+        double lp_lower = (double)info.workLower_[var];
         ok = lp_lower == lp.col_lower_[col];
         if (!ok) {
           highsLogDev(options.log_options, HighsLogType::kError,
@@ -1009,8 +1009,8 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
           return ok;
         }
       }
-      if (!highs_isInfinity(info.workUpper_[var])) {
-        double lp_upper = info.workUpper_[var];
+      if (!highs_isInfinity((double)info.workUpper_[var])) {
+        double lp_upper = (double)info.workUpper_[var];
         ok = lp_upper == lp.col_upper_[col];
         if (!ok) {
           highsLogDev(options.log_options, HighsLogType::kError,
@@ -1023,8 +1023,8 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
     }
     for (HighsInt row = 0; row < lp.num_row_; ++row) {
       HighsInt var = lp.num_col_ + row;
-      if (!highs_isInfinity(-info.workLower_[var])) {
-        double lp_lower = info.workLower_[var];
+      if (!highs_isInfinity(-(double)info.workLower_[var])) {
+        double lp_lower = (double)info.workLower_[var];
         ok = lp_lower == -lp.row_upper_[row];
         if (!ok) {
           highsLogDev(options.log_options, HighsLogType::kError,
@@ -1034,8 +1034,8 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
           return ok;
         }
       }
-      if (!highs_isInfinity(info.workUpper_[var])) {
-        double lp_upper = info.workUpper_[var];
+      if (!highs_isInfinity((double)info.workUpper_[var])) {
+        double lp_upper = (double)info.workUpper_[var];
         ok = lp_upper == -lp.row_lower_[row];
         if (!ok) {
           highsLogDev(options.log_options, HighsLogType::kError,
@@ -1055,9 +1055,9 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
                     "For variable %" HIGHSINT_FORMAT
                     ", info.workRange_ should be %g = %g - %g "
                     "but is %g\n",
-                    var, info.workUpper_[var] - info.workLower_[var],
-                    info.workUpper_[var], info.workLower_[var],
-                    info.workRange_[var]);
+                    var, (double)info.workUpper_[var] - (double)info.workLower_[var],
+                    (double)info.workUpper_[var], (double)info.workLower_[var],
+                    (double)info.workRange_[var]);
         return ok;
       }
     }
@@ -1070,14 +1070,14 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
         costs_changed)) {
     for (HighsInt col = 0; col < lp.num_col_; ++col) {
       HighsInt var = col;
-      double work_cost = info.workCost_[var];
+      double work_cost = (double)info.workCost_[var];
       double ok_cost = (HighsInt)lp.sense_ * lp.col_cost_[col];
       ok = work_cost == ok_cost;
       if (!ok) {
         highsLogDev(options.log_options, HighsLogType::kError,
                     "For col %" HIGHSINT_FORMAT
                     ", info.workCost_ should be %g but is %g\n",
-                    col, ok_cost, info.workCost_[var]);
+                    col, ok_cost, (double)info.workCost_[var]);
         return ok;
       }
     }
@@ -1088,7 +1088,7 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
         highsLogDev(options.log_options, HighsLogType::kError,
                     "For row %" HIGHSINT_FORMAT
                     ", info.workCost_ should be zero but is %g\n",
-                    row, info.workCost_[var]);
+                    row, (double)info.workCost_[var]);
         return ok;
       }
     }
@@ -1108,8 +1108,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
   // Make sure we're not checking a basic variable
   if (!basis.nonbasicFlag_[var]) return true;
   bool ok;
-  if (!highs_isInfinity(-info.workLower_[var])) {
-    if (!highs_isInfinity(info.workUpper_[var])) {
+  if (!highs_isInfinity(-(double)info.workLower_[var])) {
+    if (!highs_isInfinity((double)info.workUpper_[var])) {
       // Finite lower and upper bounds so nonbasic move depends on whether they
       // are equal
       if (info.workLower_[var] == info.workUpper_[var]) {
@@ -1122,8 +1122,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                       ") [%11g, %11g, "
                       "%11g] so nonbasic "
                       "move should be zero but is %" HIGHSINT_FORMAT "\n",
-                      var, lp.num_col_, info.workLower_[var],
-                      info.workValue_[var], info.workUpper_[var],
+                      var, lp.num_col_, (double)info.workLower_[var],
+                      (double)info.workValue_[var], (double)info.workUpper_[var],
                       basis.nonbasicMove_[var]);
           return ok;
         }
@@ -1135,8 +1135,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                       ") so "
                       "info.work value should be %g but "
                       "is %g\n",
-                      var, lp.num_col_, info.workLower_[var],
-                      info.workValue_[var]);
+                      var, lp.num_col_, (double)info.workLower_[var],
+                      (double)info.workValue_[var]);
           return ok;
         }
       } else {
@@ -1151,8 +1151,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
               ") [%11g, %11g, "
               "%11g] range %g so "
               "nonbasic move should be up/down but is  %" HIGHSINT_FORMAT "\n",
-              var, lp.num_col_, info.workLower_[var], info.workValue_[var],
-              info.workUpper_[var], info.workUpper_[var] - info.workLower_[var],
+              var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var],
+              (double)info.workUpper_[var], (double)info.workUpper_[var] - (double)info.workLower_[var],
               basis.nonbasicMove_[var]);
           return ok;
         }
@@ -1165,8 +1165,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                         ") with "
                         "kNonbasicMoveUp so work "
                         "value should be %g but is %g\n",
-                        var, lp.num_col_, info.workLower_[var],
-                        info.workValue_[var]);
+                        var, lp.num_col_, (double)info.workLower_[var],
+                        (double)info.workValue_[var]);
             return ok;
           }
         } else {
@@ -1178,8 +1178,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                         ") with "
                         "kNonbasicMoveDn so work "
                         "value should be %g but is %g\n",
-                        var, lp.num_col_, info.workUpper_[var],
-                        info.workValue_[var]);
+                        var, lp.num_col_, (double)info.workUpper_[var],
+                        (double)info.workValue_[var]);
             return ok;
           }
         }
@@ -1198,8 +1198,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                     "up=%2" HIGHSINT_FORMAT
                     " but is  "
                     "%" HIGHSINT_FORMAT "\n",
-                    var, lp.num_col_, info.workLower_[var],
-                    info.workValue_[var], info.workUpper_[var], kNonbasicMoveUp,
+                    var, lp.num_col_, (double)info.workLower_[var],
+                    (double)info.workValue_[var], (double)info.workUpper_[var], kNonbasicMoveUp,
                     basis.nonbasicMove_[var]);
         return ok;
       }
@@ -1212,13 +1212,13 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
             " "
             "(lp.num_col_ = "
             "%" HIGHSINT_FORMAT ") so work value should be %g but is %g\n",
-            var, lp.num_col_, info.workLower_[var], info.workValue_[var]);
+            var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var]);
         return ok;
       }
     }
   } else {
     // Infinite lower bound
-    if (!highs_isInfinity(info.workUpper_[var])) {
+    if (!highs_isInfinity((double)info.workUpper_[var])) {
       ok = basis.nonbasicMove_[var] == kNonbasicMoveDn;
       if (!ok) {
         highsLogDev(
@@ -1230,8 +1230,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
             "%" HIGHSINT_FORMAT
             ") [%11g, %11g, %11g] so nonbasic move should be down but is  "
             "%" HIGHSINT_FORMAT "\n",
-            var, lp.num_col_, info.workLower_[var], info.workValue_[var],
-            info.workUpper_[var], basis.nonbasicMove_[var]);
+            var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var],
+            (double)info.workUpper_[var], basis.nonbasicMove_[var]);
         return ok;
       }
       ok = info.workValue_[var] == info.workUpper_[var];
@@ -1243,7 +1243,7 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
             " "
             "(lp.num_col_ = "
             "%" HIGHSINT_FORMAT ") so work value should be %g but is %g\n",
-            var, lp.num_col_, info.workUpper_[var], info.workValue_[var]);
+            var, lp.num_col_, (double)info.workUpper_[var], (double)info.workValue_[var]);
         return ok;
       }
     } else {
@@ -1256,8 +1256,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                     ") [%11g, %11g, %11g] "
                     "so nonbasic "
                     "move should be zero but is  %" HIGHSINT_FORMAT "\n",
-                    var, lp.num_col_, info.workLower_[var],
-                    info.workValue_[var], info.workUpper_[var],
+                    var, lp.num_col_, (double)info.workLower_[var],
+                    (double)info.workValue_[var], (double)info.workUpper_[var],
                     basis.nonbasicMove_[var]);
         return ok;
       }
@@ -1269,7 +1269,7 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                     ") so work value should "
                     "be zero but "
                     "is %g\n",
-                    var, lp.num_col_, info.workValue_[var]);
+                    var, lp.num_col_, (double)info.workValue_[var]);
         return ok;
       }
     }
@@ -1292,8 +1292,8 @@ HighsDebugStatus HEkk::debugNonbasicFreeColumnSet(
   // Check the number of free columns
   HighsInt check_num_free_col = 0;
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-    if (info.workLower_[iVar] <= -kHighsInf &&
-        info.workUpper_[iVar] >= kHighsInf)
+    if ((double)info.workLower_[iVar] <= -kHighsInf &&
+        (double)info.workUpper_[iVar] >= kHighsInf)
       check_num_free_col++;
   }
   if (check_num_free_col != num_free_col) {
@@ -1317,8 +1317,8 @@ HighsDebugStatus HEkk::debugNonbasicFreeColumnSet(
   HighsInt check_num_nonbasic_free_col = 0;
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
     bool nonbasic_free = basis.nonbasicFlag_[iVar] == kNonbasicFlagTrue &&
-                         info.workLower_[iVar] <= -kHighsInf &&
-                         info.workUpper_[iVar] >= kHighsInf;
+                         (double)info.workLower_[iVar] <= -kHighsInf &&
+                         (double)info.workUpper_[iVar] >= kHighsInf;
     if (nonbasic_free) check_num_nonbasic_free_col++;
   }
   if (check_num_nonbasic_free_col != num_nonbasic_free_col) {
@@ -1334,16 +1334,16 @@ HighsDebugStatus HEkk::debugNonbasicFreeColumnSet(
   for (HighsInt ix = 0; ix < num_nonbasic_free_col; ix++) {
     HighsInt iVar = nonbasic_free_col_set_entry[ix];
     bool nonbasic_free = basis.nonbasicFlag_[iVar] == kNonbasicFlagTrue &&
-                         info.workLower_[iVar] <= -kHighsInf &&
-                         info.workUpper_[iVar] >= kHighsInf;
+                         (double)info.workLower_[iVar] <= -kHighsInf &&
+                         (double)info.workUpper_[iVar] >= kHighsInf;
     if (!nonbasic_free) {
       highsLogDev(options.log_options, HighsLogType::kInfo,
                   "NonbasicFreeColumnData: Variable %" HIGHSINT_FORMAT
                   " in nonbasic free "
                   "set has nonbasicFlag = %" HIGHSINT_FORMAT
                   " and bounds [%g, %g]\n",
-                  iVar, basis.nonbasicFlag_[iVar], info.workLower_[iVar],
-                  info.workUpper_[iVar]);
+                  iVar, basis.nonbasicFlag_[iVar], (double)info.workLower_[iVar],
+                  (double)info.workUpper_[iVar]);
       return HighsDebugStatus::kLogicalError;
     }
   }
@@ -1377,7 +1377,7 @@ HighsDebugStatus HEkk::debugRowMatrix() const {
 }
 
 HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
-  static vector<double> previous_dual;
+  static vector<HighsFloat> previous_dual;
   const HighsSimplexInfo& info = this->info_;
   if (initialise) {
     previous_dual = info.workDual_;
@@ -1391,12 +1391,12 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
 
   double norm_basic_costs = 0;
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
-    const double value = info.workCost_[basis.basicIndex_[iRow]] +
-                         info.workShift_[basis.basicIndex_[iRow]];
+    const double value = (double)(info.workCost_[basis.basicIndex_[iRow]] +
+				  info.workShift_[basis.basicIndex_[iRow]]);
     norm_basic_costs = max(fabs(value), norm_basic_costs);
   }
 
-  vector<double> new_dual = info.workDual_;
+  vector<HighsFloat> new_dual = info.workDual_;
   vector<double> delta_dual;
   HighsInt num_tot = lp.num_col_ + lp.num_row_;
   delta_dual.assign(num_tot, 0);
@@ -1405,7 +1405,7 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
   double norm_nonbasic_costs = 0;
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
     if (!basis.nonbasicFlag_[iVar]) continue;
-    double value = info.workCost_[iVar] + info.workShift_[iVar];
+    double value = double(info.workCost_[iVar] + info.workShift_[iVar]);
     norm_nonbasic_costs = max(fabs(value), norm_nonbasic_costs);
   }
 
@@ -1417,7 +1417,7 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
       new_dual[iVar] = 0;
       continue;
     }
-    double delta = new_dual[iVar] - previous_dual[iVar];
+    double delta = (double)(new_dual[iVar] - previous_dual[iVar]);
     if (fabs(delta) < zero_delta_dual) continue;
     delta_dual[iVar] = delta;
     const bool sign_change =

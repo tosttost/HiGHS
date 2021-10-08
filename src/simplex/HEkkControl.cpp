@@ -50,18 +50,18 @@ void HEkk::updateOperationResultDensity(const double local_density,
             kRunningAverageMultiplier * local_density;
 }
 
-void HEkk::assessDSEWeightError(const double computed_edge_weight,
-                                const double updated_edge_weight) {
+void HEkk::assessDSEWeightError(const HighsFloat computed_edge_weight,
+                                const HighsFloat updated_edge_weight) {
   double weight_error;
   if (updated_edge_weight < computed_edge_weight) {
     // Updated weight is low
-    weight_error = computed_edge_weight / updated_edge_weight;
+    weight_error = (double)(computed_edge_weight / updated_edge_weight);
     info_.average_log_low_DSE_weight_error =
         0.99 * info_.average_log_low_DSE_weight_error +
         0.01 * log(weight_error);
   } else {
     // Updated weight is correct or high
-    weight_error = updated_edge_weight / computed_edge_weight;
+    weight_error = (double)(updated_edge_weight / computed_edge_weight);
     info_.average_log_high_DSE_weight_error =
         0.99 * info_.average_log_high_DSE_weight_error +
         0.01 * log(weight_error);
