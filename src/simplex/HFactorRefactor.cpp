@@ -102,7 +102,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       assert(pivot_k >= 0);
       // Check that the pivot isn't too small. Shouldn't happen since
       // this is refactorization
-      double abs_pivot = std::fabs(Avalue[pivot_k]);
+      double abs_pivot = fabs((double)Avalue[pivot_k]);
       assert(abs_pivot >= pivot_tolerance);
       if (abs_pivot < pivot_tolerance) {
         rank_deficiency = nwork + 1;
@@ -111,7 +111,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       if (pivot_type == kPivotRowSingleton) {
         //
         // 2.2 Deal with row singleton
-        const double pivotX = 1 / Avalue[pivot_k];
+        const HighsFloat pivotX = 1 / Avalue[pivot_k];
         if (report_singletons)
           printf("Stage %d: Row singleton (%4d, %g)\n", (int)iK, (int)pivot_k,
                  pivotX);
@@ -262,13 +262,13 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       assert(pivot_k >= 0);
       // Check that the pivot isn't too small. Shouldn't happen since
       // this is refactorization
-      double abs_pivot = std::fabs(column.array[iRow]);
+      double abs_pivot = fabs((double)column.array[iRow]);
       assert(abs_pivot >= pivot_tolerance);
       if (abs_pivot < pivot_tolerance) {
         rank_deficiency = numRow - iK;
         return rank_deficiency;
       }
-      const double pivotX = 1 / column.array[iRow];
+      const HighsFloat pivotX = 1 / column.array[iRow];
       for (HighsInt section = 0; section < 2; section++) {
         HighsInt p0 = section == 0 ? start : pivot_k + 1;
         HighsInt p1 = section == 0 ? pivot_k : end;

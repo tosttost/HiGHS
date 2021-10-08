@@ -33,7 +33,7 @@ void debugReportRankDeficientASM(
     const HighsInt highs_debug_level, const HighsLogOptions& log_options,
     const HighsInt numRow, const vector<HighsInt>& MCstart,
     const vector<HighsInt>& MCcountA, const vector<HighsInt>& MCindex,
-    const vector<double>& MCvalue, const vector<HighsInt>& iwork,
+    const vector<HightFloat>& MCvalue, const vector<HighsInt>& iwork,
     const HighsInt rank_deficiency, const vector<HighsInt>& noPvC,
     const vector<HighsInt>& noPvR);
 
@@ -54,6 +54,6 @@ void debugLogRankDeficiency(const HighsInt highs_debug_level,
 void debugPivotValueAnalysis(const HighsInt highs_debug_level,
                              const HighsLogOptions& log_options,
                              const HighsInt numRow,
-                             const vector<double>& UpivotValue);
+                             const vector<HightFloat>& UpivotValue);
 
 #endif  // SIMPLEX_HFACTORDEBUG_H_

@@ -97,8 +97,8 @@ class HEkkPrimal {
   void adjustPerturbedEquationOut();
   void getBasicPrimalInfeasibility();
   bool correctPrimal(const bool initialise = false);
-  void shiftBound(const bool lower, const HighsInt iVar, const double value,
-                  const double random_value, double& bound, double& shift,
+  void shiftBound(const bool lower, const HighsInt iVar, const HighsFloat value,
+                  const HighsFloat random_value, HighsFloat& bound, HighsFloat& shift,
                   const bool report = false);
   void savePrimalRay();
   HighsDebugStatus debugPrimalSimplex(const std::string message,
@@ -124,16 +124,16 @@ class HEkkPrimal {
   HighsInt row_out;
   HighsInt variable_out;
   HighsInt move_out;
-  double theta_dual;
-  double theta_primal;
-  double value_in;
-  double alpha_col;
-  double alpha_row;
-  double numericalTrouble;
+  HighsFloat theta_dual;
+  HighsFloat theta_primal;
+  HighsFloat value_in;
+  HighsFloat alpha_col;
+  HighsFloat alpha_row;
+  HighsFloat numericalTrouble;
   HighsInt num_flip_since_rebuild;
   // Primal phase 1 tools
-  vector<pair<double, int> > ph1SorterR;
-  vector<pair<double, int> > ph1SorterT;
+  vector<pair<HighsFloat, int> > ph1SorterR;
+  vector<pair<HighsFloat, int> > ph1SorterT;
   // Devex weight
   HighsInt num_devex_iterations;
   HighsInt num_bad_devex_weight;

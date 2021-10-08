@@ -98,13 +98,13 @@ void debugReportRankDeficientASM(
     const HighsInt highs_debug_level, const HighsLogOptions& log_options,
     const HighsInt numRow, const vector<HighsInt>& MCstart,
     const vector<HighsInt>& MCcountA, const vector<HighsInt>& MCindex,
-    const vector<double>& MCvalue, const vector<HighsInt>& iwork,
+    const vector<HighsFloat>& MCvalue, const vector<HighsInt>& iwork,
     const HighsInt rank_deficiency, const vector<HighsInt>& noPvC,
     const vector<HighsInt>& noPvR) {
   if (highs_debug_level == kHighsDebugLevelNone) return;
   if (rank_deficiency > 10) return;
-  double* ASM;
-  ASM = (double*)malloc(sizeof(double) * rank_deficiency * rank_deficiency);
+  HighsFloat* ASM;
+  ASM = (HighsFloat*)malloc(sizeof(HighsFloat) * rank_deficiency * rank_deficiency);
   for (HighsInt i = 0; i < rank_deficiency; i++) {
     for (HighsInt j = 0; j < rank_deficiency; j++) {
       ASM[i + j * rank_deficiency] = 0;
@@ -218,13 +218,13 @@ void debugLogRankDeficiency(
 void debugPivotValueAnalysis(const HighsInt highs_debug_level,
                              const HighsLogOptions& log_options,
                              const HighsInt numRow,
-                             const vector<double>& UpivotValue) {
+                             const vector<HighsFloat>& UpivotValue) {
   if (highs_debug_level < kHighsDebugLevelCheap) return;
   double min_pivot = kHighsInf;
   double mean_pivot = 0;
   double max_pivot = 0;
   for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-    double abs_pivot = fabs(UpivotValue[iRow]);
+    double abs_pivot = fabs((double)UpivotValue[iRow]);
     min_pivot = min(abs_pivot, min_pivot);
     max_pivot = max(abs_pivot, max_pivot);
     mean_pivot += log(abs_pivot);
