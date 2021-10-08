@@ -775,8 +775,8 @@ HighsStatus HEkk::undualise() {
   HighsInt dual_num_col = lp_.num_col_;
   HighsInt primal_num_tot = original_num_col_ + original_num_row_;
   // These two aren't used (yet)
-  vector<double>& dual_work_dual = info_.workDual_;
-  vector<double>& primal_work_value = info_.workValue_;
+  //  vector<double>& dual_work_dual = info_.workDual_;
+  //  vector<double>& primal_work_value = info_.workValue_;
   // Take copies of the nonbasic information for the dual LP, since
   // its values will be over-written in constructing the corresponding
   // data for the primal problem
