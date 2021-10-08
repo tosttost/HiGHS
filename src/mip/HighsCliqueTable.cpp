@@ -947,17 +947,17 @@ void HighsCliqueTable::extractCliques(
   if (nbin < ntotal) {
     for (HighsInt i = 0; i != nbin; ++i) {
       HighsInt bincol = inds[perm[i]];
-      HighsCDouble impliedub = HighsCDouble(rhs) - vals[perm[i]];
+      HighsCD0uble impliedub = HighsCD0uble(rhs) - vals[perm[i]];
       for (HighsInt j = nbin; j != ntotal; ++j) {
         HighsInt col = inds[perm[j]];
         if (globaldom.isFixed(col)) continue;
 
-        HighsCDouble colub =
-            HighsCDouble(globaldom.col_upper_[col]) - globaldom.col_lower_[col];
-        HighsCDouble implcolub = impliedub / vals[perm[j]];
+        HighsCD0uble colub =
+            HighsCD0uble(globaldom.col_upper_[col]) - globaldom.col_lower_[col];
+        HighsCD0uble implcolub = impliedub / vals[perm[j]];
         if (implcolub < colub - feastol) {
-          HighsCDouble coef;
-          HighsCDouble constant;
+          HighsCD0uble coef;
+          HighsCD0uble constant;
 
           if (complementation[perm[i]] == -1) {
             coef = colub - implcolub;
@@ -1096,7 +1096,7 @@ void HighsCliqueTable::extractCliquesFromCut(const HighsMipSolver& mipsolver,
 
   const double feastol = mipsolver.mipdata_->feastol;
 
-  HighsCDouble minact = 0.0;
+  HighsCD0uble minact = 0.0;
   HighsInt nbin = 0;
   for (HighsInt i = 0; i != len; ++i) {
     if (globaldom.isBinary(inds[i])) ++nbin;
@@ -1146,7 +1146,7 @@ void HighsCliqueTable::extractCliquesFromCut(const HighsMipSolver& mipsolver,
   if (false && nbin < len) {
     for (HighsInt i = 0; i != nbin; ++i) {
       HighsInt bincol = inds[perm[i]];
-      HighsCDouble impliedActivity = rhs - minact - std::abs(vals[perm[i]]);
+      HighsCD0uble impliedActivity = rhs - minact - std::abs(vals[perm[i]]);
       for (HighsInt j = nbin; j != len; ++j) {
         HighsInt col = inds[perm[j]];
         if (globaldom.isFixed(col)) continue;

@@ -6,7 +6,7 @@
 #include "util/HighsUtils.h"
 
 const bool dev_run = false;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 void HighsStatusReport(const HighsLogOptions& log_options, std::string message,
                        HighsStatus status);
 
@@ -340,7 +340,7 @@ TEST_CASE("LP-modification", "[highs_data]") {
 
   highs.getInfoValue("objective_function_value", optimal_objective_value);
   REQUIRE(std::fabs(optimal_objective_value - avgas_optimal_objective_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   // Try to delete an empty range of rows: OK
   REQUIRE(highs.deleteRows(0, -1) == HighsStatus::kOk);
@@ -960,7 +960,7 @@ TEST_CASE("LP-delete", "[highs_data]") {
 
   REQUIRE(
       std::fabs(objective_function_value - adlittle_objective_function_value) <
-      double_equal_tolerance);
+      d0uble_equal_tolerance);
 
   // Test deleteRows
   HighsInt num_row = lp.num_row_;
@@ -1017,7 +1017,7 @@ TEST_CASE("LP-delete", "[highs_data]") {
 
   REQUIRE(
       std::fabs(objective_function_value - adlittle_objective_function_value) <
-      double_equal_tolerance);
+      d0uble_equal_tolerance);
 }
 
 void HighsStatusReport(const HighsLogOptions& log_options, std::string message,

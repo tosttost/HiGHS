@@ -80,7 +80,7 @@ HighsDebugStatus debugCompareHighsInfoInfeasibility(
     const HighsOptions& options, const HighsInfo& highs_info0,
     const HighsInfo& highs_info1);
 
-HighsDebugStatus debugCompareHighsInfoDouble(const string name,
+HighsDebugStatus debugCompareHighsInfoD0uble(const string name,
                                              const HighsOptions& options,
                                              const double v0, const double v1);
 

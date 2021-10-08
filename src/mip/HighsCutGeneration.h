@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsInt.h"
 #include "util/HighsRandom.h"
 
@@ -39,8 +39,8 @@ class HighsCutGeneration {
   HighsCutPool& cutpool;
   HighsRandom randgen;
   std::vector<HighsInt> cover;
-  HighsCDouble coverweight;
-  HighsCDouble lambda;
+  HighsCD0uble coverweight;
+  HighsCD0uble lambda;
   std::vector<double> upper;
   std::vector<double> solval;
   std::vector<uint8_t> complementation;
@@ -50,7 +50,7 @@ class HighsCutGeneration {
 
   double* vals;
   HighsInt* inds;
-  HighsCDouble rhs;
+  HighsCD0uble rhs;
   bool integralSupport;
   bool integralCoefficients;
   HighsInt rowlen;

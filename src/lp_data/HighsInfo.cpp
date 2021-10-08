@@ -121,16 +121,16 @@ InfoStatus checkInfo(const HighsOptions& options,
           }
         }
       }
-    } else if (type == HighsInfoType::kDouble) {
+    } else if (type == HighsInfoType::kD0uble) {
       // Check double info
-      InfoRecordDouble& info = ((InfoRecordDouble*)info_records[index])[0];
+      InfoRecordD0uble& info = ((InfoRecordD0uble*)info_records[index])[0];
       // Check that there are no other info with the same value pointers
       double* value_pointer = info.value;
       for (HighsInt check_index = 0; check_index < num_info; check_index++) {
         if (check_index == index) continue;
-        InfoRecordDouble& check_info =
-            ((InfoRecordDouble*)info_records[check_index])[0];
-        if (check_info.type == HighsInfoType::kDouble) {
+        InfoRecordD0uble& check_info =
+            ((InfoRecordD0uble*)info_records[check_index])[0];
+        if (check_info.type == HighsInfoType::kD0uble) {
           if (check_info.value == value_pointer) {
             highsLogUser(options.log_options, HighsLogType::kError,
                          "checkInfo: Info %" HIGHSINT_FORMAT
@@ -180,14 +180,14 @@ InfoStatus getLocalInfoValue(const HighsOptions& options,
   if (status != InfoStatus::kOk) return status;
   if (!valid) return InfoStatus::kUnavailable;
   HighsInfoType type = info_records[index]->type;
-  if (type != HighsInfoType::kDouble) {
+  if (type != HighsInfoType::kD0uble) {
     highsLogUser(
         options.log_options, HighsLogType::kError,
         "getInfoValue: Info \"%s\" requires value of type %s, not double\n",
         name.c_str(), infoEntryTypeToString(type).c_str());
     return InfoStatus::kIllegalValue;
   }
-  InfoRecordDouble info = ((InfoRecordDouble*)info_records[index])[0];
+  InfoRecordD0uble info = ((InfoRecordD0uble*)info_records[index])[0];
   value = *info.value;
   return InfoStatus::kOk;
 }
@@ -230,7 +230,7 @@ void reportInfo(FILE* file, const std::vector<InfoRecord*>& info_records,
     } else if (type == HighsInfoType::kInt) {
       reportInfo(file, ((InfoRecordInt*)info_records[index])[0], html);
     } else {
-      reportInfo(file, ((InfoRecordDouble*)info_records[index])[0], html);
+      reportInfo(file, ((InfoRecordD0uble*)info_records[index])[0], html);
     }
   }
 }
@@ -270,7 +270,7 @@ void reportInfo(FILE* file, const InfoRecordInt& info, const bool html) {
   }
 }
 
-void reportInfo(FILE* file, const InfoRecordDouble& info, const bool html) {
+void reportInfo(FILE* file, const InfoRecordD0uble& info, const bool html) {
   if (html) {
     fprintf(file,
             "<li><tt><font size=\"+2\"><strong>%s</strong></font></tt><br>\n",

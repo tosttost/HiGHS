@@ -17,13 +17,13 @@
 #include <cassert>
 #include <vector>
 
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsInt.h"
 
 class HighsSparseVectorSum {
  public:
   std::vector<uint8_t> nonzeroflag;
-  std::vector<HighsCDouble> values;
+  std::vector<HighsCD0uble> values;
   std::vector<HighsInt> nonzeroinds;
   HighsSparseVectorSum() = default;
 
@@ -46,7 +46,7 @@ class HighsSparseVectorSum {
     }
   }
 
-  void add(HighsInt index, HighsCDouble value) {
+  void add(HighsInt index, HighsCD0uble value) {
     if (nonzeroflag[index]) {
       values[index] += value;
     } else {
@@ -61,13 +61,13 @@ class HighsSparseVectorSum {
     nonzeroinds.push_back(index);
   }
 
-  void set(HighsInt index, HighsCDouble value) {
+  void set(HighsInt index, HighsCD0uble value) {
     values[index] = value;
     nonzeroinds.push_back(index);
   }
 
   void chgValue(HighsInt index, double val) { values[index] = val; }
-  void chgValue(HighsInt index, HighsCDouble val) { values[index] = val; }
+  void chgValue(HighsInt index, HighsCD0uble val) { values[index] = val; }
 
   const std::vector<HighsInt>& getNonzeros() const { return nonzeroinds; }
 

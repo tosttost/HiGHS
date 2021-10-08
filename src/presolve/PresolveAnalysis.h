@@ -35,13 +35,13 @@ enum PresolveRule {
   kEmptyRow,
   kFixedCol,
   kSingRow,
-  kDoubletonEquation,
+  kD0ublet0nEquation,
   kRemoveForcingConstraints,
   kForcingRow,
   kRedundantRow,
   kRemoveColumnSingletons,
   kFreeSingCol,
-  kSingColDoubletonIneq,
+  kSingColD0ublet0nIneq,
   kImpliedFreeSingCol,
   kRemoveDominatedColumns,
   kMipDualFixing,
@@ -56,19 +56,19 @@ enum PresolveRule {
 
   kRunPresolvers,
   kRemoveRowSingletons,
-  kRemoveDoubletonEquations,
+  kRemoveD0ublet0nEquations,
 
   kTotalPresolveTime,
   // Number of presolve rules.
   kPresolveRulesCount,
 
   // Items required by postsolve
-  kDoubletonEquationRowBoundsUpdate,
-  kDoubletonEquationXZeroInitially,
-  kDoubletonEquationNewXNonzero,
-  kDoubletonEquationNewXZeroArUpdate,
-  kDoubletonEquationNewXZeroAUpdate,
-  kSingColDoubletonIneqSecondSingCol,
+  kD0ublet0nEquationRowBoundsUpdate,
+  kD0ublet0nEquationXZeroInitially,
+  kD0ublet0nEquationNewXNonzero,
+  kD0ublet0nEquationNewXZeroArUpdate,
+  kD0ublet0nEquationNewXZeroAUpdate,
+  kSingColD0ublet0nIneqSecondSingCol,
   kForcingRowVariable,
   kTwoColSingTrivial,
 };
@@ -76,8 +76,8 @@ enum PresolveRule {
 enum presolveNumerics {
   kNumericsInconsistentBounds,
   kNumericsFixedColumn,
-  kNumericsDoubletonEquationBound,
-  kNumericsDoubletonInequalityBound,
+  kNumericsD0ublet0nEquationBound,
+  kNumericsD0ublet0nInequalityBound,
   kNumericsSmallMatrixValue,
   kNumericsEmptyRowBound,
   kNumericsDominatedColumn,
@@ -165,7 +165,7 @@ class PresolveTimer {
       assert(rules_[id].rule_id == id);
       if (id == kRunPresolvers) continue;
       if (id == kRemoveRowSingletons) continue;
-      if (id == kRemoveDoubletonEquations) continue;
+      if (id == kRemoveD0ublet0nEquations) continue;
       clocks.push_back(rules_[id].clock_id);
     }
     HighsInt ideal_time_rule;
@@ -189,7 +189,7 @@ class PresolveTimer {
     clocks.push_back(rules_[kRemoveRowSingletons].clock_id);
     clocks.push_back(rules_[kRemoveForcingConstraints].clock_id);
     clocks.push_back(rules_[kRemoveColumnSingletons].clock_id);
-    clocks.push_back(rules_[kRemoveDoubletonEquations].clock_id);
+    clocks.push_back(rules_[kRemoveD0ublet0nEquations].clock_id);
     clocks.push_back(rules_[kRemoveDominatedColumns].clock_id);
     timer_.report_tl("grep-Presolve", clocks, ideal_time, 0);
     std::cout << std::endl;
@@ -206,7 +206,7 @@ class PresolveTimer {
     ideal_time_rule = kRemoveColumnSingletons;
     ideal_time = getRuleTime(ideal_time_rule);
     clocks.push_back(rules_[kFreeSingCol].clock_id);
-    clocks.push_back(rules_[kSingColDoubletonIneq].clock_id);
+    clocks.push_back(rules_[kSingColD0ublet0nIneq].clock_id);
     clocks.push_back(rules_[kImpliedFreeSingCol].clock_id);
     timer_.report_tl("grep-RmColSng", clocks, ideal_time, 0);
     std::cout << std::endl;

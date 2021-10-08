@@ -298,7 +298,7 @@ HighsInt Highs_setIntOptionValue(void* highs, const char* option,
   return (HighsInt)((Highs*)highs)->setOptionValue(std::string(option), value);
 }
 
-HighsInt Highs_setDoubleOptionValue(void* highs, const char* option,
+HighsInt Highs_setD0ubleOptionValue(void* highs, const char* option,
                                     const double value) {
   return (HighsInt)((Highs*)highs)->setOptionValue(std::string(option), value);
 }
@@ -329,7 +329,7 @@ HighsInt Highs_getIntOptionValue(void* highs, const char* option,
   return (HighsInt)((Highs*)highs)->getOptionValue(std::string(option), *value);
 }
 
-HighsInt Highs_getDoubleOptionValue(void* highs, const char* option,
+HighsInt Highs_getD0ubleOptionValue(void* highs, const char* option,
                                     double* value) {
   return (HighsInt)((Highs*)highs)->getOptionValue(std::string(option), *value);
 }
@@ -368,7 +368,7 @@ HighsInt Highs_getIntInfoValue(void* highs, const char* info, HighsInt* value) {
   return (HighsInt)((Highs*)highs)->getInfoValue(info, *value);
 }
 
-HighsInt Highs_getDoubleInfoValue(void* highs, const char* info,
+HighsInt Highs_getD0ubleInfoValue(void* highs, const char* info,
                                   double* value) {
   return (HighsInt)((Highs*)highs)->getInfoValue(info, *value);
 }
@@ -1044,12 +1044,12 @@ HighsInt Highs_setHighsIntOptionValue(void* highs, const char* option,
   return Highs_setIntOptionValue(highs, option, value);
 }
 
-HighsInt Highs_setHighsDoubleOptionValue(void* highs, const char* option,
+HighsInt Highs_setHighsD0ubleOptionValue(void* highs, const char* option,
                                          const double value) {
   ((Highs*)highs)
-      ->deprecationMessage("Highs_setHighsDoubleOptionValue",
-                           "Highs_setDoubleOptionValue");
-  return Highs_setDoubleOptionValue(highs, option, value);
+      ->deprecationMessage("Highs_setHighsD0ubleOptionValue",
+                           "Highs_setD0ubleOptionValue");
+  return Highs_setD0ubleOptionValue(highs, option, value);
 }
 
 HighsInt Highs_setHighsStringOptionValue(void* highs, const char* option,
@@ -1083,12 +1083,12 @@ HighsInt Highs_getHighsIntOptionValue(void* highs, const char* option,
   return Highs_getIntOptionValue(highs, option, value);
 }
 
-HighsInt Highs_getHighsDoubleOptionValue(void* highs, const char* option,
+HighsInt Highs_getHighsD0ubleOptionValue(void* highs, const char* option,
                                          double* value) {
   ((Highs*)highs)
-      ->deprecationMessage("Highs_getHighsDoubleOptionValue",
-                           "Highs_getDoubleOptionValue");
-  return Highs_getDoubleOptionValue(highs, option, value);
+      ->deprecationMessage("Highs_getHighsD0ubleOptionValue",
+                           "Highs_getD0ubleOptionValue");
+  return Highs_getD0ubleOptionValue(highs, option, value);
 }
 
 HighsInt Highs_getHighsStringOptionValue(void* highs, const char* option,
@@ -1120,12 +1120,12 @@ HighsInt Highs_getHighsIntInfoValue(void* highs, const char* info,
   return Highs_getIntInfoValue(highs, info, value);
 }
 
-HighsInt Highs_getHighsDoubleInfoValue(void* highs, const char* info,
+HighsInt Highs_getHighsD0ubleInfoValue(void* highs, const char* info,
                                        double* value) {
   ((Highs*)highs)
-      ->deprecationMessage("Highs_getHighsDoubleInfoValue",
-                           "Highs_getDoubleInfoValue");
-  return Highs_getDoubleInfoValue(highs, info, value);
+      ->deprecationMessage("Highs_getHighsD0ubleInfoValue",
+                           "Highs_getD0ubleInfoValue");
+  return Highs_getD0ubleInfoValue(highs, info, value);
 }
 
 HighsInt Highs_getNumCols(void* highs) { return Highs_getNumCol(highs); }

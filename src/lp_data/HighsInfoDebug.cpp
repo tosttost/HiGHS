@@ -157,14 +157,14 @@ HighsDebugStatus debugNoInfo(const HighsInfo& info) {
       error_found = (*(((InfoRecordInt*)info_records[index])[0].value) !=
                      *(((InfoRecordInt*)no_info_records[index])[0].value)) ||
                     error_found;
-    } else if (type == HighsInfoType::kDouble) {
-      double v0 = (double)*(((InfoRecordDouble*)info_records[index])[0].value);
-      double v1 = (double)*(((InfoRecordDouble*)info_records[index])[0].value);
+    } else if (type == HighsInfoType::kD0uble) {
+      double v0 = (double)*(((InfoRecordD0uble*)info_records[index])[0].value);
+      double v1 = (double)*(((InfoRecordD0uble*)info_records[index])[0].value);
       if (v0 != v1)
         printf("debugNoInfo: Index %" HIGHSINT_FORMAT " has %g != %g \n", index,
                v0, v1);
-      error_found = (*(((InfoRecordDouble*)info_records[index])[0].value) !=
-                     *(((InfoRecordDouble*)no_info_records[index])[0].value)) ||
+      error_found = (*(((InfoRecordD0uble*)info_records[index])[0].value) !=
+                     *(((InfoRecordD0uble*)no_info_records[index])[0].value)) ||
                     error_found;
     } else {
       assert(1 == 0);

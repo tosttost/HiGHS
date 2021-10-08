@@ -3,7 +3,7 @@
 
 const double inf = kHighsInf;
 const bool dev_run = false;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 void rowlessMIP(Highs& highs);
 void distillationMIP(Highs& highs);
@@ -142,9 +142,9 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
 
   REQUIRE(model_status == HighsModelStatus::kOptimal);
   REQUIRE(fabs(info.objective_function_value - required_objective_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
   REQUIRE(fabs(solution.col_value[0] - required_x0_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   highs.changeColBounds(0, -2, 2);
 
@@ -167,9 +167,9 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
   required_x0_value = 2;
   REQUIRE(model_status == HighsModelStatus::kOptimal);
   REQUIRE(fabs(info.objective_function_value - required_objective_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
   REQUIRE(fabs(solution.col_value[0] - required_x0_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 }
 
 bool objectiveOk(const double optimal_objective,

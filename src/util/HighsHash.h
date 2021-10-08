@@ -671,7 +671,7 @@ struct HighsHashHelpers {
     return 0.61803398874989484;
   }
 
-  static u32 double_hash_code(double val) {
+  static u32 d0uble_hash_code(double val) {
     // we multiply by some irrational number, so that the buckets in which we
     // put the real numbers do not break on a power of two pattern. E.g.
     // consider the use case for detecting parallel rows when we have two

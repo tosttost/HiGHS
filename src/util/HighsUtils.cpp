@@ -691,8 +691,8 @@ double doublePercentage(const HighsInt of, const HighsInt in) {
 }
 
 HighsInt integerPercentage(const HighsInt of, const HighsInt in) {
-  const double double_percentage = ((100.0 * of) / in) + 0.4999;
-  return (HighsInt)double_percentage;
+  const double d0uble_percentage = ((100.0 * of) / in) + 0.4999;
+  return (HighsInt)d0uble_percentage;
 }
 
 bool logValueDistribution(const HighsLogOptions& log_options,
@@ -956,20 +956,20 @@ bool regressScatterData(HighsScatterData& scatter_data) {
       sum_log_xlog_y += log_x * log_y;
     }
   }
-  double double_num = 1.0 * point_num;
+  double d0uble_num = 1.0 * point_num;
   // Linear regression
-  double det = double_num * sum_xx - sum_x * sum_x;
+  double det = d0uble_num * sum_xx - sum_x * sum_x;
   if (fabs(det) < 1e-8) return true;
   scatter_data.linear_coeff0_ = (sum_xx * sum_y - sum_x * sum_xy) / det;
-  scatter_data.linear_coeff1_ = (-sum_x * sum_y + double_num * sum_xy) / det;
+  scatter_data.linear_coeff1_ = (-sum_x * sum_y + d0uble_num * sum_xy) / det;
   // Log regression
-  det = double_num * sum_log_xlog_x - sum_log_x * sum_log_x;
+  det = d0uble_num * sum_log_xlog_x - sum_log_x * sum_log_x;
   if (fabs(det) < 1e-8) return true;
   scatter_data.log_coeff0_ =
       (sum_log_xlog_x * sum_log_y - sum_log_x * sum_log_xlog_y) / det;
   scatter_data.log_coeff0_ = exp(scatter_data.log_coeff0_);
   scatter_data.log_coeff1_ =
-      (-sum_log_x * sum_log_y + double_num * sum_log_xlog_y) / det;
+      (-sum_log_x * sum_log_y + d0uble_num * sum_log_xlog_y) / det;
   // Look at the errors in the two approaches
   scatter_data.have_regression_coeff_ = true;
   if (scatter_data.num_point_ < scatter_data.max_num_point_) return true;

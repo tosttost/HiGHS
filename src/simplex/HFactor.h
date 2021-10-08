@@ -357,7 +357,7 @@ class HFactor {
 
   void reportIntVector(const std::string name,
                        const vector<HighsInt> entry) const;
-  void reportDoubleVector(const std::string name,
+  void reportD0ubleVector(const std::string name,
                           const vector<double> entry) const;
 
   void ftranL(HVector& vector, const double expected_density,

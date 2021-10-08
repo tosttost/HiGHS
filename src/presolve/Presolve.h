@@ -48,7 +48,7 @@ enum class Presolver {
   kMainRowSingletons,
   kMainForcing,
   kMainColSingletons,
-  kMainDoubletonEq,
+  kMainD0ublet0nEq,
   kMainDominatedCols,
   kMainSingletonsOnly,
   kMainMipDualFixing,
@@ -59,7 +59,7 @@ const std::map<Presolver, std::string> kPresolverNames{
     {Presolver::kMainRowSingletons, "Row singletons ()"},
     {Presolver::kMainForcing, "Forcing rows ()"},
     {Presolver::kMainColSingletons, "Col singletons ()"},
-    {Presolver::kMainDoubletonEq, "Doubleton eq ()"},
+    {Presolver::kMainD0ublet0nEq, "D0ublet0n eq ()"},
     {Presolver::kMainDominatedCols, "Dominated Cols()"},
     {Presolver::kMainSingletonsOnly, "Singletons only()"},
     {Presolver::kMainMipDualFixing, "Dual fixing ()"}};
@@ -197,18 +197,18 @@ class Presolve : public HPreData {
                                     const double h);
 
   // doubleton equations
-  void removeDoubletonEquations();
-  pair<HighsInt, HighsInt> getXYDoubletonEquations(const HighsInt row);
-  void processRowDoubletonEquation(const HighsInt row, const HighsInt x,
+  void removeD0ublet0nEquations();
+  pair<HighsInt, HighsInt> getXYD0ublet0nEquations(const HighsInt row);
+  void processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
                                    const HighsInt y, const double akx,
                                    const double aky, const double b);
-  pair<double, double> getNewBoundsDoubletonConstraint(HighsInt row,
+  pair<double, double> getNewBoundsD0ublet0nConstraint(HighsInt row,
                                                        HighsInt col, HighsInt j,
                                                        double aik, double aij);
-  void UpdateMatrixCoeffDoubletonEquationXzero(
+  void UpdateMatrixCoeffD0ublet0nEquationXzero(
       const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
       const double akx, const double aky);
-  void UpdateMatrixCoeffDoubletonEquationXnonZero(
+  void UpdateMatrixCoeffD0ublet0nEquationXnonZero(
       const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
       const double akx, const double aky);
 
@@ -219,10 +219,10 @@ class Presolve : public HPreData {
                                  const HighsInt k);
   void removeZeroCostColumnSingleton(const HighsInt col, const HighsInt row,
                                      const HighsInt k);
-  bool removeColumnSingletonInDoubletonInequality(const HighsInt col,
+  bool removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
                                                   const HighsInt i,
                                                   const HighsInt k);
-  void removeSecondColumnSingletonInDoubletonRow(const HighsInt j,
+  void removeSecondColumnSingletonInD0ublet0nRow(const HighsInt j,
                                                  const HighsInt i);
   pair<double, double> getBoundsImpliedFree(double lowInit, double uppInit,
                                             const HighsInt col,
@@ -282,7 +282,7 @@ class Presolve : public HPreData {
   void roundIntegerBounds(HighsInt col);
   string getDualsForcingRow(const HighsInt row, vector<HighsInt>& fRjs);
   void getDualsSingletonRow(const HighsInt row, const HighsInt col);
-  void getDualsDoubletonEquation(const HighsInt row, const HighsInt col);
+  void getDualsD0ublet0nEquation(const HighsInt row, const HighsInt col);
   void recordCounts(const string fileName);
   void trimA();
 
@@ -308,7 +308,7 @@ class Presolve : public HPreData {
   void checkKkt(const bool final = false);
   dev_kkt_check::State initState(const bool intermediate = false);
 
-  void caseTwoSingletonsDoubletonInequality(const HighsInt row,
+  void caseTwoSingletonsD0ublet0nInequality(const HighsInt row,
                                             const HighsInt x, const HighsInt y);
 
   // August 2020

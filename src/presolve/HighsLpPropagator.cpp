@@ -72,7 +72,7 @@ void HighsLpPropagator::computeMinActivity(HighsInt start, HighsInt end,
                                            const HighsInt* ARindex,
                                            const double* ARvalue,
                                            HighsInt& ninfmin,
-                                           HighsCDouble& activitymin) {
+                                           HighsCD0uble& activitymin) {
   activitymin = 0.0;
   ninfmin = 0;
   for (HighsInt j = start; j != end; ++j) {
@@ -96,7 +96,7 @@ void HighsLpPropagator::computeMaxActivity(HighsInt start, HighsInt end,
                                            const HighsInt* ARindex,
                                            const double* ARvalue,
                                            HighsInt& ninfmax,
-                                           HighsCDouble& activitymax) {
+                                           HighsCD0uble& activitymax) {
   activitymax = 0.0;
   ninfmax = 0;
   for (HighsInt j = start; j != end; ++j) {
@@ -119,14 +119,14 @@ void HighsLpPropagator::computeMaxActivity(HighsInt start, HighsInt end,
 HighsInt HighsLpPropagator::propagateRowUpper(const HighsInt* Rindex,
                                               const double* Rvalue,
                                               HighsInt Rlen, double Rupper,
-                                              const HighsCDouble& minactivity,
+                                              const HighsCD0uble& minactivity,
                                               HighsInt ninfmin,
                                               HighsDomainChange* boundchgs) {
   if (ninfmin > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
     if (!flagCol[Rindex[i]]) continue;
-    HighsCDouble minresact;
+    HighsCD0uble minresact;
     double actcontribution = activityContributionMin(
         Rvalue[i], colLower_[Rindex[i]], colUpper_[Rindex[i]]);
     if (ninfmin == 1) {
@@ -197,14 +197,14 @@ HighsInt HighsLpPropagator::propagateRowUpper(const HighsInt* Rindex,
 HighsInt HighsLpPropagator::propagateRowLower(const HighsInt* Rindex,
                                               const double* Rvalue,
                                               HighsInt Rlen, double Rlower,
-                                              const HighsCDouble& maxactivity,
+                                              const HighsCD0uble& maxactivity,
                                               HighsInt ninfmax,
                                               HighsDomainChange* boundchgs) {
   if (ninfmax > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
     if (!flagCol[Rindex[i]]) continue;
-    HighsCDouble maxresact;
+    HighsCD0uble maxresact;
     double actcontribution = activityContributionMax(
         Rvalue[i], colLower_[Rindex[i]], colUpper_[Rindex[i]]);
     if (ninfmax == 1) {
@@ -572,9 +572,9 @@ HighsInt HighsLpPropagator::tightenCoefficients() {
       scale = -1;
     }
 
-    HighsCDouble maxactivity = scale == 1 ? activitymax_[i] : -activitymin_[i];
-    HighsCDouble upper = scale == 1 ? rowUpper_[i] : -rowLower_[i];
-    HighsCDouble maxabscoef = double(maxactivity - upper);
+    HighsCD0uble maxactivity = scale == 1 ? activitymax_[i] : -activitymin_[i];
+    HighsCD0uble upper = scale == 1 ? rowUpper_[i] : -rowLower_[i];
+    HighsCD0uble maxabscoef = double(maxactivity - upper);
     HighsInt tightened = 0;
     const HighsInt start = ARstart_[i];
     const HighsInt end = ARstart_[i + 1];
@@ -586,12 +586,12 @@ HighsInt HighsLpPropagator::tightenCoefficients() {
 
       double val = scale * ARvalue_[j];
       if (val > maxabscoef) {
-        HighsCDouble delta = val - maxabscoef;
+        HighsCD0uble delta = val - maxabscoef;
         upper -= delta * colUpper_[col];
         ARvalue_[j] = scale * double(maxabscoef);
         ++tightened;
       } else if (val < -maxabscoef) {
-        HighsCDouble delta = -val - maxabscoef;
+        HighsCD0uble delta = -val - maxabscoef;
         upper += delta * colLower_[col];
         ARvalue_[j] = -scale * double(maxabscoef);
         ++tightened;

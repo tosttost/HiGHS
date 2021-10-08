@@ -319,7 +319,7 @@ HighsInt Highs_setIntOptionValue(void* highs,
                                  const HighsInt value  //!< new value of option
 );
 
-HighsInt Highs_setDoubleOptionValue(void* highs,
+HighsInt Highs_setD0ubleOptionValue(void* highs,
                                     const char* option,  //!< name of the option
                                     const double value  //!< new value of option
 );
@@ -344,7 +344,7 @@ HighsInt Highs_getIntOptionValue(void* highs,
                                  HighsInt* value      //!< value of option
 );
 
-HighsInt Highs_getDoubleOptionValue(void* highs,
+HighsInt Highs_getD0ubleOptionValue(void* highs,
                                     const char* option,  //!< name of the option
                                     double* value        //!< value of option
 );
@@ -383,7 +383,7 @@ HighsInt Highs_getIntInfoValue(void* highs,
 /*
  * @brief
  */
-HighsInt Highs_getDoubleInfoValue(void* highs,
+HighsInt Highs_getD0ubleInfoValue(void* highs,
                                   const char* info,  //!< The info name
                                   double* value      //!< The info value
 );
@@ -1128,7 +1128,7 @@ HighsInt Highs_setHighsIntOptionValue(
     const HighsInt value  //!< new value of option
 );
 
-HighsInt Highs_setHighsDoubleOptionValue(
+HighsInt Highs_setHighsD0ubleOptionValue(
     void* highs,
     const char* option,  //!< name of the option
     const double value   //!< new value of option
@@ -1157,7 +1157,7 @@ HighsInt Highs_getHighsIntOptionValue(
     HighsInt* value      //!< value of option
 );
 
-HighsInt Highs_getHighsDoubleOptionValue(
+HighsInt Highs_getHighsD0ubleOptionValue(
     void* highs,
     const char* option,  //!< name of the option
     double* value        //!< value of option
@@ -1177,7 +1177,7 @@ HighsInt Highs_resetHighsOptions(void* highs);
 HighsInt Highs_getHighsIntInfoValue(void* highs, const char* info,
                                     HighsInt* value);
 
-HighsInt Highs_getHighsDoubleInfoValue(void* highs, const char* info,
+HighsInt Highs_getHighsD0ubleInfoValue(void* highs, const char* info,
                                        double* value);
 
 HighsInt Highs_getNumCols(void* highs);

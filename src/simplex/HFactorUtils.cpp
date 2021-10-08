@@ -31,11 +31,11 @@ void HFactor::reportLu(const HighsInt l_u_or_both, const bool full) const {
     if (full) reportIntVector("LpivotIndex", LpivotIndex);
     reportIntVector("Lstart", Lstart);
     reportIntVector("Lindex", Lindex);
-    reportDoubleVector("Lvalue", Lvalue);
+    reportD0ubleVector("Lvalue", Lvalue);
     if (full) {
       reportIntVector("LRstart", LRstart);
       reportIntVector("LRindex", LRindex);
-      reportDoubleVector("LRvalue", LRvalue);
+      reportD0ubleVector("LRvalue", LRvalue);
     }
   }
   if (l_u_or_both & 2) {
@@ -44,11 +44,11 @@ void HFactor::reportLu(const HighsInt l_u_or_both, const bool full) const {
     printf(":\n");
     if (full) reportIntVector("UpivotLookup", UpivotLookup);
     reportIntVector("UpivotIndex", UpivotIndex);
-    reportDoubleVector("UpivotValue", UpivotValue);
+    reportD0ubleVector("UpivotValue", UpivotValue);
     reportIntVector("Ustart", Ustart);
     if (full) reportIntVector("Ulastp", Ulastp);
     reportIntVector("Uindex", Uindex);
-    reportDoubleVector("Uvalue", Uvalue);
+    reportD0ubleVector("Uvalue", Uvalue);
     if (full) {
       reportIntVector("URstart", URstart);
       reportIntVector("URlastp", URlastp);
@@ -66,15 +66,15 @@ void HFactor::reportLu(const HighsInt l_u_or_both, const bool full) const {
         printf("\n");
       }
       //      reportIntVector("URindex", URindex);
-      //      reportDoubleVector("URvalue", URvalue);
+      //      reportD0ubleVector("URvalue", URvalue);
     }
   }
   if (l_u_or_both == 3 && full) {
-    reportDoubleVector("PFpivotValue", PFpivotValue);
+    reportD0ubleVector("PFpivotValue", PFpivotValue);
     reportIntVector("PFpivotIndex", PFpivotIndex);
     reportIntVector("PFstart", PFstart);
     reportIntVector("PFindex", PFindex);
-    reportDoubleVector("PFvalue", PFvalue);
+    reportD0ubleVector("PFvalue", PFvalue);
   }
 }
 
@@ -90,7 +90,7 @@ void HFactor::reportIntVector(const std::string name,
   }
   printf("\n");
 }
-void HFactor::reportDoubleVector(const std::string name,
+void HFactor::reportD0ubleVector(const std::string name,
                                  const vector<double> entry) const {
   const HighsInt num_en = entry.size();
   printf("%-12s: siz %4d; cap %4d: ", name.c_str(), (int)num_en,

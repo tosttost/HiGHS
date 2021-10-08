@@ -8,7 +8,7 @@
 #include <math.h>
 
 const HighsInt dev_run = 0;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 HighsInt intArraysEqual(const HighsInt dim, const HighsInt* array0, const HighsInt* array1) {
   for (HighsInt ix = 0; ix < dim; ix++) if (array0[ix] != array1[ix]) return 0;
@@ -20,9 +20,9 @@ HighsInt doubleArraysEqual(const double dim, const double* array0, const double*
   return 1;
 }
 
-void assertDoubleValuesEqual(const char* name, const double is, const double should_be) {
+void assertD0ubleValuesEqual(const char* name, const double is, const double should_be) {
   const double dl = fabs(is-should_be);
-  if (dl > double_equal_tolerance) {
+  if (dl > d0uble_equal_tolerance) {
     printf("Value %s = %g differs from %g by %g but should be equal\n", name, is, should_be, dl);
     assert(1==0);
   }
@@ -241,7 +241,7 @@ void minimal_api_qp() {
   if (dev_run) {
     for (HighsInt iCol = 0; iCol < num_col; iCol++) {
       printf("x%d1 = %g\n", (int)iCol, col_value[iCol]);
-      assertDoubleValuesEqual("Solution value for QP qph", col_value[iCol], required_x[iCol]);
+      assertD0ubleValuesEqual("Solution value for QP qph", col_value[iCol], required_x[iCol]);
     }
   }
   free(col_value);
@@ -394,11 +394,11 @@ void full_api_lp() {
   assert(ret != 0);
 
   double primal_feasibility_tolerance;
-  Highs_getDoubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
+  Highs_getD0ubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
   if (dev_run)
     printf("primal_feasibility_tolerance = %g: setting it to 1e-6\n", primal_feasibility_tolerance);
   primal_feasibility_tolerance = 1e-6;
-  Highs_setDoubleOptionValue(highs, "primal_feasibility_tolerance", primal_feasibility_tolerance);
+  Highs_setD0ubleOptionValue(highs, "primal_feasibility_tolerance", primal_feasibility_tolerance);
 
   Highs_setBoolOptionValue(highs, "output_flag", 0);
   if (dev_run)
@@ -416,7 +416,7 @@ void full_api_lp() {
   //  printf("Run status = %"HIGHSINT_FORMAT"; Model status = %"HIGHSINT_FORMAT" = %s\n", runstatus, modelstatus, Highs_modelStatusToChar(highs, modelstatus));
 
   double objective_function_value;
-  Highs_getDoubleInfoValue(highs, "objective_function_value", &objective_function_value);
+  Highs_getD0ubleInfoValue(highs, "objective_function_value", &objective_function_value);
   HighsInt simplex_iteration_count = 0;
   Highs_getIntInfoValue(highs, "simplex_iteration_count", &simplex_iteration_count);
   HighsInt primal_solution_status = 0;
@@ -514,12 +514,12 @@ void full_api_qp() {
   required_objective_function_value = 0;
   required_x0 = -0.5;
   objective_function_value = Highs_getObjectiveValue(highs);
-  assertDoubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
+  assertD0ubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
 
   double* col_solution = (double*)malloc(sizeof(double) * num_col);
 
   Highs_getSolution(highs, col_solution, NULL, NULL, NULL);
-  assertDoubleValuesEqual("x0", col_solution[0], required_x0);
+  assertD0ubleValuesEqual("x0", col_solution[0], required_x0);
 
   if (dev_run) Highs_writeSolutionPretty(highs, "");
   // Add a variable x1 with objective x1^2 - x1
@@ -558,13 +558,13 @@ void full_api_qp() {
   required_objective_function_value = -0.25;
   required_x1 = 0.5;
   objective_function_value = Highs_getObjectiveValue(highs);
-  assertDoubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
+  assertD0ubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
 
   col_solution = (double*)malloc(sizeof(double) * num_col);
 
   Highs_getSolution(highs, col_solution, NULL, NULL, NULL);
-  assertDoubleValuesEqual("x0", col_solution[0], required_x0);
-  assertDoubleValuesEqual("x1", col_solution[1], required_x1);
+  assertD0ubleValuesEqual("x0", col_solution[0], required_x0);
+  assertD0ubleValuesEqual("x1", col_solution[1], required_x1);
 
   // Illustrate methods for getting and changing the offset by getting
   // the current offset, shifting it by the current objective and
@@ -572,7 +572,7 @@ void full_api_qp() {
 
   double check_offset;
   return_status = Highs_getObjectiveOffset(highs, &check_offset);
-  assertDoubleValuesEqual("Offset", check_offset, offset);
+  assertD0ubleValuesEqual("Offset", check_offset, offset);
 
   double dl_offset = -objective_function_value;
   offset += dl_offset;
@@ -580,7 +580,7 @@ void full_api_qp() {
   return_status = Highs_changeObjectiveOffset(highs, offset);
   required_objective_function_value += dl_offset;
   objective_function_value = Highs_getObjectiveValue(highs);
-  assertDoubleValuesEqual("Objective with new offset", objective_function_value, required_objective_function_value);
+  assertD0ubleValuesEqual("Objective with new offset", objective_function_value, required_objective_function_value);
 
   // Add the constraint 0.5 <= x0 + x1
   HighsInt a_index[2] = {0, 1};
@@ -599,11 +599,11 @@ void full_api_qp() {
   required_x1 = 0.75;
 
   objective_function_value = Highs_getObjectiveValue(highs);
-  assertDoubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
+  assertD0ubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
 
   Highs_getSolution(highs, col_solution, NULL, NULL, NULL);
-  assertDoubleValuesEqual("x0", col_solution[0], required_x0);
-  assertDoubleValuesEqual("x1", col_solution[1], required_x1);
+  assertD0ubleValuesEqual("x0", col_solution[0], required_x0);
+  assertD0ubleValuesEqual("x1", col_solution[1], required_x1);
 
   // Add bounds to make the QP infeasible
   Highs_changeColBounds(highs, 0, -inf, 0);
@@ -628,8 +628,8 @@ void options() {
   assert( simplex_scale_strategy == 0 );
 
   double primal_feasibility_tolerance;
-  Highs_setDoubleOptionValue(highs, "primal_feasibility_tolerance", 2.0);
-  Highs_getDoubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
+  Highs_setD0ubleOptionValue(highs, "primal_feasibility_tolerance", 2.0);
+  Highs_getD0ubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
   assert( primal_feasibility_tolerance == 2.0 );
 
   Highs_destroy(highs);

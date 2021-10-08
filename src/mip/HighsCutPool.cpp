@@ -20,7 +20,7 @@
 #include "mip/HighsLpRelaxation.h"
 #include "mip/HighsMipSolverData.h"
 #include "pdqsort/pdqsort.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsHash.h"
 
 static uint64_t compute_cut_hash(const HighsInt* Rindex, const double* Rvalue,
@@ -29,7 +29,7 @@ static uint64_t compute_cut_hash(const HighsInt* Rindex, const double* Rvalue,
 
   double scale = 1.0 / maxabscoef;
   for (HighsInt i = 0; i < Rlen; ++i)
-    valueHashCodes[i] = HighsHashHelpers::double_hash_code(scale * Rvalue[i]);
+    valueHashCodes[i] = HighsHashHelpers::d0uble_hash_code(scale * Rvalue[i]);
 
   return HighsHashHelpers::vector_hash(Rindex, Rlen) ^
          (HighsHashHelpers::vector_hash(valueHashCodes.data(), Rlen) >> 32);
@@ -249,7 +249,7 @@ void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
     // solution is 0 then the efficacy gets lower for each such entry even
     // though the cut dominates the clique cut where all those entries are
     // relaxed out.
-    HighsCDouble rownorm = 0.0;
+    HighsCD0uble rownorm = 0.0;
     HighsInt numActiveNzs = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];

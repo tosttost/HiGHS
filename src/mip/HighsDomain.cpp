@@ -616,7 +616,7 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
 void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
                                      const HighsInt* ARindex,
                                      const double* ARvalue, HighsInt& ninfmin,
-                                     HighsCDouble& activitymin) {
+                                     HighsCD0uble& activitymin) {
   if (infeasible_) {
     activitymin = 0.0;
     ninfmin = 0;
@@ -663,7 +663,7 @@ void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
 void HighsDomain::computeMaxActivity(HighsInt start, HighsInt end,
                                      const HighsInt* ARindex,
                                      const double* ARvalue, HighsInt& ninfmax,
-                                     HighsCDouble& activitymax) {
+                                     HighsCD0uble& activitymax) {
   if (infeasible_) {
     activitymax = 0.0;
     ninfmax = 0;
@@ -710,14 +710,14 @@ void HighsDomain::computeMaxActivity(HighsInt start, HighsInt end,
 HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
                                         const double* Rvalue, HighsInt Rlen,
                                         double Rupper,
-                                        const HighsCDouble& minactivity,
+                                        const HighsCD0uble& minactivity,
                                         HighsInt ninfmin,
                                         HighsDomainChange* boundchgs) {
   assert(std::isfinite(double(minactivity)));
   if (ninfmin > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
-    HighsCDouble minresact;
+    HighsCD0uble minresact;
     double actcontribution = activityContributionMin(
         Rvalue[i], col_lower_[Rindex[i]], col_upper_[Rindex[i]]);
     if (ninfmin == 1) {
@@ -728,7 +728,7 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
       minresact = minactivity - actcontribution;
     }
 
-    HighsCDouble boundVal = (Rupper - minresact) / Rvalue[i];
+    HighsCD0uble boundVal = (Rupper - minresact) / Rvalue[i];
     if (std::abs(double(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
       continue;
 
@@ -812,14 +812,14 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
 HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
                                         const double* Rvalue, HighsInt Rlen,
                                         double Rlower,
-                                        const HighsCDouble& maxactivity,
+                                        const HighsCD0uble& maxactivity,
                                         HighsInt ninfmax,
                                         HighsDomainChange* boundchgs) {
   assert(std::isfinite(double(maxactivity)));
   if (ninfmax > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
-    HighsCDouble maxresact;
+    HighsCD0uble maxresact;
     double actcontribution = activityContributionMax(
         Rvalue[i], col_lower_[Rindex[i]], col_upper_[Rindex[i]]);
     if (ninfmax == 1) {
@@ -830,7 +830,7 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
       maxresact = maxactivity - actcontribution;
     }
 
-    HighsCDouble boundVal = (Rlower - maxresact) / Rvalue[i];
+    HighsCD0uble boundVal = (Rlower - maxresact) / Rvalue[i];
     if (std::abs(double(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
       continue;
 
@@ -973,7 +973,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
 #ifndef NDEBUG
       {
         HighsInt tmpinf;
-        HighsCDouble tmpminact;
+        HighsCD0uble tmpminact;
         computeMinActivity(
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i]],
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
@@ -1024,7 +1024,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
 #ifndef NDEBUG
       {
         HighsInt tmpinf;
-        HighsCDouble tmpmaxact;
+        HighsCD0uble tmpmaxact;
         computeMaxActivity(
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i]],
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
@@ -1129,7 +1129,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
 #ifndef NDEBUG
       {
         HighsInt tmpinf;
-        HighsCDouble tmpmaxact;
+        HighsCD0uble tmpmaxact;
         computeMaxActivity(
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i]],
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
@@ -1184,7 +1184,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
 #ifndef NDEBUG
       {
         HighsInt tmpinf;
-        HighsCDouble tmpminact;
+        HighsCD0uble tmpminact;
         computeMinActivity(
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i]],
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
@@ -1939,7 +1939,7 @@ void HighsDomain::conflictAnalyzeReconvergence(
   ConflictSet conflictSet(*this);
 
   HighsInt ninfmin;
-  HighsCDouble activitymin;
+  HighsCD0uble activitymin;
   mipsolver->mipdata_->domain.computeMinActivity(
       0, prooflen, proofinds, proofvals, ninfmin, activitymin);
   if (ninfmin != 0) return;
@@ -1964,7 +1964,7 @@ void HighsDomain::conflictAnalyzeReconvergence(
 
 void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
                                       HighsInt len, double& rhs) const {
-  HighsCDouble maxactivity = 0;
+  HighsCD0uble maxactivity = 0;
 
   for (HighsInt i = 0; i != len; ++i) {
     if (vals[i] > 0) {
@@ -1978,20 +1978,20 @@ void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
     }
   }
 
-  HighsCDouble maxabscoef = maxactivity - rhs;
+  HighsCD0uble maxabscoef = maxactivity - rhs;
   if (maxabscoef > mipsolver->mipdata_->feastol) {
-    HighsCDouble upper = rhs;
+    HighsCD0uble upper = rhs;
     HighsInt tightened = 0;
     for (HighsInt i = 0; i != len; ++i) {
       if (mipsolver->variableType(inds[i]) == HighsVarType::kContinuous)
         continue;
       if (vals[i] > maxabscoef) {
-        HighsCDouble delta = vals[i] - maxabscoef;
+        HighsCD0uble delta = vals[i] - maxabscoef;
         upper -= delta * col_upper_[inds[i]];
         vals[i] = double(maxabscoef);
         ++tightened;
       } else if (vals[i] < -maxabscoef) {
-        HighsCDouble delta = -vals[i] - maxabscoef;
+        HighsCD0uble delta = -vals[i] - maxabscoef;
         upper += delta * col_lower_[inds[i]];
         vals[i] = -double(maxabscoef);
         ++tightened;
@@ -2849,7 +2849,7 @@ void HighsDomain::ConflictSet::conflictAnalysis(
   resolvedDomainChanges.reserve(localdom.domchgstack_.size());
 
   HighsInt ninfmin;
-  HighsCDouble activitymin;
+  HighsCD0uble activitymin;
   globaldom.computeMinActivity(0, prooflen, proofinds, proofvals, ninfmin,
                                activitymin);
   if (ninfmin != 0) return;

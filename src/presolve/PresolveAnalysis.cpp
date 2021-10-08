@@ -25,7 +25,7 @@ void initializePresolveRuleInfo(std::vector<PresolveRuleInfo>& rules) {
   rules.push_back(PresolveRuleInfo(kEmptyRow, "Empty row", "EMR"));
   rules.push_back(PresolveRuleInfo(kFixedCol, "Fixed col", "FXC"));
   rules.push_back(PresolveRuleInfo(kSingRow, "Sing row", "SGR"));
-  rules.push_back(PresolveRuleInfo(kDoubletonEquation, "Doubleton eq", "DEQ"));
+  rules.push_back(PresolveRuleInfo(kD0ublet0nEquation, "D0ublet0n eq", "DEQ"));
   rules.push_back(
       PresolveRuleInfo(kRemoveForcingConstraints, "Rm forcing cs", "RFC"));
   rules.push_back(PresolveRuleInfo(kForcingRow, "Forcing row", "FRR"));
@@ -34,7 +34,7 @@ void initializePresolveRuleInfo(std::vector<PresolveRuleInfo>& rules) {
       PresolveRuleInfo(kRemoveColumnSingletons, "Remove col sing", "RCS"));
   rules.push_back(PresolveRuleInfo(kFreeSingCol, "Free sing col", "FSC"));
   rules.push_back(
-      PresolveRuleInfo(kSingColDoubletonIneq, "Sing col dbtn ineq", "SCD"));
+      PresolveRuleInfo(kSingColD0ublet0nIneq, "Sing col dbtn ineq", "SCD"));
   rules.push_back(
       PresolveRuleInfo(kImpliedFreeSingCol, "Impl free sing col", "IFS"));
   rules.push_back(
@@ -51,7 +51,7 @@ void initializePresolveRuleInfo(std::vector<PresolveRuleInfo>& rules) {
   rules.push_back(PresolveRuleInfo(kRunPresolvers, "Run Presolvers", "RPr"));
   rules.push_back(PresolveRuleInfo(kRemoveRowSingletons, "Rm row sing", "RRS"));
   rules.push_back(
-      PresolveRuleInfo(kRemoveDoubletonEquations, "Rm dbleton eq", "RDE"));
+      PresolveRuleInfo(kRemoveD0ublet0nEquations, "Rm dbleton eq", "RDE"));
   //
   rules.push_back(
       PresolveRuleInfo(kTotalPresolveTime, "Total presolve time", "TPT"));

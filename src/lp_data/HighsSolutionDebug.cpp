@@ -389,7 +389,7 @@ HighsDebugStatus debugCompareHighsInfo(const HighsOptions& options,
 HighsDebugStatus debugCompareHighsInfoObjective(const HighsOptions& options,
                                                 const HighsInfo& highs_info0,
                                                 const HighsInfo& highs_info1) {
-  return debugCompareHighsInfoDouble("objective_function_value", options,
+  return debugCompareHighsInfoD0uble("objective_function_value", options,
                                      highs_info0.objective_function_value,
                                      highs_info1.objective_function_value);
 }
@@ -421,12 +421,12 @@ HighsDebugStatus debugCompareHighsInfoInfeasibility(
                                    highs_info1.num_primal_infeasibilities),
       return_status);
   return_status = debugWorseStatus(
-      debugCompareHighsInfoDouble("sum_primal_infeasibility", options,
+      debugCompareHighsInfoD0uble("sum_primal_infeasibility", options,
                                   highs_info0.sum_primal_infeasibilities,
                                   highs_info1.sum_primal_infeasibilities),
       return_status);
   return_status = debugWorseStatus(
-      debugCompareHighsInfoDouble("max_primal_infeasibility", options,
+      debugCompareHighsInfoD0uble("max_primal_infeasibility", options,
                                   highs_info0.max_primal_infeasibility,
                                   highs_info1.max_primal_infeasibility),
       return_status);
@@ -437,19 +437,19 @@ HighsDebugStatus debugCompareHighsInfoInfeasibility(
                                    highs_info1.num_dual_infeasibilities),
       return_status);
   return_status = debugWorseStatus(
-      debugCompareHighsInfoDouble("sum_dual_infeasibility", options,
+      debugCompareHighsInfoD0uble("sum_dual_infeasibility", options,
                                   highs_info0.sum_dual_infeasibilities,
                                   highs_info1.sum_dual_infeasibilities),
       return_status);
   return_status = debugWorseStatus(
-      debugCompareHighsInfoDouble("max_dual_infeasibility", options,
+      debugCompareHighsInfoD0uble("max_dual_infeasibility", options,
                                   highs_info0.max_dual_infeasibility,
                                   highs_info1.max_dual_infeasibility),
       return_status);
   return return_status;
 }
 
-HighsDebugStatus debugCompareHighsInfoDouble(const string name,
+HighsDebugStatus debugCompareHighsInfoD0uble(const string name,
                                              const HighsOptions& options,
                                              const double v0, const double v1) {
   if (v0 == v1) return HighsDebugStatus::kOk;

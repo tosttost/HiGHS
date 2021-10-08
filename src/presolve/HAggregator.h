@@ -24,7 +24,7 @@
 
 #include "lp_data/HConst.h"
 #include "lp_data/HStruct.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsHash.h"
 
 namespace presolve {
@@ -59,8 +59,8 @@ class HAggregator {
       freeslots;
 
   // vectors holding row activities
-  std::vector<HighsCDouble> minact;
-  std::vector<HighsCDouble> maxact;
+  std::vector<HighsCD0uble> minact;
+  std::vector<HighsCD0uble> maxact;
   std::vector<HighsInt> ninfmin;
   std::vector<HighsInt> ninfmax;
 

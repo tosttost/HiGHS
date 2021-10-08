@@ -56,7 +56,7 @@ void HighsDebugSol::activate() {
         file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
       }
 
-      HighsCDouble debugsolobj = 0.0;
+      HighsCD0uble debugsolobj = 0.0;
       for (HighsInt i = 0; i != mipsolver->model_->num_col_; ++i)
         debugsolobj += mipsolver->model_->col_cost_[i] * debugSolution[i];
 
@@ -88,7 +88,7 @@ void HighsDebugSol::shrink(const std::vector<HighsInt>& newColIndex) {
     if (newColIndex[i] != -1) debugSolution[newColIndex[i]] = debugSolution[i];
 
   debugSolution.resize(mipsolver->model_->num_col_);
-  HighsCDouble debugsolobj = 0.0;
+  HighsCD0uble debugsolobj = 0.0;
   for (HighsInt i = 0; i != mipsolver->model_->num_col_; ++i)
     debugsolobj += mipsolver->model_->col_cost_[i] * debugSolution[i];
 
@@ -157,7 +157,7 @@ void HighsDebugSol::checkCut(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double rhs) {
   if (!debugSolActive) return;
 
-  HighsCDouble violation = -rhs;
+  HighsCD0uble violation = -rhs;
 
   for (HighsInt i = 0; i != Rlen; ++i)
     violation += debugSolution[Rindex[i]] * Rvalue[i];
@@ -169,7 +169,7 @@ void HighsDebugSol::checkRow(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double Rlower, double Rupper) {
   if (!debugSolActive) return;
 
-  HighsCDouble activity = 0;
+  HighsCD0uble activity = 0;
 
   for (HighsInt i = 0; i != Rlen; ++i)
     activity += debugSolution[Rindex[i]] * Rvalue[i];

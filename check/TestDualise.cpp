@@ -3,7 +3,7 @@
 
 const double inf = kHighsInf;
 const bool dev_run = false;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 void detailedOutput(Highs& highs);
 void dualiseTest(Highs& highs);
@@ -46,7 +46,7 @@ void dualiseTest(Highs& highs) {
   // if (dev_run) highs.writeSolution("", true);
   double dual_objective = info.objective_function_value;
   double dl = fabs(primal_objective - dual_objective);
-  REQUIRE(dl < double_equal_tolerance);
+  REQUIRE(dl < d0uble_equal_tolerance);
 }
 
 HighsLp distillationLp() {

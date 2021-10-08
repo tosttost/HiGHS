@@ -14,7 +14,7 @@
 
 #include <numeric>
 
-#include "HighsCDouble.h"
+#include "HighsCD0uble.h"
 #include "lp_data/HConst.h"
 #include "lp_data/HighsOptions.h"
 
@@ -72,7 +72,7 @@ void HighsPostsolveStack::FreeColSubstitution::undo(
     HighsBasis& basis) {
   double colCoef = 0;
   // compute primal values
-  HighsCDouble rowValue = 0;
+  HighsCD0uble rowValue = 0;
   for (const auto& rowVal : rowValues) {
     if (rowVal.index == col)
       colCoef = rowVal.value;
@@ -90,7 +90,7 @@ void HighsPostsolveStack::FreeColSubstitution::undo(
 
   // compute the row dual value such that reduced cost of basic column is 0
   solution.row_dual[row] = 0;
-  HighsCDouble dualval = colCost;
+  HighsCD0uble dualval = colCost;
   for (const auto& colVal : colValues)
     dualval -= colVal.value * solution.row_dual[colVal.index];
 
@@ -109,13 +109,13 @@ void HighsPostsolveStack::FreeColSubstitution::undo(
     basis.row_status[row] = HighsBasisStatus::kUpper;
 }
 
-void HighsPostsolveStack::DoubletonEquation::undo(
+void HighsPostsolveStack::D0ublet0nEquation::undo(
     const HighsOptions& options, const std::vector<Nonzero>& colValues,
     HighsSolution& solution, HighsBasis& basis) {
   // retrieve the row and column index, the row side and the two
   // coefficients then compute the primal values
   solution.col_value[colSubst] =
-      double((rhs - HighsCDouble(coef) * solution.col_value[col]) / coefSubst);
+      double((rhs - HighsCD0uble(coef) * solution.col_value[col]) / coefSubst);
 
   // can only do primal postsolve, stop here
   if (row == -1 || solution.row_dual.empty()) return;
@@ -131,7 +131,7 @@ void HighsPostsolveStack::DoubletonEquation::undo(
   // equation row with scale -a_i/substCoef. Therefore the dual multiplier of
   // this row i implicitly increases the dual multiplier of this doubleton
   // equation row with that scale.
-  HighsCDouble rowDual = 0.0;
+  HighsCD0uble rowDual = 0.0;
   solution.row_dual[row] = 0;
   for (const auto& colVal : colValues)
     rowDual -= colVal.value * solution.row_dual[colVal.index];
@@ -152,7 +152,7 @@ void HighsPostsolveStack::DoubletonEquation::undo(
     solution.row_dual[row] = double(rowDual + rowDualDelta);
     solution.col_dual[col] = 0.0;
     solution.col_dual[colSubst] = double(
-        HighsCDouble(solution.col_dual[colSubst]) - rowDualDelta * coefSubst);
+        HighsCD0uble(solution.col_dual[colSubst]) - rowDualDelta * coefSubst);
     if ((std::signbit(coef) == std::signbit(coefSubst) &&
          basis.col_status[col] == HighsBasisStatus::kUpper) ||
         (std::signbit(coef) != std::signbit(coefSubst) &&
@@ -168,7 +168,7 @@ void HighsPostsolveStack::DoubletonEquation::undo(
     solution.row_dual[row] = double(rowDual + rowDualDelta);
     solution.col_dual[colSubst] = 0.0;
     solution.col_dual[col] =
-        double(HighsCDouble(solution.col_dual[col]) - rowDualDelta * coef);
+        double(HighsCD0uble(solution.col_dual[col]) - rowDualDelta * coef);
     basis.col_status[colSubst] = HighsBasisStatus::kBasic;
   }
 
@@ -188,7 +188,7 @@ void HighsPostsolveStack::EqualityRowAddition::undo(
   // the dual multiplier of the row implicitly increases the dual multiplier
   // of the equation with the scale the equation was added with
   solution.row_dual[addedEqRow] =
-      double(HighsCDouble(eqRowScale) * solution.row_dual[row] +
+      double(HighsCD0uble(eqRowScale) * solution.row_dual[row] +
              solution.row_dual[addedEqRow]);
 
   if (basis.row_status[addedEqRow] == HighsBasisStatus::kBasic &&
@@ -225,10 +225,10 @@ void HighsPostsolveStack::EqualityRowAdditions::undo(
   // the dual multiplier of the rows where the eq row was added implicitly
   // increases the dual multiplier of the equation with the scale that was used
   // for adding the equation
-  HighsCDouble eqRowDual = solution.row_dual[addedEqRow];
+  HighsCD0uble eqRowDual = solution.row_dual[addedEqRow];
   for (const auto& targetRow : targetRows)
     eqRowDual +=
-        HighsCDouble(targetRow.value) * solution.row_dual[targetRow.index];
+        HighsCD0uble(targetRow.value) * solution.row_dual[targetRow.index];
 
   solution.row_dual[addedEqRow] = double(eqRowDual);
 
@@ -313,7 +313,7 @@ void HighsPostsolveStack::ForcingColumnRemovedRow::undo(
     HighsSolution& solution, HighsBasis& basis) {
   // we use the row value as storage for the scaled value implied on the column
   // dual
-  HighsCDouble val = rhs;
+  HighsCD0uble val = rhs;
   for (const auto& rowVal : rowValues)
     val -= rowVal.value * solution.col_value[rowVal.index];
 
@@ -386,7 +386,7 @@ void HighsPostsolveStack::FixedCol::undo(const HighsOptions& options,
 
   // compute reduced cost
 
-  HighsCDouble reducedCost = colCost;
+  HighsCD0uble reducedCost = colCost;
   for (const auto& colVal : colValues) {
     assert((HighsInt)solution.row_dual.size() > colVal.index);
     reducedCost -= colVal.value * solution.row_dual[colVal.index];
@@ -455,7 +455,7 @@ void HighsPostsolveStack::ForcingRow::undo(
     for (const auto& rowVal : rowValues) {
       solution.col_dual[rowVal.index] =
           double(solution.col_dual[rowVal.index] -
-                 HighsCDouble(dualDelta) * rowVal.value);
+                 HighsCD0uble(dualDelta) * rowVal.value);
     }
     solution.col_dual[basicCol] = 0;
     basis.row_status[row] =
@@ -603,7 +603,7 @@ void HighsPostsolveStack::DuplicateColumn::undo(const HighsOptions& options,
 
   double mergeVal = solution.col_value[col];
   solution.col_value[duplicateCol] =
-      double((HighsCDouble(mergeVal) - colLower) / colScale);
+      double((HighsCD0uble(mergeVal) - colLower) / colScale);
 
   bool recomputeCol = false;
 
@@ -636,7 +636,7 @@ void HighsPostsolveStack::DuplicateColumn::undo(const HighsOptions& options,
       solution.col_value[col] = std::ceil(solution.col_value[col] -
                                           options.mip_feasibility_tolerance);
       solution.col_value[duplicateCol] =
-          double((HighsCDouble(mergeVal) - solution.col_value[col]) / colScale);
+          double((HighsCD0uble(mergeVal) - solution.col_value[col]) / colScale);
     }
   } else {
     // setting col to its lower bound yielded a feasible value for

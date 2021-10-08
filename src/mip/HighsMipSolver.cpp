@@ -26,7 +26,7 @@
 #include "presolve/HPresolve.h"
 #include "presolve/HighsPostsolveStack.h"
 #include "presolve/PresolveComponent.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 HighsMipSolver::HighsMipSolver(const HighsOptions& options, const HighsLp& lp,
                                const HighsSolution& solution, bool submip)

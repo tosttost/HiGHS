@@ -21,7 +21,7 @@
 
 #include "lp_data/HConst.h"
 #include "mip/HighsDomainChange.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 class HighsDomain;
 class HighsLpRelaxation;
@@ -73,7 +73,7 @@ class HighsNodeQueue {
   };
 
   void checkGlobalBounds(HighsInt col, double lb, double ub, double feastol,
-                         HighsCDouble& treeweight);
+                         HighsCD0uble& treeweight);
 
  private:
   std::vector<OpenNode> nodes;

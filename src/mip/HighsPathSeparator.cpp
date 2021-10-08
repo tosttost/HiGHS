@@ -492,18 +492,18 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
           std::vector<double> valueMatrix;
           valueMatrix.resize(pathLen * numInds, 0.0);
 
-          HighsCDouble cutRhs = 0.0;
+          HighsCD0uble cutRhs = 0.0;
           std::vector<double> cutVals(numInds);
           std::vector<double> maxFrac(numInds);
-          std::vector<HighsCDouble> downSum(numInds);
-          std::vector<HighsCDouble> fSum(numInds);
+          std::vector<HighsCD0uble> downSum(numInds);
+          std::vector<HighsCD0uble> fSum(numInds);
 
           double fLast = 0;
           double scale = -1.0 / delta;
 
           for (HighsInt k = 0; k < pathLen; ++k) {
             double f = rhs[k] * scale;
-            HighsCDouble fDiff = HighsCDouble(f) - fLast;
+            HighsCD0uble fDiff = HighsCD0uble(f) - fLast;
             HighsInt len = aggregatedPath[k].first.size();
             cutRhs += fDiff;
             for (HighsInt j = 0; j < len; ++j) {

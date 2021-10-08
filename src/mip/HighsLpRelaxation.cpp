@@ -19,7 +19,7 @@
 #include "mip/HighsMipSolver.h"
 #include "mip/HighsMipSolverData.h"
 #include "mip/HighsPseudocost.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsHash.h"
 
 void HighsLpRelaxation::LpRow::get(const HighsMipSolver& mipsolver,
@@ -159,14 +159,14 @@ void HighsLpRelaxation::loadModel() {
 }
 
 double HighsLpRelaxation::computeBestEstimate(const HighsPseudocost& ps) const {
-  HighsCDouble estimate = objective;
+  HighsCD0uble estimate = objective;
 
   if (!fractionalints.empty()) {
     // because the pseudocost may be zero, we add an offset to the pseudocost so
     // that we always have some part of the estimate depending on the
     // fractionality.
 
-    HighsCDouble increase = 0.0;
+    HighsCD0uble increase = 0.0;
     double offset = mipsolver.mipdata_->feastol *
                     std::max(std::abs(objective), 1.0) /
                     mipsolver.mipdata_->integral_cols.size();
@@ -418,7 +418,7 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
   const HighsLp& lp = lpsolver.getLp();
 
   assert(std::isfinite(upperbound));
-  HighsCDouble upper = upperbound;
+  HighsCD0uble upper = upperbound;
 
   for (HighsInt i = 0; i != lp.num_row_; ++i) {
     // @FlipRowDual row_dual[i] < 0 became row_dual[i] > 0
@@ -446,7 +446,7 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
     HighsInt start = lp.a_matrix_.start_[i];
     HighsInt end = lp.a_matrix_.start_[i + 1];
 
-    HighsCDouble sum = lp.col_cost_[i];
+    HighsCD0uble sum = lp.col_cost_[i];
 
     for (HighsInt j = start; j != end; ++j) {
       if (row_dual[lp.a_matrix_.index_[j]] == 0) continue;
@@ -525,7 +525,7 @@ void HighsLpRelaxation::storeDualInfProof() {
   lpsolver.getDualRay(hasdualproof, dualproofbuffer.data());
   std::vector<double>& dualray = dualproofbuffer;
 
-  HighsCDouble upper = 0.0;
+  HighsCD0uble upper = 0.0;
 
   double maxval = 0;
   for (HighsInt i = 0; i != lp.num_row_; ++i)
@@ -562,7 +562,7 @@ void HighsLpRelaxation::storeDualInfProof() {
     HighsInt start = lp.a_matrix_.start_[i];
     HighsInt end = lp.a_matrix_.start_[i + 1];
 
-    HighsCDouble sum = 0.0;
+    HighsCD0uble sum = 0.0;
 
     for (HighsInt j = start; j != end; ++j) {
       if (dualray[lp.a_matrix_.index_[j]] == 0.0) continue;
@@ -624,7 +624,7 @@ bool HighsLpRelaxation::checkDualProof() const {
 
   HighsInt len = dualproofinds.size();
 
-  HighsCDouble viol = -dualproofrhs;
+  HighsCD0uble viol = -dualproofrhs;
 
   const HighsLp& lp = lpsolver.getLp();
 
@@ -866,7 +866,7 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
             maxNumFractional);
         const HighsSolution& sol = lpsolver.getSolution();
 
-        HighsCDouble objsum = 0;
+        HighsCD0uble objsum = 0;
         bool roundable = true;
 
         for (HighsInt i : mipsolver.mipdata_->integral_cols) {

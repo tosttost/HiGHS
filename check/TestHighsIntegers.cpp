@@ -25,7 +25,7 @@ TEST_CASE("HighsIntegers", "[util]") {
   // with this magnitude the results are still representable
   // in an 64bit integers, but not in 53bits double precision.
   // The double precision error is already far above 1.0
-  // so for computing the correct fraction it is necessary to use HighsCDouble
+  // so for computing the correct fraction it is necessary to use HighsCD0uble
   // which represents a roughly quad precision number as the unevaluated sum of
   // two double precision numbers, otherwise the algorithm will fail.
   int64_t primes[] = {967, 971, 977, 983, 991, 997};

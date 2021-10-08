@@ -82,8 +82,8 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
                                           const HighsLpRelaxation& lp) {
   const std::vector<double>& lpredcost = lp.getSolution().col_dual;
   double lpobjective = lp.getObjective();
-  HighsCDouble gap =
-      HighsCDouble(mipsolver.mipdata_->upper_limit) - lpobjective;
+  HighsCD0uble gap =
+      HighsCD0uble(mipsolver.mipdata_->upper_limit) - lpobjective;
 
   double tolerance = std::max(10 * mipsolver.mipdata_->feastol,
                               mipsolver.mipdata_->epsilon * double(gap));
@@ -103,7 +103,7 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
     //   redcost >= / <=  gap * (ub - lb)
     if (localdomain.col_upper_[col] == localdomain.col_lower_[col]) continue;
 
-    double threshold = double((HighsCDouble(localdomain.col_upper_[col]) -
+    double threshold = double((HighsCD0uble(localdomain.col_upper_[col]) -
                                localdomain.col_lower_[col]) *
                                   gap +
                               tolerance);

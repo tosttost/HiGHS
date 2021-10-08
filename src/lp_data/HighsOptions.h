@@ -87,17 +87,17 @@ class OptionRecordInt : public OptionRecord {
   virtual ~OptionRecordInt() {}
 };
 
-class OptionRecordDouble : public OptionRecord {
+class OptionRecordD0uble : public OptionRecord {
  public:
   double* value;
   double lower_bound;
   double upper_bound;
   double default_value;
-  OptionRecordDouble(std::string Xname, std::string Xdescription,
+  OptionRecordD0uble(std::string Xname, std::string Xdescription,
                      bool Xadvanced, double* Xvalue_pointer,
                      double Xlower_bound, double Xdefault_value,
                      double Xupper_bound)
-      : OptionRecord(HighsOptionType::kDouble, Xname, Xdescription, Xadvanced) {
+      : OptionRecord(HighsOptionType::kD0uble, Xname, Xdescription, Xadvanced) {
     value = Xvalue_pointer;
     lower_bound = Xlower_bound;
     default_value = Xdefault_value;
@@ -107,7 +107,7 @@ class OptionRecordDouble : public OptionRecord {
 
   void assignvalue(double Xvalue) { *value = Xvalue; }
 
-  virtual ~OptionRecordDouble() {}
+  virtual ~OptionRecordD0uble() {}
 };
 
 class OptionRecordString : public OptionRecord {
@@ -145,7 +145,7 @@ OptionStatus checkOptions(const HighsLogOptions& log_options,
 OptionStatus checkOption(const HighsLogOptions& log_options,
                          const OptionRecordInt& option);
 OptionStatus checkOption(const HighsLogOptions& log_options,
-                         const OptionRecordDouble& option);
+                         const OptionRecordD0uble& option);
 
 OptionStatus checkOptionValue(const HighsLogOptions& log_options,
                               std::vector<OptionRecord*>& option_records,
@@ -191,7 +191,7 @@ OptionStatus setLocalOptionValue(OptionRecordBool& option, const bool value);
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordInt& option, const HighsInt value);
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
-                                 OptionRecordDouble& option,
+                                 OptionRecordD0uble& option,
                                  const double value);
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordString& option,
@@ -231,7 +231,7 @@ void reportOption(FILE* file, const OptionRecordBool& option,
                   const bool report_only_deviations, const bool html);
 void reportOption(FILE* file, const OptionRecordInt& option,
                   const bool report_only_deviations, const bool html);
-void reportOption(FILE* file, const OptionRecordDouble& option,
+void reportOption(FILE* file, const OptionRecordD0uble& option,
                   const bool report_only_deviations, const bool html);
 void reportOption(FILE* file, const OptionRecordString& option,
                   const bool report_only_deviations, const bool html);
@@ -403,7 +403,7 @@ class HighsOptions : public HighsOptionsStruct {
   void initRecords() {
     OptionRecordBool* record_bool;
     OptionRecordInt* record_int;
-    OptionRecordDouble* record_double;
+    OptionRecordD0uble* record_d0uble;
     OptionRecordString* record_string;
     bool advanced;
     advanced = false;
@@ -420,63 +420,63 @@ class HighsOptions : public HighsOptionsStruct {
         kParallelString, "Parallel option: \"off\", \"choose\" or \"on\"",
         advanced, &parallel, kHighsChooseString);
     records.push_back(record_string);
-    record_double =
-        new OptionRecordDouble(kTimeLimitString, "Time limit", advanced,
+    record_d0uble =
+        new OptionRecordD0uble(kTimeLimitString, "Time limit", advanced,
                                &time_limit, 0, kHighsInf, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
     // Options read from the file
-    record_double =
-        new OptionRecordDouble("infinite_cost",
+    record_d0uble =
+        new OptionRecordD0uble("infinite_cost",
                                "Limit on cost coefficient: values larger than "
                                "this will be treated as infinite",
                                advanced, &infinite_cost, 1e15, 1e20, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "infinite_bound",
         "Limit on |constraint bound|: values larger "
         "than this will be treated as infinite",
         advanced, &infinite_bound, 1e15, 1e20, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "small_matrix_value",
         "Lower limit on |matrix entries|: values smaller than this will be "
         "treated as zero",
         advanced, &small_matrix_value, 1e-12, 1e-9, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "large_matrix_value",
         "Upper limit on |matrix entries|: values larger "
         "than this will be treated as infinite",
         advanced, &large_matrix_value, 1e0, 1e15, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "primal_feasibility_tolerance", "Primal feasibility tolerance",
         advanced, &primal_feasibility_tolerance, 1e-10, 1e-7, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "dual_feasibility_tolerance", "Dual feasibility tolerance", advanced,
         &dual_feasibility_tolerance, 1e-10, 1e-7, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "ipm_optimality_tolerance", "IPM optimality tolerance", advanced,
         &ipm_optimality_tolerance, 1e-12, 1e-8, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "objective_bound", "Objective bound for termination", advanced,
         &objective_bound, -kHighsInf, kHighsInf, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "objective_target", "Objective target for termination", advanced,
         &objective_target, -kHighsInf, -kHighsInf, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_int =
         new OptionRecordInt(kRandomSeedString, "random seed used in HiGHS",
@@ -660,15 +660,15 @@ class HighsOptions : public HighsOptionsStruct {
                             advanced, &mip_report_level, 0, 1, 2);
     records.push_back(record_int);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "mip_feasibility_tolerance", "MIP feasibility tolerance", advanced,
         &mip_feasibility_tolerance, 1e-10, 1e-6, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "mip_heuristic_effort", "effort spent for MIP heuristics", advanced,
         &mip_heuristic_effort, 0.0, 0.05, 1.0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     // Advanced options
     advanced = true;
@@ -778,47 +778,47 @@ class HighsOptions : public HighsOptionsStruct {
         &no_unnecessary_rebuild_refactor, true);
     records.push_back(record_bool);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "simplex_initial_condition_tolerance",
         "Tolerance on initial basis condition in simplex", advanced,
         &simplex_initial_condition_tolerance, 1.0, 1e14, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "rebuild_refactor_solution_error_tolerance",
         "Tolerance on solution error when considering refactorization on "
         "simplex rebuild",
         advanced, &rebuild_refactor_solution_error_tolerance, -kHighsInf, 1e-8,
         kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "dual_steepest_edge_weight_log_error_threshold",
         "Threshold on dual steepest edge weight errors for Devex switch",
         advanced, &dual_steepest_edge_weight_log_error_threshold, 1.0, 1e1,
         kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "dual_simplex_cost_perturbation_multiplier",
         "Dual simplex cost perturbation multiplier: 0 => no perturbation",
         advanced, &dual_simplex_cost_perturbation_multiplier, 0.0, 1.0,
         kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "primal_simplex_bound_perturbation_multiplier",
         "Primal simplex bound perturbation multiplier: 0 => no perturbation",
         advanced, &primal_simplex_bound_perturbation_multiplier, 0.0, 1.0,
         kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "presolve_pivot_threshold",
         "Matrix factorization pivot threshold for substitutions in presolve",
         advanced, &presolve_pivot_threshold, kMinPivotThreshold, 0.01,
         kMaxPivotThreshold);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_int = new OptionRecordInt("presolve_substitution_maxfillin",
                                      "Strategy for CHUZC sort in dual simplex",
@@ -826,23 +826,23 @@ class HighsOptions : public HighsOptionsStruct {
                                      0, 10, kHighsIInf);
     records.push_back(record_int);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "factor_pivot_threshold", "Matrix factorization pivot threshold",
         advanced, &factor_pivot_threshold, kMinPivotThreshold,
         kDefaultPivotThreshold, kMaxPivotThreshold);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "factor_pivot_tolerance", "Matrix factorization pivot tolerance",
         advanced, &factor_pivot_tolerance, kMinPivotTolerance,
         kDefaultPivotTolerance, kMaxPivotTolerance);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new OptionRecordDouble(
+    record_d0uble = new OptionRecordD0uble(
         "start_crossover_tolerance",
         "Tolerance to be satisfied before IPM crossover will start", advanced,
         &start_crossover_tolerance, 1e-12, 1e-8, kHighsInf);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_bool = new OptionRecordBool(
         "use_original_HFactor_logic",

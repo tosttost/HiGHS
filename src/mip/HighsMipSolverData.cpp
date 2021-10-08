@@ -51,7 +51,7 @@ bool HighsMipSolverData::trySolution(const std::vector<double>& solution,
                                      char source) {
   if (int(solution.size()) != mipsolver.model_->num_col_) return false;
 
-  HighsCDouble obj = 0;
+  HighsCD0uble obj = 0;
 
   for (HighsInt i = 0; i != mipsolver.model_->num_col_; ++i) {
     if (solution[i] < mipsolver.model_->col_lower_[i] - feastol) return false;
@@ -483,7 +483,7 @@ try_again:
   double row_violation_ = 0;
   double integrality_violation_ = 0;
 
-  HighsCDouble obj = mipsolver.orig_model_->offset_;
+  HighsCD0uble obj = mipsolver.orig_model_->offset_;
   assert((HighsInt)solution.col_value.size() ==
          mipsolver.orig_model_->num_col_);
   for (HighsInt i = 0; i != mipsolver.orig_model_->num_col_; ++i) {
@@ -1201,7 +1201,7 @@ restart:
       if (status == HighsLpRelaxation::Status::kInfeasible) return;
     }
 
-    HighsCDouble sqrnorm = 0.0;
+    HighsCD0uble sqrnorm = 0.0;
     const auto& solvals = lp.getSolution().col_value;
 
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
@@ -1217,7 +1217,7 @@ restart:
 #if 1
     double scale = double(1.0 / sqrt(sqrnorm));
     sqrnorm = 0.0;
-    HighsCDouble dotproduct = 0.0;
+    HighsCD0uble dotproduct = 0.0;
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
       avgdirection[i] =
           (scale * curdirection[i] - avgdirection[i]) / nseparounds;

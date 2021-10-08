@@ -20,7 +20,7 @@
 #include <limits>
 #include <vector>
 
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsInt.h"
 
 class HighsIntegers {
@@ -86,8 +86,8 @@ class HighsIntegers {
     int64_t ai = (int64_t)x;
     int64_t m[] = {ai, 1, 1, 0};
 
-    HighsCDouble xi = x;
-    HighsCDouble fraction = xi - double(ai);
+    HighsCD0uble xi = x;
+    HighsCD0uble fraction = xi - double(ai);
 
     while (fraction > eps) {
       xi = 1.0 / fraction;
@@ -138,12 +138,12 @@ class HighsIntegers {
     expshift = std::max(-expshift, 0) + 3;
 
     uint64_t denom = uint64_t{75} << expshift;
-    HighsCDouble startdenom = denom;
+    HighsCD0uble startdenom = denom;
     // now check if the values are integral and if not compute a common
     // denominator for their remaining fraction
-    HighsCDouble val = startdenom * vals[0];
-    HighsCDouble downval = floor(val + deltaup);
-    HighsCDouble fraction = val - downval;
+    HighsCD0uble val = startdenom * vals[0];
+    HighsCD0uble downval = floor(val + deltaup);
+    HighsCD0uble fraction = val - downval;
 
     if (fraction > deltadown) {
       // use a continued fraction algorithm to compute small missing
@@ -160,7 +160,7 @@ class HighsIntegers {
     uint64_t currgcd = (uint64_t)std::abs(double(downval));
 
     for (HighsInt i = 1; i != numVals; ++i) {
-      val = denom * HighsCDouble(vals[i]);
+      val = denom * HighsCD0uble(vals[i]);
       downval = floor(val + deltaup);
       fraction = val - downval;
 

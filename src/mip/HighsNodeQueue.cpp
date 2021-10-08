@@ -143,7 +143,7 @@ void HighsNodeQueue::setNumCol(HighsInt numcol) {
 
 void HighsNodeQueue::checkGlobalBounds(HighsInt col, double lb, double ub,
                                        double feastol,
-                                       HighsCDouble& treeweight) {
+                                       HighsCD0uble& treeweight) {
   std::set<HighsInt> delnodes;
   auto prunestart =
       colLowerNodes[col].lower_bound(std::make_pair(ub + feastol, -1));
@@ -165,7 +165,7 @@ double HighsNodeQueue::pruneInfeasibleNodes(HighsDomain& globaldomain,
                                             double feastol) {
   size_t numchgs;
 
-  HighsCDouble treeweight = 0.0;
+  HighsCD0uble treeweight = 0.0;
 
   do {
     if (globaldomain.infeasible()) break;
@@ -217,7 +217,7 @@ double HighsNodeQueue::pruneNode(HighsInt nodeId) {
 double HighsNodeQueue::performBounding(double upper_limit) {
   if (lowerroot == -1) return 0.0;
 
-  HighsCDouble treeweight = 0.0;
+  HighsCD0uble treeweight = 0.0;
 
   auto get_left = [&](HighsInt n) -> HighsInt& { return nodes[n].leftlower; };
   auto get_right = [&](HighsInt n) -> HighsInt& { return nodes[n].rightlower; };

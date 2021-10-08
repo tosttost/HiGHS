@@ -82,7 +82,7 @@ struct HighsMipSolverData {
   double rootlpsolobj;
   HighsInt numintegercols;
 
-  HighsCDouble pruned_treeweight;
+  HighsCD0uble pruned_treeweight;
   double avgrootlpiters;
   double last_disptime;
   int64_t firstrootlpiters;

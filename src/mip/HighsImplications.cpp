@@ -514,7 +514,7 @@ void HighsImplications::cleanupVarbounds(HighsInt col) {
         if (mipsolver.mipdata_->domain.infeasible()) return;
       }
     } else {
-      HighsCDouble minub = HighsCDouble(it->second.constant) + it->second.coef;
+      HighsCD0uble minub = HighsCD0uble(it->second.constant) + it->second.coef;
       double maxub = it->second.constant;
       if (minub >= ub - mipsolver.mipdata_->feastol)
         vubs[col].erase(it);  // variable bound is redundant
@@ -541,7 +541,7 @@ void HighsImplications::cleanupVarbounds(HighsInt col) {
                                                it->second.constant);
 
     if (it->second.coef > 0) {
-      HighsCDouble maxlb = HighsCDouble(it->second.constant) + it->second.coef;
+      HighsCD0uble maxlb = HighsCD0uble(it->second.constant) + it->second.coef;
       double minlb = it->second.constant;
       if (maxlb <= lb + mipsolver.mipdata_->feastol)
         vlbs[col].erase(it);  // variable bound is redundant

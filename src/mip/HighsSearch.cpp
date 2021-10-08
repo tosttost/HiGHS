@@ -41,7 +41,7 @@ HighsSearch::HighsSearch(HighsMipSolver& mipsolver,
 
 double HighsSearch::checkSol(const std::vector<double>& sol,
                              bool& integerfeasible) const {
-  HighsCDouble objval = 0.0;
+  HighsCD0uble objval = 0.0;
   integerfeasible = true;
   for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
     objval += sol[i] * mipsolver.colCost(i);

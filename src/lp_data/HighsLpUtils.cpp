@@ -25,7 +25,7 @@
 #include "lp_data/HighsModelUtils.h"
 #include "lp_data/HighsSolution.h"
 #include "lp_data/HighsStatus.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsSort.h"
 #include "util/HighsTimer.h"
 
@@ -1646,7 +1646,7 @@ void writeSolutionToFile(FILE* file, const HighsOptions& options,
                             lp.row_upper_, lp.row_names_, use_row_value,
                             use_row_dual, use_row_status);
   } else if (style == kWriteSolutionStyleMittelmann) {
-    HighsCDouble solObj = lp.offset_;
+    HighsCD0uble solObj = lp.offset_;
     for (HighsInt i = 0; i < lp.num_col_; ++i)
       solObj += lp.col_cost_[i] * use_col_value[i];
     writeModelSolution(file, options, double(solObj), lp.num_col_,

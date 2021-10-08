@@ -3,7 +3,7 @@
 
 const double inf = kHighsInf;
 const bool dev_run = false;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   std::string filename;
@@ -120,7 +120,7 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   REQUIRE(info.simplex_iteration_count == 0);
   double dl_objective =
       fabs(semi_continuous_objective - info.objective_function_value);
-  REQUIRE(dl_objective < double_equal_tolerance);
+  REQUIRE(dl_objective < d0uble_equal_tolerance);
   REQUIRE(info.simplex_iteration_count == 0);
   //
   // Restore the lower bounds and unfreeze frozen_basis_id1 (continuous optimal
@@ -140,7 +140,7 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   highs.run();
   // highs.setOptionValue("output_flag", false);
   dl_objective = fabs(continuous_objective - info.objective_function_value);
-  REQUIRE(dl_objective < double_equal_tolerance);
+  REQUIRE(dl_objective < d0uble_equal_tolerance);
   REQUIRE(info.simplex_iteration_count == 0);
   //
   // Unfreeze frozen_basis_id0
@@ -154,7 +154,7 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   highs.run();
   // highs.setOptionValue("output_flag", false);
   dl_objective = fabs(continuous_objective - info.objective_function_value);
-  REQUIRE(dl_objective < double_equal_tolerance);
+  REQUIRE(dl_objective < d0uble_equal_tolerance);
   REQUIRE(info.simplex_iteration_count == continuous_iteration_count);
 
   REQUIRE(highs.frozenBasisAllDataClear() == HighsStatus::kOk);

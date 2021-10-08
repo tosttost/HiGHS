@@ -135,8 +135,8 @@ class Highs {
    */
 
   /**
-   * @brief Sets an option to the bool/int/double/string  value if it's
-   * legal and, for bool/int/double, only if it's of the correct type
+   * @brief Sets an option to the bool/int/d0uble/string  value if it's
+   * legal and, for bool/int/d0uble, only if it's of the correct type
    */
 
   HighsStatus setOptionValue(const std::string& option,  //!< The option name
@@ -176,8 +176,8 @@ class Highs {
   const HighsOptions& getOptions() const { return options_; }
 
   /**
-   * @brief Gets an option value as bool/int/double/string and, for
-   * bool/int/double, only if it's of the correct type.
+   * @brief Gets an option value as bool/int/d0uble/string and, for
+   * bool/int/d0uble, only if it's of the correct type.
    */
   HighsStatus getOptionValue(const std::string& option,  //!< The option name
                              bool& value                 //!< The option value
@@ -208,7 +208,7 @@ class Highs {
                            const bool report_only_deviations = false);
 
   /**
-   * @brief Gets an option value as int/double, and only if it's of the correct
+   * @brief Gets an option value as int/d0uble, and only if it's of the correct
    * type.
    */
 

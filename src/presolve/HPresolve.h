@@ -28,7 +28,7 @@
 #include "lp_data/HighsLp.h"
 #include "lp_data/HighsOptions.h"
 #include "mip/HighsMipSolver.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsHash.h"
 #include "util/HighsLinearSumBounds.h"
 #include "util/HighsMatrixSlice.h"
@@ -316,7 +316,7 @@ class HPresolve {
 
   Result presolveChangedCols(HighsPostsolveStack& postSolveStack);
 
-  Result removeDoubletonEquations(HighsPostsolveStack& postSolveStack);
+  Result removeD0ublet0nEquations(HighsPostsolveStack& postSolveStack);
 
   HighsInt strengthenInequalities();
 

@@ -20,14 +20,14 @@
 
 #include "lp_data/HConst.h"
 #include "mip/HighsDomainChange.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 /// propagates domains as part of LP presolve
 /// final propagated bounds are relaxed by a wide enough margin
 /// so that they cannot be used in any basic feasible solution
 class HighsLpPropagator {
-  std::vector<HighsCDouble> activitymin_;
-  std::vector<HighsCDouble> activitymax_;
+  std::vector<HighsCD0uble> activitymin_;
+  std::vector<HighsCD0uble> activitymax_;
   std::vector<HighsInt> activitymininf_;
   std::vector<HighsInt> activitymaxinf_;
   std::vector<uint8_t> propagateflags_;
@@ -53,20 +53,20 @@ class HighsLpPropagator {
 
   void computeMinActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
                           const double* ARvalue, HighsInt& ninfmin,
-                          HighsCDouble& activitymin);
+                          HighsCD0uble& activitymin);
 
   void computeMaxActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
                           const double* ARvalue, HighsInt& ninfmax,
-                          HighsCDouble& activitymax);
+                          HighsCD0uble& activitymax);
 
   HighsInt propagateRowUpper(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double Rupper,
-                             const HighsCDouble& minactivity, HighsInt ninfmin,
+                             const HighsCD0uble& minactivity, HighsInt ninfmin,
                              HighsDomainChange* boundchgs);
 
   HighsInt propagateRowLower(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double Rlower,
-                             const HighsCDouble& maxactivity, HighsInt ninfmax,
+                             const HighsCD0uble& maxactivity, HighsInt ninfmax,
                              HighsDomainChange* boundchgs);
 
   void updateActivityLbChange(HighsInt col, double oldbound, double newbound);

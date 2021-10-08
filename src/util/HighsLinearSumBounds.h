@@ -21,15 +21,15 @@
 #include <vector>
 
 #include "lp_data/HConst.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 class HighsLinearSumBounds {
-  std::vector<HighsCDouble> sumLowerOrig;
-  std::vector<HighsCDouble> sumUpperOrig;
+  std::vector<HighsCD0uble> sumLowerOrig;
+  std::vector<HighsCD0uble> sumUpperOrig;
   std::vector<HighsInt> numInfSumLowerOrig;
   std::vector<HighsInt> numInfSumUpperOrig;
-  std::vector<HighsCDouble> sumLower;
-  std::vector<HighsCDouble> sumUpper;
+  std::vector<HighsCD0uble> sumLower;
+  std::vector<HighsCD0uble> sumUpper;
   std::vector<HighsInt> numInfSumLower;
   std::vector<HighsInt> numInfSumUpper;
   const double* varLower;
@@ -134,12 +134,12 @@ class HighsLinearSumBounds {
                                     : kHighsInf;
   }
 
-  double getSumLower(HighsInt sum, HighsCDouble offset) const {
+  double getSumLower(HighsInt sum, HighsCD0uble offset) const {
     return numInfSumLower[sum] == 0 ? double(sumLower[sum] + offset)
                                     : -kHighsInf;
   }
 
-  double getSumUpper(HighsInt sum, HighsCDouble offset) const {
+  double getSumUpper(HighsInt sum, HighsCD0uble offset) const {
     return numInfSumUpper[sum] == 0 ? double(sumUpper[sum] + offset)
                                     : kHighsInf;
   }

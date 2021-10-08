@@ -72,7 +72,7 @@ class HighsSearch {
  private:
   ChildSelectionRule childselrule;
 
-  HighsCDouble treeweight;
+  HighsCD0uble treeweight;
 
   struct NodeData {
     double lower_bound;

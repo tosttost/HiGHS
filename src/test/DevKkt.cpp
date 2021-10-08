@@ -19,7 +19,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "HighsCDouble.h"
+#include "HighsCD0uble.h"
 #include "presolve/PresolveUtils.h"
 
 namespace presolve {
@@ -315,7 +315,7 @@ void checkStationarityOfLagrangian(const State& state,
       details.checked++;
       double infeas = 0;
 
-      HighsCDouble lagrV = HighsCDouble(state.colCost[j]) - state.colDual[j];
+      HighsCD0uble lagrV = HighsCD0uble(state.colCost[j]) - state.colDual[j];
       for (int k = state.Astart[j]; k < state.Aend[j]; k++) {
         const int row = state.Aindex[k];
         assert(row >= 0 && row < state.numRow);

@@ -14,7 +14,7 @@
 #include "mip/HighsTransformedLp.h"
 
 #include "mip/HighsMipSolverData.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 HighsTransformedLp::HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
                                        HighsImplications& implications)
@@ -231,7 +231,7 @@ bool HighsTransformedLp::transform(std::vector<double>& vals,
                                    std::vector<double>& solval,
                                    std::vector<HighsInt>& inds, double& rhs,
                                    bool& integersPositive, bool preferVbds) {
-  HighsCDouble tmpRhs = rhs;
+  HighsCD0uble tmpRhs = rhs;
 
   const HighsMipSolver& mip = lprelaxation.getMipSolver();
   const HighsInt slackOffset = lprelaxation.numCols();
@@ -483,7 +483,7 @@ bool HighsTransformedLp::transform(std::vector<double>& vals,
 bool HighsTransformedLp::untransform(std::vector<double>& vals,
                                      std::vector<HighsInt>& inds, double& rhs,
                                      bool integral) {
-  HighsCDouble tmpRhs = rhs;
+  HighsCD0uble tmpRhs = rhs;
   const HighsMipSolver& mip = lprelaxation.getMipSolver();
   const HighsInt slackOffset = mip.numCol();
 

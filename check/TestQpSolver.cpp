@@ -5,7 +5,7 @@
 #include "catch.hpp"
 
 const bool dev_run = false;
-const double double_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 TEST_CASE("qpsolver", "[qpsolver]") {
   double required_objective_function_value;
@@ -36,12 +36,12 @@ TEST_CASE("qpsolver", "[qpsolver]") {
   double alt_objective_function_value =
       model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[1] - required_x1) < double_equal_tolerance);
+          d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[1] - required_x1) < d0uble_equal_tolerance);
 
   // Check with qjh.mps
   filename = std::string(HIGHS_DIR) + "/check/instances/qjh.mps";
@@ -60,14 +60,14 @@ TEST_CASE("qpsolver", "[qpsolver]") {
 
   alt_objective_function_value = model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[1] - required_x1) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[2] - required_x2) < double_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[1] - required_x1) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[2] - required_x2) < d0uble_equal_tolerance);
   REQUIRE(return_status == HighsStatus::kOk);
 
   // Test writeModel by writing out qjh.mps...
@@ -85,13 +85,13 @@ TEST_CASE("qpsolver", "[qpsolver]") {
 
   alt_objective_function_value = model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[1] - required_x1) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[2] - required_x2) < double_equal_tolerance);
+          d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[1] - required_x1) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[2] - required_x2) < d0uble_equal_tolerance);
 }
 
 TEST_CASE("test-qod", "[qpsolver]") {
@@ -148,11 +148,11 @@ TEST_CASE("test-qod", "[qpsolver]") {
   double alt_objective_function_value =
       model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
+          d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
 
   // Add a variable x1 with objective x1^2 - x1
   //
@@ -189,12 +189,12 @@ TEST_CASE("test-qod", "[qpsolver]") {
 
   alt_objective_function_value = model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[1] - required_x1) < double_equal_tolerance);
+          d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[1] - required_x1) < d0uble_equal_tolerance);
 
   // Illustrate methods for getting and changing the offset by getting
   // the current offset, shifting it by the current objective and
@@ -208,7 +208,7 @@ TEST_CASE("test-qod", "[qpsolver]") {
   return_status = highs.changeObjectiveOffset(offset);
   required_objective_function_value += dl_offset;
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   // Add the constraint 0.5 <= x0 + x1
   lp.a_matrix_.index_ = {0, 1};
@@ -229,12 +229,12 @@ TEST_CASE("test-qod", "[qpsolver]") {
   required_x1 = 0.75;
   alt_objective_function_value = model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[0] - required_x0) < double_equal_tolerance);
-  REQUIRE(fabs(solution.col_value[1] - required_x1) < double_equal_tolerance);
+          d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[0] - required_x0) < d0uble_equal_tolerance);
+  REQUIRE(fabs(solution.col_value[1] - required_x1) < d0uble_equal_tolerance);
 }
 
 TEST_CASE("test-qjh", "[qpsolver]") {
@@ -283,7 +283,7 @@ TEST_CASE("test-qjh", "[qpsolver]") {
   REQUIRE(return_status == HighsStatus::kOk);
   required_objective_function_value = -5.50;
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   if (dev_run) printf("Objective = %g\n", objective_function_value);
   if (dev_run) highs.writeSolution("", kWriteSolutionStylePretty);
@@ -304,7 +304,7 @@ TEST_CASE("test-qjh", "[qpsolver]") {
   REQUIRE(return_status == HighsStatus::kOk);
   required_objective_function_value = -5.25;
   REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-          double_equal_tolerance);
+          d0uble_equal_tolerance);
 
   if (dev_run) printf("Objective = %g\n", objective_function_value);
   if (dev_run) highs.writeSolution("", kWriteSolutionStylePretty);
@@ -341,7 +341,7 @@ TEST_CASE("test-qjh", "[qpsolver]") {
     return_status = highs.run();
     REQUIRE(return_status == HighsStatus::kOk);
     REQUIRE(fabs(objective_function_value - required_objective_function_value) <
-            double_equal_tolerance);
+            d0uble_equal_tolerance);
     return_status = highs.clearModel();
   }
 }

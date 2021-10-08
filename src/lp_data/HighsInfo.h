@@ -74,19 +74,19 @@ class InfoRecordInt : public InfoRecord {
   virtual ~InfoRecordInt() {}
 };
 
-class InfoRecordDouble : public InfoRecord {
+class InfoRecordD0uble : public InfoRecord {
  public:
   double* value;
   double default_value;
-  InfoRecordDouble(std::string Xname, std::string Xdescription, bool Xadvanced,
+  InfoRecordD0uble(std::string Xname, std::string Xdescription, bool Xadvanced,
                    double* Xvalue_pointer, double Xdefault_value)
-      : InfoRecord(HighsInfoType::kDouble, Xname, Xdescription, Xadvanced) {
+      : InfoRecord(HighsInfoType::kD0uble, Xname, Xdescription, Xadvanced) {
     value = Xvalue_pointer;
     default_value = Xdefault_value;
     *value = default_value;
   }
 
-  virtual ~InfoRecordDouble() {}
+  virtual ~InfoRecordD0uble() {}
 };
 
 InfoStatus getInfoIndex(const HighsOptions& options, const std::string& name,
@@ -96,7 +96,7 @@ InfoStatus getInfoIndex(const HighsOptions& options, const std::string& name,
 InfoStatus checkInfo(const HighsOptions& options,
                      const std::vector<InfoRecord*>& info_records);
 InfoStatus checkInfo(const InfoRecordInt& info);
-InfoStatus checkInfo(const InfoRecordDouble& info);
+InfoStatus checkInfo(const InfoRecordD0uble& info);
 
 InfoStatus getLocalInfoValue(const HighsOptions& options,
                              const std::string& name, const bool valid,
@@ -119,7 +119,7 @@ void reportInfo(FILE* file, const std::vector<InfoRecord*>& info_records,
 void reportInfo(FILE* file, const InfoRecordInt64& info,
                 const bool html = false);
 void reportInfo(FILE* file, const InfoRecordInt& info, const bool html = false);
-void reportInfo(FILE* file, const InfoRecordDouble& info,
+void reportInfo(FILE* file, const InfoRecordD0uble& info,
                 const bool html = false);
 
 // For now, but later change so HiGHS properties are string based so that new
@@ -192,7 +192,7 @@ class HighsInfo : public HighsInfoStruct {
   void initRecords() {
     InfoRecordInt64* record_int64;
     InfoRecordInt* record_int;
-    InfoRecordDouble* record_double;
+    InfoRecordD0uble* record_d0uble;
     bool advanced;
     advanced = false;
 
@@ -242,54 +242,54 @@ class HighsInfo : public HighsInfoStruct {
         advanced, &basis_validity, kBasisValidityInvalid);
     records.push_back(record_int);
 
-    record_double = new InfoRecordDouble("objective_function_value",
+    record_d0uble = new InfoRecordD0uble("objective_function_value",
                                          "Objective function value", advanced,
                                          &objective_function_value, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_int64 =
         new InfoRecordInt64("mip_node_count", "MIP solver node count", advanced,
                             &mip_node_count, 0);
     records.push_back(record_int64);
 
-    record_double =
-        new InfoRecordDouble("mip_dual_bound", "MIP solver dual bound",
+    record_d0uble =
+        new InfoRecordD0uble("mip_dual_bound", "MIP solver dual bound",
                              advanced, &mip_dual_bound, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new InfoRecordDouble("mip_gap", "MIP solver gap (%)",
+    record_d0uble = new InfoRecordD0uble("mip_gap", "MIP solver gap (%)",
                                          advanced, &mip_gap, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_int = new InfoRecordInt("num_primal_infeasibilities",
                                    "Number of primal infeasibilities", advanced,
                                    &num_primal_infeasibilities, -1);
     records.push_back(record_int);
 
-    record_double = new InfoRecordDouble(
+    record_d0uble = new InfoRecordD0uble(
         "max_primal_infeasibility", "Maximum primal infeasibility", advanced,
         &max_primal_infeasibility, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new InfoRecordDouble(
+    record_d0uble = new InfoRecordD0uble(
         "sum_primal_infeasibilities", "Sum of primal infeasibilities", advanced,
         &sum_primal_infeasibilities, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
     record_int = new InfoRecordInt("num_dual_infeasibilities",
                                    "Number of dual infeasibilities", advanced,
                                    &num_dual_infeasibilities, -1);
     records.push_back(record_int);
 
-    record_double = new InfoRecordDouble("max_dual_infeasibility",
+    record_d0uble = new InfoRecordD0uble("max_dual_infeasibility",
                                          "Maximum dual infeasibility", advanced,
                                          &max_dual_infeasibility, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
 
-    record_double = new InfoRecordDouble(
+    record_d0uble = new InfoRecordD0uble(
         "sum_dual_infeasibilities", "Sum of dual infeasibilities", advanced,
         &sum_dual_infeasibilities, 0);
-    records.push_back(record_double);
+    records.push_back(record_d0uble);
   }
 
  public:

@@ -133,11 +133,11 @@ void Presolve::setNumericalTolerances() {
                                  inconsistent_bounds_tolerance);
   timer.initialiseNumericsRecord(kNumericsFixedColumn, "Fixed column",
                                  fixed_column_tolerance);
-  timer.initialiseNumericsRecord(kNumericsDoubletonEquationBound,
-                                 "Doubleton equation bound",
+  timer.initialiseNumericsRecord(kNumericsD0ublet0nEquationBound,
+                                 "D0ublet0n equation bound",
                                  doubleton_equation_bound_tolerance);
-  timer.initialiseNumericsRecord(kNumericsDoubletonInequalityBound,
-                                 "Doubleton inequality bound",
+  timer.initialiseNumericsRecord(kNumericsD0ublet0nInequalityBound,
+                                 "D0ublet0n inequality bound",
                                  doubleton_inequality_bound_tolerance);
   timer.initialiseNumericsRecord(kNumericsSmallMatrixValue,
                                  "Small matrix value",
@@ -298,10 +298,10 @@ HighsInt Presolve::runPresolvers(const std::vector<Presolver>& order) {
         removeColumnSingletons();
         timer.recordFinish(kRemoveColumnSingletons);
         break;
-      case Presolver::kMainDoubletonEq:
-        timer.recordStart(kRemoveDoubletonEquations);
-        removeDoubletonEquations();
-        timer.recordFinish(kRemoveDoubletonEquations);
+      case Presolver::kMainD0ublet0nEq:
+        timer.recordStart(kRemoveD0ublet0nEquations);
+        removeD0ublet0nEquations();
+        timer.recordFinish(kRemoveD0ublet0nEquations);
         break;
       case Presolver::kMainDominatedCols:
         timer.recordStart(kRemoveDominatedColumns);
@@ -411,7 +411,7 @@ HighsInt Presolve::presolve(HighsInt print) {
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainForcing);
     order.push_back(Presolver::kMainRowSingletons);
-    order.push_back(Presolver::kMainDoubletonEq);
+    order.push_back(Presolver::kMainD0ublet0nEq);
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainColSingletons);
     order.push_back(Presolver::kMainDominatedCols);
@@ -584,7 +584,7 @@ void Presolve::checkBoundsAreConsistent() {
  *
  * 		   row is of form akx_x + aky_y = b,
  */
-pair<HighsInt, HighsInt> Presolve::getXYDoubletonEquations(const HighsInt row) {
+pair<HighsInt, HighsInt> Presolve::getXYD0ublet0nEquations(const HighsInt row) {
   // todo, for mip presolve also check integrality of right hand side value to
   // detect integer feasibility
   pair<HighsInt, HighsInt> colIndex;
@@ -677,7 +677,7 @@ pair<HighsInt, HighsInt> Presolve::getXYDoubletonEquations(const HighsInt row) {
   return colIndex;
 }
 
-void Presolve::processRowDoubletonEquation(const HighsInt row, const HighsInt x,
+void Presolve::processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
                                            const HighsInt y, const double akx,
                                            const double aky, const double b) {
   // std::cout << "col 2... c = " << colCost.at(2)<< std::endl;
@@ -691,7 +691,7 @@ void Presolve::processRowDoubletonEquation(const HighsInt row, const HighsInt x,
   // modify bounds on variable x (j), variable y (col,k) is substituted out
   // double aik = Avalue.at(k);
   // double aij = Avalue.at(kk);
-  pair<double, double> p = getNewBoundsDoubletonConstraint(row, y, x, aky, akx);
+  pair<double, double> p = getNewBoundsD0ublet0nConstraint(row, y, x, aky, akx);
   double low = p.first;
   double upp = p.second;
 
@@ -726,25 +726,25 @@ void Presolve::processRowDoubletonEquation(const HighsInt row, const HighsInt x,
   vector<double> bnds3({colLower.at(x), colUpper.at(x), colCost.at(x)});
   oldBounds.push(make_pair(x, bnds3));
 
-  addChange(kDoubletonEquation, row, y);
+  addChange(kD0ublet0nEquation, row, y);
 
   // remove y (col) and the row
   if (iPrint > 0)
-    cout << "PR: Doubleton equation removed. Row " << row << ", column " << y
+    cout << "PR: D0ublet0n equation removed. Row " << row << ", column " << y
          << ", column left is " << x << "    nzy=" << nzCol.at(y) << endl;
 
   flagRow.at(row) = 0;
   nzCol.at(x)--;
 
-  countRemovedRows(kDoubletonEquation);
-  countRemovedCols(kDoubletonEquation);
+  countRemovedRows(kD0ublet0nEquation);
+  countRemovedCols(kD0ublet0nEquation);
 
   //----------------------------
   flagCol.at(y) = 0;
   if (!hasChange) hasChange = true;
 }
 
-void Presolve::caseTwoSingletonsDoubletonInequality(const HighsInt row,
+void Presolve::caseTwoSingletonsD0ublet0nInequality(const HighsInt row,
                                                     const HighsInt x,
                                                     const HighsInt y) {
   // std::cout << "Call caseTwoSing..." << std::endl;
@@ -782,12 +782,12 @@ void Presolve::caseTwoSingletonsDoubletonInequality(const HighsInt row,
   // }
 }
 
-void Presolve::removeDoubletonEquations() {
+void Presolve::removeD0ublet0nEquations() {
   if (timer.reachLimit()) {
     status = Stat::kTimeout;
     return;
   }
-  timer.recordStart(kDoubletonEquation);
+  timer.recordStart(kD0ublet0nEquation);
   // flagCol should have one more element at end which is zero
   // needed for AR matrix manipulation
   if ((HighsInt)flagCol.size() == numCol) flagCol.push_back(0);
@@ -800,7 +800,7 @@ void Presolve::removeDoubletonEquations() {
       if (nzRow.at(row) == 2 && rowLower[row] > -kHighsInf &&
           rowUpper[row] < kHighsInf) {
         // Possible doubleton equation
-        timer.updateNumericsRecord(kNumericsDoubletonEquationBound,
+        timer.updateNumericsRecord(kNumericsD0ublet0nEquationBound,
                                    fabs(rowLower[row] - rowUpper[row]));
       }
       if (nzRow.at(row) == 2 && rowLower[row] > -kHighsInf &&
@@ -810,7 +810,7 @@ void Presolve::removeDoubletonEquations() {
         // row is of form akx_x + aky_y = b, where k=row and y is present in
         // fewer constraints
         const double b = rowLower.at(row);
-        pair<HighsInt, int> colIndex = getXYDoubletonEquations(row);
+        pair<HighsInt, int> colIndex = getXYD0ublet0nEquations(row);
         const HighsInt x = colIndex.first;
         const HighsInt y = colIndex.second;
 
@@ -822,7 +822,7 @@ void Presolve::removeDoubletonEquations() {
 
         // two singletons case handled elsewhere
         if (y < 0 || ((nzCol.at(y) == 1 && nzCol.at(x) == 1))) {
-          caseTwoSingletonsDoubletonInequality(row, x, y);
+          caseTwoSingletonsD0ublet0nInequality(row, x, y);
           continue;
         }
 
@@ -839,9 +839,9 @@ void Presolve::removeDoubletonEquations() {
 
         const double akx = getaij(row, x);
         const double aky = getaij(row, y);
-        processRowDoubletonEquation(row, x, y, akx, aky, b);
+        processRowD0ublet0nEquation(row, x, y, akx, aky, b);
         if (status) {
-          timer.recordFinish(kDoubletonEquation);
+          timer.recordFinish(kD0ublet0nEquation);
           return;
         }
 
@@ -860,7 +860,7 @@ void Presolve::removeDoubletonEquations() {
               bndsU.push_back(make_pair(i, rowUpper.at(i)));
               chk2.rLowers.push(bndsL);
               chk2.rUppers.push(bndsU);
-              addChange(kDoubletonEquationRowBoundsUpdate, i, y);
+              addChange(kD0ublet0nEquationRowBoundsUpdate, i, y);
             }
 
             if (rowLower.at(i) > -kHighsInf) rowLower.at(i) -= b * aiy / aky;
@@ -873,10 +873,10 @@ void Presolve::removeDoubletonEquations() {
 
             // update matrix coefficients
             if (isZeroA(i, x)) {
-              UpdateMatrixCoeffDoubletonEquationXzero(i, x, y, aiy, akx, aky);
+              UpdateMatrixCoeffD0ublet0nEquationXzero(i, x, y, aiy, akx, aky);
               // std::cout << "   . row " << i << " zero " << std::endl;
             } else {
-              UpdateMatrixCoeffDoubletonEquationXnonZero(i, x, y, aiy, akx,
+              UpdateMatrixCoeffD0ublet0nEquationXnonZero(i, x, y, aiy, akx,
                                                          aky);
               // std::cout << "   . row " << i << " zero " << std::endl;
             }
@@ -889,10 +889,10 @@ void Presolve::removeDoubletonEquations() {
       }
     }
   }
-  timer.recordFinish(kDoubletonEquation);
+  timer.recordFinish(kD0ublet0nEquation);
 }
 
-void Presolve::UpdateMatrixCoeffDoubletonEquationXzero(
+void Presolve::UpdateMatrixCoeffD0ublet0nEquationXzero(
     const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
     const double akx, const double aky) {
   // case x is zero initially
@@ -910,7 +910,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXzero(
 
   postValue.push(aiy);
   postValue.push(y);
-  addChange(kDoubletonEquationXZeroInitially, i, x);
+  addChange(kD0ublet0nEquationXZeroInitially, i, x);
 
   ARindex.at(ind) = x;
   ARvalue.at(ind) = -aiy * akx / aky;
@@ -930,7 +930,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXzero(
   // nzRow does not change here.
 }
 
-void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
+void Presolve::UpdateMatrixCoeffD0ublet0nEquationXnonZero(
     const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
     const double akx, const double aky) {
   HighsInt ind;
@@ -942,7 +942,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
   if (nzRow.at(i) == 0) {
     // singRow.remove(i);
     removeEmptyRow(i);
-    countRemovedRows(kDoubletonEquation);
+    countRemovedRows(kD0ublet0nEquation);
   }
 
   double xNew;
@@ -957,7 +957,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
     // cout<<"case: x still there row "<<i<<" "<<endl;
 
     postValue.push(ARvalue.at(ind));
-    addChange(kDoubletonEquationNewXNonzero, i, x);
+    addChange(kD0ublet0nEquationNewXNonzero, i, x);
     ARvalue.at(ind) = xNew;
 
     // update A:
@@ -976,7 +976,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
 
     if (nzRow.at(i) == 0) {
       removeEmptyRow(i);
-      countRemovedRows(kDoubletonEquation);
+      countRemovedRows(kD0ublet0nEquation);
     }
 
     if (nzRow.at(i) > 0) {
@@ -988,7 +988,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
 
       ARindex.at(ind) = numCol;
 
-      addChange(kDoubletonEquationNewXZeroArUpdate, i, x);
+      addChange(kD0ublet0nEquationNewXZeroArUpdate, i, x);
     }
 
     if (nzCol.at(x) > 0) {
@@ -1010,7 +1010,7 @@ void Presolve::UpdateMatrixCoeffDoubletonEquationXnonZero(
         Aindex.at(indi) = tmpi;
       }
       Aend.at(x)--;
-      addChange(kDoubletonEquationNewXZeroAUpdate, i, x);
+      addChange(kD0ublet0nEquationNewXZeroAUpdate, i, x);
     }
 
     // update nz col
@@ -2052,7 +2052,7 @@ void Presolve::setKKTcheckerData() {
   chk2.setBoundsCostRHS(colUpper, colLower, colCost, rowLower, rowUpper);
 }
 
-pair<double, double> Presolve::getNewBoundsDoubletonConstraint(
+pair<double, double> Presolve::getNewBoundsD0ublet0nConstraint(
     const HighsInt row, const HighsInt col, const HighsInt j, const double aik,
     const double aij) {
   HighsInt i = row;
@@ -2143,7 +2143,7 @@ void Presolve::removeFreeColumnSingleton(const HighsInt col, const HighsInt row,
   countRemovedRows(kFreeSingCol);
 }
 
-bool Presolve::removeColumnSingletonInDoubletonInequality(const HighsInt col,
+bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
                                                           const HighsInt i,
                                                           const HighsInt k) {
   // second column index j
@@ -2166,7 +2166,7 @@ bool Presolve::removeColumnSingletonInDoubletonInequality(const HighsInt col,
   // others handled in doubleton equation
   // Analyse dependency on numerical tolerance
   if (nzCol.at(j) > 1)
-    timer.updateNumericsRecord(kNumericsDoubletonInequalityBound,
+    timer.updateNumericsRecord(kNumericsD0ublet0nInequalityBound,
                                fabs(rowLower.at(i) - rowUpper.at(i)));
   if ((fabs(rowLower.at(i) - rowUpper.at(i)) <
        doubleton_inequality_bound_tolerance) &&
@@ -2178,7 +2178,7 @@ bool Presolve::removeColumnSingletonInDoubletonInequality(const HighsInt col,
   // low and upp to be tighter than original bounds for variable col
   // so it is indeed implied free and we can remove it
   pair<double, double> p =
-      getNewBoundsDoubletonConstraint(i, j, col, ARvalue.at(kk), Avalue.at(k));
+      getNewBoundsD0ublet0nConstraint(i, j, col, ARvalue.at(kk), Avalue.at(k));
   if (!(colLower.at(col) <= p.first && colUpper.at(col) >= p.second)) {
     return false;
   }
@@ -2189,7 +2189,7 @@ bool Presolve::removeColumnSingletonInDoubletonInequality(const HighsInt col,
   // modify bounds on variable j, variable col (k) is substituted out
   // double aik = Avalue.at(k);
   // double aij = Avalue.at(kk);
-  p = getNewBoundsDoubletonConstraint(i, col, j, Avalue.at(k), ARvalue.at(kk));
+  p = getNewBoundsD0ublet0nConstraint(i, col, j, Avalue.at(k), ARvalue.at(kk));
   double low = p.first;
   double upp = p.second;
 
@@ -2232,25 +2232,25 @@ bool Presolve::removeColumnSingletonInDoubletonInequality(const HighsInt col,
 
   flagCol.at(col) = 0;
   fillStackRowBounds(i);
-  countRemovedCols(kSingColDoubletonIneq);
-  countRemovedRows(kSingColDoubletonIneq);
+  countRemovedCols(kSingColD0ublet0nIneq);
+  countRemovedRows(kSingColD0ublet0nIneq);
 
   valueColDual.at(col) = 0;
   valueRowDual.at(i) =
       -colCost.at(col) /
       Avalue.at(k);  // may be changed later, depending on bounds.
-  addChange(kSingColDoubletonIneq, i, col);
+  addChange(kSingColD0ublet0nIneq, i, col);
 
   // if not special case two column singletons
   if (nzCol.at(j) > 1)
     removeRow(i);
   else if (nzCol.at(j) == 1)
-    removeSecondColumnSingletonInDoubletonRow(j, i);
+    removeSecondColumnSingletonInD0ublet0nRow(j, i);
 
   return true;
 }
 
-void Presolve::removeSecondColumnSingletonInDoubletonRow(const HighsInt j,
+void Presolve::removeSecondColumnSingletonInD0ublet0nRow(const HighsInt j,
                                                          const HighsInt i) {
   // case two singleton columns
   // when we get here bounds on xj are updated so we can choose low/upper one
@@ -2280,11 +2280,11 @@ void Presolve::removeSecondColumnSingletonInDoubletonRow(const HighsInt j,
       value = colLower.at(j);
   }
   setPrimalValue(j, value);
-  addChange(kSingColDoubletonIneqSecondSingCol, 0, j);
+  addChange(kSingColD0ublet0nIneqSecondSingCol, 0, j);
   if (iPrint > 0)
     cout << "PR: Second singleton column " << j << " in doubleton row " << i
          << " removed.\n";
-  countRemovedCols(kSingColDoubletonIneq);
+  countRemovedCols(kSingColD0ublet0nIneq);
   // singCol.remove(j);
 }
 
@@ -2389,7 +2389,7 @@ void Presolve::removeColumnSingletons() {
       if (!mip || integrality[col] != HighsVarType::kInteger)
         if (nzRow.at(i) == 2) {
           const bool result_di =
-              removeColumnSingletonInDoubletonInequality(col, i, k);
+              removeColumnSingletonInD0ublet0nInequality(col, i, k);
           if (result_di) {
             if (status) return;
             it = singCol.erase(it);
@@ -3069,7 +3069,7 @@ void Presolve::setPrimalValue(const HighsInt j, const double value) {
 void Presolve::checkForChanges(HighsInt iteration) {
   if (iteration <= 2) {
     // flagCol has one more element at end which is zero
-    // from removeDoubletonEquatoins, needed for AR matrix manipulation
+    // from removeD0ublet0nEquatoins, needed for AR matrix manipulation
     if (none_of(flagCol.begin(), flagCol.begin() + numCol,
                 [](HighsInt i) { return i == 0; }) &&
         none_of(flagRow.begin(), flagRow.begin() + numRow,
@@ -3088,11 +3088,11 @@ void Presolve::checkForChanges(HighsInt iteration) {
 //   HighsInt reportList[] = {kEmptyRow,
 //                       kFixedCol,
 //                       kSingRow,
-//                       kDoubletonEquation,
+//                       kD0ublet0nEquation,
 //                       kForcingRow,
 //                       kRedundantRow,
 //                       kFreeSingCol,
-//                       kSingColDoubletonIneq,
+//                       kSingColD0ublet0nIneq,
 //                       kImpliedFreeSingCol,
 //                       kDominatedCols,
 //                       kWeaklyDominatedCols};
@@ -3122,11 +3122,11 @@ void Presolve::checkForChanges(HighsInt iteration) {
 //   HighsInt reportList[] = {kEmptyRow,
 //                       kFixedCol,
 //                       kSingRow,
-//                       kDoubletonEquation,
+//                       kD0ublet0nEquation,
 //                       kForcingRow,
 //                       kRedundantRow,
 //                       kFreeSingCol,
-//                       kSingColDoubletonIneq,
+//                       kSingColD0ublet0nIneq,
 //                       kImpliedFreeSingCol,
 //                       kDominatedCols,
 //                       kWeaklyDominatedCols,
@@ -3411,19 +3411,19 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         flagCol[y] = true;
         break;
       }
-      case kDoubletonEquation: {  // Doubleton equation row
-        getDualsDoubletonEquation(c.row, c.col);
+      case kD0ublet0nEquation: {  // D0ublet0n equation row
+        getDualsD0ublet0nEquation(c.row, c.col);
 
         // exit(2);
         break;
       }
-      case kDoubletonEquationRowBoundsUpdate: {
+      case kD0ublet0nEquationRowBoundsUpdate: {
         // new bounds from doubleton equation, retrieve old ones
         // just for KKT check, not called otherwise
         // chk2.addChange(171, c.row, c.col, 0, 0, 0);
         break;
       }
-      case kDoubletonEquationNewXNonzero: {
+      case kD0ublet0nEquationNewXNonzero: {
         // matrix transformation from doubleton equation, case x still there
         // case new x is not 0
         // just change value of entry in row for x
@@ -3439,7 +3439,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
 
         break;
       }
-      case kDoubletonEquationXZeroInitially: {
+      case kD0ublet0nEquationXZeroInitially: {
         // matrix transformation from doubleton equation, retrieve old value
         // case when row does not have x initially: entries for row i swap x and
         // y cols
@@ -3486,7 +3486,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
 
         break;
       }
-      case kDoubletonEquationNewXZeroArUpdate: {
+      case kD0ublet0nEquationNewXZeroArUpdate: {
         // sp case x disappears row representation change
         HighsInt indi;
         for (indi = ARstart[c.row]; indi < ARstart[c.row + 1]; ++indi)
@@ -3498,7 +3498,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
 
         break;
       }
-      case kDoubletonEquationNewXZeroAUpdate: {
+      case kD0ublet0nEquationNewXZeroAUpdate: {
         // sp case x disappears column representation change
         // here A is copied from AR array at end of presolve so need to expand x
         // column  Aend[c.col]++; wouldn't do because old value is overriden
@@ -3614,7 +3614,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         // valueRowDual[c.row] = 0;
         break;
       }
-      case kSingColDoubletonIneq: {
+      case kSingColD0ublet0nIneq: {
         assert(false);
         // column singleton in a doubleton equation.
         // colDual already set. need valuePrimal from stack. maybe change
@@ -3917,8 +3917,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         row_status.at(c.row) = HighsBasisStatus::kBasic;
         break;
       }
-      case kDoubletonEquation: {  // Doubleton equation row
-        getDualsDoubletonEquation(c.row, c.col);
+      case kD0ublet0nEquation: {  // D0ublet0n equation row
+        getDualsD0ublet0nEquation(c.row, c.col);
 
         if (iKKTcheck == 1) {
           if (chk2.print == 1)
@@ -3932,13 +3932,13 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // exit(2);
         break;
       }
-      case kDoubletonEquationRowBoundsUpdate: {
+      case kD0ublet0nEquationRowBoundsUpdate: {
         // new bounds from doubleton equation, retrieve old ones
         // just for KKT check, not called otherwise
         chk2.addChange(171, c.row, c.col, 0, 0, 0);
         break;
       }
-      case kDoubletonEquationNewXNonzero: {
+      case kD0ublet0nEquationNewXNonzero: {
         // matrix transformation from doubleton equation, case x still there
         // case new x is not 0
         // just change value of entry in row for x
@@ -3956,7 +3956,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
         break;
       }
-      case kDoubletonEquationXZeroInitially: {
+      case kD0ublet0nEquationXZeroInitially: {
         // matrix transformation from doubleton equation, retrieve old value
         // case when row does not have x initially: entries for row i swap x and
         // y cols
@@ -4007,7 +4007,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
         break;
       }
-      case kDoubletonEquationNewXZeroArUpdate: {
+      case kD0ublet0nEquationNewXZeroArUpdate: {
         // sp case x disappears row representation change
         HighsInt indi;
         for (indi = ARstart[c.row]; indi < ARstart[c.row + 1]; ++indi)
@@ -4019,7 +4019,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
         break;
       }
-      case kDoubletonEquationNewXZeroAUpdate: {
+      case kD0ublet0nEquationNewXZeroAUpdate: {
         // sp case x disappears column representation change
         // here A is copied from AR array at end of presolve so need to expand x
         // column  Aend[c.col]++; wouldn't do because old value is overriden
@@ -4190,7 +4190,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         }
         break;
       }
-      case kSingColDoubletonIneq: {
+      case kSingColD0ublet0nIneq: {
         // column singleton in a doubleton equation.
         // colDual already set. need valuePrimal from stack. maybe change
         // rowDual depending on bounds. old bounds kept in oldBounds. variables
@@ -4805,7 +4805,7 @@ void Presolve::getDualsSingletonRow(const HighsInt row, const HighsInt col) {
   }
 }
 
-void Presolve::getDualsDoubletonEquation(const HighsInt row,
+void Presolve::getDualsD0ublet0nEquation(const HighsInt row,
                                          const HighsInt col) {
   // colDual already set. need valuePrimal from stack. maybe change rowDual
   // depending on bounds. old bounds kept in oldBounds. variables j,k : we

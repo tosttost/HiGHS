@@ -52,7 +52,7 @@ HighsStatus zeroCostColSing() {
 }
 
 // handled by doubleton equality
-HighsStatus colSingDoubletonEquality() 
+HighsStatus colSingD0ublet0nEquality() 
 {
   HighsLp lp;
   lp.num_col_ = 4;
@@ -108,7 +108,7 @@ HighsStatus colSingDoubletonEquality()
   return status;
 }
 
-HighsStatus colSingDoubletonInequality() 
+HighsStatus colSingD0ublet0nInequality() 
 {
   HighsLp lp;
   lp.num_col_ = 4;
@@ -165,7 +165,7 @@ HighsStatus colSingDoubletonInequality()
 }
 
 // handled by doubleton equality
-HighsStatus twoColSingDoubletonEquality() 
+HighsStatus twoColSingD0ublet0nEquality() 
 {
   HighsLp lp;
   lp.num_col_ = 2;
@@ -202,7 +202,7 @@ HighsStatus twoColSingDoubletonEquality()
 }
 
 // handled by special case.
-HighsStatus twoColSingDoubletonInequality() 
+HighsStatus twoColSingD0ublet0nInequality() 
 {
   HighsLp lp;
   lp.num_col_ = 2;
@@ -249,28 +249,28 @@ TEST_CASE("zero-cost [presolve-col-sing]") {
 
 TEST_CASE("col-sing-doubleton-eq [presolve-col-sing]") {
   std::cout << "Presolve 2." << std::endl;
-  HighsStatus status =  colSingDoubletonEquality();
+  HighsStatus status =  colSingD0ublet0nEquality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
 TEST_CASE("col-sing-doubleton-ineq [presolve-col-sing]") {
   std::cout << "Presolve 3." << std::endl;
-  HighsStatus status =  colSingDoubletonInequality();
+  HighsStatus status =  colSingD0ublet0nInequality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
 TEST_CASE("two-col-sing-doubleton-eq [presolve-col-sing]") {
   std::cout << "Presolve 4." << std::endl;
-  HighsStatus status =  twoColSingDoubletonEquality();
+  HighsStatus status =  twoColSingD0ublet0nEquality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
 TEST_CASE("two-col-sing-doubleton-ineq [presolve-col-sing]") {
   std::cout << "Presolve 5." << std::endl;
-  HighsStatus status =  twoColSingDoubletonInequality();
+  HighsStatus status =  twoColSingD0ublet0nInequality();
   std::string str = HighsStatusToString(status);
   REQUIRE(str == "OK");
 }

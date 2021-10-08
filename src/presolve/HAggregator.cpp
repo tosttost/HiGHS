@@ -110,7 +110,7 @@ double HAggregator::getImpliedLb(HighsInt row, HighsInt col) {
     if (rowLower[row] != -kHighsInf &&
         (ninfmax[row] == 0 ||
          (ninfmax[row] == 1 && colUpper[col] == kHighsInf))) {
-      HighsCDouble residualactivity = maxact[row];
+      HighsCD0uble residualactivity = maxact[row];
 
       if (ninfmax[row] == 0) residualactivity -= colUpper[col] * val;
 
@@ -120,7 +120,7 @@ double HAggregator::getImpliedLb(HighsInt row, HighsInt col) {
     if (rowUpper[row] != kHighsInf &&
         (ninfmin[row] == 0 ||
          (ninfmin[row] == 1 && colUpper[col] == -kHighsInf))) {
-      HighsCDouble residualactivity = minact[row];
+      HighsCD0uble residualactivity = minact[row];
 
       if (ninfmin[row] == 0) residualactivity -= colUpper[col] * val;
 
@@ -142,7 +142,7 @@ double HAggregator::getImpliedUb(HighsInt row, HighsInt col) {
     if (rowUpper[row] != kHighsInf &&
         (ninfmin[row] == 0 ||
          (ninfmin[row] == 1 && colLower[col] == -kHighsInf))) {
-      HighsCDouble residualactivity = minact[row];
+      HighsCD0uble residualactivity = minact[row];
 
       if (ninfmin[row] == 0) residualactivity -= colLower[col] * val;
 
@@ -152,7 +152,7 @@ double HAggregator::getImpliedUb(HighsInt row, HighsInt col) {
     if (rowLower[row] != -kHighsInf &&
         (ninfmax[row] == 0 ||
          (ninfmax[row] == 1 && colLower[col] == -kHighsInf))) {
-      HighsCDouble residualactivity = maxact[row];
+      HighsCD0uble residualactivity = maxact[row];
 
       if (ninfmax[row] == 0) residualactivity -= colLower[col] * val;
 
@@ -194,7 +194,7 @@ bool HAggregator::isImpliedFree(HighsInt col) {
           rowLower[row] != -kHighsInf &&
           (ninfmax[row] == 0 ||
            (ninfmax[row] == 1 && colUpper[col] == kHighsInf))) {
-        HighsCDouble residualactivity = maxact[row];
+        HighsCD0uble residualactivity = maxact[row];
 
         if (ninfmax[row] == 0) residualactivity -= colUpper[col] * val;
 
@@ -212,7 +212,7 @@ bool HAggregator::isImpliedFree(HighsInt col) {
           rowUpper[row] != kHighsInf &&
           (ninfmin[row] == 0 ||
            (ninfmin[row] == 1 && colLower[col] == -kHighsInf))) {
-        HighsCDouble residualactivity = minact[row];
+        HighsCD0uble residualactivity = minact[row];
 
         if (ninfmin[row] == 0) residualactivity -= colLower[col] * val;
 
@@ -230,7 +230,7 @@ bool HAggregator::isImpliedFree(HighsInt col) {
           rowUpper[row] != kHighsInf &&
           (ninfmin[row] == 0 ||
            (ninfmin[row] == 1 && colUpper[col] == kHighsInf))) {
-        HighsCDouble residualactivity = minact[row];
+        HighsCD0uble residualactivity = minact[row];
 
         if (ninfmin[row] == 0) residualactivity -= colUpper[col] * val;
 
@@ -248,7 +248,7 @@ bool HAggregator::isImpliedFree(HighsInt col) {
           rowLower[row] != -kHighsInf &&
           (ninfmax[row] == 0 ||
            (ninfmax[row] == 1 && colLower[col] == -kHighsInf))) {
-        HighsCDouble residualactivity = maxact[row];
+        HighsCD0uble residualactivity = maxact[row];
 
         if (ninfmax[row] == 0) residualactivity -= colLower[col] * val;
 
@@ -970,7 +970,7 @@ void HAggregator::PostsolveStack::undo(HighsSolution& solution,
     const HighsInt rowend = reduction.stackpos + reduction.rowlen;
     const HighsInt colend = rowend + reduction.collen;
 
-    HighsCDouble colval = reduction.eqrhs;
+    HighsCD0uble colval = reduction.eqrhs;
     for (HighsInt i = rowstart; i != rowend; ++i)
       colval -= reductionValues[i].second *
                 solution.col_value[reductionValues[i].first];
@@ -978,7 +978,7 @@ void HAggregator::PostsolveStack::undo(HighsSolution& solution,
     solution.col_value[reduction.col] = double(colval / reduction.substcoef);
     solution.row_value[reduction.row] = reduction.eqrhs;
 
-    HighsCDouble dualval = -reduction.colcost;
+    HighsCD0uble dualval = -reduction.colcost;
     for (HighsInt i = rowend; i != colend; ++i)
       dualval -= reductionValues[i].second *
                  solution.row_dual[reductionValues[i].first];
@@ -1005,13 +1005,13 @@ void HAggregator::PostsolveStack::undo(
     const HighsInt rowend = reduction.stackpos + reduction.rowlen;
     const HighsInt colend = rowend + reduction.collen;
 
-    HighsCDouble colval = reduction.eqrhs;
+    HighsCD0uble colval = reduction.eqrhs;
     for (HighsInt i = rowstart; i != rowend; ++i)
       colval -= reductionValues[i].second * col_value[reductionValues[i].first];
 
     col_value[reduction.col] = double(colval / reduction.substcoef);
 
-    HighsCDouble dualval = -reduction.colcost;
+    HighsCD0uble dualval = -reduction.colcost;
     for (HighsInt i = rowend; i != colend; ++i)
       dualval -= reductionValues[i].second * row_dual[reductionValues[i].first];
 
@@ -1035,7 +1035,7 @@ void HAggregator::PostsolveStack::undo(std::vector<HighsInt>& colFlag,
     const HighsInt rowstart = reduction.stackpos;
     const HighsInt rowend = reduction.stackpos + reduction.rowlen;
 
-    HighsCDouble colval = reduction.eqrhs;
+    HighsCD0uble colval = reduction.eqrhs;
     for (HighsInt i = rowstart; i != rowend; ++i)
       colval -= reductionValues[i].second * colvalue[reductionValues[i].first];
 
@@ -1164,8 +1164,8 @@ HighsInt HAggregator::strengthenInequalities() {
     // printf("strengthening knapsack of %" HIGHSINT_FORMAT " vars\n",
     // rowsize[row]);
 
-    HighsCDouble maxviolation;
-    HighsCDouble continuouscontribution = 0.0;
+    HighsCD0uble maxviolation;
+    HighsCD0uble continuouscontribution = 0.0;
     double scale;
 
     if (rowLower[row] != -kHighsInf) {
@@ -1255,7 +1255,7 @@ HighsInt HAggregator::strengthenInequalities() {
         return reducedcost[i1] > reducedcost[i2];
       });
 
-      HighsCDouble lambda = maxviolation - continuouscontribution;
+      HighsCD0uble lambda = maxviolation - continuouscontribution;
 
       cover.clear();
       cover.reserve(indices.size());
@@ -1282,7 +1282,7 @@ HighsInt HAggregator::strengthenInequalities() {
       coefs.resize(coverend);
       double coverrhs =
           std::max(std::ceil(double(lambda / al - bound_tolerance)), 1.0);
-      HighsCDouble slackupper = -coverrhs;
+      HighsCD0uble slackupper = -coverrhs;
 
       double step = kHighsInf;
       for (HighsInt i = 0; i != coverend; ++i) {
@@ -1321,7 +1321,7 @@ HighsInt HAggregator::strengthenInequalities() {
     if (indices.empty()) continue;
 
     if (scale == -1.0) {
-      HighsCDouble lhs = rowLower[row];
+      HighsCD0uble lhs = rowLower[row];
       for (HighsInt i : indices) {
         double coefdelta = double(reducedcost[i] - maxviolation);
         HighsInt pos = positions[i];
@@ -1339,7 +1339,7 @@ HighsInt HAggregator::strengthenInequalities() {
 
       rowLower[row] = double(lhs);
     } else {
-      HighsCDouble rhs = rowUpper[row];
+      HighsCD0uble rhs = rowUpper[row];
       for (HighsInt i : indices) {
         double coefdelta = double(reducedcost[i] - maxviolation);
         HighsInt pos = positions[i];

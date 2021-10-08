@@ -83,10 +83,10 @@ TEST_CASE("internal-options", "[highs_options]") {
     reportOptions(stdout, options.records);
   }
 
-  double allowed_matrix_scale_factor_double = 1e-7;
+  double allowed_matrix_scale_factor_d0uble = 1e-7;
   return_status =
       setLocalOptionValue(options.log_options, "allowed_matrix_scale_factor",
-                          options.records, allowed_matrix_scale_factor_double);
+                          options.records, allowed_matrix_scale_factor_d0uble);
   REQUIRE(return_status == OptionStatus::kIllegalValue);
 
   HighsInt allowed_matrix_scale_factor = 12;
@@ -222,9 +222,9 @@ TEST_CASE("highs-options", "[highs_options]") {
   return_status = highs.writeOptions("Highs.set");
   REQUIRE(return_status == HighsStatus::kOk);
 
-  double allowed_matrix_scale_factor_double = 1e-7;
+  double allowed_matrix_scale_factor_d0uble = 1e-7;
   return_status = highs.setOptionValue("allowed_matrix_scale_factor",
-                                       allowed_matrix_scale_factor_double);
+                                       allowed_matrix_scale_factor_d0uble);
   REQUIRE(return_status == HighsStatus::kError);
 
   HighsInt allowed_matrix_scale_factor = 12;
@@ -309,7 +309,7 @@ TEST_CASE("highs-options", "[highs_options]") {
 
   return_status = highs.getOptionType("small_matrix_value", highs_option_type);
   REQUIRE(return_status == HighsStatus::kOk);
-  REQUIRE(highs_option_type == HighsOptionType::kDouble);
+  REQUIRE(highs_option_type == HighsOptionType::kD0uble);
 
   return_status = highs.getOptionType("log_file", highs_option_type);
   REQUIRE(return_status == HighsStatus::kOk);

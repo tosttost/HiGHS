@@ -29,7 +29,7 @@
 #include "pdqsort/pdqsort.h"
 #include "presolve/HighsPostsolveStack.h"
 #include "test/DevKkt.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsIntegers.h"
 #include "util/HighsLinearSumBounds.h"
 #include "util/HighsSplay.h"
@@ -462,7 +462,7 @@ void HPresolve::updateRowDualImpliedBounds(HighsInt row, HighsInt col,
         impliedDualRowBounds.getResidualSumLowerOrig(col, row, val);
     if (residualMinAct != -kHighsInf) {
       double impliedBound =
-          double((HighsCDouble(dualRowUpper) - residualMinAct) / val);
+          double((HighsCD0uble(dualRowUpper) - residualMinAct) / val);
 
       if (std::abs(impliedBound) * kHighsTiny <=
           options->dual_feasibility_tolerance) {
@@ -486,7 +486,7 @@ void HPresolve::updateRowDualImpliedBounds(HighsInt row, HighsInt col,
         impliedDualRowBounds.getResidualSumUpperOrig(col, row, val);
     if (residualMaxAct != kHighsInf) {
       double impliedBound =
-          double((HighsCDouble(dualRowLower) - residualMaxAct) / val);
+          double((HighsCD0uble(dualRowLower) - residualMaxAct) / val);
 
       if (std::abs(impliedBound) * kHighsTiny <=
           options->dual_feasibility_tolerance) {
@@ -523,7 +523,7 @@ void HPresolve::updateColImpliedBounds(HighsInt row, HighsInt col, double val) {
         impliedRowBounds.getResidualSumLowerOrig(row, col, val);
     if (residualMinAct != -kHighsInf) {
       double impliedBound =
-          double((HighsCDouble(rowUpper) - residualMinAct) / val);
+          double((HighsCD0uble(rowUpper) - residualMinAct) / val);
 
       if (std::abs(impliedBound) * kHighsTiny <=
           options->primal_feasibility_tolerance) {
@@ -595,7 +595,7 @@ void HPresolve::updateColImpliedBounds(HighsInt row, HighsInt col, double val) {
         impliedRowBounds.getResidualSumUpperOrig(row, col, val);
     if (residualMaxAct != kHighsInf) {
       double impliedBound =
-          double((HighsCDouble(rowLower) - residualMaxAct) / val);
+          double((HighsCD0uble(rowLower) - residualMaxAct) / val);
 
       if (std::abs(impliedBound) * kHighsTiny <=
           options->primal_feasibility_tolerance) {
@@ -1104,7 +1104,7 @@ HPresolve::Result HPresolve::dominatedColumns(
           }
 
           if (colDeleted[j]) {
-            HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+            HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
             continue;
           }
         }
@@ -1145,7 +1145,7 @@ HPresolve::Result HPresolve::dominatedColumns(
           }
 
           if (colDeleted[j]) {
-            HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+            HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
             continue;
           }
         }
@@ -1239,7 +1239,7 @@ HPresolve::Result HPresolve::dominatedColumns(
     }
 
     if (numFixedCols != oldNumFixed)
-      HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+      HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
   }
 
   if (numFixedCols)
@@ -2299,7 +2299,7 @@ void HPresolve::substitute(HighsInt row, HighsInt col, double rhs) {
 
   // substitute column in the objective function
   if (model->col_cost_[col] != 0.0) {
-    HighsCDouble objscale = model->col_cost_[col] * substrowscale;
+    HighsCD0uble objscale = model->col_cost_[col] * substrowscale;
     model->offset_ = double(model->offset_ - objscale * rhs);
     assert(std::isfinite(model->offset_));
     for (HighsInt rowiter : rowpositions) {
@@ -2504,20 +2504,20 @@ HPresolve::Result HPresolve::doubletonEq(HighsPostsolveStack& postSolveStack,
     stayImplLower =
         substLower == -kHighsInf
             ? -kHighsInf
-            : double((HighsCDouble(rhs) - substcoef * substLower) / staycoef);
+            : double((HighsCD0uble(rhs) - substcoef * substLower) / staycoef);
     stayImplUpper =
         substUpper == kHighsInf
             ? kHighsInf
-            : double((HighsCDouble(rhs) - substcoef * substUpper) / staycoef);
+            : double((HighsCD0uble(rhs) - substcoef * substUpper) / staycoef);
   } else {
     stayImplLower =
         substUpper == kHighsInf
             ? -kHighsInf
-            : double((HighsCDouble(rhs) - substcoef * substUpper) / staycoef);
+            : double((HighsCD0uble(rhs) - substcoef * substUpper) / staycoef);
     stayImplUpper =
         substLower == -kHighsInf
             ? kHighsInf
-            : double((HighsCDouble(rhs) - substcoef * substLower) / staycoef);
+            : double((HighsCD0uble(rhs) - substcoef * substLower) / staycoef);
   }
 
   // possibly tighten bounds of the column that stays
@@ -3148,15 +3148,15 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
         if (intScale != 0.0) {
           if (model->row_lower_[row] == -kHighsInf) {
             // <= inequality
-            HighsCDouble rhs = model->row_upper_[row] * intScale;
+            HighsCD0uble rhs = model->row_upper_[row] * intScale;
             bool success = true;
             double minRhsTightening = 0.0;
             double maxVal = 0.0;
             for (HighsInt i = 0; i != rowsize[row]; ++i) {
               double coef = rowCoefs[i];
-              HighsCDouble scaleCoef = HighsCDouble(coef) * intScale;
-              HighsCDouble intCoef = floor(scaleCoef + 0.5);
-              HighsCDouble coefDelta = intCoef - scaleCoef;
+              HighsCD0uble scaleCoef = HighsCD0uble(coef) * intScale;
+              HighsCD0uble intCoef = floor(scaleCoef + 0.5);
+              HighsCD0uble coefDelta = intCoef - scaleCoef;
               rowCoefs[i] = double(intCoef);
               maxVal = std::max(std::abs(rowCoefs[i]), maxVal);
               if (coefDelta < -options->small_matrix_value) {
@@ -3173,7 +3173,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             }
 
             if (success) {
-              HighsCDouble roundRhs =
+              HighsCD0uble roundRhs =
                   floor(rhs + options->mip_feasibility_tolerance);
               if (rhs - roundRhs >=
                   minRhsTightening - options->small_matrix_value) {
@@ -3203,7 +3203,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
                   // checked with the condition above
                   model->row_upper_[row] = double(roundRhs / intScale);
                   for (HighsInt i = 0; i != rowsize[row]; ++i) {
-                    double delta = double(HighsCDouble(rowCoefs[i]) / intScale -
+                    double delta = double(HighsCD0uble(rowCoefs[i]) / intScale -
                                           Avalue[rowpositions[i]]);
                     if (std::abs(delta) > options->small_matrix_value)
                       addToMatrix(row, rowIndex[i], delta);
@@ -3213,15 +3213,15 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             }
           } else if (model->row_upper_[row] == kHighsInf) {
             // >= inequality
-            HighsCDouble rhs = model->row_lower_[row] * intScale;
+            HighsCD0uble rhs = model->row_lower_[row] * intScale;
             bool success = true;
             double minRhsTightening = 0.0;
             double maxVal = 0.0;
             for (HighsInt i = 0; i != rowsize[row]; ++i) {
               double coef = rowCoefs[i];
-              HighsCDouble scaleCoef = HighsCDouble(coef) * intScale;
-              HighsCDouble intCoef = floor(scaleCoef + 0.5);
-              HighsCDouble coefDelta = intCoef - scaleCoef;
+              HighsCD0uble scaleCoef = HighsCD0uble(coef) * intScale;
+              HighsCD0uble intCoef = floor(scaleCoef + 0.5);
+              HighsCD0uble coefDelta = intCoef - scaleCoef;
               rowCoefs[i] = double(intCoef);
               maxVal = std::max(std::abs(rowCoefs[i]), maxVal);
               if (coefDelta < -options->small_matrix_value) {
@@ -3238,7 +3238,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             }
 
             if (success) {
-              HighsCDouble roundRhs =
+              HighsCD0uble roundRhs =
                   ceil(rhs - options->mip_feasibility_tolerance);
               if (rhs - roundRhs <=
                   minRhsTightening + options->small_matrix_value) {
@@ -3268,7 +3268,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
                   //     intScale);
                   model->row_lower_[row] = double(roundRhs / intScale);
                   for (HighsInt i = 0; i != rowsize[row]; ++i) {
-                    double delta = double(HighsCDouble(rowCoefs[i]) / intScale -
+                    double delta = double(HighsCD0uble(rowCoefs[i]) / intScale -
                                           Avalue[rowpositions[i]]);
                     if (std::abs(delta) > options->small_matrix_value)
                       addToMatrix(row, rowIndex[i], delta);
@@ -3278,17 +3278,17 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             }
           } else {
             // ranged row or equation, can maybe tighten sides and
-            HighsCDouble lhs = model->row_lower_[row] * intScale;
-            HighsCDouble rhs = model->row_upper_[row] * intScale;
+            HighsCD0uble lhs = model->row_lower_[row] * intScale;
+            HighsCD0uble rhs = model->row_upper_[row] * intScale;
             bool success = true;
             double minRhsTightening = 0.0;
             double minLhsTightening = 0.0;
             double maxVal = 0.0;
             for (HighsInt i = 0; i != rowsize[row]; ++i) {
               double coef = rowCoefs[i];
-              HighsCDouble scaleCoef = HighsCDouble(coef) * intScale;
-              HighsCDouble intCoef = floor(scaleCoef + 0.5);
-              HighsCDouble coefDelta = intCoef - scaleCoef;
+              HighsCD0uble scaleCoef = HighsCD0uble(coef) * intScale;
+              HighsCD0uble intCoef = floor(scaleCoef + 0.5);
+              HighsCD0uble coefDelta = intCoef - scaleCoef;
               rowCoefs[i] = double(intCoef);
               maxVal = std::max(std::abs(rowCoefs[i]), maxVal);
               if (coefDelta < -options->small_matrix_value) {
@@ -3321,9 +3321,9 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
             }
 
             if (success) {
-              HighsCDouble roundLhs =
+              HighsCD0uble roundLhs =
                   ceil(lhs - options->mip_feasibility_tolerance);
-              HighsCDouble roundRhs =
+              HighsCD0uble roundRhs =
                   floor(rhs + options->mip_feasibility_tolerance);
 
               // rounded row proves infeasibility regardless of coefficient
@@ -3375,7 +3375,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
           impliedRowUpper != kHighsInf) {
         HighsInt numTightened = 0;
         double maxCoefValue = impliedRowUpper - model->row_upper_[row];
-        HighsCDouble rhs = model->row_upper_[row];
+        HighsCD0uble rhs = model->row_upper_[row];
         for (const HighsSliceNonzero& nonz : getStoredRow()) {
           if (model->integrality_[nonz.index()] == HighsVarType::kContinuous)
             continue;
@@ -3404,7 +3404,7 @@ HPresolve::Result HPresolve::rowPresolve(HighsPostsolveStack& postSolveStack,
           impliedRowLower != -kHighsInf) {
         HighsInt numTightened = 0;
         double maxCoefValue = model->row_lower_[row] - impliedRowLower;
-        HighsCDouble rhs = model->row_lower_[row];
+        HighsCD0uble rhs = model->row_lower_[row];
         for (const HighsSliceNonzero& nonz : getStoredRow()) {
           if (model->integrality_[nonz.index()] == HighsVarType::kContinuous)
             continue;
@@ -3825,7 +3825,7 @@ HPresolve::Result HPresolve::fastPresolveLoop(
 
     HPRESOLVE_CHECKED_CALL(presolveChangedRows(postSolveStack));
 
-    HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+    HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
 
     HPRESOLVE_CHECKED_CALL(presolveColSingletons(postSolveStack));
 
@@ -4576,7 +4576,7 @@ HPresolve::Result HPresolve::presolveChangedCols(
   return Result::kOk;
 }
 
-HPresolve::Result HPresolve::removeDoubletonEquations(
+HPresolve::Result HPresolve::removeD0ublet0nEquations(
     HighsPostsolveStack& postSolveStack) {
   auto eq = equations.begin();
   while (eq != equations.end()) {
@@ -4622,8 +4622,8 @@ HighsInt HPresolve::strengthenInequalities() {
     // printf("strengthening knapsack of %" HIGHSINT_FORMAT " vars\n",
     // rowsize[row]);
 
-    HighsCDouble maxviolation;
-    HighsCDouble continuouscontribution = 0.0;
+    HighsCD0uble maxviolation;
+    HighsCD0uble continuouscontribution = 0.0;
     double scale;
 
     if (model->row_lower_[row] != -kHighsInf) {
@@ -4718,7 +4718,7 @@ HighsInt HPresolve::strengthenInequalities() {
                std::make_pair(reducedcost[i2], i2);
       });
 
-      HighsCDouble lambda = maxviolation - continuouscontribution;
+      HighsCD0uble lambda = maxviolation - continuouscontribution;
 
       cover.clear();
       cover.reserve(indices.size());
@@ -4749,7 +4749,7 @@ HighsInt HPresolve::strengthenInequalities() {
       double coverrhs = std::max(
           std::ceil(double(lambda / al - options->mip_feasibility_tolerance)),
           1.0);
-      HighsCDouble slackupper = -coverrhs;
+      HighsCD0uble slackupper = -coverrhs;
 
       double step = kHighsInf;
       for (HighsInt i = 0; i != coverend; ++i) {
@@ -4790,7 +4790,7 @@ HighsInt HPresolve::strengthenInequalities() {
     if (indices.empty()) continue;
 
     if (scale == -1.0) {
-      HighsCDouble lhs = model->row_lower_[row];
+      HighsCD0uble lhs = model->row_lower_[row];
       for (HighsInt i : indices) {
         double coefdelta = double(reducedcost[i] - maxviolation);
         HighsInt pos = positions[i];
@@ -4806,7 +4806,7 @@ HighsInt HPresolve::strengthenInequalities() {
 
       model->row_lower_[row] = double(lhs);
     } else {
-      HighsCDouble rhs = model->row_upper_[row];
+      HighsCD0uble rhs = model->row_upper_[row];
       for (HighsInt i : indices) {
         double coefdelta = double(reducedcost[i] - maxviolation);
         HighsInt pos = positions[i];
@@ -4916,10 +4916,10 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
       colHashes[Acol[i]] = Arow[i];
     } else {
       HighsHashHelpers::sparse_combine(rowHashes[Arow[i]], Acol[i],
-                                       HighsHashHelpers::double_hash_code(
+                                       HighsHashHelpers::d0uble_hash_code(
                                            Avalue[i] / rowMax[Arow[i]].first));
       HighsHashHelpers::sparse_combine(colHashes[Acol[i]], Arow[i],
-                                       HighsHashHelpers::double_hash_code(
+                                       HighsHashHelpers::d0uble_hash_code(
                                            Avalue[i] / colMax[Acol[i]].first));
     }
   }
@@ -5113,7 +5113,7 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
             model->integrality_[parallelColCandidate] != HighsVarType::kInteger;
       }
 
-      double objDiff = double(model->col_cost_[col] * HighsCDouble(colScale) -
+      double objDiff = double(model->col_cost_[col] * HighsCD0uble(colScale) -
                               model->col_cost_[duplicateCol]);
       // if (std::abs(objDiff) > options->small_matrix_value) continue;
       constexpr HighsInt kMergeParallelCols = 0;
@@ -5474,7 +5474,7 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
         }
 
         if (std::abs(double(Avalue[nzPos] -
-                            HighsCDouble(rowScale) * rowNz.value())) >
+                            HighsCD0uble(rowScale) * rowNz.value())) >
             options->small_matrix_value) {
           parallel = false;
           break;
@@ -5590,11 +5590,11 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
         if (model->row_upper_[parallelRowCand] != kHighsInf)
           model->row_upper_[parallelRowCand] =
               double(model->row_upper_[parallelRowCand] -
-                     HighsCDouble(rowScale) * model->row_upper_[i]);
+                     HighsCD0uble(rowScale) * model->row_upper_[i]);
         if (model->row_lower_[parallelRowCand] != -kHighsInf)
           model->row_lower_[parallelRowCand] =
               double(model->row_lower_[parallelRowCand] -
-                     HighsCDouble(rowScale) * model->row_upper_[i]);
+                     HighsCD0uble(rowScale) * model->row_upper_[i]);
 
         // parallelRowCand is now a singleton row, doubleton equation, or a row
         // that contains only singletons and we let the normal row presolve
@@ -5623,11 +5623,11 @@ HPresolve::Result HPresolve::detectParallelRowsAndCols(
         if (model->row_upper_[i] != kHighsInf)
           model->row_upper_[i] =
               double(model->row_upper_[i] +
-                     HighsCDouble(scale) * model->row_upper_[parallelRowCand]);
+                     HighsCD0uble(scale) * model->row_upper_[parallelRowCand]);
         if (model->row_lower_[i] != -kHighsInf)
           model->row_lower_[i] =
               double(model->row_lower_[i] +
-                     HighsCDouble(scale) * model->row_upper_[parallelRowCand]);
+                     HighsCD0uble(scale) * model->row_upper_[parallelRowCand]);
 
         HPRESOLVE_CHECKED_CALL(rowPresolve(postSolveStack, i));
         delRow = i;
@@ -5869,7 +5869,7 @@ void HPresolve::debug(const HighsLp& lp, const HighsOptions& options) {
 HPresolve::Result HPresolve::sparsify(HighsPostsolveStack& postSolveStack) {
   std::vector<HighsPostsolveStack::Nonzero> sparsifyRows;
   HPRESOLVE_CHECKED_CALL(removeRowSingletons(postSolveStack));
-  HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+  HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
   std::vector<HighsInt> tmpEquations;
   tmpEquations.reserve(equations.size());
 
@@ -6107,7 +6107,7 @@ HPresolve::Result HPresolve::sparsify(HighsPostsolveStack& postSolveStack) {
 
     HPRESOLVE_CHECKED_CALL(checkLimits(postSolveStack));
     HPRESOLVE_CHECKED_CALL(removeRowSingletons(postSolveStack));
-    HPRESOLVE_CHECKED_CALL(removeDoubletonEquations(postSolveStack));
+    HPRESOLVE_CHECKED_CALL(removeD0ublet0nEquations(postSolveStack));
   }
 
   return Result::kOk;

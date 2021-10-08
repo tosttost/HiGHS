@@ -145,11 +145,11 @@ void HighsCutGeneration::separateLiftedKnapsackCover() {
   pdqsort_branchless(cover.begin(), cover.end(),
                      [&](HighsInt a, HighsInt b) { return vals[a] > vals[b]; });
 
-  HighsCDouble abartmp = vals[cover[0]];
-  HighsCDouble sigma = lambda;
+  HighsCD0uble abartmp = vals[cover[0]];
+  HighsCD0uble sigma = lambda;
   for (HighsInt i = 1; i != coversize; ++i) {
-    HighsCDouble delta = abartmp - vals[cover[i]];
-    HighsCDouble kdelta = double(i) * delta;
+    HighsCD0uble delta = abartmp - vals[cover[i]];
+    HighsCD0uble kdelta = double(i) * delta;
     if (double(kdelta) < double(sigma)) {
       abartmp = vals[cover[i]];
       sigma -= kdelta;
@@ -160,11 +160,11 @@ void HighsCutGeneration::separateLiftedKnapsackCover() {
     }
   }
 
-  if (double(sigma) > 0) abartmp = HighsCDouble(rhs) / double(coversize);
+  if (double(sigma) > 0) abartmp = HighsCD0uble(rhs) / double(coversize);
 
   double abar = double(abartmp);
 
-  HighsCDouble sum = 0.0;
+  HighsCD0uble sum = 0.0;
   HighsInt cplussize = 0;
   for (HighsInt i = 0; i != coversize; ++i) {
     sum += std::min(abar, vals[cover[i]]);
@@ -233,7 +233,7 @@ bool HighsCutGeneration::separateLiftedMixedBinaryCover() {
 
   pdqsort_branchless(cover.begin(), cover.end(),
                      [&](HighsInt a, HighsInt b) { return vals[a] > vals[b]; });
-  HighsCDouble sum = 0;
+  HighsCD0uble sum = 0;
 
   HighsInt p = coversize;
   for (HighsInt i = 0; i != coversize; ++i) {
@@ -250,10 +250,10 @@ bool HighsCutGeneration::separateLiftedMixedBinaryCover() {
     for (HighsInt i = 0; i < p; ++i) {
       if (a <= S[i] - lambda) return double(i * lambda);
 
-      if (a <= S[i]) return double((i + 1) * lambda + (HighsCDouble(a) - S[i]));
+      if (a <= S[i]) return double((i + 1) * lambda + (HighsCD0uble(a) - S[i]));
     }
 
-    return double(p * lambda + (HighsCDouble(a) - S[p - 1]));
+    return double(p * lambda + (HighsCD0uble(a) - S[p - 1]));
   };
 
   rhs = -lambda;
@@ -292,16 +292,16 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
   auto comp = [&](HighsInt a, HighsInt b) { return vals[a] > vals[b]; };
   pdqsort_branchless(cover.begin(), cover.end(), comp);
 
-  std::vector<HighsCDouble> a;
-  std::vector<HighsCDouble> u;
-  std::vector<HighsCDouble> m;
+  std::vector<HighsCD0uble> a;
+  std::vector<HighsCD0uble> u;
+  std::vector<HighsCD0uble> m;
 
   a.resize(coversize);
   u.resize(coversize + 1);
   m.resize(coversize + 1);
 
-  HighsCDouble usum = 0.0;
-  HighsCDouble msum = 0.0;
+  HighsCD0uble usum = 0.0;
+  HighsCD0uble msum = 0.0;
   // set up the partial sums of the upper bounds, and the contributions
   for (HighsInt c = 0; c != coversize; ++c) {
     HighsInt i = cover[c];
@@ -334,7 +334,7 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
     if (atUpper && !bestlAtUpper) continue;
 
     double mju = ub * vals[j];
-    HighsCDouble mu = mju - lambda;
+    HighsCD0uble mu = mju - lambda;
 
     if (mu <= 10 * feastol) continue;
     if (std::abs(vals[j]) < 1000 * feastol) continue;
@@ -343,8 +343,8 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
     if (std::abs(std::round(mudival) - mudival) <= feastol) continue;
     double eta = ceil(mudival);
 
-    HighsCDouble ulminusetaplusone = HighsCDouble(ub) - eta + 1.0;
-    HighsCDouble cplusthreshold = ulminusetaplusone * vals[j];
+    HighsCD0uble ulminusetaplusone = HighsCD0uble(ub) - eta + 1.0;
+    HighsCD0uble cplusthreshold = ulminusetaplusone * vals[j];
 
     HighsInt cplusend =
         std::upper_bound(cover.begin(), cover.end(), double(cplusthreshold),
@@ -353,7 +353,7 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
                          }) -
         cover.begin();
 
-    HighsCDouble mcplus = m[cplusend];
+    HighsCD0uble mcplus = m[cplusend];
     if (i < cplusend) mcplus -= mju;
 
     double jlVal = double(mcplus + eta * vals[j]);
@@ -369,10 +369,10 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
   if (lpos == -1) return false;
 
   l = cover[lpos];
-  HighsCDouble al = vals[l];
+  HighsCD0uble al = vals[l];
   double upperl = upper[l];
-  HighsCDouble mlu = upperl * al;
-  HighsCDouble mu = mlu - lambda;
+  HighsCD0uble mlu = upperl * al;
+  HighsCD0uble mu = mlu - lambda;
 
   a.resize(bestlCplusend);
   cover.resize(bestlCplusend);
@@ -396,13 +396,13 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
 
   double mudival = double(mu / al);
   double eta = ceil(mudival);
-  HighsCDouble r = mu - floor(mudival) * HighsCDouble(al);
+  HighsCD0uble r = mu - floor(mudival) * HighsCD0uble(al);
   // we multiply with r and it is important that it does not flip the sign
   // so we safe guard against tiny numerical errors here
   if (r < 0) r = 0;
 
-  HighsCDouble ulminusetaplusone = HighsCDouble(upperl) - eta + 1.0;
-  HighsCDouble cplusthreshold = ulminusetaplusone * al;
+  HighsCD0uble ulminusetaplusone = HighsCD0uble(upperl) - eta + 1.0;
+  HighsCD0uble cplusthreshold = ulminusetaplusone * al;
 
   HighsInt kmin = floor(eta - upperl - 0.5);
 
@@ -435,9 +435,9 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
       HighsInt upperi = upper[cover[i]];
 
       for (HighsInt h = 0; h <= upperi; ++h) {
-        HighsCDouble mih = m[i] + h * a[i];
-        HighsCDouble uih = u[i] + h;
-        HighsCDouble mihplusdeltai = mih + a[i] - cplusthreshold;
+        HighsCD0uble mih = m[i] + h * a[i];
+        HighsCD0uble uih = u[i] + h;
+        HighsCD0uble mihplusdeltai = mih + a[i] - cplusthreshold;
         if (z <= mihplusdeltai) {
           assert(mih <= z);
           return double(uih * ulminusetaplusone * (al - r));
@@ -474,7 +474,7 @@ bool HighsCutGeneration::separateLiftedMixedIntegerCover() {
     }
   };
 
-  rhs = (HighsCDouble(upperl) - eta) * r - lambda;
+  rhs = (HighsCD0uble(upperl) - eta) * r - lambda;
   integralSupport = true;
   integralCoefficients = false;
   for (HighsInt i = 0; i != rowlen; ++i) {
@@ -702,12 +702,12 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic(double minEfficacy,
     }
   }
 
-  HighsCDouble scale = 1.0 / HighsCDouble(bestdelta);
-  HighsCDouble scalrhs = rhs * scale;
+  HighsCD0uble scale = 1.0 / HighsCD0uble(bestdelta);
+  HighsCD0uble scalrhs = rhs * scale;
   double downrhs = floor(double(scalrhs));
 
-  HighsCDouble f0 = scalrhs - downrhs;
-  HighsCDouble oneoveroneminusf0 = 1.0 / (1.0 - f0);
+  HighsCD0uble f0 = scalrhs - downrhs;
+  HighsCD0uble oneoveroneminusf0 = 1.0 / (1.0 - f0);
 
   rhs = downrhs * bestdelta;
   integralSupport = true;
@@ -722,10 +722,10 @@ bool HighsCutGeneration::cmirCutGenerationHeuristic(double minEfficacy,
         integralSupport = false;
       }
     } else {
-      HighsCDouble scalaj = scale * vals[j];
+      HighsCD0uble scalaj = scale * vals[j];
       double downaj = floor(double(scalaj + kHighsTiny));
-      HighsCDouble fj = scalaj - downaj;
-      HighsCDouble aj = downaj;
+      HighsCD0uble fj = scalaj - downaj;
+      HighsCD0uble aj = downaj;
       if (fj > f0) aj += fj - f0;
 
       vals[j] = double(aj * bestdelta);
@@ -818,8 +818,8 @@ bool HighsCutGeneration::postprocessCut() {
       rhs *= intscale;
       maxAbsValue = std::round(maxAbsValue * intscale);
       for (HighsInt i = 0; i != rowlen; ++i) {
-        HighsCDouble scaleval = intscale * HighsCDouble(vals[i]);
-        HighsCDouble intval = round(scaleval);
+        HighsCD0uble scaleval = intscale * HighsCD0uble(vals[i]);
+        HighsCD0uble intval = round(scaleval);
         double delta = double(scaleval - intval);
 
         vals[i] = (double)intval;
@@ -1040,7 +1040,7 @@ bool HighsCutGeneration::preprocessBaseInequality(bool& hasUnboundedInts,
 static void checkNumerics(const double* vals, HighsInt len, double rhs) {
   double maxAbsCoef = 0.0;
   double minAbsCoef = kHighsInf;
-  HighsCDouble sqrnorm = 0;
+  HighsCD0uble sqrnorm = 0;
   for (HighsInt i = 0; i < len; ++i) {
     sqrnorm += vals[i] * vals[i];
     maxAbsCoef = std::max(std::abs(vals[i]), maxAbsCoef);
@@ -1150,7 +1150,7 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
     //    condition
     std::vector<double> tmpVals(vals, vals + rowlen);
     std::vector<HighsInt> tmpInds(inds, inds + rowlen);
-    HighsCDouble tmpRhs = rhs;
+    HighsCD0uble tmpRhs = rhs;
     bool success = false;
     do {
       if (!determineCover()) break;
@@ -1272,7 +1272,7 @@ bool HighsCutGeneration::generateCut(HighsTransformedLp& transLp,
       inds_.data(), vals_.data(), rowlen, rhs_);
 
   // finally determine the violation of the cut in the original space
-  HighsCDouble violation = -rhs_;
+  HighsCD0uble violation = -rhs_;
   const auto& sol = lpRelaxation.getSolution().col_value;
   for (HighsInt i = 0; i != rowlen; ++i) violation += sol[inds[i]] * vals_[i];
 
@@ -1350,7 +1350,7 @@ bool HighsCutGeneration::generateConflict(HighsDomain& localdomain,
     std::vector<double> tmpVals(vals, vals + rowlen);
     std::vector<HighsInt> tmpInds(inds, inds + rowlen);
     std::vector<uint8_t> tmpComplementation(complementation);
-    HighsCDouble tmpRhs = rhs;
+    HighsCD0uble tmpRhs = rhs;
     bool success = false;
     do {
       if (!determineCover(false)) break;
@@ -1480,7 +1480,7 @@ bool HighsCutGeneration::finalizeAndAddCut(std::vector<HighsInt>& inds_,
       inds_.data(), vals_.data(), rowlen, rhs_);
 
   // finally determine the violation of the cut in the original space
-  HighsCDouble violation = -rhs_;
+  HighsCD0uble violation = -rhs_;
   const auto& sol = lpRelaxation.getSolution().col_value;
   for (HighsInt i = 0; i != rowlen; ++i) violation += sol[inds[i]] * vals_[i];
 

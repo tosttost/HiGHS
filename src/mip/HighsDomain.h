@@ -20,7 +20,7 @@
 
 #include "mip/HighsDomainChange.h"
 #include "mip/HighsMipSolver.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 
 class HighsCutPool;
 class HighsConflictPool;
@@ -121,7 +121,7 @@ class HighsDomain {
     HighsInt cutpoolindex;
     HighsDomain* domain;
     HighsCutPool* cutpool;
-    std::vector<HighsCDouble> activitycuts_;
+    std::vector<HighsCD0uble> activitycuts_;
     std::vector<HighsInt> activitycutsinf_;
     std::vector<uint8_t> propagatecutflags_;
     std::vector<HighsInt> propagatecutinds_;
@@ -198,8 +198,8 @@ class HighsDomain {
   std::vector<Reason> domchgreason_;
   std::vector<std::pair<double, HighsInt>> prevboundval_;
 
-  std::vector<HighsCDouble> activitymin_;
-  std::vector<HighsCDouble> activitymax_;
+  std::vector<HighsCD0uble> activitymin_;
+  std::vector<HighsCD0uble> activitymax_;
   std::vector<HighsInt> activitymininf_;
   std::vector<HighsInt> activitymaxinf_;
   std::vector<double> capacityThreshold_;
@@ -301,20 +301,20 @@ class HighsDomain {
 
   void computeMinActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
                           const double* ARvalue, HighsInt& ninfmin,
-                          HighsCDouble& activitymin);
+                          HighsCD0uble& activitymin);
 
   void computeMaxActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
                           const double* ARvalue, HighsInt& ninfmax,
-                          HighsCDouble& activitymax);
+                          HighsCD0uble& activitymax);
 
   HighsInt propagateRowUpper(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double Rupper,
-                             const HighsCDouble& minactivity, HighsInt ninfmin,
+                             const HighsCD0uble& minactivity, HighsInt ninfmin,
                              HighsDomainChange* boundchgs);
 
   HighsInt propagateRowLower(const HighsInt* Rindex, const double* Rvalue,
                              HighsInt Rlen, double Rlower,
-                             const HighsCDouble& maxactivity, HighsInt ninfmax,
+                             const HighsCD0uble& maxactivity, HighsInt ninfmax,
                              HighsDomainChange* boundchgs);
 
   const std::vector<HighsInt>& getChangedCols() const { return changedcols_; }

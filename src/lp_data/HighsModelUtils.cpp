@@ -185,11 +185,11 @@ void writeModelSolution(FILE* file, const HighsOptions& options,
   if (have_primal) assert((int)primal.size() >= dim);
   if (have_integrality) assert((int)integrality.size() >= dim);
 
-  std::array<char, 32> objStr = highsDoubleToString(solutionObjective, 1e-13);
+  std::array<char, 32> objStr = highsD0ubleToString(solutionObjective, 1e-13);
   fprintf(file, "=obj= %s\n", objStr.data());
 
   for (HighsInt ix = 0; ix < dim; ix++) {
-    std::array<char, 32> valStr = highsDoubleToString(primal[ix], 1e-13);
+    std::array<char, 32> valStr = highsD0ubleToString(primal[ix], 1e-13);
     fprintf(file, "%-s %s\n", names[ix].c_str(), valStr.data());
   }
 }

@@ -27,7 +27,7 @@
 #include "lp_data/HConst.h"
 #include "lp_data/HStruct.h"
 #include "lp_data/HighsOptions.h"
-#include "util/HighsCDouble.h"
+#include "util/HighsCD0uble.h"
 #include "util/HighsDataStack.h"
 #include "util/HighsMatrixSlice.h"
 
@@ -86,7 +86,7 @@ class HighsPostsolveStack {
               HighsBasis& basis);
   };
 
-  struct DoubletonEquation {
+  struct D0ublet0nEquation {
     double coef;
     double coefSubst;
     double rhs;
@@ -211,7 +211,7 @@ class HighsPostsolveStack {
   enum class ReductionType : uint8_t {
     kLinearTransform,
     kFreeColSubstitution,
-    kDoubletonEquation,
+    kD0ublet0nEquation,
     kEqualityRowAddition,
     kEqualityRowAdditions,
     kSingletonRow,
@@ -311,12 +311,12 @@ class HighsPostsolveStack {
     for (const HighsSliceNonzero& colVal : colVec)
       colValues.emplace_back(origRowIndex[colVal.index()], colVal.value());
 
-    reductionValues.push(DoubletonEquation{
+    reductionValues.push(D0ublet0nEquation{
         coef, coefSubst, rhs, substLower, substUpper, substCost,
         row == -1 ? -1 : origRowIndex[row], origColIndex[colSubst],
         origColIndex[col], lowerTightened, upperTightened});
     reductionValues.push(colValues);
-    reductions.push_back(ReductionType::kDoubletonEquation);
+    reductions.push_back(ReductionType::kD0ublet0nEquation);
   }
 
   template <typename RowStorageFormat>
@@ -531,8 +531,8 @@ class HighsPostsolveStack {
           reduction.undo(options, rowValues, colValues, solution, basis);
           break;
         }
-        case ReductionType::kDoubletonEquation: {
-          DoubletonEquation reduction;
+        case ReductionType::kD0ublet0nEquation: {
+          D0ublet0nEquation reduction;
           reductionValues.pop(colValues);
           reductionValues.pop(reduction);
           reduction.undo(options, colValues, solution, basis);
@@ -648,8 +648,8 @@ class HighsPostsolveStack {
           reduction.undo(options, rowValues, colValues, solution, basis);
           break;
         }
-        case ReductionType::kDoubletonEquation: {
-          DoubletonEquation reduction;
+        case ReductionType::kD0ublet0nEquation: {
+          D0ublet0nEquation reduction;
           reductionValues.pop(colValues);
           reductionValues.pop(reduction);
           reduction.undo(options, colValues, solution, basis);
@@ -784,8 +784,8 @@ class HighsPostsolveStack {
           reduction.undo(options, rowValues, colValues, solution, basis);
           break;
         }
-        case ReductionType::kDoubletonEquation: {
-          DoubletonEquation reduction;
+        case ReductionType::kD0ublet0nEquation: {
+          D0ublet0nEquation reduction;
           reductionValues.pop(colValues);
           reductionValues.pop(reduction);
           reduction.undo(options, colValues, solution, basis);
