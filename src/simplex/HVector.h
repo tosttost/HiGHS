@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "util/HighsInt.h"
+#include "util/HighsFloat.h"
 
 // using std::map;
 using std::vector;

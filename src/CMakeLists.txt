@@ -270,6 +270,7 @@ set(headers
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsDisjointSets.h
+    util/HighsFloat.h
     util/HighsHash.h
     util/HighsInt.h
     util/HighsIntegers.h
@@ -701,6 +702,7 @@ set(headers_fast_build_
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsDisjointSets.h
+    util/HighsFloat.h
     util/HighsHash.h
     util/HighsInt.h
     util/HighsIntegers.h
