@@ -575,8 +575,8 @@ DllExport HighsInt STDCALL C__hisModifyProblem(void* Cptr) {
 
   HighsInt* colidx = new int[maxsize];
   HighsInt* rowidx = new int[maxsize];
-  double* array1 = new double[maxsize];
-  double* array2 = new double[maxsize];
+  HighsFloat* array1 = new HighsFloat[maxsize];
+  HighsFloat* array2 = new HighsFloat[maxsize];
 
   Highs* highs = gh->highs;
   assert(highs != NULL);
@@ -597,7 +597,7 @@ DllExport HighsInt STDCALL C__hisModifyProblem(void* Cptr) {
 
   // update constraint sides
   for (HighsInt i = 0; i < gmoM(gh->gmo); ++i) {
-    double rhs = gmoGetRhsOne(gh->gmo, i);
+    HighsFloat rhs = gmoGetRhsOne(gh->gmo, i);
     rowidx[i] = 1;
     switch (gmoGetEquTypeOne(gh->gmo, i)) {
       case gmoequ_E:

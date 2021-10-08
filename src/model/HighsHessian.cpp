@@ -49,7 +49,7 @@ void HighsHessian::print() {
   printf("-----");
   for (int iCol = 0; iCol < dim_; iCol++) printf("-----");
   printf("\n");
-  std::vector<double> col;
+  std::vector<HighsFloat> col;
   col.assign(dim_, 0);
   for (HighsInt iCol = 0; iCol < dim_; iCol++) {
     for (HighsInt iEl = this->start_[iCol]; iEl < this->start_[iCol + 1]; iEl++)
@@ -70,8 +70,8 @@ bool HighsHessian::operator==(const HighsHessian& hessian) {
   return equal;
 }
 
-void HighsHessian::product(const std::vector<double>& solution,
-                           std::vector<double>& product) const {
+void HighsHessian::product(const std::vector<HighsFloat>& solution,
+                           std::vector<HighsFloat>& product) const {
   if (this->dim_ <= 0) return;
   product.assign(this->dim_, 0);
   for (HighsInt iCol = 0; iCol < this->dim_; iCol++) {
@@ -83,8 +83,8 @@ void HighsHessian::product(const std::vector<double>& solution,
   }
 }
 
-double HighsHessian::objectiveValue(const std::vector<double>& solution) const {
-  double objective_function_value = 0;
+HighsFloat HighsHessian::objectiveValue(const std::vector<HighsFloat>& solution) const {
+  HighsFloat objective_function_value = 0;
   for (HighsInt iCol = 0; iCol < this->dim_; iCol++) {
     HighsInt iEl = this->start_[iCol];
     assert(this->index_[iEl] == iCol);

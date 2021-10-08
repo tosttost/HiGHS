@@ -36,7 +36,7 @@ void HighsDebugSol::activate() {
     std::ifstream file(mipsolver->options_mip_->mip_debug_solution_file);
     if (file) {
       std::string varname;
-      double varval;
+      HighsFloat varval;
       std::map<std::string, int> nametoidx;
 
       for (HighsInt i = 0; i != mipsolver->model_->num_col_; ++i)
@@ -60,7 +60,7 @@ void HighsDebugSol::activate() {
       for (HighsInt i = 0; i != mipsolver->model_->num_col_; ++i)
         debugsolobj += mipsolver->model_->col_cost_[i] * debugSolution[i];
 
-      debugSolObjective = double(debugsolobj);
+      debugSolObjective = HighsFloat(debugsolobj);
       debugSolActive = true;
       printf("debug sol active\n");
       registerDomain(mipsolver->mipdata_->domain);
@@ -92,7 +92,7 @@ void HighsDebugSol::shrink(const std::vector<HighsInt>& newColIndex) {
   for (HighsInt i = 0; i != mipsolver->model_->num_col_; ++i)
     debugsolobj += mipsolver->model_->col_cost_[i] * debugSolution[i];
 
-  debugSolObjective = double(debugsolobj);
+  debugSolObjective = HighsFloat(debugsolobj);
 
   conflictingBounds.clear();
 }
@@ -153,8 +153,8 @@ void HighsDebugSol::boundChangeRemoved(const HighsDomain& domain,
     conflictingBounds[&domain].erase(i);
 }
 
-void HighsDebugSol::checkCut(const HighsInt* Rindex, const double* Rvalue,
-                             HighsInt Rlen, double rhs) {
+void HighsDebugSol::checkCut(const HighsInt* Rindex, const HighsFloat* Rvalue,
+                             HighsInt Rlen, HighsFloat rhs) {
   if (!debugSolActive) return;
 
   HighsCD0uble violation = -rhs;
@@ -165,8 +165,8 @@ void HighsDebugSol::checkCut(const HighsInt* Rindex, const double* Rvalue,
   assert(violation <= mipsolver->mipdata_->feastol);
 }
 
-void HighsDebugSol::checkRow(const HighsInt* Rindex, const double* Rvalue,
-                             HighsInt Rlen, double Rlower, double Rupper) {
+void HighsDebugSol::checkRow(const HighsInt* Rindex, const HighsFloat* Rvalue,
+                             HighsInt Rlen, HighsFloat Rlower, HighsFloat Rupper) {
   if (!debugSolActive) return;
 
   HighsCD0uble activity = 0;
@@ -204,16 +204,16 @@ void HighsDebugSol::checkClique(const HighsCliqueTable::CliqueVar* clq,
   assert(violation <= 0);
 }
 
-void HighsDebugSol::checkVub(HighsInt col, HighsInt vubcol, double vubcoef,
-                             double vubconstant) const {
+void HighsDebugSol::checkVub(HighsInt col, HighsInt vubcol, HighsFloat vubcoef,
+                             HighsFloat vubconstant) const {
   if (!debugSolActive || std::abs(vubcoef) == kHighsInf) return;
 
   assert(debugSolution[col] <= debugSolution[vubcol] * vubcoef + vubconstant +
                                    mipsolver->mipdata_->feastol);
 }
 
-void HighsDebugSol::checkVlb(HighsInt col, HighsInt vlbcol, double vlbcoef,
-                             double vlbconstant) const {
+void HighsDebugSol::checkVlb(HighsInt col, HighsInt vlbcol, HighsFloat vlbcoef,
+                             HighsFloat vlbconstant) const {
   if (!debugSolActive || std::abs(vlbcoef) == kHighsInf) return;
 
   assert(debugSolution[col] >= debugSolution[vlbcol] * vlbcoef + vlbconstant -

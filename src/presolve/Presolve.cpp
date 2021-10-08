@@ -76,13 +76,13 @@ void Presolve::load(const HighsLp& lp, bool mip) {
 
 void Presolve::setNumericalTolerances() {
   const bool use_original_tol = false;
-  const double zero_tolerance = 1e-16;
+  const HighsFloat zero_tolerance = 1e-16;
   if (use_original_tol) {
     inconsistent_bounds_tolerance = tol;
     fixed_column_tolerance =
         zero_tolerance;  // Since exact equality is currently used
-    doubleton_equation_bound_tolerance = tol;
-    doubleton_inequality_bound_tolerance = tol;
+    HighsFloatton_equation_bound_tolerance = tol;
+    HighsFloatton_inequality_bound_tolerance = tol;
     presolve_small_matrix_value = tol;
     empty_row_bound_tolerance = tol;
     dominated_column_tolerance = tol;
@@ -100,14 +100,14 @@ void Presolve::setNumericalTolerances() {
         zero_tolerance;  // Since exact equality is currently used
     //        2 * default_primal_feasiblility_tolerance;
     // Tolerance on bound differences being considered to be zero,
-    // allowing a doubleton to be treated as an equation. What value
+    // allowing a HighsFloatton to be treated as an equation. What value
     // this should have is unclear. It could depend on the coefficients
     // of the two variables and the values of the bounds, as there's an
     // implicit infeasibility created when the optimal value for one
     // variable is substituted to deduce the optimal value of the other.
-    doubleton_equation_bound_tolerance =
+    HighsFloatton_equation_bound_tolerance =
         2 * default_primal_feasiblility_tolerance;
-    doubleton_inequality_bound_tolerance = doubleton_equation_bound_tolerance;
+    HighsFloatton_inequality_bound_tolerance = HighsFloatton_equation_bound_tolerance;
     // Need to decide when a matrix coefficient changed by substitution
     // is zeroed: should be the small_matrix_value, for which the
     // following is the default value
@@ -135,10 +135,10 @@ void Presolve::setNumericalTolerances() {
                                  fixed_column_tolerance);
   timer.initialiseNumericsRecord(kNumericsD0ublet0nEquationBound,
                                  "D0ublet0n equation bound",
-                                 doubleton_equation_bound_tolerance);
+                                 HighsFloatton_equation_bound_tolerance);
   timer.initialiseNumericsRecord(kNumericsD0ublet0nInequalityBound,
                                  "D0ublet0n inequality bound",
-                                 doubleton_inequality_bound_tolerance);
+                                 HighsFloatton_inequality_bound_tolerance);
   timer.initialiseNumericsRecord(kNumericsSmallMatrixValue,
                                  "Small matrix value",
                                  presolve_small_matrix_value);
@@ -272,7 +272,7 @@ HighsInt Presolve::runPresolvers(const std::vector<Presolver>& order) {
   if (iPrint) std::cout << "----> fixed cols" << std::endl;
 
   for (Presolver main_loop_presolver : order) {
-    double time_start = timer.timer_.readRunHighsClock();
+    HighsFloat time_start = timer.timer_.readRunHighsClock();
     if (iPrint) std::cout << "----> ";
     auto it = kPresolverNames.find(main_loop_presolver);
     assert(it != kPresolverNames.end());
@@ -321,7 +321,7 @@ HighsInt Presolve::runPresolvers(const std::vector<Presolver>& order) {
         break;
     }
 
-    double time_end = timer.timer_.readRunHighsClock();
+    HighsFloat time_end = timer.timer_.readRunHighsClock();
     if (iPrint)
       std::cout << (*it).second << " time: " << time_end - time_start
                 << std::endl;
@@ -420,11 +420,11 @@ HighsInt Presolve::presolve(HighsInt print) {
     // order.push_back(Presolver::kMainSingletonsOnly);
   }
 
-  const double reduction_pct_for_further_presolve_iteration = 0.05;
+  const HighsFloat reduction_pct_for_further_presolve_iteration = 0.05;
   HighsInt model_cols_rows = numCol + numRow;
   HighsInt prev_cols_rows;
   HighsInt current_cols_rows = model_cols_rows;
-  //  double prev_diff = 0;
+  //  HighsFloat prev_diff = 0;
   // Else: The order has been modified for experiments
   while (hasChange == 1) {
     if (max_iterations > 0 && iter > max_iterations) break;
@@ -450,7 +450,7 @@ HighsInt Presolve::presolve(HighsInt print) {
       if (flagCol[i]) current_cols_rows++;
     current_num_col = current_cols_rows - current_num_row;
     HighsInt diff = prev_cols_rows - current_cols_rows;
-    double iteration_reduction_pct =
+    HighsFloat iteration_reduction_pct =
         100 * (1.0 * diff) / (1.0 * model_cols_rows);
     highsLogDev(log_options, HighsLogType::kVerbose,
                 "Iteration %2" HIGHSINT_FORMAT
@@ -484,7 +484,7 @@ HighsInt Presolve::presolve(HighsInt print) {
         if (flagCol[i]) current_num_col++;
       current_cols_rows = current_num_col + current_num_row;
       HighsInt diff = prev_cols_rows - current_cols_rows;
-      double iteration_reduction_pct =
+      HighsFloat iteration_reduction_pct =
           100 * (1.0 * diff) / (1.0 * model_cols_rows);
       highsLogDev(log_options, HighsLogType::kVerbose,
                   "Iteration %2" HIGHSINT_FORMAT
@@ -593,8 +593,8 @@ pair<HighsInt, HighsInt> Presolve::getXYD0ublet0nEquations(const HighsInt row) {
 
   HighsInt col1 = -1;
   HighsInt col2 = -1;
-  double val1 = 0.0;
-  double val2 = 0.0;
+  HighsFloat val1 = 0.0;
+  HighsFloat val2 = 0.0;
   HighsInt kk = ARstart.at(row);
   while (kk < ARstart.at(row + 1)) {
     if (flagCol.at(ARindex.at(kk))) {
@@ -605,7 +605,7 @@ pair<HighsInt, HighsInt> Presolve::getXYD0ublet0nEquations(const HighsInt row) {
         col2 = ARindex.at(kk);
         val2 = std::abs(ARvalue[kk]);
       } else {
-        cout << "ERROR: doubleton eq row" << row
+        cout << "ERROR: HighsFloatton eq row" << row
              << " has more than two variables. \n";
         col2 = -2;
         break;
@@ -615,7 +615,7 @@ pair<HighsInt, HighsInt> Presolve::getXYD0ublet0nEquations(const HighsInt row) {
       ++kk;
   }
   if (col2 == -1)
-    cout << "ERROR: doubleton eq row" << row
+    cout << "ERROR: HighsFloatton eq row" << row
          << " has less than two variables. \n";
   if (col2 < 0) {
     colIndex.second = -1;
@@ -678,8 +678,8 @@ pair<HighsInt, HighsInt> Presolve::getXYD0ublet0nEquations(const HighsInt row) {
 }
 
 void Presolve::processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
-                                           const HighsInt y, const double akx,
-                                           const double aky, const double b) {
+                                           const HighsInt y, const HighsFloat akx,
+                                           const HighsFloat aky, const HighsFloat b) {
   // std::cout << "col 2... c = " << colCost.at(2)<< std::endl;
   // presolve::printCol(2, numRow, numCol, flagRow, flagCol, colLower,
   //                    colUpper, valueRowDual, Astart, Aend, Aindex, Avalue);
@@ -689,15 +689,15 @@ void Presolve::processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
   postValue.push(b);
 
   // modify bounds on variable x (j), variable y (col,k) is substituted out
-  // double aik = Avalue.at(k);
-  // double aij = Avalue.at(kk);
-  pair<double, double> p = getNewBoundsD0ublet0nConstraint(row, y, x, aky, akx);
-  double low = p.first;
-  double upp = p.second;
+  // HighsFloat aik = Avalue.at(k);
+  // HighsFloat aij = Avalue.at(kk);
+  pair<HighsFloat, HighsFloat> p = getNewBoundsD0ublet0nConstraint(row, y, x, aky, akx);
+  HighsFloat low = p.first;
+  HighsFloat upp = p.second;
 
   // add old bounds of x to checker and for postsolve
   if (iKKTcheck == 1) {
-    vector<pair<HighsInt, double>> bndsL, bndsU, costS;
+    vector<pair<HighsInt, HighsFloat>> bndsL, bndsU, costS;
     bndsL.push_back(make_pair(x, colLower.at(x)));
     bndsU.push_back(make_pair(x, colUpper.at(x)));
     costS.push_back(make_pair(x, colCost.at(x)));
@@ -707,8 +707,8 @@ void Presolve::processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
     chk2.costs.push(costS);
   }
 
-  vector<double> bnds({colLower.at(y), colUpper.at(y), colCost.at(y)});
-  vector<double> bnds2({colLower.at(x), colUpper.at(x), colCost.at(x)});
+  vector<HighsFloat> bnds({colLower.at(y), colUpper.at(y), colCost.at(y)});
+  vector<HighsFloat> bnds2({colLower.at(x), colUpper.at(x), colCost.at(x)});
   oldBounds.push(make_pair(y, bnds));
   oldBounds.push(make_pair(x, bnds2));
 
@@ -723,7 +723,7 @@ void Presolve::processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
 
   // for postsolve: need the new bounds too
   assert(x >= 0 && x < numCol);
-  vector<double> bnds3({colLower.at(x), colUpper.at(x), colCost.at(x)});
+  vector<HighsFloat> bnds3({colLower.at(x), colUpper.at(x), colCost.at(x)});
   oldBounds.push(make_pair(x, bnds3));
 
   addChange(kD0ublet0nEquation, row, y);
@@ -775,7 +775,7 @@ void Presolve::caseTwoSingletonsD0ublet0nInequality(const HighsInt row,
   //     flagRow[row] = false;
   //     flagCol[x] = false;
   //     flagCol[y] = false;
-  //     postValue.push((double)y);
+  //     postValue.push((HighsFloat)y);
   //     addChange(PresolveRule::kTwoColSingTrivial, row, x);
   //     std::cout << "Trivial case row " << row << std::endl;
   //   }
@@ -799,17 +799,17 @@ void Presolve::removeD0ublet0nEquations() {
       // Analyse dependency on numerical tolerance
       if (nzRow.at(row) == 2 && rowLower[row] > -kHighsInf &&
           rowUpper[row] < kHighsInf) {
-        // Possible doubleton equation
+        // Possible HighsFloatton equation
         timer.updateNumericsRecord(kNumericsD0ublet0nEquationBound,
                                    fabs(rowLower[row] - rowUpper[row]));
       }
       if (nzRow.at(row) == 2 && rowLower[row] > -kHighsInf &&
           rowUpper[row] < kHighsInf &&
           fabs(rowLower[row] - rowUpper[row]) <=
-              doubleton_equation_bound_tolerance) {
+              HighsFloatton_equation_bound_tolerance) {
         // row is of form akx_x + aky_y = b, where k=row and y is present in
         // fewer constraints
-        const double b = rowLower.at(row);
+        const HighsFloat b = rowLower.at(row);
         pair<HighsInt, int> colIndex = getXYD0ublet0nEquations(row);
         const HighsInt x = colIndex.first;
         const HighsInt y = colIndex.second;
@@ -837,8 +837,8 @@ void Presolve::removeD0ublet0nEquations() {
         //   }
         // if (rs_only) continue;
 
-        const double akx = getaij(row, x);
-        const double aky = getaij(row, y);
+        const HighsFloat akx = getaij(row, x);
+        const HighsFloat aky = getaij(row, y);
         processRowD0ublet0nEquation(row, x, y, akx, aky, b);
         if (status) {
           timer.recordFinish(kD0ublet0nEquation);
@@ -851,11 +851,11 @@ void Presolve::removeD0ublet0nEquations() {
         for (HighsInt k = Astart.at(y); k < Aend.at(y); ++k)
           if (flagRow.at(Aindex.at(k)) && Aindex.at(k) != row) {
             const HighsInt i = Aindex.at(k);
-            const double aiy = Avalue.at(k);
+            const HighsFloat aiy = Avalue.at(k);
 
             // update row bounds
             if (iKKTcheck == 1) {
-              vector<pair<HighsInt, double>> bndsL, bndsU;
+              vector<pair<HighsInt, HighsFloat>> bndsL, bndsU;
               bndsL.push_back(make_pair(i, rowLower.at(i)));
               bndsU.push_back(make_pair(i, rowUpper.at(i)));
               chk2.rLowers.push(bndsL);
@@ -893,8 +893,8 @@ void Presolve::removeD0ublet0nEquations() {
 }
 
 void Presolve::UpdateMatrixCoeffD0ublet0nEquationXzero(
-    const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
-    const double akx, const double aky) {
+    const HighsInt i, const HighsInt x, const HighsInt y, const HighsFloat aiy,
+    const HighsFloat akx, const HighsFloat aky) {
   // case x is zero initially
   // row nonzero count doesn't change here
   // cout<<"case: x not present "<<i<<" "<<endl;
@@ -931,8 +931,8 @@ void Presolve::UpdateMatrixCoeffD0ublet0nEquationXzero(
 }
 
 void Presolve::UpdateMatrixCoeffD0ublet0nEquationXnonZero(
-    const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
-    const double akx, const double aky) {
+    const HighsInt i, const HighsInt x, const HighsInt y, const HighsFloat aiy,
+    const HighsFloat akx, const HighsFloat aky) {
   HighsInt ind;
 
   // update nonzeros: for removal of
@@ -945,7 +945,7 @@ void Presolve::UpdateMatrixCoeffD0ublet0nEquationXnonZero(
     countRemovedRows(kD0ublet0nEquation);
   }
 
-  double xNew;
+  HighsFloat xNew;
   for (ind = ARstart.at(i); ind < ARstart.at(i + 1); ++ind)
     if (ARindex.at(ind) == x) break;
 
@@ -1002,7 +1002,7 @@ void Presolve::UpdateMatrixCoeffD0ublet0nEquationXnonZero(
 
       // if indi is not Aend-1 swap elements indi and Aend-1
       if (indi != Aend.at(x) - 1) {
-        double tmp = Avalue.at(Aend.at(x) - 1);
+        HighsFloat tmp = Avalue.at(Aend.at(x) - 1);
         HighsInt tmpi = Aindex.at(Aend.at(x) - 1);
         Avalue.at(Aend.at(x) - 1) = Avalue.at(indi);
         Aindex.at(Aend.at(x) - 1) = Aindex.at(indi);
@@ -1147,9 +1147,9 @@ void Presolve::resizeProblem() {
 
   // cost, bounds
   colCostAtEl = colCost;
-  vector<double> tempCost = colCost;
-  vector<double> temp = colLower;
-  vector<double> teup = colUpper;
+  vector<HighsFloat> tempCost = colCost;
+  vector<HighsFloat> temp = colLower;
+  vector<HighsFloat> teup = colUpper;
   vector<HighsVarType> tempintegrality = integrality;
 
   colCost.resize(numCol);
@@ -1433,7 +1433,7 @@ void Presolve::runPropagator() {
 
     HighsInt start = Astart[i];
     HighsInt end = Aend[i];
-    double minabs = 1.0;
+    HighsFloat minabs = 1.0;
 
     for (HighsInt j = start; j != end; ++j) {
       HighsInt row = Aindex[j];
@@ -1446,15 +1446,15 @@ void Presolve::runPropagator() {
     // it if the column has coefficient values below 1.0 so that it is ensured
     // that no primal feasible solution can have this variable sitting at this
     // artifical bound
-    double margin = 128.0 * default_primal_feasiblility_tolerance / minabs;
+    HighsFloat margin = 128.0 * default_primal_feasiblility_tolerance / minabs;
 
     // now widen the bounds and check if they are tighter than the previous
     // bounds
-    double abslb = std::abs(propagator.colLower_[i]);
+    HighsFloat abslb = std::abs(propagator.colLower_[i]);
 
     if (abslb <= 1e8) {
       // use a relative minimal margin to ensure large bounds are relaxed enough
-      double minlowermargin = default_primal_feasiblility_tolerance * abslb;
+      HighsFloat minlowermargin = default_primal_feasiblility_tolerance * abslb;
       propagator.colLower_[i] -= std::max(margin, minlowermargin);
       if (propagator.colLower_[i] > colLower[i]) {
         colLower[i] = propagator.colLower_[i];
@@ -1462,11 +1462,11 @@ void Presolve::runPropagator() {
       }
     }
 
-    double absub = std::abs(propagator.colUpper_[i]);
+    HighsFloat absub = std::abs(propagator.colUpper_[i]);
 
     if (absub <= 1e8) {
       // use a relative minimal margin to ensure large bounds are relaxed enough
-      double minuppermargin = default_primal_feasiblility_tolerance * absub;
+      HighsFloat minuppermargin = default_primal_feasiblility_tolerance * absub;
       propagator.colUpper_[i] += std::max(margin, minuppermargin);
       if (propagator.colUpper_[i] < colUpper[i]) {
         colUpper[i] = propagator.colUpper_[i];
@@ -1546,7 +1546,7 @@ void Presolve::detectImpliedIntegers() {
     }
 
     assert(cont != -1);
-    double b = rowUpper[i] / ARvalue[cont];
+    HighsFloat b = rowUpper[i] / ARvalue[cont];
     if (std::abs(b - std::floor(b + 0.5)) > 1e-9) continue;
 
     bool impliedint = true;
@@ -1554,7 +1554,7 @@ void Presolve::detectImpliedIntegers() {
       if (j == cont) continue;
       if (!flagCol[ARindex[j]]) continue;
 
-      double val = ARvalue[j] / ARvalue[cont];
+      HighsFloat val = ARvalue[j] / ARvalue[cont];
       if (std::abs(val - std::floor(val + 0.5)) > 1e-9) {
         impliedint = false;
         break;
@@ -1609,7 +1609,7 @@ void Presolve::detectImpliedIntegers() {
       if (!flagRow[row]) continue;
 
       if (rowUpper[row] != kHighsInf) {
-        double val = rowUpper[row] / Avalue[j];
+        HighsFloat val = rowUpper[row] / Avalue[j];
 
         if (std::abs(val - std::floor(val + 0.5)) > 1e-9) {
           impliedinteger = false;
@@ -1618,7 +1618,7 @@ void Presolve::detectImpliedIntegers() {
       }
 
       if (rowLower[row] != -kHighsInf) {
-        double val = rowLower[row] / Avalue[j];
+        HighsFloat val = rowLower[row] / Avalue[j];
 
         if (std::abs(val - std::floor(val + 0.5)) > 1e-9) {
           impliedinteger = false;
@@ -1637,7 +1637,7 @@ void Presolve::detectImpliedIntegers() {
           break;
         }
 
-        double val = ARvalue[k] / Avalue[j];
+        HighsFloat val = ARvalue[k] / Avalue[j];
         if (std::abs(val - std::floor(val + 0.5)) > 1e-9) {
           impliedinteger = false;
           break;
@@ -1681,8 +1681,8 @@ void Presolve::applyMipDualFixing() {
     for (HighsInt j = start; j != end; ++j) {
       HighsInt row = Aindex[j];
       if (!flagRow[row]) continue;
-      double lower;
-      double upper;
+      HighsFloat lower;
+      HighsFloat upper;
 
       if (Avalue[j] < 0) {
         lower = -rowUpper[row];
@@ -1712,7 +1712,7 @@ void Presolve::applyMipDualFixing() {
 
 void Presolve::removeEmptyRow(HighsInt i) {
   // Analyse dependency on numerical tolerance
-  double value = min(rowLower.at(i), -rowUpper.at(i));
+  HighsFloat value = min(rowLower.at(i), -rowUpper.at(i));
   timer.updateNumericsRecord(kNumericsEmptyRowBound, value);
   if (rowLower.at(i) <= empty_row_bound_tolerance &&
       rowUpper.at(i) >= -empty_row_bound_tolerance) {
@@ -1730,7 +1730,7 @@ void Presolve::removeEmptyRow(HighsInt i) {
 void Presolve::removeEmptyColumn(HighsInt j) {
   flagCol.at(j) = 0;
   // singCol.remove(j);
-  double value;
+  HighsFloat value;
   if ((colCost.at(j) < 0 && colUpper.at(j) >= kHighsInf) ||
       (colCost.at(j) > 0 && colLower.at(j) <= -kHighsInf)) {
     if (iPrint > 0) cout << "PR: Problem unbounded." << endl;
@@ -1822,10 +1822,10 @@ void Presolve::rowDualBoundsDominatedColumns() {
     }
 }
 
-pair<double, double> Presolve::getImpliedColumnBounds(HighsInt j) {
-  pair<double, double> out;
-  double e = 0;
-  double d = 0;
+pair<HighsFloat, HighsFloat> Presolve::getImpliedColumnBounds(HighsInt j) {
+  pair<HighsFloat, HighsFloat> out;
+  HighsFloat e = 0;
+  HighsFloat d = 0;
 
   HighsInt i;
   for (HighsInt k = Astart.at(j); k < Aend.at(j); ++k) {
@@ -1886,8 +1886,8 @@ void Presolve::removeDominatedColumns() {
   // check) should be correct for integers
 
   // for each column j calculate e and d and check:
-  double e, d;
-  pair<double, double> p;
+  HighsFloat e, d;
+  pair<HighsFloat, HighsFloat> p;
   if (timer.reachLimit()) {
     status = Stat::kTimeout;
     return;
@@ -1946,8 +1946,8 @@ void Presolve::removeDominatedColumns() {
     }
 }
 
-void Presolve::removeIfWeaklyDominated(const HighsInt j, const double d,
-                                       const double e) {
+void Presolve::removeIfWeaklyDominated(const HighsInt j, const HighsFloat d,
+                                       const HighsFloat e) {
   HighsInt i;
   // check if it is weakly dominated: Excluding singletons!
   if (nzCol.at(j) > 1) {
@@ -1983,7 +1983,7 @@ void Presolve::removeIfWeaklyDominated(const HighsInt j, const double d,
 
       countRemovedCols(kWeaklyDominatedCols);
     } else {
-      double bnd;
+      HighsFloat bnd;
 
       // calculate new bounds
       if (!mip || integrality[j] != HighsVarType::kInteger) {
@@ -2052,13 +2052,13 @@ void Presolve::setKKTcheckerData() {
   chk2.setBoundsCostRHS(colUpper, colLower, colCost, rowLower, rowUpper);
 }
 
-pair<double, double> Presolve::getNewBoundsD0ublet0nConstraint(
-    const HighsInt row, const HighsInt col, const HighsInt j, const double aik,
-    const double aij) {
+pair<HighsFloat, HighsFloat> Presolve::getNewBoundsD0ublet0nConstraint(
+    const HighsInt row, const HighsInt col, const HighsInt j, const HighsFloat aik,
+    const HighsFloat aij) {
   HighsInt i = row;
 
-  double upp = kHighsInf;
-  double low = -kHighsInf;
+  HighsFloat upp = kHighsInf;
+  HighsFloat low = -kHighsInf;
 
   roundIntegerBounds(col);
 
@@ -2086,7 +2086,7 @@ pair<double, double> Presolve::getNewBoundsD0ublet0nConstraint(
 
   if (upp - low < -inconsistent_bounds_tolerance) {
     if (iPrint > 0)
-      std::cout << "Presolve warning: inconsistent bounds in doubleton "
+      std::cout << "Presolve warning: inconsistent bounds in HighsFloatton "
                    "constraint row "
                 << row << std::endl;
   }
@@ -2114,7 +2114,7 @@ void Presolve::removeFreeColumnSingleton(const HighsInt col, const HighsInt row,
          << " removed." << endl;
 
   // modify costs
-  vector<pair<HighsInt, double>> newCosts;
+  vector<pair<HighsInt, HighsFloat>> newCosts;
   HighsInt j;
   for (HighsInt kk = ARstart.at(row); kk < ARstart.at(row + 1); ++kk) {
     j = ARindex.at(kk);
@@ -2133,7 +2133,7 @@ void Presolve::removeFreeColumnSingleton(const HighsInt col, const HighsInt row,
   valueColDual.at(col) = 0;
   valueRowDual.at(row) = -colCost.at(col) / Avalue.at(k);
 
-  double b = valueRowDual[row] < 0 ? rowLower[row] : rowUpper[row];
+  HighsFloat b = valueRowDual[row] < 0 ? rowLower[row] : rowUpper[row];
   objShift += colCost.at(col) * b / Avalue.at(k);
 
   addChange(kFreeSingCol, row, col);
@@ -2163,13 +2163,13 @@ bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
     cout << "ERROR: nzRow[" << i << "]=2, but no second variable in row. \n";
 
   // only inequality case and case two singletons here,
-  // others handled in doubleton equation
+  // others handled in HighsFloatton equation
   // Analyse dependency on numerical tolerance
   if (nzCol.at(j) > 1)
     timer.updateNumericsRecord(kNumericsD0ublet0nInequalityBound,
                                fabs(rowLower.at(i) - rowUpper.at(i)));
   if ((fabs(rowLower.at(i) - rowUpper.at(i)) <
-       doubleton_inequality_bound_tolerance) &&
+       HighsFloatton_inequality_bound_tolerance) &&
       (nzCol.at(j) > 1))
     return false;
 
@@ -2177,7 +2177,7 @@ bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
   // needed since we handle inequalities and it may not be true
   // low and upp to be tighter than original bounds for variable col
   // so it is indeed implied free and we can remove it
-  pair<double, double> p =
+  pair<HighsFloat, HighsFloat> p =
       getNewBoundsD0ublet0nConstraint(i, j, col, ARvalue.at(kk), Avalue.at(k));
   if (!(colLower.at(col) <= p.first && colUpper.at(col) >= p.second)) {
     return false;
@@ -2187,15 +2187,15 @@ bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
   postValue.push(Avalue.at(k));
 
   // modify bounds on variable j, variable col (k) is substituted out
-  // double aik = Avalue.at(k);
-  // double aij = Avalue.at(kk);
+  // HighsFloat aik = Avalue.at(k);
+  // HighsFloat aij = Avalue.at(kk);
   p = getNewBoundsD0ublet0nConstraint(i, col, j, Avalue.at(k), ARvalue.at(kk));
-  double low = p.first;
-  double upp = p.second;
+  HighsFloat low = p.first;
+  HighsFloat upp = p.second;
 
   // add old bounds of xj to checker and for postsolve
   if (iKKTcheck == 1) {
-    vector<pair<HighsInt, double>> bndsL, bndsU, costS;
+    vector<pair<HighsInt, HighsFloat>> bndsL, bndsU, costS;
     bndsL.push_back(make_pair(j, colLower.at(j)));
     bndsU.push_back(make_pair(j, colUpper.at(j)));
     costS.push_back(make_pair(j, colCost.at(j)));
@@ -2204,8 +2204,8 @@ bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
     chk2.costs.push(costS);
   }
 
-  vector<double> bndsCol({colLower.at(col), colUpper.at(col), colCost.at(col)});
-  vector<double> bndsJ({colLower.at(j), colUpper.at(j), colCost.at(j)});
+  vector<HighsFloat> bndsCol({colLower.at(col), colUpper.at(col), colCost.at(col)});
+  vector<HighsFloat> bndsJ({colLower.at(j), colUpper.at(j), colCost.at(j)});
   oldBounds.push(make_pair(col, bndsCol));
   oldBounds.push(make_pair(j, bndsJ));
 
@@ -2227,7 +2227,7 @@ bool Presolve::removeColumnSingletonInD0ublet0nInequality(const HighsInt col,
   // remove col as free column singleton
   if (iPrint > 0)
     cout << "PR: Column singleton " << col
-         << " in a doubleton inequality constraint removed. Row " << i
+         << " in a HighsFloatton inequality constraint removed. Row " << i
          << " removed. variable left is " << j << endl;
 
   flagCol.at(col) = 0;
@@ -2256,7 +2256,7 @@ void Presolve::removeSecondColumnSingletonInD0ublet0nRow(const HighsInt j,
   // when we get here bounds on xj are updated so we can choose low/upper one
   // depending on the cost of xj
   flagRow.at(i) = 0;
-  double value;
+  HighsFloat value;
   if (colCost.at(j) > 0) {
     if (colLower.at(j) <= -kHighsInf) {
       if (iPrint > 0) cout << "PR: Problem unbounded." << endl;
@@ -2282,7 +2282,7 @@ void Presolve::removeSecondColumnSingletonInD0ublet0nRow(const HighsInt j,
   setPrimalValue(j, value);
   addChange(kSingColD0ublet0nIneqSecondSingCol, 0, j);
   if (iPrint > 0)
-    cout << "PR: Second singleton column " << j << " in doubleton row " << i
+    cout << "PR: Second singleton column " << j << " in HighsFloatton row " << i
          << " removed.\n";
   countRemovedCols(kSingColD0ublet0nIneq);
   // singCol.remove(j);
@@ -2323,7 +2323,7 @@ void Presolve::removeColumnSingletons() {
       }
       assert(k < (HighsInt)Aindex.size());
       const HighsInt i = Aindex.at(k);
-      const double ai = Avalue[k];
+      const HighsFloat ai = Avalue[k];
 
       // todo if the variable type of column is HighsVarType::INTEGRAL check the
       // integrality of all coefficients divided by the coefficient of the
@@ -2345,8 +2345,8 @@ void Presolve::removeColumnSingletons() {
               break;
             }
 
-            double substval = ARvalue[kk] / ai;
-            double intval = std::floor(substval + 0.5);
+            HighsFloat substval = ARvalue[kk] / ai;
+            HighsFloat intval = std::floor(substval + 0.5);
             if (std::abs(substval - intval) > tol) {
               suitable = false;
               break;
@@ -2384,7 +2384,7 @@ void Presolve::removeColumnSingletons() {
       }
 
       // todo, I think this case might not work for integral variables
-      // singleton column in a doubleton inequality
+      // singleton column in a HighsFloatton inequality
       // case two column singletons
       if (!mip || integrality[col] != HighsVarType::kInteger)
         if (nzRow.at(i) == 2) {
@@ -2469,17 +2469,17 @@ bool Presolve::isKnapsack(const HighsInt col) const {
   return true;
 }
 
-pair<double, double> Presolve::getBoundsImpliedFree(double lowInit,
-                                                    double uppInit,
+pair<HighsFloat, HighsFloat> Presolve::getBoundsImpliedFree(HighsFloat lowInit,
+                                                    HighsFloat uppInit,
                                                     const HighsInt col,
                                                     const HighsInt i,
                                                     const HighsInt k) {
-  double low = lowInit;
-  double upp = uppInit;
+  HighsFloat low = lowInit;
+  HighsFloat upp = uppInit;
 
   // use implied bounds with original bounds
   HighsInt j;
-  double l, u;
+  HighsFloat l, u;
   // if at any stage low becomes  or upp becomes inf break loop
   // can't use bounds for variables generated by the same row.
   // low
@@ -2553,7 +2553,7 @@ void Presolve::removeImpliedFreeColumn(const HighsInt col, const HighsInt i,
 
   // modify costs
   HighsInt j;
-  vector<pair<HighsInt, double>> newCosts;
+  vector<pair<HighsInt, HighsFloat>> newCosts;
   for (HighsInt kk = ARstart.at(i); kk < ARstart.at(i + 1); ++kk) {
     j = ARindex.at(kk);
     if (flagCol.at(j) && j != col) {
@@ -2570,7 +2570,7 @@ void Presolve::removeImpliedFreeColumn(const HighsInt col, const HighsInt i,
 
   valueColDual.at(col) = 0;
   valueRowDual.at(i) = -colCost.at(col) / Avalue.at(k);
-  double b = valueRowDual[i] < 0 || rowUpper[i] == kHighsInf ? rowLower[i]
+  HighsFloat b = valueRowDual[i] < 0 || rowUpper[i] == kHighsInf ? rowLower[i]
                                                              : rowUpper[i];
   assert(std::isfinite(b));
   objShift += colCost.at(col) * b / Avalue.at(k);
@@ -2581,10 +2581,10 @@ void Presolve::removeImpliedFreeColumn(const HighsInt col, const HighsInt i,
 bool Presolve::removeIfImpliedFree(HighsInt col, HighsInt i, HighsInt k) {
   // first find which bound is active for row i
   // A'y + c = z so yi = -ci/aij
-  double aij = getaij(i, col);
+  HighsFloat aij = getaij(i, col);
   if (aij != Avalue.at(k)) cout << "ERROR during implied free";
-  double yi = -colCost.at(col) / aij;
-  double low, upp;
+  HighsFloat yi = -colCost.at(col) / aij;
+  HighsFloat low, upp;
 
   if (yi > 0) {
     if (rowUpper.at(i) >= kHighsInf) return false;
@@ -2599,7 +2599,7 @@ bool Presolve::removeIfImpliedFree(HighsInt col, HighsInt i, HighsInt k) {
     upp = rowUpper.at(i);
   }
 
-  pair<double, double> p = getBoundsImpliedFree(low, upp, col, i, k);
+  pair<HighsFloat, HighsFloat> p = getBoundsImpliedFree(low, upp, col, i, k);
   low = p.first;
   upp = p.second;
 
@@ -2658,9 +2658,9 @@ void Presolve::fillStackRowBounds(HighsInt row) {
   postValue.push(rowLower.at(row));
 }
 
-pair<double, double> Presolve::getImpliedRowBounds(HighsInt row) {
-  double g = 0;
-  double h = 0;
+pair<HighsFloat, HighsFloat> Presolve::getImpliedRowBounds(HighsInt row) {
+  HighsFloat g = 0;
+  HighsFloat h = 0;
 
   HighsInt col;
   for (HighsInt k = ARstart.at(row); k < ARstart.at(row + 1); ++k) {
@@ -2721,7 +2721,7 @@ void Presolve::setVariablesToBoundForForcingRow(const HighsInt row,
   while (k < ARstart.at(row + 1)) {
     col = ARindex.at(k);
     if (flagCol.at(col)) {
-      double value;
+      HighsFloat value;
       if ((ARvalue.at(k) < 0 && isLower) || (ARvalue.at(k) > 0 && !isLower))
         value = colUpper.at(col);
       else
@@ -2729,7 +2729,7 @@ void Presolve::setVariablesToBoundForForcingRow(const HighsInt row,
 
       setPrimalValue(col, value);
       valueColDual.at(col) = colCost.at(col);
-      vector<double> bnds({colLower.at(col), colUpper.at(col)});
+      vector<HighsFloat> bnds({colLower.at(col), colUpper.at(col)});
       oldBounds.push(make_pair(col, bnds));
       addChange(kForcingRowVariable, 0, col);
 
@@ -2743,10 +2743,10 @@ void Presolve::setVariablesToBoundForForcingRow(const HighsInt row,
   countRemovedRows(kForcingRow);
 }
 
-void Presolve::dominatedConstraintProcedure(const HighsInt i, const double g,
-                                            const double h) {
+void Presolve::dominatedConstraintProcedure(const HighsInt i, const HighsFloat g,
+                                            const HighsFloat h) {
   HighsInt j;
-  double val;
+  HighsFloat val;
   if (h < kHighsInf) {
     // fill in implied bounds arrays
     if (h < implRowValueUpper.at(i)) {
@@ -2804,8 +2804,8 @@ void Presolve::dominatedConstraintProcedure(const HighsInt i, const double g,
 }
 
 void Presolve::removeForcingConstraints() {
-  double g, h;
-  pair<double, double> implBounds;
+  HighsFloat g, h;
+  pair<HighsFloat, HighsFloat> implBounds;
 
   if (timer.reachLimit()) {
     status = Stat::kTimeout;
@@ -2880,7 +2880,7 @@ void Presolve::removeRowSingletons() {
 
       // add old bounds OF X to checker and for postsolve
       if (iKKTcheck == 1) {
-        vector<pair<HighsInt, double>> bndsL, bndsU, costS;
+        vector<pair<HighsInt, HighsFloat>> bndsL, bndsU, costS;
         bndsL.push_back(make_pair(j, colLower.at(j)));
         bndsU.push_back(make_pair(j, colUpper.at(j)));
         costS.push_back(make_pair(j, colCost.at(j)));
@@ -2890,11 +2890,11 @@ void Presolve::removeRowSingletons() {
         chk2.costs.push(costS);
       }
 
-      vector<double> bnds(
+      vector<HighsFloat> bnds(
           {colLower.at(j), colUpper.at(j), rowLower.at(i), rowUpper.at(i)});
       oldBounds.push(make_pair(j, bnds));
 
-      double aij = ARvalue.at(k);
+      HighsFloat aij = ARvalue.at(k);
       /*		//before update bounds of x take it out of rows with
       implied row bounds for (HighsInt r = Astart.at(j); r<Aend.at(j); r++) { if
       (flagRow[Aindex[r]]) { HighsInt rr = Aindex[r]; if (implRowValueLower[rr]
@@ -3000,7 +3000,7 @@ void Presolve::addChange(PresolveRule type, HighsInt row, HighsInt col) {
 
 // when setting a value to a primal variable and eliminating row update b,
 // singleton Rows linked list, number of nonzeros in rows
-void Presolve::setPrimalValue(const HighsInt j, const double value) {
+void Presolve::setPrimalValue(const HighsInt j, const HighsFloat value) {
   flagCol.at(j) = 0;
   if (!hasChange) hasChange = true;
   valuePrimal.at(j) = value;
@@ -3019,7 +3019,7 @@ void Presolve::setPrimalValue(const HighsInt j, const double value) {
   // update values if necessary
   if (fabs(value) > 0) {
     // RHS
-    vector<pair<HighsInt, double>> bndsL, bndsU;
+    vector<pair<HighsInt, HighsFloat>> bndsL, bndsU;
 
     for (HighsInt k = Astart.at(j); k < Aend.at(j); ++k)
       if (flagRow.at(Aindex.at(k))) {
@@ -3172,8 +3172,8 @@ void Presolve::checkForChanges(HighsInt iteration) {
 void Presolve::resizeImpliedBounds() {
   // implied bounds for crashes
   // row duals
-  vector<double> temp = implRowDualLower;
-  vector<double> teup = implRowDualUpper;
+  vector<HighsFloat> temp = implRowDualLower;
+  vector<HighsFloat> teup = implRowDualUpper;
   implRowDualLower.resize(numRow);
   implRowDualUpper.resize(numRow);
 
@@ -3270,8 +3270,8 @@ void Presolve::testAnAR(HighsInt post) {
   HighsInt rows = numRow;
   HighsInt cols = numCol;
 
-  double valueA = 0;
-  double valueAR = 0;
+  HighsFloat valueA = 0;
+  HighsFloat valueAR = 0;
   bool hasValueA, hasValueAR;
 
   if (post) {
@@ -3335,7 +3335,7 @@ void Presolve::testAnAR(HighsInt post) {
 }
 
 HighsPostsolveStatus Presolve::primalPostsolve(
-    const std::vector<double>& reduced_solution,
+    const std::vector<HighsFloat>& reduced_solution,
     HighsSolution& recovered_solution) {
   colValue = reduced_solution;
 
@@ -3418,13 +3418,13 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         break;
       }
       case kD0ublet0nEquationRowBoundsUpdate: {
-        // new bounds from doubleton equation, retrieve old ones
+        // new bounds from HighsFloatton equation, retrieve old ones
         // just for KKT check, not called otherwise
         // chk2.addChange(171, c.row, c.col, 0, 0, 0);
         break;
       }
       case kD0ublet0nEquationNewXNonzero: {
-        // matrix transformation from doubleton equation, case x still there
+        // matrix transformation from HighsFloatton equation, case x still there
         // case new x is not 0
         // just change value of entry in row for x
         HighsInt indi;
@@ -3440,7 +3440,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         break;
       }
       case kD0ublet0nEquationXZeroInitially: {
-        // matrix transformation from doubleton equation, retrieve old value
+        // matrix transformation from HighsFloatton equation, retrieve old value
         // case when row does not have x initially: entries for row i swap x and
         // y cols
 
@@ -3461,7 +3461,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         // recover x: column decreases by 1
         // if indi is not Aend-1 swap elements indi and Aend-1
         if (indi != Aend[c.col] - 1) {
-          double tmp = Avalue[Aend[c.col] - 1];
+          HighsFloat tmp = Avalue[Aend[c.col] - 1];
           HighsInt tmpi = Aindex[Aend[c.col] - 1];
           Avalue[Aend[c.col] - 1] = Avalue.at(indi);
           Aindex[Aend[c.col] - 1] = Aindex.at(indi);
@@ -3502,7 +3502,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         // sp case x disappears column representation change
         // here A is copied from AR array at end of presolve so need to expand x
         // column  Aend[c.col]++; wouldn't do because old value is overriden
-        double oldXvalue = postValue.top();
+        HighsFloat oldXvalue = postValue.top();
         postValue.pop();
         HighsInt x = c.col;
 
@@ -3549,15 +3549,15 @@ HighsPostsolveStatus Presolve::primalPostsolve(
       case kImpliedFreeSingCol: {
         // colDual rowDual already set.
         // calculate row value without xj
-        double aij = getaij(c.row, c.col);
-        double sum = 0;
+        HighsFloat aij = getaij(c.row, c.col);
+        HighsFloat sum = 0;
         for (HighsInt k = ARstart[c.row]; k < ARstart[c.row + 1]; ++k)
           if (flagCol.at(ARindex.at(k)))
             sum += valuePrimal.at(ARindex.at(k)) * ARvalue.at(k);
 
-        double rowlb = postValue.top();
+        HighsFloat rowlb = postValue.top();
         postValue.pop();
-        double rowub = postValue.top();
+        HighsFloat rowub = postValue.top();
         postValue.pop();
 
         // calculate xj
@@ -3566,7 +3566,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         else if (colCostAtEl[c.col] > 0) {
           // we are interested in the lowest possible value of x:
           // max { l_j, bound implied by row i }
-          double bndL;
+          HighsFloat bndL;
           if (aij > 0)
             bndL = (rowlb - sum) / aij;
           else
@@ -3575,14 +3575,14 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         } else if (colCostAtEl[c.col] < 0) {
           // we are interested in the highest possible value of x:
           // min { u_j, bound implied by row i }
-          double bndU;
+          HighsFloat bndU;
           if (aij < 0)
             bndU = (rowlb - sum) / aij;
           else
             bndU = (rowub - sum) / aij;
           valuePrimal[c.col] = min(colUpperOriginal[c.col], bndU);
         } else {  // cost is zero
-          double bndL, bndU;
+          HighsFloat bndL, bndU;
           if (aij > 0) {
             bndL = (rowlb - sum) / aij;
             bndU = (rowub - sum) / aij;
@@ -3590,8 +3590,8 @@ HighsPostsolveStatus Presolve::primalPostsolve(
             bndL = (rowub - sum) / aij;
             bndU = (rowlb - sum) / aij;
           }
-          double valuePrimalUB = min(colUpperOriginal[c.col], bndU);
-          double valuePrimalLB = max(colLowerOriginal[c.col], bndL);
+          HighsFloat valuePrimalUB = min(colUpperOriginal[c.col], bndU);
+          HighsFloat valuePrimalLB = max(colLowerOriginal[c.col], bndL);
           if (valuePrimalUB < valuePrimalLB - tol) {
             cout << "Postsolve error: inconsistent bounds for implied free "
                     "column singleton "
@@ -3605,7 +3605,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         }
         sum = sum + valuePrimal[c.col] * aij;
 
-        double costAtTimeOfElimination = postValue.top();
+        HighsFloat costAtTimeOfElimination = postValue.top();
         postValue.pop();
         objShift += (costAtTimeOfElimination * sum) / aij;
 
@@ -3616,46 +3616,46 @@ HighsPostsolveStatus Presolve::primalPostsolve(
       }
       case kSingColD0ublet0nIneq: {
         assert(false);
-        // column singleton in a doubleton equation.
+        // column singleton in a HighsFloatton equation.
         // colDual already set. need valuePrimal from stack. maybe change
         // rowDual depending on bounds. old bounds kept in oldBounds. variables
         // j,k : we eliminated j and are left with changed bounds on k and no
         // row. c.col is column COL (K) - eliminated, j is with new bounds
-        pair<HighsInt, vector<double>> p = oldBounds.top();
+        pair<HighsInt, vector<HighsFloat>> p = oldBounds.top();
         oldBounds.pop();
         const HighsInt j = p.first;
-        vector<double> v = p.second;
-        // double lbNew = v[0];
-        // double ubNew = v[1];
-        double cjNew = v[2];
+        vector<HighsFloat> v = p.second;
+        // HighsFloat lbNew = v[0];
+        // HighsFloat ubNew = v[1];
+        HighsFloat cjNew = v[2];
 
         p = oldBounds.top();
         oldBounds.pop();
         v = p.second;
-        double ubOld = v[1];
-        double lbOld = v[0];
-        double cjOld = v[2];
+        HighsFloat ubOld = v[1];
+        HighsFloat lbOld = v[0];
+        HighsFloat cjOld = v[2];
 
         p = oldBounds.top();
         oldBounds.pop();
         v = p.second;
-        double ubCOL = v[1];
-        double lbCOL = v[0];
-        double ck = v[2];
+        HighsFloat ubCOL = v[1];
+        HighsFloat lbCOL = v[0];
+        HighsFloat ck = v[2];
 
-        double rowlb = postValue.top();
+        HighsFloat rowlb = postValue.top();
         postValue.pop();
-        double rowub = postValue.top();
+        HighsFloat rowub = postValue.top();
         postValue.pop();
-        double aik = postValue.top();
+        HighsFloat aik = postValue.top();
         postValue.pop();
-        double aij = postValue.top();
+        HighsFloat aij = postValue.top();
         postValue.pop();
-        double xj = valuePrimal.at(j);
+        HighsFloat xj = valuePrimal.at(j);
 
         // calculate xk, depending on signs of coeff and cost
-        double upp = kHighsInf;
-        double low = -kHighsInf;
+        HighsFloat upp = kHighsInf;
+        HighsFloat low = -kHighsInf;
 
         if ((aij > 0 && aik > 0) || (aij < 0 && aik < 0)) {
           if (rowub < kHighsInf) upp = (rowub - aij * xj) / aik;
@@ -3665,7 +3665,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
           if (rowlb > -kHighsInf) low = (rowlb - aij * xj) / aik;
         }
 
-        double xkValue = 0;
+        HighsFloat xkValue = 0;
         if (ck == 0) {
           if (low < 0 && upp > 0)
             xkValue = 0;
@@ -3688,7 +3688,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         objShift += -cjNew * xj + cjOld * xj + ck * xkValue;
 
         // fix duals
-        double rowVal = aij * xj + aik * xkValue;
+        HighsFloat rowVal = aij * xj + aik * xkValue;
 
         // If row is strictly between bounds:
         // Row is basic and column is non basic.
@@ -3702,8 +3702,8 @@ HighsPostsolveStatus Presolve::primalPostsolve(
         } else {
           // row is at a bound
           // case fabs(rowlb - rowub) < tol
-          double lo = -kHighsInf;
-          double up = kHighsInf;
+          HighsFloat lo = -kHighsInf;
+          HighsFloat up = kHighsInf;
 
           if (fabs(rowub - rowVal) <= tol) {
             lo = 0;
@@ -3719,7 +3719,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
 
           // calculate yi
           if (lo - up > tol)
-            cout << "PR: Error in postsolving doubleton inequality " << c.row
+            cout << "PR: Error in postsolving HighsFloatton inequality " << c.row
                  << " : inconsistent bounds for its dual value." << std::endl;
 
           // WARNING: bound_row_dual not used. commented out to surpress warning
@@ -3727,7 +3727,7 @@ HighsPostsolveStatus Presolve::primalPostsolve(
           // again (todo)
           //
           //
-          // double bound_row_dual = 0;
+          // HighsFloat bound_row_dual = 0;
           // if (lo > 0) {
           //   bound_row_dual = lo;
           // } else if (up < 0) {
@@ -3923,7 +3923,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         if (iKKTcheck == 1) {
           if (chk2.print == 1)
             cout
-                << "----KKT check after doubleton equation re-introduced. Row: "
+                << "----KKT check after HighsFloatton equation re-introduced. Row: "
                 << c.row << ", column " << c.col << " -----\n";
           chk2.addChange(17, c.row, c.col, valuePrimal[c.col],
                          valueColDual[c.col], valueRowDual[c.row]);
@@ -3933,13 +3933,13 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         break;
       }
       case kD0ublet0nEquationRowBoundsUpdate: {
-        // new bounds from doubleton equation, retrieve old ones
+        // new bounds from HighsFloatton equation, retrieve old ones
         // just for KKT check, not called otherwise
         chk2.addChange(171, c.row, c.col, 0, 0, 0);
         break;
       }
       case kD0ublet0nEquationNewXNonzero: {
-        // matrix transformation from doubleton equation, case x still there
+        // matrix transformation from HighsFloatton equation, case x still there
         // case new x is not 0
         // just change value of entry in row for x
         HighsInt indi;
@@ -3957,7 +3957,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         break;
       }
       case kD0ublet0nEquationXZeroInitially: {
-        // matrix transformation from doubleton equation, retrieve old value
+        // matrix transformation from HighsFloatton equation, retrieve old value
         // case when row does not have x initially: entries for row i swap x and
         // y cols
 
@@ -3978,7 +3978,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // recover x: column decreases by 1
         // if indi is not Aend-1 swap elements indi and Aend-1
         if (indi != Aend[c.col] - 1) {
-          double tmp = Avalue[Aend[c.col] - 1];
+          HighsFloat tmp = Avalue[Aend[c.col] - 1];
           HighsInt tmpi = Aindex[Aend[c.col] - 1];
           Avalue[Aend[c.col] - 1] = Avalue.at(indi);
           Aindex[Aend[c.col] - 1] = Aindex.at(indi);
@@ -3999,10 +3999,10 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         Astart[yindex] = st;
         Aend[yindex] = Avalue.size();
 
-        double topp = postValue.top();
+        HighsFloat topp = postValue.top();
         postValue.pop();
         if (iKKTcheck == 1) {
-          chk2.addChange(173, c.row, c.col, topp, (double)yindex, 0);
+          chk2.addChange(173, c.row, c.col, topp, (HighsFloat)yindex, 0);
         }
 
         break;
@@ -4023,7 +4023,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // sp case x disappears column representation change
         // here A is copied from AR array at end of presolve so need to expand x
         // column  Aend[c.col]++; wouldn't do because old value is overriden
-        double oldXvalue = postValue.top();
+        HighsFloat oldXvalue = postValue.top();
         postValue.pop();
         HighsInt x = c.col;
 
@@ -4106,15 +4106,15 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
       case kImpliedFreeSingCol: {
         // colDual rowDual already set.
         // calculate row value without xj
-        double aij = getaij(c.row, c.col);
-        double sum = 0;
+        HighsFloat aij = getaij(c.row, c.col);
+        HighsFloat sum = 0;
         for (HighsInt k = ARstart[c.row]; k < ARstart[c.row + 1]; ++k)
           if (flagCol.at(ARindex.at(k)))
             sum += valuePrimal.at(ARindex.at(k)) * ARvalue.at(k);
 
-        double rowlb = postValue.top();
+        HighsFloat rowlb = postValue.top();
         postValue.pop();
-        double rowub = postValue.top();
+        HighsFloat rowub = postValue.top();
         postValue.pop();
 
         // calculate xj
@@ -4129,7 +4129,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         else if (colCostAtEl[c.col] > 0) {
           // we are interested in the lowest possible value of x:
           // max { l_j, bound implied by row i }
-          double bndL;
+          HighsFloat bndL;
           if (aij > 0)
             bndL = (rowlb - sum) / aij;
           else
@@ -4138,14 +4138,14 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         } else if (colCostAtEl[c.col] < 0) {
           // we are interested in the highest possible value of x:
           // min { u_j, bound implied by row i }
-          double bndU;
+          HighsFloat bndU;
           if (aij < 0)
             bndU = (rowlb - sum) / aij;
           else
             bndU = (rowub - sum) / aij;
           valuePrimal[c.col] = min(colUpperOriginal[c.col], bndU);
         } else {  // cost is zero
-          double bndL, bndU;
+          HighsFloat bndL, bndU;
           if (aij > 0) {
             bndL = (rowlb - sum) / aij;
             bndU = (rowub - sum) / aij;
@@ -4153,8 +4153,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
             bndL = (rowub - sum) / aij;
             bndU = (rowlb - sum) / aij;
           }
-          double valuePrimalUB = min(colUpperOriginal[c.col], bndU);
-          double valuePrimalLB = max(colLowerOriginal[c.col], bndL);
+          HighsFloat valuePrimalUB = min(colUpperOriginal[c.col], bndU);
+          HighsFloat valuePrimalLB = max(colLowerOriginal[c.col], bndL);
           if (valuePrimalUB < valuePrimalLB - tol) {
             cout << "Postsolve error: inconsistent bounds for implied free "
                     "column singleton "
@@ -4168,7 +4168,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         }
         sum = sum + valuePrimal[c.col] * aij;
 
-        double costAtTimeOfElimination = postValue.top();
+        HighsFloat costAtTimeOfElimination = postValue.top();
         postValue.pop();
         objShift += (costAtTimeOfElimination * sum) / aij;
 
@@ -4191,46 +4191,46 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         break;
       }
       case kSingColD0ublet0nIneq: {
-        // column singleton in a doubleton equation.
+        // column singleton in a HighsFloatton equation.
         // colDual already set. need valuePrimal from stack. maybe change
         // rowDual depending on bounds. old bounds kept in oldBounds. variables
         // j,k : we eliminated j and are left with changed bounds on k and no
         // row. c.col is column COL (K) - eliminated, j is with new bounds
-        pair<HighsInt, vector<double>> p = oldBounds.top();
+        pair<HighsInt, vector<HighsFloat>> p = oldBounds.top();
         oldBounds.pop();
         const HighsInt j = p.first;
-        vector<double> v = p.second;
-        // double lbNew = v[0];
-        // double ubNew = v[1];
-        double cjNew = v[2];
+        vector<HighsFloat> v = p.second;
+        // HighsFloat lbNew = v[0];
+        // HighsFloat ubNew = v[1];
+        HighsFloat cjNew = v[2];
 
         p = oldBounds.top();
         oldBounds.pop();
         v = p.second;
-        double ubOld = v[1];
-        double lbOld = v[0];
-        double cjOld = v[2];
+        HighsFloat ubOld = v[1];
+        HighsFloat lbOld = v[0];
+        HighsFloat cjOld = v[2];
 
         p = oldBounds.top();
         oldBounds.pop();
         v = p.second;
-        double ubCOL = v[1];
-        double lbCOL = v[0];
-        double ck = v[2];
+        HighsFloat ubCOL = v[1];
+        HighsFloat lbCOL = v[0];
+        HighsFloat ck = v[2];
 
-        double rowlb = postValue.top();
+        HighsFloat rowlb = postValue.top();
         postValue.pop();
-        double rowub = postValue.top();
+        HighsFloat rowub = postValue.top();
         postValue.pop();
-        double aik = postValue.top();
+        HighsFloat aik = postValue.top();
         postValue.pop();
-        double aij = postValue.top();
+        HighsFloat aij = postValue.top();
         postValue.pop();
-        double xj = valuePrimal.at(j);
+        HighsFloat xj = valuePrimal.at(j);
 
         // calculate xk, depending on signs of coeff and cost
-        double upp = kHighsInf;
-        double low = -kHighsInf;
+        HighsFloat upp = kHighsInf;
+        HighsFloat low = -kHighsInf;
 
         if ((aij > 0 && aik > 0) || (aij < 0 && aik < 0)) {
           if (rowub < kHighsInf) upp = (rowub - aij * xj) / aik;
@@ -4240,7 +4240,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           if (rowlb > -kHighsInf) low = (rowlb - aij * xj) / aik;
         }
 
-        double xkValue = 0;
+        HighsFloat xkValue = 0;
         if (ck == 0) {
           if (low < 0 && upp > 0)
             xkValue = 0;
@@ -4263,7 +4263,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         objShift += -cjNew * xj + cjOld * xj + ck * xkValue;
 
         // fix duals
-        double rowVal = aij * xj + aik * xkValue;
+        HighsFloat rowVal = aij * xj + aik * xkValue;
 
         // If row is strictly between bounds:
         // Row is basic and column is non basic.
@@ -4277,8 +4277,8 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         } else {
           // row is at a bound
           // case fabs(rowlb - rowub) < tol
-          double lo = -kHighsInf;
-          double up = kHighsInf;
+          HighsFloat lo = -kHighsInf;
+          HighsFloat up = kHighsInf;
 
           if (fabs(rowub - rowVal) <= tol) {
             lo = 0;
@@ -4294,7 +4294,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
 
           // calculate yi
           if (lo - up > tol)
-            cout << "PR: Error in postsolving doubleton inequality " << c.row
+            cout << "PR: Error in postsolving HighsFloatton inequality " << c.row
                  << " : inconsistent bounds for its dual value." << std::endl;
 
           // WARNING: bound_row_dual not used. commented out to surpress warning
@@ -4302,7 +4302,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           // again (todo)
           //
           //
-          // double bound_row_dual = 0;
+          // HighsFloat bound_row_dual = 0;
           // if (lo > 0) {
           //   bound_row_dual = lo;
           // } else if (up < 0) {
@@ -4338,7 +4338,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         if (iKKTcheck == 1) {
           if (chk2.print == 1)
             cout << "----KKT check after col singleton " << c.col
-                 << " in doubleton ineq re-introduced. Row: " << c.row
+                 << " in HighsFloatton ineq re-introduced. Row: " << c.row
                  << " -----\n";
 
           chk2.addChange(5, c.row, c.col, valuePrimal[c.col],
@@ -4353,7 +4353,7 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
       case kWeaklyDominatedCols: {
         // got valuePrimal, need colDual
         if (c.type != kEmptyCol) {
-          double z = colCostAtEl[c.col];
+          HighsFloat z = colCostAtEl[c.col];
           for (HighsInt k = Astart[c.col]; k < Astart[c.col + 1]; ++k)
             if (flagRow.at(Aindex.at(k)))
               z = z + valueRowDual.at(Aindex.at(k)) * Avalue.at(k);
@@ -4584,19 +4584,19 @@ void Presolve::setBasisElement(change c) {
  * lo and up refer to the place storing the current bounds on y_row
  *
  */
-void Presolve::getBoundOnLByZj(HighsInt row, HighsInt j, double* lo, double* up,
-                               double colLow, double colUpp) {
-  double cost = colCostAtEl.at(j);  // valueColDual.at(j);
-  double x = -cost;
+void Presolve::getBoundOnLByZj(HighsInt row, HighsInt j, HighsFloat* lo, HighsFloat* up,
+                               HighsFloat colLow, HighsFloat colUpp) {
+  HighsFloat cost = colCostAtEl.at(j);  // valueColDual.at(j);
+  HighsFloat x = -cost;
 
-  double sum = 0;
+  HighsFloat sum = 0;
   for (HighsInt kk = Astart.at(j); kk < Aend.at(j); ++kk)
     if (flagRow.at(Aindex.at(kk))) {
       sum = sum + Avalue.at(kk) * valueRowDual.at(Aindex.at(kk));
     }
   x = x - sum;
 
-  double aij = getaij(row, j);
+  HighsFloat aij = getaij(row, j);
   x = x / aij;
 
   if (fabs(colLow - colUpp) < tol)
@@ -4622,10 +4622,10 @@ void Presolve::getBoundOnLByZj(HighsInt row, HighsInt j, double* lo, double* up,
  * returns z_col
  * z = A'y + c
  */
-double Presolve::getColumnDualPost(HighsInt col) {
+HighsFloat Presolve::getColumnDualPost(HighsInt col) {
   HighsInt row;
-  double z;
-  double sum = 0;
+  HighsFloat z;
+  HighsFloat sum = 0;
   for (HighsInt cnt = Astart.at(col); cnt < Aend.at(col); cnt++)
     if (flagRow.at(Aindex.at(cnt))) {
       row = Aindex.at(cnt);
@@ -4641,8 +4641,8 @@ double Presolve::getColumnDualPost(HighsInt col) {
  * returns y_row = -(A'y      +   c   - z )/a_rowcol
  *               (except row)  (at el)
  */
-double Presolve::getRowDualPost(HighsInt row, HighsInt col) {
-  double x = 0;
+HighsFloat Presolve::getRowDualPost(HighsInt row, HighsInt col) {
+  HighsFloat x = 0;
 
   for (HighsInt kk = Astart.at(col); kk < Aend.at(col); ++kk)
     if (flagRow.at(Aindex.at(kk)) && Aindex.at(kk) != row)
@@ -4650,34 +4650,34 @@ double Presolve::getRowDualPost(HighsInt row, HighsInt col) {
 
   x = x + colCostAtEl.at(col) - valueColDual.at(col);
 
-  double y = getaij(row, col);
+  HighsFloat y = getaij(row, col);
   return -x / y;
 }
 
 string Presolve::getDualsForcingRow(HighsInt row, vector<HighsInt>& fRjs) {
-  double z;
+  HighsFloat z;
   stringstream ss;
   HighsInt j;
 
-  double lo = -kHighsInf;
-  double up = kHighsInf;
+  HighsFloat lo = -kHighsInf;
+  HighsFloat up = kHighsInf;
   HighsInt lo_col = -1;
   HighsInt up_col = -1;
 
-  double cost, sum;
+  HighsFloat cost, sum;
 
   for (size_t jj = 0; jj < fRjs.size(); ++jj) {
     j = fRjs[jj];
 
-    pair<HighsInt, vector<double>> p = oldBounds.top();
-    vector<double> v = get<1>(p);
+    pair<HighsInt, vector<HighsFloat>> p = oldBounds.top();
+    vector<HighsFloat> v = get<1>(p);
     oldBounds.pop();
-    double colLow = v[0];
-    double colUpp = v[1];
+    HighsFloat colLow = v[0];
+    HighsFloat colUpp = v[1];
 
     // calculate bound x imposed by zj
-    double save_lo = lo;
-    double save_up = up;
+    HighsFloat save_lo = lo;
+    HighsFloat save_up = up;
     getBoundOnLByZj(row, j, &lo, &up, colLow, colUpp);
     if (lo > save_lo) lo_col = j;
     if (up < save_up) up_col = j;
@@ -4738,20 +4738,20 @@ string Presolve::getDualsForcingRow(HighsInt row, vector<HighsInt>& fRjs) {
 }
 
 void Presolve::getDualsSingletonRow(const HighsInt row, const HighsInt col) {
-  pair<HighsInt, vector<double>> bnd = oldBounds.top();
+  pair<HighsInt, vector<HighsFloat>> bnd = oldBounds.top();
   oldBounds.pop();
 
   valueRowDual.at(row) = 0;
 
-  const double cost = postValue.top();
+  const HighsFloat cost = postValue.top();
   postValue.pop();
   colCostAtEl[col] = cost;
 
-  const double aij = getaij(row, col);
-  const double l = (get<1>(bnd))[0];
-  const double u = (get<1>(bnd))[1];
-  const double lrow = (get<1>(bnd))[2];
-  const double urow = (get<1>(bnd))[3];
+  const HighsFloat aij = getaij(row, col);
+  const HighsFloat l = (get<1>(bnd))[0];
+  const HighsFloat u = (get<1>(bnd))[1];
+  const HighsFloat lrow = (get<1>(bnd))[2];
+  const HighsFloat urow = (get<1>(bnd))[3];
 
   flagRow.at(row) = 1;
 
@@ -4775,9 +4775,9 @@ void Presolve::getDualsSingletonRow(const HighsInt row, const HighsInt col) {
       const bool isRowAtLB = fabs(aij * valuePrimal[col] - lrow) < tol;
       const bool isRowAtUB = fabs(aij * valuePrimal[col] - urow) < tol;
 
-      const double save_dual = valueColDual[col];
+      const HighsFloat save_dual = valueColDual[col];
       valueColDual[col] = 0;
-      const double row_dual = getRowDualPost(row, col);
+      const HighsFloat row_dual = getRowDualPost(row, col);
 
       if ((isRowAtLB && !isRowAtUB && row_dual > 0) ||
           (!isRowAtLB && isRowAtUB && row_dual < 0) ||
@@ -4814,39 +4814,39 @@ void Presolve::getDualsD0ublet0nEquation(const HighsInt row,
 
   constexpr bool report = false;
 
-  pair<HighsInt, vector<double>> p = oldBounds.top();
+  pair<HighsInt, vector<HighsFloat>> p = oldBounds.top();
   oldBounds.pop();
-  vector<double> v = get<1>(p);
+  vector<HighsFloat> v = get<1>(p);
   const HighsInt x = get<0>(p);
   assert(x >= 0 && x <= numColOriginal);
-  const double ubxNew = v[1];
-  const double lbxNew = v[0];
-  const double cxNew = v[2];
+  const HighsFloat ubxNew = v[1];
+  const HighsFloat lbxNew = v[0];
+  const HighsFloat cxNew = v[2];
 
   p = oldBounds.top();
   oldBounds.pop();
   v = get<1>(p);
-  const double ubxOld = v[1];
-  const double lbxOld = v[0];
-  const double cxOld = v[2];
+  const HighsFloat ubxOld = v[1];
+  const HighsFloat lbxOld = v[0];
+  const HighsFloat cxOld = v[2];
 
   p = oldBounds.top();
   oldBounds.pop();
   v = get<1>(p);
-  const double uby = v[1];
-  const double lby = v[0];
-  const double cy = v[2];
+  const HighsFloat uby = v[1];
+  const HighsFloat lby = v[0];
+  const HighsFloat cy = v[2];
 
   const HighsInt y = col;
   assert(y >= 0 && y <= numColOriginal);
 
-  const double b = postValue.top();
+  const HighsFloat b = postValue.top();
   postValue.pop();
-  const double aky = postValue.top();
+  const HighsFloat aky = postValue.top();
   postValue.pop();
-  const double akx = postValue.top();
+  const HighsFloat akx = postValue.top();
   postValue.pop();
-  const double valueX = valuePrimal.at(x);
+  const HighsFloat valueX = valuePrimal.at(x);
 
   // primal value and objective shift
   valuePrimal.at(y) = (b - akx * valueX) / aky;

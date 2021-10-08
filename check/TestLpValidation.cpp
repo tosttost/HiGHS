@@ -19,11 +19,11 @@ TEST_CASE("LP-validation", "[highs_data]") {
   const HighsInt avgas_num_row = 10;
   HighsInt num_row = 0;
   HighsInt num_row_nz = 0;
-  vector<double> rowLower;
-  vector<double> rowUpper;
+  vector<HighsFloat> rowLower;
+  vector<HighsFloat> rowUpper;
   vector<HighsInt> ARstart;
   vector<HighsInt> ARindex;
-  vector<double> ARvalue;
+  vector<HighsFloat> ARvalue;
 
   for (HighsInt row = 0; row < avgas_num_row; row++) {
     avgas.row(row, num_row, num_row_nz, rowLower, rowUpper, ARstart, ARindex,
@@ -32,12 +32,12 @@ TEST_CASE("LP-validation", "[highs_data]") {
 
   HighsInt num_col = 0;
   HighsInt num_col_nz = 0;
-  vector<double> colCost;
-  vector<double> colLower;
-  vector<double> colUpper;
+  vector<HighsFloat> colCost;
+  vector<HighsFloat> colLower;
+  vector<HighsFloat> colUpper;
   vector<HighsInt> Astart;
   vector<HighsInt> Aindex;
-  vector<double> Avalue;
+  vector<HighsFloat> Avalue;
   for (HighsInt col = 0; col < avgas_num_col; col++) {
     avgas.col(col, num_col, num_col_nz, colCost, colLower, colUpper, Astart,
               Aindex, Avalue);
@@ -47,7 +47,7 @@ TEST_CASE("LP-validation", "[highs_data]") {
   REQUIRE(return_status == HighsStatus::kOk);
   //  reportLp(lp, HighsLogType::kVerbose);
 
-  const double my_infinity = 1e30;
+  const HighsFloat my_infinity = 1e30;
   Highs highs;
   highs.passOptions(options);
 
@@ -64,19 +64,19 @@ TEST_CASE("LP-validation", "[highs_data]") {
   // Create an empty column
   HighsInt XnumNewCol = 1;
   HighsInt XnumNewNZ = 0;
-  vector<double> XcolCost;
+  vector<HighsFloat> XcolCost;
   XcolCost.resize(XnumNewCol);
   XcolCost[0] = 1;
-  vector<double> XcolLower;
+  vector<HighsFloat> XcolLower;
   XcolLower.resize(XnumNewCol);
   XcolLower[0] = 0;
-  vector<double> XcolUpper;
+  vector<HighsFloat> XcolUpper;
   XcolUpper.resize(XnumNewCol);
   XcolUpper[0] = 1e25;
   vector<HighsInt> XAstart;
   XAstart.resize(XnumNewCol);
   vector<HighsInt> XAindex;
-  vector<double> XAvalue;
+  vector<HighsFloat> XAvalue;
   // Add an empty column
   return_status =
       highs.addCols(XnumNewCol, &XcolCost[0], &XcolLower[0], &XcolUpper[0],
@@ -196,7 +196,7 @@ TEST_CASE("LP-validation", "[highs_data]") {
   if (!dev_run) highs.setOptionValue("output_flag", false);
 
   const HighsLp& internal_lp = highs.getLp();
-  double check_value;
+  HighsFloat check_value;
   REQUIRE(highs.getCoeff(-1, 0, check_value) == HighsStatus::kError);
   REQUIRE(highs.getCoeff(0, -1, check_value) == HighsStatus::kError);
   REQUIRE(highs.getCoeff(internal_lp.num_row_, 0, check_value) ==
@@ -210,7 +210,7 @@ TEST_CASE("LP-validation", "[highs_data]") {
           HighsStatus::kOk);
   REQUIRE(check_value == 0);
 
-  const double value = -3;
+  const HighsFloat value = -3;
   REQUIRE(highs.getCoeff(check_row, check_col, check_value) ==
           HighsStatus::kOk);
   REQUIRE(check_value == value);
@@ -237,7 +237,7 @@ TEST_CASE("LP-validation", "[highs_data]") {
   REQUIRE(highs.changeCoeff(0, internal_lp.num_col_, check_value) ==
           HighsStatus::kError);
 
-  const double to_value = 99;
+  const HighsFloat to_value = 99;
   REQUIRE(highs.changeCoeff(check_row, check_col, to_value) ==
           HighsStatus::kOk);
   REQUIRE(highs.getCoeff(check_row, check_col, check_value) ==

@@ -42,7 +42,7 @@ HighsDebugStatus debugWorseStatus(const HighsDebugStatus status0,
       std::max((HighsInt)status0, (HighsInt)status1));
 }
 
-bool debugVectorRightSize(const std::vector<double> v,
+bool debugVectorRightSize(const std::vector<HighsFloat> v,
                           const HighsInt right_size) {
   const HighsInt v_size = v.size();
   const bool is_right_size = v_size == right_size;

@@ -23,19 +23,19 @@
 
 // Analyse lower and upper bounds of a model
 void analyseModelBounds(const HighsLogOptions& log_options, const char* message,
-                        HighsInt numBd, const std::vector<double>& lower,
-                        const std::vector<double>& upper);
+                        HighsInt numBd, const std::vector<HighsFloat>& lower,
+                        const std::vector<HighsFloat>& upper);
 void writeModelBoundSolution(FILE* file, const bool columns, const HighsInt dim,
-                             const std::vector<double>& lower,
-                             const std::vector<double>& upper,
+                             const std::vector<HighsFloat>& lower,
+                             const std::vector<HighsFloat>& upper,
                              const std::vector<std::string>& names,
-                             const std::vector<double>& primal,
-                             const std::vector<double>& dual,
+                             const std::vector<HighsFloat>& primal,
+                             const std::vector<HighsFloat>& dual,
                              const std::vector<HighsBasisStatus>& status);
 void writeModelSolution(FILE* file, const HighsOptions& options,
-                        const double solutionObjective, const HighsInt dim,
+                        const HighsFloat solutionObjective, const HighsInt dim,
                         const std::vector<std::string>& names,
-                        const std::vector<double>& primal,
+                        const std::vector<HighsFloat>& primal,
                         const std::vector<HighsVarType>& integrality);
 bool hasNamesWithSpaces(const HighsLogOptions& log_options,
                         const HighsInt num_name,
@@ -48,8 +48,8 @@ HighsStatus normaliseNames(const HighsLogOptions& log_options,
                            HighsInt& max_name_length);
 
 HighsBasisStatus checkedVarHighsNonbasicStatus(
-    const HighsBasisStatus ideal_status, const double lower,
-    const double upper);
+    const HighsBasisStatus ideal_status, const HighsFloat lower,
+    const HighsFloat upper);
 
 std::string utilModelStatusToString(const HighsModelStatus model_status);
 
@@ -61,6 +61,6 @@ std::string utilBasisValidityToString(const HighsInt basis_validity);
 
 HighsStatus highsStatusFromHighsModelStatus(HighsModelStatus model_status);
 
-std::string statusToString(const HighsBasisStatus status, const double lower,
-                           const double upper);
+std::string statusToString(const HighsBasisStatus status, const HighsFloat lower,
+                           const HighsFloat upper);
 #endif

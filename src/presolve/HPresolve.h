@@ -45,7 +45,7 @@ class HPresolve {
   HighsMipSolver* mipsolver = nullptr;
 
   // triplet storage
-  std::vector<double> Avalue;
+  std::vector<HighsFloat> Avalue;
   std::vector<HighsInt> Arow;
   std::vector<HighsInt> Acol;
 
@@ -73,14 +73,14 @@ class HPresolve {
 
   // vectors holding implied bounds on primal and dual variables as well as
   // their origins
-  std::vector<double> implColLower;
-  std::vector<double> implColUpper;
+  std::vector<HighsFloat> implColLower;
+  std::vector<HighsFloat> implColUpper;
   std::vector<HighsInt> colLowerSource;
   std::vector<HighsInt> colUpperSource;
-  std::vector<double> rowDualLower;
-  std::vector<double> rowDualUpper;
-  std::vector<double> implRowDualLower;
-  std::vector<double> implRowDualUpper;
+  std::vector<HighsFloat> rowDualLower;
+  std::vector<HighsFloat> rowDualUpper;
+  std::vector<HighsFloat> implRowDualLower;
+  std::vector<HighsFloat> implRowDualUpper;
   std::vector<HighsInt> rowDualLowerSource;
   std::vector<HighsInt> rowDualUpperSource;
 
@@ -146,15 +146,15 @@ class HPresolve {
 
   void markChangedCol(HighsInt col);
 
-  double getMaxAbsColVal(HighsInt col) const;
+  HighsFloat getMaxAbsColVal(HighsInt col) const;
 
-  double getMaxAbsRowVal(HighsInt row) const;
+  HighsFloat getMaxAbsRowVal(HighsInt row) const;
 
-  void updateColImpliedBounds(HighsInt row, HighsInt col, double val);
+  void updateColImpliedBounds(HighsInt row, HighsInt col, HighsFloat val);
 
-  void updateRowDualImpliedBounds(HighsInt row, HighsInt col, double val);
+  void updateRowDualImpliedBounds(HighsInt row, HighsInt col, HighsFloat val);
 
-  bool rowCoefficientsIntegral(HighsInt row, double scale) const;
+  bool rowCoefficientsIntegral(HighsInt row, HighsFloat scale) const;
 
   bool isImpliedFree(HighsInt col) const;
 
@@ -179,18 +179,18 @@ class HPresolve {
 
   HighsInt findNonzero(HighsInt row, HighsInt col);
 
-  void fromCSC(const std::vector<double>& Aval,
+  void fromCSC(const std::vector<HighsFloat>& Aval,
                const std::vector<HighsInt>& Aindex,
                const std::vector<HighsInt>& Astart);
 
-  void fromCSR(const std::vector<double>& ARval,
+  void fromCSR(const std::vector<HighsFloat>& ARval,
                const std::vector<HighsInt>& ARindex,
                const std::vector<HighsInt>& ARstart);
 
-  void toCSC(std::vector<double>& Aval, std::vector<HighsInt>& Aindex,
+  void toCSC(std::vector<HighsFloat>& Aval, std::vector<HighsInt>& Aindex,
              std::vector<HighsInt>& Astart);
 
-  void toCSR(std::vector<double>& ARval, std::vector<HighsInt>& ARindex,
+  void toCSR(std::vector<HighsFloat>& ARval, std::vector<HighsInt>& ARindex,
              std::vector<HighsInt>& ARstart);
 
   void storeRow(HighsInt row);
@@ -214,30 +214,30 @@ class HPresolve {
   void fixColToZero(HighsPostsolveStack& postsolveStack, HighsInt col);
 
   void transformColumn(HighsPostsolveStack& postSolveStack, HighsInt col,
-                       double scale, double constant);
+                       HighsFloat scale, HighsFloat constant);
 
-  void scaleRow(HighsInt row, double scale, bool integral = false);
+  void scaleRow(HighsInt row, HighsFloat scale, bool integral = false);
 
-  void scaleStoredRow(HighsInt row, double scale, bool integral = false);
+  void scaleStoredRow(HighsInt row, HighsFloat scale, bool integral = false);
 
-  void substitute(HighsInt row, HighsInt col, double rhs);
+  void substitute(HighsInt row, HighsInt col, HighsFloat rhs);
 
-  void changeColUpper(HighsInt col, double newUpper);
+  void changeColUpper(HighsInt col, HighsFloat newUpper);
 
-  void changeColLower(HighsInt col, double newLower);
+  void changeColLower(HighsInt col, HighsFloat newLower);
 
-  void changeRowDualUpper(HighsInt row, double newUpper);
+  void changeRowDualUpper(HighsInt row, HighsFloat newUpper);
 
-  void changeRowDualLower(HighsInt row, double newLower);
+  void changeRowDualLower(HighsInt row, HighsFloat newLower);
 
-  void changeImplColUpper(HighsInt col, double newUpper, HighsInt originRow);
+  void changeImplColUpper(HighsInt col, HighsFloat newUpper, HighsInt originRow);
 
-  void changeImplColLower(HighsInt col, double newLower, HighsInt originRow);
+  void changeImplColLower(HighsInt col, HighsFloat newLower, HighsInt originRow);
 
-  void changeImplRowDualUpper(HighsInt row, double newUpper,
+  void changeImplRowDualUpper(HighsInt row, HighsFloat newUpper,
                               HighsInt originCol);
 
-  void changeImplRowDualLower(HighsInt row, double newLower,
+  void changeImplRowDualLower(HighsInt row, HighsFloat newLower,
                               HighsInt originCol);
 
   void scaleMIP(HighsPostsolveStack& postSolveStack);
@@ -252,7 +252,7 @@ class HPresolve {
 
   void storeCurrentProblemSize();
 
-  double problemSizeReduction();
+  HighsFloat problemSizeReduction();
 
  public:
   // for LP presolve
@@ -270,13 +270,13 @@ class HPresolve {
 
   void shrinkProblem(HighsPostsolveStack& postSolveStack);
 
-  void addToMatrix(HighsInt row, HighsInt col, double val);
+  void addToMatrix(HighsInt row, HighsInt col, HighsFloat val);
 
   Result runProbing(HighsPostsolveStack& postSolveStack);
 
   Result dominatedColumns(HighsPostsolveStack& postSolveStack);
 
-  Result doubletonEq(HighsPostsolveStack& postSolveStack, HighsInt row);
+  Result HighsFloattonEq(HighsPostsolveStack& postSolveStack, HighsInt row);
 
   Result singletonRow(HighsPostsolveStack& postSolveStack, HighsInt row);
 
@@ -299,8 +299,8 @@ class HPresolve {
                                  std::vector<HighsInt>& flagCol,
                                  size_t& numreductions);
 
-  void substitute(HighsInt substcol, HighsInt staycol, double offset,
-                  double scale);
+  void substitute(HighsInt substcol, HighsInt staycol, HighsFloat offset,
+                  HighsFloat scale);
 
   void removeFixedCol(HighsInt col);
 

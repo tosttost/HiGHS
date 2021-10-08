@@ -31,7 +31,7 @@ void HSimplexNla::setup(const HighsLp* lp, HighsInt* base_index,
                         const HighsOptions* options, HighsTimer* timer,
                         HighsSimplexAnalysis* analysis,
                         const HighsSparseMatrix* factor_a_matrix,
-                        const double factor_pivot_threshold) {
+                        const HighsFloat factor_pivot_threshold) {
   this->setLpAndScalePointers(lp);
   this->base_index_ = base_index;
   this->options_ = options;
@@ -102,7 +102,7 @@ HighsInt HSimplexNla::invert() {
   return rank_deficiency;
 }
 
-void HSimplexNla::btran(HVector& rhs, const double expected_density,
+void HSimplexNla::btran(HVector& rhs, const HighsFloat expected_density,
                         HighsTimerClock* factor_timer_clock_pointer) const {
   applyBasisMatrixColScale(rhs);
   frozenBtran(rhs);
@@ -110,7 +110,7 @@ void HSimplexNla::btran(HVector& rhs, const double expected_density,
   applyBasisMatrixRowScale(rhs);
 }
 
-void HSimplexNla::ftran(HVector& rhs, const double expected_density,
+void HSimplexNla::ftran(HVector& rhs, const HighsFloat expected_density,
                         HighsTimerClock* factor_timer_clock_pointer) const {
   applyBasisMatrixRowScale(rhs);
   factor_.ftranCall(rhs, expected_density, factor_timer_clock_pointer);
@@ -176,7 +176,7 @@ void HSimplexNla::transformForUpdate(HVector* aq, HVector* ep,
   // CB
   //
   reportPackValue("pack aq Bf ", aq);
-  double scale_factor;
+  HighsFloat scale_factor;
   if (variable_in < lp_->num_col_) {
     scale_factor = scale_->col[variable_in];
   } else {
@@ -207,14 +207,14 @@ void HSimplexNla::transformForUpdate(HVector* aq, HVector* ep,
     ep->packValue[ix] /= scale_factor;
 }
 
-void HSimplexNla::setPivotThreshold(const double new_pivot_threshold) {
+void HSimplexNla::setPivotThreshold(const HighsFloat new_pivot_threshold) {
   factor_.setPivotThreshold(new_pivot_threshold);
 }
 
 void HSimplexNla::applyBasisMatrixRowScale(HVector& rhs) const {
   if (scale_ == NULL) return;
-  const vector<double>& col_scale = scale_->col;
-  const vector<double>& row_scale = scale_->row;
+  const vector<HighsFloat>& col_scale = scale_->col;
+  const vector<HighsFloat>& row_scale = scale_->row;
   HighsInt to_entry;
   const bool use_row_indices =
       sparseLoopStyle(rhs.count, lp_->num_row_, to_entry);
@@ -231,8 +231,8 @@ void HSimplexNla::applyBasisMatrixRowScale(HVector& rhs) const {
 
 void HSimplexNla::applyBasisMatrixColScale(HVector& rhs) const {
   if (scale_ == NULL) return;
-  const vector<double>& col_scale = scale_->col;
-  const vector<double>& row_scale = scale_->row;
+  const vector<HighsFloat>& col_scale = scale_->col;
+  const vector<HighsFloat>& row_scale = scale_->row;
   HighsInt to_entry;
   const bool use_row_indices =
       sparseLoopStyle(rhs.count, lp_->num_row_, to_entry);
@@ -278,7 +278,7 @@ bool HSimplexNla::sparseLoopStyle(const HighsInt count, const HighsInt dim,
                                   HighsInt& to_entry) const {
   // Parameter to decide whether to use just the values in a HVector, or
   // use the indices of their nonzeros
-  const double density_for_indexing = 0.4;
+  const HighsFloat density_for_indexing = 0.4;
   const bool use_indices = count >= 0 && count < density_for_indexing * dim;
   if (use_indices) {
     to_entry = count;
@@ -360,7 +360,7 @@ HighsDebugStatus HSimplexNla::debugCheckData(const std::string message) const {
   bool error_found = false;
   const HighsInt* factor_Astart = factor_.getAstart();
   const HighsInt* factor_Aindex = factor_.getAindex();
-  const double* factor_Avalue = factor_.getAvalue();
+  const HighsFloat* factor_Avalue = factor_.getAvalue();
 
   if (scale_ == NULL) {
     if (factor_Astart != &(lp_->a_matrix_.start_[0])) error0_found = true;

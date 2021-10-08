@@ -12,7 +12,7 @@ struct IterationCount {
 void testSolver(Highs& highs, const std::string solver,
                 IterationCount& default_iteration_count,
                 const HighsInt int_simplex_strategy = 0) {
-  double default_time_limit;
+  HighsFloat default_time_limit;
   HighsInt default_simplex_iteration_limit;
   HighsInt default_ipm_iteration_limit;
   HighsModelStatus model_status;
@@ -53,10 +53,10 @@ void testSolver(Highs& highs, const std::string solver,
   }
 
   // Vanilla solve: get solution time to calibrate time limit test
-  double run_time = highs.getRunTime();
+  HighsFloat run_time = highs.getRunTime();
   return_status = highs.run();
   REQUIRE(return_status == HighsStatus::kOk);
-  const double single_solve_run_time = highs.getRunTime() - run_time;
+  const HighsFloat single_solve_run_time = highs.getRunTime() - run_time;
 
   if (use_simplex) {
     REQUIRE(info.simplex_iteration_count == default_iteration_count.simplex);
@@ -70,16 +70,16 @@ void testSolver(Highs& highs, const std::string solver,
   }
 
   // Only perform the time limit test if the solve time is large enough
-  const double min_run_time_for_test = 0.001;
+  const HighsFloat min_run_time_for_test = 0.001;
   if (perform_timeout_test && single_solve_run_time > min_run_time_for_test) {
     const HighsInt ideal_num_solve = 10;
-    const double local_time_limit = ideal_num_solve * single_solve_run_time;
+    const HighsFloat local_time_limit = ideal_num_solve * single_solve_run_time;
 
     // Solve with time limit
     run_time = highs.getRunTime();
     if (dev_run) printf("Current run time is %g\n", run_time);
 
-    double use_time_limit = run_time + local_time_limit;
+    HighsFloat use_time_limit = run_time + local_time_limit;
     return_status = highs.setOptionValue("time_limit", use_time_limit);
     REQUIRE(return_status == HighsStatus::kOk);
 
@@ -309,12 +309,12 @@ TEST_CASE("dual-objective-upper-bound", "[highs_lp_solver]") {
   HighsStatus status;
   HighsModelStatus model_status;
   bool bool_status;
-  const double min_objective_function_value = -11.6389290663705;
-  const double max_objective_function_value = 111.650960689315;
-  const double smaller_min_objective_bound = -110.0;
-  const double larger_min_objective_bound = -45.876;
-  const double use_max_objective_bound = 150.0;
-  double save_objective_bound;
+  const HighsFloat min_objective_function_value = -11.6389290663705;
+  const HighsFloat max_objective_function_value = 111.650960689315;
+  const HighsFloat smaller_min_objective_bound = -110.0;
+  const HighsFloat larger_min_objective_bound = -45.876;
+  const HighsFloat use_max_objective_bound = 150.0;
+  HighsFloat save_objective_bound;
   Highs highs;
   if (!dev_run) highs.setOptionValue("output_flag", false);
   const HighsInfo& info = highs.getInfo();
@@ -322,7 +322,7 @@ TEST_CASE("dual-objective-upper-bound", "[highs_lp_solver]") {
   //  status = highs.setOptionValue("log_dev_level",
   //  kHighsLogDevLevelVerbose);
 
-  double error;
+  HighsFloat error;
   filename = std::string(HIGHS_DIR) + "/check/instances/e226.mps";
   status = highs.readModel(filename);
   REQUIRE(status == HighsStatus::kOk);

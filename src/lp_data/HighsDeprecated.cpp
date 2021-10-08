@@ -29,7 +29,7 @@ HighsStatus Highs::setHighsOptionValue(const std::string& option,
 }
 
 HighsStatus Highs::setHighsOptionValue(const std::string& option,
-                                       const double value) {
+                                       const HighsFloat value) {
   deprecationMessage("setHighsOptionValue", "setOptionValue");
   return setOptionValue(option, value);
 }
@@ -68,7 +68,7 @@ HighsStatus Highs::getHighsOptionValue(const std::string& option,
 }
 
 HighsStatus Highs::getHighsOptionValue(const std::string& option,
-                                       double& value) {
+                                       HighsFloat& value) {
   deprecationMessage("getHighsOptionValue", "getOptionValue");
   return getOptionValue(option, value);
 }
@@ -124,7 +124,7 @@ HighsStatus Highs::getHighsInfoValue(const std::string& info, HighsInt& value) {
 }
 
 HighsStatus Highs::getHighsInfoValue(const std::string& info,
-                                     double& value) const {
+                                     HighsFloat& value) const {
   deprecationMessage("getHighsInfoValue", "getInfoValue");
   return getInfoValue(info, value);
 }
@@ -134,12 +134,12 @@ HighsStatus Highs::writeHighsInfo(const std::string filename) {
   return writeInfo(filename);
 }
 
-double Highs::getHighsInfinity() {
+HighsFloat Highs::getHighsInfinity() {
   deprecationMessage("getHighsInfinity", "getInfinity");
   return getInfinity();
 }
 
-double Highs::getHighsRunTime() {
+HighsFloat Highs::getHighsRunTime() {
   deprecationMessage("getHighsRunTime", "getRunTime");
   return getRunTime();
 }

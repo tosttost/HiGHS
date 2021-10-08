@@ -102,7 +102,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       assert(pivot_k >= 0);
       // Check that the pivot isn't too small. Shouldn't happen since
       // this is refactorization
-      double abs_pivot = std::fabs(Avalue[pivot_k]);
+      HighsFloat abs_pivot = std::fabs(Avalue[pivot_k]);
       assert(abs_pivot >= pivot_tolerance);
       if (abs_pivot < pivot_tolerance) {
         rank_deficiency = nwork + 1;
@@ -111,7 +111,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       if (pivot_type == kPivotRowSingleton) {
         //
         // 2.2 Deal with row singleton
-        const double pivotX = 1 / Avalue[pivot_k];
+        const HighsFloat pivotX = 1 / Avalue[pivot_k];
         if (report_singletons)
           printf("Stage %d: Row singleton (%4d, %g)\n", (int)iK, (int)pivot_k,
                  pivotX);
@@ -212,7 +212,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
     vector<bool> not_in_bump = has_pivot;
     // Monitor density of FtranL result to possibly switch from exploiting
     // hyper-sparsity
-    double expected_density = 0.0;
+    HighsFloat expected_density = 0.0;
     // Initialise a HVector in which the L and U entries of the
     // pivotal column will be formed
     HVector column;
@@ -242,7 +242,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       // Perform FtranL, but don't time it!
       ftranL(column, expected_density);
       // Update the running average density
-      double local_density = (1.0 * column.count) / numRow;
+      HighsFloat local_density = (1.0 * column.count) / numRow;
       expected_density = kRunningAverageMultiplier * local_density +
                          (1 - kRunningAverageMultiplier) * expected_density;
       // Strip out small values
@@ -262,13 +262,13 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
       assert(pivot_k >= 0);
       // Check that the pivot isn't too small. Shouldn't happen since
       // this is refactorization
-      double abs_pivot = std::fabs(column.array[iRow]);
+      HighsFloat abs_pivot = std::fabs(column.array[iRow]);
       assert(abs_pivot >= pivot_tolerance);
       if (abs_pivot < pivot_tolerance) {
         rank_deficiency = numRow - iK;
         return rank_deficiency;
       }
-      const double pivotX = 1 / column.array[iRow];
+      const HighsFloat pivotX = 1 / column.array[iRow];
       for (HighsInt section = 0; section < 2; section++) {
         HighsInt p0 = section == 0 ? start : pivot_k + 1;
         HighsInt p1 = section == 0 ? pivot_k : end;

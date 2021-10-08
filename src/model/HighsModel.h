@@ -30,9 +30,9 @@ class HighsModel {
   bool isQp() const { return this->hessian_.dim_; }
   bool isMip() const { return this->lp_.isMip(); }
   void clear();
-  double objectiveValue(const std::vector<double>& solution) const;
-  void objectiveGradient(const std::vector<double>& solution,
-                         std::vector<double>& gradient) const;
+  HighsFloat objectiveValue(const std::vector<HighsFloat>& solution) const;
+  void objectiveGradient(const std::vector<HighsFloat>& solution,
+                         std::vector<HighsFloat>& gradient) const;
 };
 
 #endif

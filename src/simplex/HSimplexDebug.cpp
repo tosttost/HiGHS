@@ -22,18 +22,18 @@
 
 void debugDualChuzcFailNorms(
     const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    double& workDataNorm, const HighsInt numVar, const double* workDual,
-    double& workDualNorm) {
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    HighsFloat& workDataNorm, const HighsInt numVar, const HighsFloat* workDual,
+    HighsFloat& workDualNorm) {
   workDataNorm = 0;
   for (HighsInt i = 0; i < workCount; i++) {
-    double value = workData[i].second;
+    HighsFloat value = workData[i].second;
     workDataNorm += value * value;
   }
   workDataNorm = sqrt(workDataNorm);
   workDualNorm = 0;
   for (HighsInt iVar = 0; iVar < numVar; iVar++) {
-    double value = workDual[iVar];
+    HighsFloat value = workDual[iVar];
     workDualNorm += value * value;
   }
   workDualNorm = sqrt(workDualNorm);
@@ -41,17 +41,17 @@ void debugDualChuzcFailNorms(
 
 HighsDebugStatus debugDualChuzcFailQuad0(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
-    const double remainTheta, const bool force) {
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
+    const HighsFloat remainTheta, const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)
     return HighsDebugStatus::kNotChecked;
 
   highsLogDev(options.log_options, HighsLogType::kInfo,
               "DualChuzC:     No change in loop 2 so return error\n");
-  double workDataNorm;
-  double workDualNorm;
+  HighsFloat workDataNorm;
+  HighsFloat workDualNorm;
   debugDualChuzcFailNorms(workCount, workData, workDataNorm, numVar, workDual,
                           workDualNorm);
   highsLogDev(options.log_options, HighsLogType::kInfo,
@@ -66,8 +66,8 @@ HighsDebugStatus debugDualChuzcFailQuad0(
 
 HighsDebugStatus debugDualChuzcFailQuad1(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)
@@ -76,8 +76,8 @@ HighsDebugStatus debugDualChuzcFailQuad1(
   highsLogDev(
       options.log_options, HighsLogType::kInfo,
       "DualChuzC:     No group identified in quad search so return error\n");
-  double workDataNorm;
-  double workDualNorm;
+  HighsFloat workDataNorm;
+  HighsFloat workDualNorm;
   debugDualChuzcFailNorms(workCount, workData, workDataNorm, numVar, workDual,
                           workDualNorm);
   highsLogDev(options.log_options, HighsLogType::kInfo,
@@ -92,8 +92,8 @@ HighsDebugStatus debugDualChuzcFailQuad1(
 
 HighsDebugStatus debugDualChuzcFailHeap(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)
@@ -101,8 +101,8 @@ HighsDebugStatus debugDualChuzcFailHeap(
 
   highsLogDev(options.log_options, HighsLogType::kInfo,
               "DualChuzC:     No entries in heap so return error\n");
-  double workDataNorm;
-  double workDualNorm;
+  HighsFloat workDataNorm;
+  HighsFloat workDualNorm;
   debugDualChuzcFailNorms(workCount, workData, workDataNorm, numVar, workDual,
                           workDualNorm);
   highsLogDev(options.log_options, HighsLogType::kInfo,

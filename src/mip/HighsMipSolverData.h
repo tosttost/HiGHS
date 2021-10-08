@@ -56,8 +56,8 @@ struct HighsMipSolverData {
 
   std::vector<HighsInt> ARstart_;
   std::vector<HighsInt> ARindex_;
-  std::vector<double> ARvalue_;
-  std::vector<double> maxAbsRowCoef;
+  std::vector<HighsFloat> ARvalue_;
+  std::vector<HighsFloat> maxAbsRowCoef;
   std::vector<uint8_t> rowintegral;
   std::vector<HighsInt> uplocks;
   std::vector<HighsInt> downlocks;
@@ -69,22 +69,22 @@ struct HighsMipSolverData {
   HighsSymmetries symmetries;
   std::shared_ptr<const StabilizerOrbits> globalOrbits;
 
-  double objintscale;
+  HighsFloat objintscale;
 
-  double feastol;
-  double epsilon;
-  double heuristic_effort;
+  HighsFloat feastol;
+  HighsFloat epsilon;
+  HighsFloat heuristic_effort;
   int64_t dispfreq;
-  std::vector<double> firstlpsol;
-  std::vector<double> rootlpsol;
-  double firstlpsolobj;
+  std::vector<HighsFloat> firstlpsol;
+  std::vector<HighsFloat> rootlpsol;
+  HighsFloat firstlpsolobj;
   HighsBasis firstrootbasis;
-  double rootlpsolobj;
+  HighsFloat rootlpsolobj;
   HighsInt numintegercols;
 
   HighsCD0uble pruned_treeweight;
-  double avgrootlpiters;
-  double last_disptime;
+  HighsFloat avgrootlpiters;
+  HighsFloat last_disptime;
   int64_t firstrootlpiters;
   int64_t num_nodes;
   int64_t num_leaves;
@@ -101,10 +101,10 @@ struct HighsMipSolverData {
   int64_t num_disp_lines;
 
   HighsInt numImprovingSols;
-  double lower_bound;
-  double upper_bound;
-  double upper_limit;
-  std::vector<double> incumbent;
+  HighsFloat lower_bound;
+  HighsFloat upper_bound;
+  HighsFloat upper_limit;
+  std::vector<HighsFloat> incumbent;
 
   HighsNodeQueue nodequeue;
 
@@ -135,23 +135,23 @@ struct HighsMipSolverData {
   void runPresolve();
   void setupDomainPropagation();
   void runSetup();
-  double transformNewIncumbent(const std::vector<double>& sol);
-  double percentageInactiveIntegers() const;
+  HighsFloat transformNewIncumbent(const std::vector<HighsFloat>& sol);
+  HighsFloat percentageInactiveIntegers() const;
   void performRestart();
-  bool checkSolution(const std::vector<double>& solution);
-  bool trySolution(const std::vector<double>& solution, char source = ' ');
+  bool checkSolution(const std::vector<HighsFloat>& solution);
+  bool trySolution(const std::vector<HighsFloat>& solution, char source = ' ');
   bool rootSeparationRound(HighsSeparation& sepa, HighsInt& ncuts,
                            HighsLpRelaxation::Status& status);
   HighsLpRelaxation::Status evaluateRootLp();
   void evaluateRootNode();
-  bool addIncumbent(const std::vector<double>& sol, double solobj, char source);
+  bool addIncumbent(const std::vector<HighsFloat>& sol, HighsFloat solobj, char source);
 
-  const std::vector<double>& getSolution() const;
+  const std::vector<HighsFloat>& getSolution() const;
 
   void printDisplayLine(char first = ' ');
 
   void getRow(HighsInt row, HighsInt& rowlen, const HighsInt*& rowinds,
-              const double*& rowvals) const {
+              const HighsFloat*& rowvals) const {
     HighsInt start = ARstart_[row];
     rowlen = ARstart_[row + 1] - start;
     rowinds = ARindex_.data() + start;

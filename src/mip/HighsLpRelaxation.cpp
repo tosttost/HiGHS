@@ -24,7 +24,7 @@
 
 void HighsLpRelaxation::LpRow::get(const HighsMipSolver& mipsolver,
                                    HighsInt& len, const HighsInt*& inds,
-                                   const double*& vals) const {
+                                   const HighsFloat*& vals) const {
   switch (origin) {
     case kCutPool:
       mipsolver.mipdata_->cutpool.getCut(index, len, inds, vals);
@@ -61,7 +61,7 @@ bool HighsLpRelaxation::LpRow::isIntegral(
   return false;
 }
 
-double HighsLpRelaxation::LpRow::getMaxAbsVal(
+HighsFloat HighsLpRelaxation::LpRow::getMaxAbsVal(
     const HighsMipSolver& mipsolver) const {
   switch (origin) {
     case kCutPool:
@@ -74,13 +74,13 @@ double HighsLpRelaxation::LpRow::getMaxAbsVal(
   return 0.0;
 }
 
-double HighsLpRelaxation::slackLower(HighsInt row) const {
+HighsFloat HighsLpRelaxation::slackLower(HighsInt row) const {
   switch (lprows[row].origin) {
     case LpRow::kCutPool:
       return mipsolver.mipdata_->domain.getMinCutActivity(
           mipsolver.mipdata_->cutpool, lprows[row].index);
     case LpRow::kModel:
-      double rowlower = rowLower(row);
+      HighsFloat rowlower = rowLower(row);
       if (rowlower != -kHighsInf) return rowlower;
       return mipsolver.mipdata_->domain.getMinActivity(lprows[row].index);
   };
@@ -89,8 +89,8 @@ double HighsLpRelaxation::slackLower(HighsInt row) const {
   return -kHighsInf;
 }
 
-double HighsLpRelaxation::slackUpper(HighsInt row) const {
-  double rowupper = rowUpper(row);
+HighsFloat HighsLpRelaxation::slackUpper(HighsInt row) const {
+  HighsFloat rowupper = rowUpper(row);
   switch (lprows[row].origin) {
     case LpRow::kCutPool:
       return rowupper;
@@ -158,7 +158,7 @@ void HighsLpRelaxation::loadModel() {
   mask.resize(lpmodel.num_col_);
 }
 
-double HighsLpRelaxation::computeBestEstimate(const HighsPseudocost& ps) const {
+HighsFloat HighsLpRelaxation::computeBestEstimate(const HighsPseudocost& ps) const {
   HighsCD0uble estimate = objective;
 
   if (!fractionalints.empty()) {
@@ -167,28 +167,28 @@ double HighsLpRelaxation::computeBestEstimate(const HighsPseudocost& ps) const {
     // fractionality.
 
     HighsCD0uble increase = 0.0;
-    double offset = mipsolver.mipdata_->feastol *
+    HighsFloat offset = mipsolver.mipdata_->feastol *
                     std::max(std::abs(objective), 1.0) /
                     mipsolver.mipdata_->integral_cols.size();
 
-    for (const std::pair<HighsInt, double>& f : fractionalints) {
+    for (const std::pair<HighsInt, HighsFloat>& f : fractionalints) {
       increase += std::min(ps.getPseudocostUp(f.first, f.second, offset),
                            ps.getPseudocostDown(f.first, f.second, offset));
     }
 
-    estimate += double(increase);
+    estimate += HighsFloat(increase);
   }
 
-  return double(estimate);
+  return HighsFloat(estimate);
 }
 
-double HighsLpRelaxation::computeLPDegneracy(
+HighsFloat HighsLpRelaxation::computeLPDegneracy(
     const HighsDomain& localdomain) const {
   if (!lpsolver.getSolution().dual_valid || !lpsolver.getBasis().valid) {
     return 1.0;
   }
 
-  double dualFeasTol = lpsolver.getInfo().max_dual_infeasibility;
+  HighsFloat dualFeasTol = lpsolver.getInfo().max_dual_infeasibility;
 
   const HighsBasis& basis = lpsolver.getBasis();
   const HighsSolution& sol = lpsolver.getSolution();
@@ -222,19 +222,19 @@ double HighsLpRelaxation::computeLPDegneracy(
   HighsInt base = numCols() - numAlreadyFixedCols + numInequalities +
                   numBasicEqualities - numRows();
 
-  double degenerateColumnShare =
-      base > 0 ? 1.0 - double(numFixedCols + numFixedRows) / base : 0.0;
+  HighsFloat degenerateColumnShare =
+      base > 0 ? 1.0 - HighsFloat(numFixedCols + numFixedRows) / base : 0.0;
 
-  double varConsRatio =
+  HighsFloat varConsRatio =
       numRows() > 0
-          ? double(numCols() + numInequalities + numBasicEqualities -
+          ? HighsFloat(numCols() + numInequalities + numBasicEqualities -
                    numFixedCols - numFixedRows - numAlreadyFixedCols) /
                 numRows()
           : 1.0;
-  double fac1 = degenerateColumnShare < 0.8
+  HighsFloat fac1 = degenerateColumnShare < 0.8
                     ? 1.0
                     : std::pow(10.0, 10 * (degenerateColumnShare - 0.7));
-  double fac2 = varConsRatio < 2.0 ? 1.0 : 10.0 * varConsRatio;
+  HighsFloat fac2 = varConsRatio < 2.0 ? 1.0 : 10.0 * varConsRatio;
 
   return fac1 * fac2;
 }
@@ -409,11 +409,11 @@ void HighsLpRelaxation::flushDomain(HighsDomain& domain, bool continuous) {
 }
 
 bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
-                                         double upperbound,
+                                         HighsFloat upperbound,
                                          std::vector<HighsInt>& inds,
-                                         std::vector<double>& vals, double& rhs,
+                                         std::vector<HighsFloat>& vals, HighsFloat& rhs,
                                          bool extractCliques) const {
-  std::vector<double> row_dual = lpsolver.getSolution().row_dual;
+  std::vector<HighsFloat> row_dual = lpsolver.getSolution().row_dual;
 
   const HighsLp& lp = lpsolver.getLp();
 
@@ -454,7 +454,7 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
       sum -= lp.a_matrix_.value_[j] * row_dual[lp.a_matrix_.index_[j]];
     }
 
-    double val = double(sum);
+    HighsFloat val = HighsFloat(sum);
 
     if (std::abs(val) <= mipsolver.options_mip_->small_matrix_value) continue;
 
@@ -490,7 +490,7 @@ bool HighsLpRelaxation::computeDualProof(const HighsDomain& globaldomain,
     inds.push_back(i);
   }
 
-  rhs = double(upper);
+  rhs = HighsFloat(upper);
   assert(std::isfinite(rhs));
   globaldomain.tightenCoefficients(inds.data(), vals.data(), inds.size(), rhs);
 
@@ -523,11 +523,11 @@ void HighsLpRelaxation::storeDualInfProof() {
   dualproofbuffer.resize(numrow);
 
   lpsolver.getDualRay(hasdualproof, dualproofbuffer.data());
-  std::vector<double>& dualray = dualproofbuffer;
+  std::vector<HighsFloat>& dualray = dualproofbuffer;
 
   HighsCD0uble upper = 0.0;
 
-  double maxval = 0;
+  HighsFloat maxval = 0;
   for (HighsInt i = 0; i != lp.num_row_; ++i)
     maxval = std::max(maxval, std::abs(dualray[i]));
 
@@ -569,7 +569,7 @@ void HighsLpRelaxation::storeDualInfProof() {
       sum -= lp.a_matrix_.value_[j] * dualray[lp.a_matrix_.index_[j]];
     }
 
-    double val = double(sum);
+    HighsFloat val = HighsFloat(sum);
 
     if (std::abs(val) <= mipsolver.options_mip_->small_matrix_value) continue;
 
@@ -592,7 +592,7 @@ void HighsLpRelaxation::storeDualInfProof() {
     dualproofinds.push_back(i);
   }
 
-  dualproofrhs = double(upper);
+  dualproofrhs = HighsFloat(upper);
   mipsolver.mipdata_->domain.tightenCoefficients(
       dualproofinds.data(), dualproofvals.data(), dualproofinds.size(),
       dualproofrhs);
@@ -645,8 +645,8 @@ bool HighsLpRelaxation::checkDualProof() const {
 
 bool HighsLpRelaxation::computeDualInfProof(const HighsDomain& globaldomain,
                                             std::vector<HighsInt>& inds,
-                                            std::vector<double>& vals,
-                                            double& rhs) {
+                                            std::vector<HighsFloat>& vals,
+                                            HighsFloat& rhs) {
   if (!hasdualproof) return false;
 
   // assert(checkDualProof());
@@ -664,7 +664,7 @@ void HighsLpRelaxation::recoverBasis() {
   }
 }
 
-void HighsLpRelaxation::setObjectiveLimit(double objlim) {
+void HighsLpRelaxation::setObjectiveLimit(HighsFloat objlim) {
   lpsolver.setOptionValue(
       "objective_bound",
       objlim + std::max(0.5, mipsolver.mipdata_->lower_bound *
@@ -723,7 +723,7 @@ HighsLpRelaxation::Status HighsLpRelaxation::run(bool resolve_on_error) {
         //        lpsolver.getOptions().objective_bound);
         return Status::kInfeasible;
       } else {
-        double objbound = lpsolver.getOptions().objective_bound;
+        HighsFloat objbound = lpsolver.getOptions().objective_bound;
         // printf(
         //     "proof constraint for obj limit %g not valid, solving without "
         //     "objlim\n",
@@ -862,7 +862,7 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
       case Status::kUnscaledDualFeasible:
       case Status::kUnscaledPrimalFeasible:
       case Status::kOptimal: {
-        HighsHashTable<HighsInt, std::pair<double, int>> fracints(
+        HighsHashTable<HighsInt, std::pair<HighsFloat, int>> fracints(
             maxNumFractional);
         const HighsSolution& sol = lpsolver.getSolution();
 
@@ -873,10 +873,10 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
           // for the fractionality we assume that LP bounds are not violated
           // bounds that are violated by the unscaled LP are indicated by the
           // return status already
-          double val = std::max(
+          HighsFloat val = std::max(
               std::min(sol.col_value[i], lpsolver.getLp().col_upper_[i]),
               lpsolver.getLp().col_lower_[i]);
-          double intval = std::floor(val + 0.5);
+          HighsFloat intval = std::floor(val + 0.5);
 
           if (std::abs(val - intval) > mipsolver.mipdata_->feastol) {
             HighsInt col = i;
@@ -927,13 +927,13 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
 
         for (const auto& it : fracints) {
           fractionalints.emplace_back(
-              it.key(), it.value().first / (double)it.value().second);
+              it.key(), it.value().first / (HighsFloat)it.value().second);
         }
 
         if (roundable && !fractionalints.empty()) {
-          std::vector<double> roundsol = sol.col_value;
+          std::vector<HighsFloat> roundsol = sol.col_value;
 
-          for (const std::pair<HighsInt, double>& fracint : fractionalints) {
+          for (const std::pair<HighsInt, HighsFloat>& fracint : fractionalints) {
             HighsInt col = fracint.first;
 
             if (mipsolver.mipdata_->uplocks[col] == 0 &&
@@ -958,14 +958,14 @@ HighsLpRelaxation::Status HighsLpRelaxation::resolveLp(HighsDomain* domain) {
           for (HighsInt i = 0; i != mipsolver.numCol(); ++i)
             objsum += roundsol[i] * mipsolver.colCost(i);
 
-          mipsolver.mipdata_->addIncumbent(roundsol, double(objsum), 'S');
+          mipsolver.mipdata_->addIncumbent(roundsol, HighsFloat(objsum), 'S');
           objsum = 0;
         }
 
         for (HighsInt i = 0; i != mipsolver.numCol(); ++i)
           objsum += sol.col_value[i] * mipsolver.colCost(i);
 
-        objective = double(objsum);
+        objective = HighsFloat(objsum);
         break;
       }
       case Status::kInfeasible:

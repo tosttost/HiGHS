@@ -60,7 +60,7 @@ void HFactor::addRows(const HighsSparseMatrix* ar_matrix) {
   HighsSparseMatrix new_lr_rows;
   new_lr_rows.format_ = MatrixFormat::kRowwise;
   new_lr_rows.num_col_ = numRow;
-  double expected_density = 0.0;
+  HighsFloat expected_density = 0.0;
   HVector rhs;
   rhs.setup(numRow);
   this->LRstart.reserve(new_num_row + 1);
@@ -80,7 +80,7 @@ void HFactor::addRows(const HighsSparseMatrix* ar_matrix) {
     }
     // Solve U^T.v = r
     btranU(rhs, expected_density);
-    double local_density = (1.0 * rhs.count) / numRow;
+    HighsFloat local_density = (1.0 * rhs.count) / numRow;
     expected_density = kRunningAverageMultiplier * local_density +
                        (1 - kRunningAverageMultiplier) * expected_density;
     //    printf("New row btranU density: local = %11.4g; expected =  %11.4g\n",

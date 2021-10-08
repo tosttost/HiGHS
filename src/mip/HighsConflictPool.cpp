@@ -63,7 +63,7 @@ void HighsConflictPool::addConflictCut(
   HighsInt i = start;
   const std::vector<HighsDomainChange>& domchgStack_ =
       domain.getDomainChangeStack();
-  double feastol = domain.feastol();
+  HighsFloat feastol = domain.feastol();
   for (HighsInt pos : reasonSideFrontier) {
     assert(i < end);
     assert(pos >= 0);
@@ -134,7 +134,7 @@ void HighsConflictPool::addReconvergenceCut(
       domain.getDomainChangeStack();
   assert(i < end);
   conflictEntries_[i++] = domain.flip(reconvergenceDomchg);
-  double feastol = domain.feastol();
+  HighsFloat feastol = domain.feastol();
   for (HighsInt pos : reconvergenceFrontier) {
     assert(i < end);
     assert(pos >= 0);

@@ -54,8 +54,8 @@ class HEkk {
   void setNlaPointersForTrans(const HighsLp& lp);
   void setNlaRefactorInfo();
   void clearHotStart();
-  void btran(HVector& rhs, const double expected_density);
-  void ftran(HVector& rhs, const double expected_density);
+  void btran(HVector& rhs, const HighsFloat expected_density);
+  void ftran(HVector& rhs, const HighsFloat expected_density);
 
   void moveLp(HighsLpSolverObject& solver_object);
   void setPointers(HighsOptions* options, HighsTimer* timer);
@@ -81,7 +81,7 @@ class HEkk {
   void deleteCols(const HighsIndexCollection& index_collection);
   void deleteRows(const HighsIndexCollection& index_collection);
   void unscaleSimplex(const HighsLp& incumbent_lp);
-  double factorSolveError();
+  HighsFloat factorSolveError();
 
   HighsSolution getSolution();
   HighsBasis getHighsBasis(HighsLp& use_lp) const;
@@ -95,12 +95,12 @@ class HEkk {
 
   // Interface methods
   void appendColsToVectors(const HighsInt num_new_col,
-                           const vector<double>& colCost,
-                           const vector<double>& colLower,
-                           const vector<double>& colUpper);
+                           const vector<HighsFloat>& colCost,
+                           const vector<HighsFloat>& colLower,
+                           const vector<HighsFloat>& colUpper);
   void appendRowsToVectors(const HighsInt num_new_row,
-                           const vector<double>& rowLower,
-                           const vector<double>& rowUpper);
+                           const vector<HighsFloat>& rowLower,
+                           const vector<HighsFloat>& rowUpper);
 
   // Make this private later
   void chooseSimplexStrategyThreads(const HighsOptions& options,
@@ -128,8 +128,8 @@ class HEkk {
   HighsHashTable<uint64_t> visited_basis_;
   HighsRandom random_;
 
-  double* workEdWt_ = NULL;      //!< DSE or Dvx weight
-  double* workEdWtFull_ = NULL;  //!< Full-length std::vector where weights
+  HighsFloat* workEdWt_ = NULL;      //!< DSE or Dvx weight
+  HighsFloat* workEdWtFull_ = NULL;  //!< Full-length std::vector where weights
 
   bool simplex_in_scaled_space_;
   HighsSparseMatrix ar_matrix_;
@@ -137,7 +137,7 @@ class HEkk {
   HSimplexNla simplex_nla_;
   HotStart hot_start_;
 
-  double cost_scale_ = 1;
+  HighsFloat cost_scale_ = 1;
   HighsInt iteration_count_ = 0;
   HighsInt dual_simplex_cleanup_level_ = 0;
   HighsInt dual_simplex_phase1_cleanup_level_ = 0;
@@ -154,12 +154,12 @@ class HEkk {
   HighsInt original_num_col_;
   HighsInt original_num_row_;
   HighsInt original_num_nz_;
-  double original_offset_;
-  vector<double> original_col_cost_;
-  vector<double> original_col_lower_;
-  vector<double> original_col_upper_;
-  vector<double> original_row_lower_;
-  vector<double> original_row_upper_;
+  HighsFloat original_offset_;
+  vector<HighsFloat> original_col_cost_;
+  vector<HighsFloat> original_col_lower_;
+  vector<HighsFloat> original_col_upper_;
+  vector<HighsFloat> original_row_lower_;
+  vector<HighsFloat> original_row_upper_;
   //
   // The upper_bound_col vector accumulates the indices of boxed
   // variables, whose upper bounds are treated as additional
@@ -171,8 +171,8 @@ class HEkk {
   vector<HighsInt> upper_bound_col_;
   vector<HighsInt> upper_bound_row_;
 
-  double build_synthetic_tick_;
-  double total_synthetic_tick_;
+  HighsFloat build_synthetic_tick_;
+  HighsFloat total_synthetic_tick_;
   HighsInt debug_solve_call_num_ = 0;
 
  private:
@@ -183,11 +183,11 @@ class HEkk {
   void initialiseSimplexLpRandomVectors();
   void setNonbasicMove();
   bool getNonsingularInverse(const HighsInt solve_phase = 0);
-  bool getBacktrackingBasis(double* scattered_edge_weights);
+  bool getBacktrackingBasis(HighsFloat* scattered_edge_weights);
   void putBacktrackingBasis();
   void putBacktrackingBasis(
       const vector<HighsInt>& basicIndex_before_compute_factor,
-      double* scattered_edge_weights);
+      HighsFloat* scattered_edge_weights);
   void computePrimalObjectiveValue();
   void computeDualObjectiveValue(const HighsInt phase = 2);
   bool rebuildRefactor(HighsInt rebuild_reason);
@@ -207,21 +207,21 @@ class HEkk {
   void unitBtran(const HighsInt iRow, HVector& row_ep);
   void fullBtran(HVector& buffer);
   void choosePriceTechnique(const HighsInt price_strategy,
-                            const double row_ep_density, bool& use_col_price,
+                            const HighsFloat row_ep_density, bool& use_col_price,
                             bool& use_row_price_w_switch);
   void tableauRowPrice(const HVector& row_ep, HVector& row_ap);
   void fullPrice(const HVector& full_col, HVector& full_row);
   void computePrimal();
   void computeDual();
   void computeDualInfeasibleWithFlips();
-  double computeDualForTableauColumn(const HighsInt iVar,
+  HighsFloat computeDualForTableauColumn(const HighsInt iVar,
                                      const HVector& tableau_column);
   void correctDual(HighsInt* free_infeasibility_count);
   bool reinvertOnNumericalTrouble(const std::string method_name,
-                                  double& numerical_trouble_measure,
-                                  const double alpha_from_col,
-                                  const double alpha_from_row,
-                                  const double numerical_trouble_tolerance);
+                                  HighsFloat& numerical_trouble_measure,
+                                  const HighsFloat alpha_from_col,
+                                  const HighsFloat alpha_from_row,
+                                  const HighsFloat numerical_trouble_tolerance);
 
   void flipBound(const HighsInt iCol);
   void updateFactor(HVector* column, HVector* row_ep, HighsInt* iRow,
@@ -249,16 +249,16 @@ class HEkk {
   bool bailoutOnTimeIterations();
   HighsStatus returnFromSolve(const HighsStatus return_status);
 
-  double computeBasisCondition();
+  HighsFloat computeBasisCondition();
   void initialiseAnalysis();
   std::string rebuildReason(const HighsInt rebuild_reason);
 
   // Methods in HEkkControl
   void initialiseControl();
-  void assessDSEWeightError(const double computed_edge_weight,
-                            const double updated_edge_weight);
-  void updateOperationResultDensity(const double local_density,
-                                    double& density);
+  void assessDSEWeightError(const HighsFloat computed_edge_weight,
+                            const HighsFloat updated_edge_weight);
+  void updateOperationResultDensity(const HighsFloat local_density,
+                                    HighsFloat& density);
   bool switchToDevex();
 
   // private debug methods
@@ -267,12 +267,12 @@ class HEkk {
                                 const HighsInt phase,
                                 const bool initialise = false) const;
   void debugReportReinvertOnNumericalTrouble(
-      const std::string method_name, const double numerical_trouble_measure,
-      const double alpha_from_col, const double alpha_from_row,
-      const double numerical_trouble_tolerance, const bool reinvert) const;
+      const std::string method_name, const HighsFloat numerical_trouble_measure,
+      const HighsFloat alpha_from_col, const HighsFloat alpha_from_row,
+      const HighsFloat numerical_trouble_tolerance, const bool reinvert) const;
 
-  HighsDebugStatus debugUpdatedDual(const double updated_dual,
-                                    const double computed_dual) const;
+  HighsDebugStatus debugUpdatedDual(const HighsFloat updated_dual,
+                                    const HighsFloat computed_dual) const;
 
   HighsDebugStatus debugBasisCorrect(const HighsLp* lp = NULL) const;
   HighsDebugStatus debugBasisConsistent() const;

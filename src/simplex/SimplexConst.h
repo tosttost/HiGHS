@@ -159,7 +159,7 @@ const HighsInt kIllegalMoveValue =
     -99;  // Used to see whether valid move value has been set
 
 // Threshold for accepting updated DSE weight
-const double kAcceptDseWeightThreshold = 0.25;
+const HighsFloat kAcceptDseWeightThreshold = 0.25;
 
 const HighsInt kNoRowSought = -2;
 const HighsInt kNoRowChosen = -1;

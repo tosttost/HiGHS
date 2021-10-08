@@ -1,9 +1,9 @@
 #include "Highs.h"
 #include "catch.hpp"
 
-const double inf = kHighsInf;
+const HighsFloat inf = kHighsInf;
 const bool dev_run = false;
-const double d0uble_equal_tolerance = 1e-5;
+const HighsFloat d0uble_equal_tolerance = 1e-5;
 
 void detailedOutput(Highs& highs);
 void dualiseTest(Highs& highs);
@@ -38,14 +38,14 @@ void dualiseTest(Highs& highs) {
   highs.setBasis();
   highs.run();
   //  if (dev_run) highs.writeSolution("", true);
-  double primal_objective = info.objective_function_value;
+  HighsFloat primal_objective = info.objective_function_value;
   highs.setOptionValue("simplex_dualise_strategy", kHighsOptionOn);
   highs.setBasis();
   //  detailedOutput(highs);
   highs.run();
   // if (dev_run) highs.writeSolution("", true);
-  double dual_objective = info.objective_function_value;
-  double dl = fabs(primal_objective - dual_objective);
+  HighsFloat dual_objective = info.objective_function_value;
+  HighsFloat dl = fabs(primal_objective - dual_objective);
   REQUIRE(dl < d0uble_equal_tolerance);
 }
 
@@ -97,12 +97,12 @@ void distillationTest(Highs& highs) {
   highs.passModel(model);
   dualiseTest(highs);
 
-  double x0_lower = 3;
+  HighsFloat x0_lower = 3;
   if (dev_run) printf("\nGive a lower bound on x0 of %g\n", x0_lower);
   highs.changeColBounds(0, x0_lower, inf);
   dualiseTest(highs);
 
-  double x1_upper = 0.5;
+  HighsFloat x1_upper = 0.5;
   if (dev_run) printf("\nGive an upper bound on x1 of %g\n", x1_upper);
   highs.changeColBounds(1, -inf, x1_upper);
   dualiseTest(highs);
@@ -125,7 +125,7 @@ void fixedColumnTest(Highs& highs) {
   HighsModel model;
   HighsLp& lp = model.lp_;
   lp = distillationLp();
-  double x0_fixed = 1;
+  HighsFloat x0_fixed = 1;
   if (dev_run) printf("\nFix column 0 of distillation to be %g\n", x0_fixed);
   lp.col_lower_[0] = x0_fixed;
   lp.col_upper_[0] = x0_fixed;
@@ -138,11 +138,11 @@ void colUpperBoundTest(Highs& highs) {
   HighsModel model;
   HighsLp& lp = model.lp_;
   lp = distillationLp();
-  double col1_upper = 1;
+  HighsFloat col1_upper = 1;
   if (dev_run) printf("\nGive an upper bound on col 1 of %g\n", col1_upper);
   lp.col_upper_[1] = col1_upper;
   // Needs reduced lower bound for feasiblilty
-  //  double col2_lower = 5.7; lp.col_lower_[2] = col2_lower;
+  //  HighsFloat col2_lower = 5.7; lp.col_lower_[2] = col2_lower;
   highs.passModel(model);
   dualiseTest(highs);
 }
@@ -151,11 +151,11 @@ void rowUpperBoundTest(Highs& highs) {
   HighsModel model;
   HighsLp& lp = model.lp_;
   lp = distillationLp();
-  double row0_upper = 7.1;
+  HighsFloat row0_upper = 7.1;
   if (dev_run) printf("\nGive an upper bound on row 0 of %g\n", row0_upper);
   lp.row_upper_[0] = row0_upper;
   // Needs reduced lower bound for feasiblilty
-  double row2_lower = 5.7;
+  HighsFloat row2_lower = 5.7;
   lp.row_lower_[2] = row2_lower;
   highs.passModel(model);
   dualiseTest(highs);

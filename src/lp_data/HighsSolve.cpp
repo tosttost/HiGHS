@@ -168,12 +168,12 @@ HighsStatus solveUnconstrainedLp(const HighsOptions& options, const HighsLp& lp,
   solution.row_dual.clear();
   basis.row_status.clear();
 
-  double primal_feasibility_tolerance = options.primal_feasibility_tolerance;
-  double dual_feasibility_tolerance = options.dual_feasibility_tolerance;
+  HighsFloat primal_feasibility_tolerance = options.primal_feasibility_tolerance;
+  HighsFloat dual_feasibility_tolerance = options.dual_feasibility_tolerance;
 
   // Initialise the objective value calculation. Done using
   // HighsSolution so offset is vanilla
-  double objective = lp.offset_;
+  HighsFloat objective = lp.offset_;
   bool infeasible = false;
   bool unbounded = false;
 
@@ -185,13 +185,13 @@ HighsStatus solveUnconstrainedLp(const HighsOptions& options, const HighsLp& lp,
   highs_info.sum_dual_infeasibilities = 0;
 
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
-    double cost = lp.col_cost_[iCol];
-    double dual = (HighsInt)lp.sense_ * cost;
-    double lower = lp.col_lower_[iCol];
-    double upper = lp.col_upper_[iCol];
-    double value;
-    double primal_infeasibility = 0;
-    double dual_infeasibility = -1;
+    HighsFloat cost = lp.col_cost_[iCol];
+    HighsFloat dual = (HighsInt)lp.sense_ * cost;
+    HighsFloat lower = lp.col_lower_[iCol];
+    HighsFloat upper = lp.col_upper_[iCol];
+    HighsFloat value;
+    HighsFloat primal_infeasibility = 0;
+    HighsFloat dual_infeasibility = -1;
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     if (lower > upper) {
       // Inconsistent bounds, so set the variable to lower bound,

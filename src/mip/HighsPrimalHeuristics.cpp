@@ -39,24 +39,24 @@ void HighsPrimalHeuristics::setupIntCols() {
   intcols = mipsolver.mipdata_->integer_cols;
 
   pdqsort(intcols.begin(), intcols.end(), [&](HighsInt c1, HighsInt c2) {
-    double lockScore1 =
+    HighsFloat lockScore1 =
         (mipsolver.mipdata_->feastol + mipsolver.mipdata_->uplocks[c1]) *
         (mipsolver.mipdata_->feastol + mipsolver.mipdata_->downlocks[c1]);
 
-    double lockScore2 =
+    HighsFloat lockScore2 =
         (mipsolver.mipdata_->feastol + mipsolver.mipdata_->uplocks[c2]) *
         (mipsolver.mipdata_->feastol + mipsolver.mipdata_->downlocks[c2]);
 
     if (lockScore1 > lockScore2) return true;
     if (lockScore2 > lockScore1) return false;
 
-    double cliqueScore1 =
+    HighsFloat cliqueScore1 =
         (mipsolver.mipdata_->feastol +
          mipsolver.mipdata_->cliquetable.getNumImplications(c1, 1)) *
         (mipsolver.mipdata_->feastol +
          mipsolver.mipdata_->cliquetable.getNumImplications(c1, 0));
 
-    double cliqueScore2 =
+    HighsFloat cliqueScore2 =
         (mipsolver.mipdata_->feastol +
          mipsolver.mipdata_->cliquetable.getNumImplications(c2, 1)) *
         (mipsolver.mipdata_->feastol +
@@ -70,8 +70,8 @@ void HighsPrimalHeuristics::setupIntCols() {
 }
 
 bool HighsPrimalHeuristics::solveSubMip(
-    const HighsLp& lp, const HighsBasis& basis, double fixingRate,
-    std::vector<double> colLower, std::vector<double> colUpper,
+    const HighsLp& lp, const HighsBasis& basis, HighsFloat fixingRate,
+    std::vector<HighsFloat> colLower, std::vector<HighsFloat> colUpper,
     HighsInt maxleaves, HighsInt maxnodes, HighsInt stallnodes) {
   HighsOptions submipoptions = *mipsolver.options_mip_;
   HighsLp submip = lp;
@@ -106,10 +106,10 @@ bool HighsPrimalHeuristics::solveSubMip(
   submipsolver.implicinit = &mipsolver.mipdata_->implications;
   submipsolver.run();
   if (submipsolver.mipdata_) {
-    double numUnfixed = mipsolver.mipdata_->integral_cols.size() +
+    HighsFloat numUnfixed = mipsolver.mipdata_->integral_cols.size() +
                         mipsolver.mipdata_->continuous_cols.size();
-    double adjustmentfactor = submipsolver.numCol() / std::max(1.0, numUnfixed);
-    // (double)mipsolver.orig_model_->a_matrix_.value_.size();
+    HighsFloat adjustmentfactor = submipsolver.numCol() / std::max(1.0, numUnfixed);
+    // (HighsFloat)mipsolver.orig_model_->a_matrix_.value_.size();
     int64_t adjusted_lp_iterations =
         (size_t)(adjustmentfactor * submipsolver.mipdata_->total_lp_iterations);
     lp_iterations += adjusted_lp_iterations;
@@ -141,23 +141,23 @@ bool HighsPrimalHeuristics::solveSubMip(
   return true;
 }
 
-double HighsPrimalHeuristics::determineTargetFixingRate() {
-  double lowFixingRate = 0.6;
-  double highFixingRate = 0.6;
+HighsFloat HighsPrimalHeuristics::determineTargetFixingRate() {
+  HighsFloat lowFixingRate = 0.6;
+  HighsFloat highFixingRate = 0.6;
 
   if (numInfeasObservations != 0) {
-    double infeasRate = infeasObservations / numInfeasObservations;
+    HighsFloat infeasRate = infeasObservations / numInfeasObservations;
     highFixingRate = 0.9 * infeasRate;
     lowFixingRate = std::min(lowFixingRate, highFixingRate);
   }
 
   if (numSuccessObservations != 0) {
-    double successFixingRate = successObservations / numSuccessObservations;
+    HighsFloat successFixingRate = successObservations / numSuccessObservations;
     lowFixingRate = std::min(lowFixingRate, 0.9 * successFixingRate);
     highFixingRate = std::max(successFixingRate * 1.1, highFixingRate);
   }
 
-  double fixingRate = randgen.real(lowFixingRate, highFixingRate);
+  HighsFloat fixingRate = randgen.real(lowFixingRate, highFixingRate);
   // if (!mipsolver.submip) printf("fixing rate: %.2f\n", 100.0 * fixingRate);
   return fixingRate;
 }
@@ -182,14 +182,14 @@ class HeuristicNeighborhood {
     numTotal = mipsolver.mipdata_->integral_cols.size() - numFixed;
   }
 
-  double getFixingRate() {
+  HighsFloat getFixingRate() {
     while (nCheckedChanges < localdom.getDomainChangeStack().size()) {
       HighsInt col = localdom.getDomainChangeStack()[nCheckedChanges++].column;
       if (localdom.variableType(col) == HighsVarType::kContinuous) continue;
       if (localdom.isFixed(col)) fixedCols.insert(col);
     }
 
-    return fixedCols.size() / (double)numTotal;
+    return fixedCols.size() / (HighsFloat)numTotal;
   }
 
   void backtracked() {
@@ -199,13 +199,13 @@ class HeuristicNeighborhood {
 };
 
 void HighsPrimalHeuristics::rootReducedCost() {
-  std::vector<std::pair<double, HighsDomainChange>> lurkingBounds =
+  std::vector<std::pair<HighsFloat, HighsDomainChange>> lurkingBounds =
       mipsolver.mipdata_->redcostfixing.getLurkingBounds(mipsolver);
   if (lurkingBounds.size() < 0.1 * mipsolver.mipdata_->integral_cols.size())
     return;
   pdqsort(lurkingBounds.begin(), lurkingBounds.end(),
-          [](const std::pair<double, HighsDomainChange>& a,
-             const std::pair<double, HighsDomainChange>& b) {
+          [](const std::pair<HighsFloat, HighsDomainChange>& a,
+             const std::pair<HighsFloat, HighsDomainChange>& b) {
             return a.first > b.first;
           });
 
@@ -213,12 +213,12 @@ void HighsPrimalHeuristics::rootReducedCost() {
 
   HeuristicNeighborhood neighborhood(mipsolver, localdom);
 
-  double currCutoff = kHighsInf;
-  double lower_bound;
+  HighsFloat currCutoff = kHighsInf;
+  HighsFloat lower_bound;
 
   lower_bound = mipsolver.mipdata_->lower_bound + mipsolver.mipdata_->feastol;
 
-  for (const std::pair<double, HighsDomainChange>& domchg : lurkingBounds) {
+  for (const std::pair<HighsFloat, HighsDomainChange>& domchg : lurkingBounds) {
     currCutoff = domchg.first;
 
     if (currCutoff <= lower_bound) break;
@@ -239,14 +239,14 @@ void HighsPrimalHeuristics::rootReducedCost() {
       }
       break;
     }
-    double fixingRate = neighborhood.getFixingRate();
+    HighsFloat fixingRate = neighborhood.getFixingRate();
     if (fixingRate >= 0.5) break;
-    // double gap = (currCutoff - mipsolver.mipdata_->lower_bound) /
+    // HighsFloat gap = (currCutoff - mipsolver.mipdata_->lower_bound) /
     //             std::max(std::abs(mipsolver.mipdata_->lower_bound), 1.0);
     // if (gap < 0.001) break;
   }
 
-  double fixingRate = neighborhood.getFixingRate();
+  HighsFloat fixingRate = neighborhood.getFixingRate();
   if (fixingRate < 0.3) return;
 
   solveSubMip(*mipsolver.model_, mipsolver.mipdata_->firstrootbasis, fixingRate,
@@ -256,7 +256,7 @@ void HighsPrimalHeuristics::rootReducedCost() {
               200 + int(0.05 * (mipsolver.mipdata_->num_nodes)), 12);
 }
 
-void HighsPrimalHeuristics::RENS(const std::vector<double>& tmp) {
+void HighsPrimalHeuristics::RENS(const std::vector<HighsFloat>& tmp) {
   HighsSearch heur(mipsolver, mipsolver.mipdata_->pseudocost);
   HighsDomain& localdom = heur.getLocalDomain();
   heur.setHeuristic(true);
@@ -280,8 +280,8 @@ void HighsPrimalHeuristics::RENS(const std::vector<double>& tmp) {
 
   // determine the initial number of unfixed variables fixing rate to decide if
   // the problem is restricted enough to be considered for solving a submip
-  double maxfixingrate = determineTargetFixingRate();
-  double fixingrate = 0.0;
+  HighsFloat maxfixingrate = determineTargetFixingRate();
+  HighsFloat fixingrate = 0.0;
   bool stop = false;
   // heurlp.setIterationLimit(2 * mipsolver.mipdata_->maxrootlpiters);
   // printf("iterlimit: %" HIGHSINT_FORMAT "\n",
@@ -333,15 +333,15 @@ retry:
     if (nbacktracks >= 10) break;
 
     HighsInt numBranched = 0;
-    double stopFixingRate = std::min(
+    HighsFloat stopFixingRate = std::min(
         1.0 - (1.0 - neighborhood.getFixingRate()) * 0.9, maxfixingrate);
     const auto& relaxationsol = heurlp.getSolution().col_value;
     for (HighsInt i : intcols) {
       if (localdom.col_lower_[i] == localdom.col_upper_[i]) continue;
 
-      double downval =
+      HighsFloat downval =
           std::floor(relaxationsol[i] + mipsolver.mipdata_->feastol);
-      double upval = std::ceil(relaxationsol[i] - mipsolver.mipdata_->feastol);
+      HighsFloat upval = std::ceil(relaxationsol[i] - mipsolver.mipdata_->feastol);
 
       downval = std::min(downval, localdom.col_upper_[i]);
       upval = std::max(upval, localdom.col_lower_[i]);
@@ -368,14 +368,14 @@ retry:
     }
 
     if (numBranched == 0) {
-      auto getFixVal = [&](HighsInt col, double fracval) {
-        double fixval;
+      auto getFixVal = [&](HighsInt col, HighsFloat fracval) {
+        HighsFloat fixval;
 
         // reinforce direction of this solution away from root
         // solution if the change is at least 0.4
         // otherwise take the direction where the objective gets worse
         // if objective is zero round to nearest integer
-        double rootchange = mipsolver.mipdata_->rootlpsol.empty()
+        HighsFloat rootchange = mipsolver.mipdata_->rootlpsol.empty()
                                 ? 0.0
                                 : fracval - mipsolver.mipdata_->rootlpsol[col];
         if (rootchange >= 0.4)
@@ -396,8 +396,8 @@ retry:
 
       pdqsort(heurlp.getFractionalIntegers().begin(),
               heurlp.getFractionalIntegers().end(),
-              [&](const std::pair<HighsInt, double>& a,
-                  const std::pair<HighsInt, double>& b) {
+              [&](const std::pair<HighsInt, HighsFloat>& a,
+                  const std::pair<HighsInt, HighsFloat>& b) {
                 return std::make_pair(
                            std::abs(getFixVal(a.first, a.second) - a.second),
                            HighsHashHelpers::hash(
@@ -410,10 +410,10 @@ retry:
                                heurlp.getFractionalIntegers().size()));
               });
 
-      double change = 0.0;
+      HighsFloat change = 0.0;
       // select a set of fractional variables to fix
       for (auto fracint : heurlp.getFractionalIntegers()) {
-        double fixval = getFixVal(fracint.first, fracint.second);
+        HighsFloat fixval = getFixVal(fracint.first, fracint.second);
 
         if (localdom.col_lower_[fracint.first] < fixval) {
           ++numBranched;
@@ -488,7 +488,7 @@ retry:
   }
 }
 
-void HighsPrimalHeuristics::RINS(const std::vector<double>& relaxationsol) {
+void HighsPrimalHeuristics::RINS(const std::vector<HighsFloat>& relaxationsol) {
   if (int(relaxationsol.size()) != mipsolver.numCol()) return;
 
   intcols.erase(std::remove_if(intcols.begin(), intcols.end(),
@@ -514,9 +514,9 @@ void HighsPrimalHeuristics::RINS(const std::vector<double>& relaxationsol) {
 
   // determine the initial number of unfixed variables fixing rate to decide if
   // the problem is restricted enough to be considered for solving a submip
-  double maxfixingrate = determineTargetFixingRate();
-  double minfixingrate = 0.25;
-  double fixingrate = 0.0;
+  HighsFloat maxfixingrate = determineTargetFixingRate();
+  HighsFloat minfixingrate = 0.25;
+  HighsFloat fixingrate = 0.0;
   bool stop = false;
   HighsInt nbacktracks = -1;
   HighsInt targetdepth = 1;
@@ -563,7 +563,7 @@ retry:
     if (fixingrate >= maxfixingrate) break;
     if (nbacktracks >= 10) break;
 
-    std::vector<std::pair<HighsInt, double>>::iterator fixcandend;
+    std::vector<std::pair<HighsInt, HighsFloat>>::iterator fixcandend;
 
     // partition the fractional variables to consider which ones should we fix
     // in this dive first if there is an incumbent, we dive towards the RINS
@@ -571,7 +571,7 @@ retry:
     fixcandend = std::partition(
         heurlp.getFractionalIntegers().begin(),
         heurlp.getFractionalIntegers().end(),
-        [&](const std::pair<HighsInt, double>& fracvar) {
+        [&](const std::pair<HighsInt, HighsFloat>& fracvar) {
           return std::abs(relaxationsol[fracvar.first] -
                           mipsolver.mipdata_->incumbent[fracvar.first]) <=
                  mipsolver.mipdata_->feastol;
@@ -579,8 +579,8 @@ retry:
 
     bool fixtolpsol = true;
 
-    auto getFixVal = [&](HighsInt col, double fracval) {
-      double fixval;
+    auto getFixVal = [&](HighsInt col, HighsFloat fracval) {
+      HighsFloat fixval;
       if (fixtolpsol) {
         // RINS neighborhood (with extension)
         fixval = std::floor(relaxationsol[col] + 0.5);
@@ -589,7 +589,7 @@ retry:
         // solution if the change is at least 0.4
         // otherwise take the direction where the objective gets worse
         // if objcetive is zero round to nearest integer
-        double rootchange = fracval - mipsolver.mipdata_->rootlpsol[col];
+        HighsFloat rootchange = fracval - mipsolver.mipdata_->rootlpsol[col];
         if (rootchange >= 0.4)
           fixval = std::ceil(fracval);
         else if (rootchange <= -0.4)
@@ -613,7 +613,7 @@ retry:
     HighsInt numBranched = 0;
     if (heurlp.getFractionalIntegers().begin() == fixcandend) {
       fixingrate = neighborhood.getFixingRate();
-      double stopFixingRate =
+      HighsFloat stopFixingRate =
           std::min(maxfixingrate, 1.0 - (1.0 - fixingrate) * 0.9);
       const auto& currlpsol = heurlp.getSolution().col_value;
       for (HighsInt i : intcols) {
@@ -621,7 +621,7 @@ retry:
 
         if (std::abs(currlpsol[i] - mipsolver.mipdata_->incumbent[i]) <=
             mipsolver.mipdata_->feastol) {
-          double fixval = std::round(currlpsol[i]);
+          HighsFloat fixval = std::round(currlpsol[i]);
           HighsInt oldNumBranched = numBranched;
           if (localdom.col_lower_[i] < fixval) {
             ++numBranched;
@@ -671,8 +671,8 @@ retry:
     // now sort the variables by their distance towards the value they will be
     // fixed to
     pdqsort(heurlp.getFractionalIntegers().begin(), fixcandend,
-            [&](const std::pair<HighsInt, double>& a,
-                const std::pair<HighsInt, double>& b) {
+            [&](const std::pair<HighsInt, HighsFloat>& a,
+                const std::pair<HighsInt, HighsFloat>& b) {
               return std::make_pair(
                          std::abs(getFixVal(a.first, a.second) - a.second),
                          HighsHashHelpers::hash(
@@ -685,10 +685,10 @@ retry:
                              heurlp.getFractionalIntegers().size()));
             });
 
-    double change = 0.0;
+    HighsFloat change = 0.0;
     // select a set of fractional variables to fix
     for (auto fracint : heurlp.getFractionalIntegers()) {
-      double fixval = getFixVal(fracint.first, fracint.second);
+      HighsFloat fixval = getFixVal(fracint.first, fracint.second);
 
       if (localdom.col_lower_[fracint.first] < fixval) {
         ++numBranched;
@@ -761,14 +761,14 @@ retry:
   }
 }
 
-bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<double>& point,
+bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<HighsFloat>& point,
                                             char source) {
   auto localdom = mipsolver.mipdata_->domain;
 
   HighsInt numintcols = intcols.size();
   for (HighsInt i = 0; i != numintcols; ++i) {
     HighsInt col = intcols[i];
-    double intval = point[col];
+    HighsFloat intval = point[col];
     intval = std::min(localdom.col_upper_[col], intval);
     intval = std::max(localdom.col_lower_[col], intval);
 
@@ -793,7 +793,7 @@ bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<double>& point,
                                            localdom.col_lower_.data(),
                                            localdom.col_upper_.data());
 
-    if (numintcols / (double)mipsolver.numCol() >= 0.2)
+    if (numintcols / (HighsFloat)mipsolver.numCol() >= 0.2)
       lprelax.getLpSolver().setOptionValue("presolve", "on");
     else
       lprelax.getLpSolver().setBasis(mipsolver.mipdata_->firstrootbasis);
@@ -802,8 +802,8 @@ bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<double>& point,
 
     if (st == HighsLpRelaxation::Status::kInfeasible) {
       std::vector<HighsInt> inds;
-      std::vector<double> vals;
-      double rhs;
+      std::vector<HighsFloat> vals;
+      HighsFloat rhs;
       if (lprelax.computeDualInfProof(mipsolver.mipdata_->domain, inds, vals,
                                       rhs)) {
         HighsCutGeneration cutGen(lprelax, mipsolver.mipdata_->cutpool);
@@ -822,20 +822,20 @@ bool HighsPrimalHeuristics::tryRoundedPoint(const std::vector<double>& point,
 }
 
 bool HighsPrimalHeuristics::linesearchRounding(
-    const std::vector<double>& point1, const std::vector<double>& point2,
+    const std::vector<HighsFloat>& point1, const std::vector<HighsFloat>& point2,
     char source) {
-  std::vector<double> roundedpoint;
+  std::vector<HighsFloat> roundedpoint;
 
   HighsInt numintcols = intcols.size();
   roundedpoint.resize(mipsolver.numCol());
 
-  double alpha = 0.0;
+  HighsFloat alpha = 0.0;
   assert(int(mipsolver.mipdata_->uplocks.size()) == mipsolver.numCol());
   assert(int(point1.size()) == mipsolver.numCol());
   assert(int(point2.size()) == mipsolver.numCol());
 
   while (alpha < 1.0) {
-    double nextalpha = 1.0;
+    HighsFloat nextalpha = 1.0;
     bool reachedpoint2 = true;
     // printf("trying alpha = %g\n", alpha);
     for (HighsInt i = 0; i != numintcols; ++i) {
@@ -854,14 +854,14 @@ bool HighsPrimalHeuristics::linesearchRounding(
         continue;
       }
 
-      double convexcomb = (1.0 - alpha) * point1[col] + alpha * point2[col];
-      double intpoint2 = std::floor(point2[col] + 0.5);
+      HighsFloat convexcomb = (1.0 - alpha) * point1[col] + alpha * point2[col];
+      HighsFloat intpoint2 = std::floor(point2[col] + 0.5);
       roundedpoint[col] = std::floor(convexcomb + 0.5);
 
       if (roundedpoint[col] == intpoint2) continue;
 
       reachedpoint2 = false;
-      double tmpalpha = (roundedpoint[col] + 0.5 + mipsolver.mipdata_->feastol -
+      HighsFloat tmpalpha = (roundedpoint[col] + 0.5 + mipsolver.mipdata_->feastol -
                          point1[col]) /
                         std::abs(point2[col] - point1[col]);
       if (tmpalpha < nextalpha && tmpalpha > alpha + 1e-2) nextalpha = tmpalpha;
@@ -878,13 +878,13 @@ bool HighsPrimalHeuristics::linesearchRounding(
 }
 
 void HighsPrimalHeuristics::randomizedRounding(
-    const std::vector<double>& relaxationsol) {
+    const std::vector<HighsFloat>& relaxationsol) {
   if (int(relaxationsol.size()) != mipsolver.numCol()) return;
 
   auto localdom = mipsolver.mipdata_->domain;
 
   for (HighsInt i : intcols) {
-    double intval;
+    HighsFloat intval;
     if (mipsolver.mipdata_->uplocks[i] == 0)
       intval = std::ceil(relaxationsol[i] - mipsolver.mipdata_->feastol);
     else if (mipsolver.mipdata_->downlocks[i] == 0)
@@ -915,7 +915,7 @@ void HighsPrimalHeuristics::randomizedRounding(
     lprelax.getLpSolver().changeColsBounds(0, mipsolver.numCol() - 1,
                                            localdom.col_lower_.data(),
                                            localdom.col_upper_.data());
-    if (intcols.size() / (double)mipsolver.numCol() >= 0.2)
+    if (intcols.size() / (HighsFloat)mipsolver.numCol() >= 0.2)
       lprelax.getLpSolver().setOptionValue("presolve", "on");
     else
       lprelax.getLpSolver().setBasis(mipsolver.mipdata_->firstrootbasis);
@@ -923,8 +923,8 @@ void HighsPrimalHeuristics::randomizedRounding(
 
     if (st == HighsLpRelaxation::Status::kInfeasible) {
       std::vector<HighsInt> inds;
-      std::vector<double> vals;
-      double rhs;
+      std::vector<HighsFloat> vals;
+      HighsFloat rhs;
       if (lprelax.computeDualInfProof(mipsolver.mipdata_->domain, inds, vals,
                                       rhs)) {
         HighsCutGeneration cutGen(lprelax, mipsolver.mipdata_->cutpool);
@@ -944,18 +944,18 @@ void HighsPrimalHeuristics::feasibilityPump() {
   HighsLpRelaxation lprelax(mipsolver.mipdata_->lp);
   std::unordered_set<std::vector<HighsInt>, HighsVectorHasher, HighsVectorEqual>
       referencepoints;
-  std::vector<double> roundedsol;
+  std::vector<HighsFloat> roundedsol;
   HighsLpRelaxation::Status status = lprelax.resolveLp();
   lp_iterations += lprelax.getNumLpIterations();
 
-  std::vector<double> fracintcost;
+  std::vector<HighsFloat> fracintcost;
   std::vector<HighsInt> fracintset;
 
   std::vector<HighsInt> mask(mipsolver.model_->num_col_, 1);
-  std::vector<double> cost(mipsolver.model_->num_col_, 0.0);
+  std::vector<HighsFloat> cost(mipsolver.model_->num_col_, 0.0);
   if (mipsolver.mipdata_->upper_limit != kHighsInf) {
     std::vector<HighsInt> objinds;
-    std::vector<double> objval;
+    std::vector<HighsFloat> objval;
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
       if (mipsolver.colCost(i) != 0) {
         objinds.push_back(i);
@@ -985,7 +985,7 @@ void HighsPrimalHeuristics::feasibilityPump() {
     auto localdom = mipsolver.mipdata_->domain;
     for (HighsInt i : mipsolver.mipdata_->integer_cols) {
       assert(mipsolver.variableType(i) == HighsVarType::kInteger);
-      double intval = std::floor(roundedsol[i] + randgen.real(0.4, 0.6));
+      HighsFloat intval = std::floor(roundedsol[i] + randgen.real(0.4, 0.6));
       intval = std::max(intval, localdom.col_lower_[i]);
       intval = std::min(intval, localdom.col_upper_[i]);
       roundedsol[i] = intval;
@@ -1074,7 +1074,7 @@ void HighsPrimalHeuristics::centralRounding() {
 
   if (false && mipsolver.mipdata_->upper_limit != kHighsInf) {
     std::vector<HighsInt> objinds;
-    std::vector<double> objval;
+    std::vector<HighsFloat> objval;
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
       if (mipsolver.colCost(i) != 0) {
         objinds.push_back(i);
@@ -1086,17 +1086,17 @@ void HighsPrimalHeuristics::centralRounding() {
                objinds.data(), objval.data());
   }
   ipm.run();
-  const std::vector<double>& sol = ipm.getSolution().col_value;
+  const std::vector<HighsFloat>& sol = ipm.getSolution().col_value;
   if (int(sol.size()) != mipsolver.numCol()) return;
   if (ipm.getModelStatus() == HighsModelStatus::kOptimal) {
     HighsInt nfixed = 0;
     HighsInt nintfixed = 0;
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
-      double boundRange = mipsolver.mipdata_->domain.col_upper_[i] -
+      HighsFloat boundRange = mipsolver.mipdata_->domain.col_upper_[i] -
                           mipsolver.mipdata_->domain.col_lower_[i];
       if (boundRange == 0.0) continue;
 
-      double tolerance =
+      HighsFloat tolerance =
           mipsolver.mipdata_->feastol * std::min(boundRange, 1.0);
 
       if (sol[i] <= mipsolver.model_->col_lower_[i] + tolerance) {
@@ -1135,13 +1135,13 @@ void HighsPrimalHeuristics::centralRounding() {
 
 #if 0
 void HighsPrimalHeuristics::clique() {
-  HighsHashTable<HighsInt, double> entries;
-  double offset = 0.0;
+  HighsHashTable<HighsInt, HighsFloat> entries;
+  HighsFloat offset = 0.0;
 
   HighsDomain& globaldom = mipsolver.mipdata_->domain;
   for (HighsInt j = 0; j != mipsolver.numCol(); ++j) {
     HighsInt col = j;
-    double val = mipsolver.colCost(col);
+    HighsFloat val = mipsolver.colCost(col);
     if (val == 0.0) continue;
 
     if (!globaldom.isBinary(col)) {
@@ -1153,11 +1153,11 @@ void HighsPrimalHeuristics::clique() {
     entries[col] += val;
   }
 
-  std::vector<double> profits;
+  std::vector<HighsFloat> profits;
   std::vector<HighsCliqueTable::CliqueVar> objvars;
 
   for (const auto& entry : entries) {
-    double objprofit = -entry.value();
+    HighsFloat objprofit = -entry.value();
     if (objprofit < 0) {
       offset += objprofit;
       profits.push_back(-objprofit);
@@ -1168,13 +1168,13 @@ void HighsPrimalHeuristics::clique() {
     }
   }
 
-  std::vector<double> solution(mipsolver.numCol());
+  std::vector<HighsFloat> solution(mipsolver.numCol());
 
   HighsInt nobjvars = profits.size();
   for (HighsInt i = 0; i != nobjvars; ++i) solution[objvars[i].col] = objvars[i].val;
 
   std::vector<std::vector<HighsCliqueTable::CliqueVar>> cliques;
-  double bestviol;
+  HighsFloat bestviol;
   HighsInt bestviolpos;
   HighsInt numcliques;
 
@@ -1186,7 +1186,7 @@ void HighsPrimalHeuristics::clique() {
     bestviolpos = -1;
 
     for (HighsInt c = 0; c != numcliques; ++c) {
-      double viol = -1.0;
+      HighsFloat viol = -1.0;
       for (HighsCliqueTable::CliqueVar clqvar : cliques[c])
         viol += clqvar.weight(solution);
 

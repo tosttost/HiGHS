@@ -32,11 +32,11 @@ using std::map;
 FilereaderRetcode readMps(const HighsLogOptions& log_options,
                           const std::string filename, HighsInt mxNumRow,
                           HighsInt mxNumCol, HighsInt& numRow, HighsInt& numCol,
-                          ObjSense& objSense, double& objOffset,
+                          ObjSense& objSense, HighsFloat& objOffset,
                           vector<HighsInt>& Astart, vector<HighsInt>& Aindex,
-                          vector<double>& Avalue, vector<double>& colCost,
-                          vector<double>& colLower, vector<double>& colUpper,
-                          vector<double>& rowLower, vector<double>& rowUpper,
+                          vector<HighsFloat>& Avalue, vector<HighsFloat>& colCost,
+                          vector<HighsFloat>& colLower, vector<HighsFloat>& colUpper,
+                          vector<HighsFloat>& rowLower, vector<HighsFloat>& rowUpper,
                           vector<HighsVarType>& integerColumn,
                           vector<string>& col_names, vector<string>& row_names,
                           const HighsInt keep_n_rows) {
@@ -62,7 +62,7 @@ FilereaderRetcode readMps(const HighsLogOptions& log_options,
   const HighsInt lmax = 128;
   char line[lmax];
   char flag[2] = {0, 0};
-  double data[3];
+  HighsFloat data[3];
 
   HighsInt num_alien_entries = 0;
   HighsVarType integerCol = HighsVarType::kContinuous;
@@ -93,8 +93,8 @@ FilereaderRetcode readMps(const HighsLogOptions& log_options,
   row_names.clear();
   col_names.clear();
   vector<char> rowType;
-  map<double, int> rowIndex;
-  double objName = 0;
+  map<HighsFloat, int> rowIndex;
+  HighsFloat objName = 0;
   while (load_mpsLine(file, integerCol, lmax, line, flag, data)) {
     if (flag[0] == 'N' &&
         (objName == 0 || keep_n_rows == kKeepNRowsDeleteRows)) {
@@ -120,8 +120,8 @@ FilereaderRetcode readMps(const HighsLogOptions& log_options,
   highsLogDev(log_options, HighsLogType::kInfo, "readMPS: Read ROWS    OK\n");
 
   // Load COLUMNS
-  map<double, int> colIndex;
-  double lastName = 0;
+  map<HighsFloat, int> colIndex;
+  HighsFloat lastName = 0;
   // flag[1] is used to indicate whether there is more to read on the
   // line - field 5 non-empty. save_flag1 is used to deduce whether
   // the row name and value are from fields 5 and 6, or 3 and 4
@@ -193,7 +193,7 @@ FilereaderRetcode readMps(const HighsLogOptions& log_options,
 
   // Load RHS
   num_alien_entries = 0;
-  vector<double> RHS(numRow, 0);
+  vector<HighsFloat> RHS(numRow, 0);
   save_flag1 = 0;
   while (load_mpsLine(file, integerCol, lmax, line, flag, data)) {
     if (data[2] != objName) {
@@ -384,7 +384,7 @@ FilereaderRetcode readMps(const HighsLogOptions& log_options,
 }
 
 bool load_mpsLine(FILE* file, HighsVarType& integerVar, HighsInt lmax,
-                  char* line, char* flag, double* data) {
+                  char* line, char* flag, HighsFloat* data) {
   HighsInt F1 = 1, F2 = 4, F3 = 14, F4 = 24, F5 = 39, F6 = 49;
   char* fgets_rt;
 
@@ -520,12 +520,12 @@ HighsStatus writeMps(
     const HighsLogOptions& log_options, const std::string filename,
     const std::string model_name, const HighsInt& num_row,
     const HighsInt& num_col, const HighsInt& q_dim, const ObjSense& sense,
-    const double& offset, const vector<double>& col_cost,
-    const vector<double>& col_lower, const vector<double>& col_upper,
-    const vector<double>& row_lower, const vector<double>& row_upper,
+    const HighsFloat& offset, const vector<HighsFloat>& col_cost,
+    const vector<HighsFloat>& col_lower, const vector<HighsFloat>& col_upper,
+    const vector<HighsFloat>& row_lower, const vector<HighsFloat>& row_upper,
     const vector<HighsInt>& a_start, const vector<HighsInt>& a_index,
-    const vector<double>& a_value, const vector<HighsInt>& q_start,
-    const vector<HighsInt>& q_index, const vector<double>& q_value,
+    const vector<HighsFloat>& a_value, const vector<HighsInt>& q_start,
+    const vector<HighsInt>& q_index, const vector<HighsFloat>& q_value,
     const vector<HighsVarType>& integrality,
     const vector<std::string>& col_names, const vector<std::string>& row_names,
     const bool use_free_format) {
@@ -554,7 +554,7 @@ HighsStatus writeMps(
     return HighsStatus::kError;
   }
   vector<HighsInt> r_ty;
-  vector<double> rhs, ranges;
+  vector<HighsFloat> rhs, ranges;
   bool have_rhs = false;
   bool have_ranges = false;
   bool have_bounds = false;
@@ -687,7 +687,7 @@ HighsStatus writeMps(
       num_zero_no_cost_columns++;
       if (write_zero_no_cost_columns) {
         // Give the column a presence by writing out a zero cost
-        double v = 0;
+        HighsFloat v = 0;
         fprintf(file, "    %-8s  COST      %.15g\n", col_names[c_n].c_str(), v);
       }
       continue;
@@ -712,11 +712,11 @@ HighsStatus writeMps(
       }
     }
     if (col_cost[c_n] != 0) {
-      double v = (HighsInt)sense * col_cost[c_n];
+      HighsFloat v = (HighsInt)sense * col_cost[c_n];
       fprintf(file, "    %-8s  COST      %.15g\n", col_names[c_n].c_str(), v);
     }
     for (HighsInt el_n = a_start[c_n]; el_n < a_start[c_n + 1]; el_n++) {
-      double v = a_value[el_n];
+      HighsFloat v = a_value[el_n];
       HighsInt r_n = a_index[el_n];
       fprintf(file, "    %-8s  %-8s  %.15g\n", col_names[c_n].c_str(),
               row_names[r_n].c_str(), v);
@@ -727,11 +727,11 @@ HighsStatus writeMps(
     fprintf(file, "RHS\n");
     if (offset) {
       // Handle the objective offset as a RHS entry for the cost row
-      double v = -(HighsInt)sense * offset;
+      HighsFloat v = -(HighsInt)sense * offset;
       fprintf(file, "    RHS_V     COST      %.15g\n", v);
     }
     for (HighsInt r_n = 0; r_n < num_row; r_n++) {
-      double v = rhs[r_n];
+      HighsFloat v = rhs[r_n];
       if (v) {
         fprintf(file, "    RHS_V     %-8s  %.15g\n", row_names[r_n].c_str(), v);
       }
@@ -740,7 +740,7 @@ HighsStatus writeMps(
   if (have_ranges) {
     fprintf(file, "RANGES\n");
     for (HighsInt r_n = 0; r_n < num_row; r_n++) {
-      double v = ranges[r_n];
+      HighsFloat v = ranges[r_n];
       if (v) {
         fprintf(file, "    RANGE     %-8s  %.15g\n", row_names[r_n].c_str(), v);
       }
@@ -749,8 +749,8 @@ HighsStatus writeMps(
   if (have_bounds) {
     fprintf(file, "BOUNDS\n");
     for (HighsInt c_n = 0; c_n < num_col; c_n++) {
-      double lb = col_lower[c_n];
-      double ub = col_upper[c_n];
+      HighsFloat lb = col_lower[c_n];
+      HighsFloat ub = col_upper[c_n];
       bool discrete = false;
       if (have_int) discrete = integrality[c_n] == HighsVarType::kInteger;
       if (a_start[c_n] == a_start[c_n + 1] && col_cost[c_n] == 0) {

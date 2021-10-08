@@ -32,10 +32,10 @@ class HighsLinearSumBounds {
   std::vector<HighsCD0uble> sumUpper;
   std::vector<HighsInt> numInfSumLower;
   std::vector<HighsInt> numInfSumUpper;
-  const double* varLower;
-  const double* varUpper;
-  const double* implVarLower;
-  const double* implVarUpper;
+  const HighsFloat* varLower;
+  const HighsFloat* varUpper;
+  const HighsFloat* implVarLower;
+  const HighsFloat* implVarUpper;
   const HighsInt* implVarLowerSource;
   const HighsInt* implVarUpperSource;
 
@@ -51,8 +51,8 @@ class HighsLinearSumBounds {
     sumUpperOrig.resize(numSums);
   }
 
-  void setBoundArrays(const double* varLower, const double* varUpper,
-                      const double* implVarLower, const double* implVarUpper,
+  void setBoundArrays(const HighsFloat* varLower, const HighsFloat* varUpper,
+                      const HighsFloat* implVarLower, const HighsFloat* implVarUpper,
                       const HighsInt* implVarLowerSource,
                       const HighsInt* implVarUpperSource) {
     this->varLower = varLower;
@@ -63,7 +63,7 @@ class HighsLinearSumBounds {
     this->implVarUpperSource = implVarUpperSource;
   }
 
-  void sumScaled(HighsInt sum, double scale) {
+  void sumScaled(HighsInt sum, HighsFloat scale) {
     sumLowerOrig[sum] *= scale;
     sumUpperOrig[sum] *= scale;
     sumLower[sum] *= scale;
@@ -77,70 +77,70 @@ class HighsLinearSumBounds {
     }
   }
 
-  void add(HighsInt sum, HighsInt var, double coefficient);
+  void add(HighsInt sum, HighsInt var, HighsFloat coefficient);
 
-  void remove(HighsInt sum, HighsInt var, double coefficient);
+  void remove(HighsInt sum, HighsInt var, HighsFloat coefficient);
 
-  void updatedVarUpper(HighsInt sum, HighsInt var, double coefficient,
-                       double oldVarUpper);
+  void updatedVarUpper(HighsInt sum, HighsInt var, HighsFloat coefficient,
+                       HighsFloat oldVarUpper);
 
-  void updatedVarLower(HighsInt sum, HighsInt var, double coefficient,
-                       double oldVarLower);
+  void updatedVarLower(HighsInt sum, HighsInt var, HighsFloat coefficient,
+                       HighsFloat oldVarLower);
 
-  void updatedImplVarUpper(HighsInt sum, HighsInt var, double coefficient,
-                           double oldImplVarUpper,
+  void updatedImplVarUpper(HighsInt sum, HighsInt var, HighsFloat coefficient,
+                           HighsFloat oldImplVarUpper,
                            HighsInt oldImplVarUpperSource);
 
-  void updatedImplVarLower(HighsInt sum, HighsInt var, double coefficient,
-                           double oldImplVarLower,
+  void updatedImplVarLower(HighsInt sum, HighsInt var, HighsFloat coefficient,
+                           HighsFloat oldImplVarLower,
                            HighsInt oldImplVarLowerSource);
 
-  double getResidualSumLower(HighsInt sum, HighsInt var,
-                             double coefficient) const;
+  HighsFloat getResidualSumLower(HighsInt sum, HighsInt var,
+                             HighsFloat coefficient) const;
 
-  double getResidualSumUpper(HighsInt sum, HighsInt var,
-                             double coefficient) const;
+  HighsFloat getResidualSumUpper(HighsInt sum, HighsInt var,
+                             HighsFloat coefficient) const;
 
-  double getResidualSumLowerOrig(HighsInt sum, HighsInt var,
-                                 double coefficient) const;
+  HighsFloat getResidualSumLowerOrig(HighsInt sum, HighsInt var,
+                                 HighsFloat coefficient) const;
 
-  double getResidualSumUpperOrig(HighsInt sum, HighsInt var,
-                                 double coefficient) const;
+  HighsFloat getResidualSumUpperOrig(HighsInt sum, HighsInt var,
+                                 HighsFloat coefficient) const;
 
-  double getSumLowerOrig(HighsInt sum) const {
-    return numInfSumLowerOrig[sum] == 0 ? double(sumLowerOrig[sum])
+  HighsFloat getSumLowerOrig(HighsInt sum) const {
+    return numInfSumLowerOrig[sum] == 0 ? HighsFloat(sumLowerOrig[sum])
                                         : -kHighsInf;
   }
 
-  double getSumUpperOrig(HighsInt sum) const {
-    return numInfSumUpperOrig[sum] == 0 ? double(sumUpperOrig[sum]) : kHighsInf;
+  HighsFloat getSumUpperOrig(HighsInt sum) const {
+    return numInfSumUpperOrig[sum] == 0 ? HighsFloat(sumUpperOrig[sum]) : kHighsInf;
   }
 
-  double getSumLower(HighsInt sum) const {
-    return numInfSumLower[sum] == 0 ? double(sumLower[sum]) : -kHighsInf;
+  HighsFloat getSumLower(HighsInt sum) const {
+    return numInfSumLower[sum] == 0 ? HighsFloat(sumLower[sum]) : -kHighsInf;
   }
 
-  double getSumUpper(HighsInt sum) const {
-    return numInfSumUpper[sum] == 0 ? double(sumUpper[sum]) : kHighsInf;
+  HighsFloat getSumUpper(HighsInt sum) const {
+    return numInfSumUpper[sum] == 0 ? HighsFloat(sumUpper[sum]) : kHighsInf;
   }
 
-  double getSumLower(HighsInt sum, double offset) const {
-    return numInfSumLower[sum] == 0 ? double(sumLower[sum] + offset)
+  HighsFloat getSumLower(HighsInt sum, HighsFloat offset) const {
+    return numInfSumLower[sum] == 0 ? HighsFloat(sumLower[sum] + offset)
                                     : -kHighsInf;
   }
 
-  double getSumUpper(HighsInt sum, double offset) const {
-    return numInfSumUpper[sum] == 0 ? double(sumUpper[sum] + offset)
+  HighsFloat getSumUpper(HighsInt sum, HighsFloat offset) const {
+    return numInfSumUpper[sum] == 0 ? HighsFloat(sumUpper[sum] + offset)
                                     : kHighsInf;
   }
 
-  double getSumLower(HighsInt sum, HighsCD0uble offset) const {
-    return numInfSumLower[sum] == 0 ? double(sumLower[sum] + offset)
+  HighsFloat getSumLower(HighsInt sum, HighsCD0uble offset) const {
+    return numInfSumLower[sum] == 0 ? HighsFloat(sumLower[sum] + offset)
                                     : -kHighsInf;
   }
 
-  double getSumUpper(HighsInt sum, HighsCD0uble offset) const {
-    return numInfSumUpper[sum] == 0 ? double(sumUpper[sum] + offset)
+  HighsFloat getSumUpper(HighsInt sum, HighsCD0uble offset) const {
+    return numInfSumUpper[sum] == 0 ? HighsFloat(sumUpper[sum] + offset)
                                     : kHighsInf;
   }
 

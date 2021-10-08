@@ -37,6 +37,7 @@ typedef unsigned int HighsUInt;
 #define HIGHSINT_FORMAT "d"
 #endif
 
-typedef __float128 HighsFloat;
+//typedef __float128 HighsFloat;
+typedef double HighsFloat;
 
 #endif

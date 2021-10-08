@@ -72,19 +72,19 @@ class Highs {
   HighsStatus passModel(
       const HighsInt num_col, const HighsInt num_row, const HighsInt num_nz,
       const HighsInt q_num_nz, const HighsInt a_format, const HighsInt q_format,
-      const HighsInt sense, const double offset, const double* costs,
-      const double* col_lower, const double* col_upper, const double* row_lower,
-      const double* row_upper, const HighsInt* astart, const HighsInt* aindex,
-      const double* avalue, const HighsInt* q_start, const HighsInt* q_index,
-      const double* q_value, const HighsInt* integrality = NULL);
+      const HighsInt sense, const HighsFloat offset, const HighsFloat* costs,
+      const HighsFloat* col_lower, const HighsFloat* col_upper, const HighsFloat* row_lower,
+      const HighsFloat* row_upper, const HighsInt* astart, const HighsInt* aindex,
+      const HighsFloat* avalue, const HighsInt* q_start, const HighsInt* q_index,
+      const HighsFloat* q_value, const HighsInt* integrality = NULL);
 
   HighsStatus passModel(const HighsInt num_col, const HighsInt num_row,
                         const HighsInt num_nz, const HighsInt a_format,
-                        const HighsInt sense, const double offset,
-                        const double* costs, const double* col_lower,
-                        const double* col_upper, const double* row_lower,
-                        const double* row_upper, const HighsInt* astart,
-                        const HighsInt* aindex, const double* avalue,
+                        const HighsInt sense, const HighsFloat offset,
+                        const HighsFloat* costs, const HighsFloat* col_lower,
+                        const HighsFloat* col_upper, const HighsFloat* row_lower,
+                        const HighsFloat* row_upper, const HighsInt* astart,
+                        const HighsInt* aindex, const HighsFloat* avalue,
                         const HighsInt* integrality = NULL);
 
   /**
@@ -94,7 +94,7 @@ class Highs {
 
   HighsStatus passHessian(const HighsInt dim, const HighsInt num_nz,
                           const HighsInt format, const HighsInt* start,
-                          const HighsInt* index, const double* value);
+                          const HighsInt* index, const HighsFloat* value);
 
   /**
    * @brief reads in a model as the incumbent model
@@ -156,7 +156,7 @@ class Highs {
 #endif
 
   HighsStatus setOptionValue(const std::string& option,  //!< The option name
-                             const double value          //!< The option value
+                             const HighsFloat value          //!< The option value
   );
 
   HighsStatus setOptionValue(const std::string& option,  //!< The option name
@@ -188,7 +188,7 @@ class Highs {
   );
 
   HighsStatus getOptionValue(const std::string& option,  //!< The option name
-                             double& value               //!< The option value
+                             HighsFloat& value               //!< The option value
   );
 
   HighsStatus getOptionValue(const std::string& option,  //!< The option name
@@ -219,7 +219,7 @@ class Highs {
   );
 
   HighsStatus getInfoValue(const std::string& info,  //!< The info name
-                           double& value) const;     //!< The info value
+                           HighsFloat& value) const;     //!< The info value
 
   HighsStatus writeInfo(const std::string filename  //!< The filename
   );
@@ -274,14 +274,14 @@ class Highs {
    * @brief Indicates whether a dual unbounded ray exdists, and gets
    * it if it does and dual_ray is not NULL
    */
-  HighsStatus getDualRay(bool& has_dual_ray, double* dual_ray_value = NULL);
+  HighsStatus getDualRay(bool& has_dual_ray, HighsFloat* dual_ray_value = NULL);
 
   /**
    * @brief Indicates whether a primal unbounded ray exdists, and gets
    * it if it does and primal_ray is not NULL
    */
   HighsStatus getPrimalRay(bool& has_primal_ray,
-                           double* primal_ray_value = NULL);
+                           HighsFloat* primal_ray_value = NULL);
 
   /**
    * @brief Gets the ranging information for the current LP
@@ -291,7 +291,7 @@ class Highs {
   /**
    * @brief Gets the current model objective value
    */
-  double getObjectiveValue() { return info_.objective_function_value; }
+  HighsFloat getObjectiveValue() { return info_.objective_function_value; }
 
   /**
    * Methods for operations with the invertible representation of the
@@ -312,7 +312,7 @@ class Highs {
    */
   HighsStatus getBasisInverseRow(
       const HighsInt row,           //!< Index of row required
-      double* row_vector,           //!< Row required
+      HighsFloat* row_vector,           //!< Row required
       HighsInt* row_num_nz = NULL,  //!< Number of nonzeros
       HighsInt* row_indices = NULL  //!< Indices of nonzeros
   );
@@ -322,7 +322,7 @@ class Highs {
    */
   HighsStatus getBasisInverseCol(
       const HighsInt col,           //!< Index of column required
-      double* col_vector,           //!< Column required
+      HighsFloat* col_vector,           //!< Column required
       HighsInt* col_num_nz = NULL,  //!< Number of nonzeros
       HighsInt* col_indices = NULL  //!< Indices of nonzeros
   );
@@ -332,8 +332,8 @@ class Highs {
    * \f$\mathbf{b}\f$
    */
   HighsStatus getBasisSolve(
-      const double* rhs,                 //!< RHS \f$\mathbf{b}\f$
-      double* solution_vector,           //!< Solution  \f$\mathbf{x}\f$
+      const HighsFloat* rhs,                 //!< RHS \f$\mathbf{b}\f$
+      HighsFloat* solution_vector,           //!< Solution  \f$\mathbf{x}\f$
       HighsInt* solution_num_nz = NULL,  //!< Number of nonzeros
       HighsInt* solution_indices = NULL  //!< Indices of nonzeros
   );
@@ -343,8 +343,8 @@ class Highs {
    * \f$\mathbf{b}\f$
    */
   HighsStatus getBasisTransposeSolve(
-      const double* rhs,                 //!< RHS \f$\mathbf{b}\f$
-      double* solution_vector,           //!< Solution  \f$\mathbf{x}\f$
+      const HighsFloat* rhs,                 //!< RHS \f$\mathbf{b}\f$
+      HighsFloat* solution_vector,           //!< Solution  \f$\mathbf{x}\f$
       HighsInt* solution_nz = NULL,      //!< Number of nonzeros
       HighsInt* solution_indices = NULL  //!< Indices of nonzeros
   );
@@ -354,10 +354,10 @@ class Highs {
    */
   HighsStatus getReducedRow(
       const HighsInt row,            //!< Index of row required
-      double* row_vector,            //!< Row required
+      HighsFloat* row_vector,            //!< Row required
       HighsInt* row_num_nz = NULL,   //!< Number of nonzeros
       HighsInt* row_indices = NULL,  //!< Indices of nonzeros
-      const double* pass_basis_inverse_row_vector =
+      const HighsFloat* pass_basis_inverse_row_vector =
           NULL  //!< Necessary row of \f$B^{-1}\f$
   );
 
@@ -366,7 +366,7 @@ class Highs {
    */
   HighsStatus getReducedColumn(
       const HighsInt col,           //!< Index of column required
-      double* col_vector,           //!< Column required
+      HighsFloat* col_vector,           //!< Column required
       HighsInt* col_num_nz = NULL,  //!< Number of nonzeros
       HighsInt* col_indices = NULL  //!< Indices of nonzeros
   );
@@ -400,7 +400,7 @@ class Highs {
   /**
    * @brief Get the objective offset of the model
    */
-  HighsStatus getObjectiveOffset(double& offset);
+  HighsStatus getObjectiveOffset(HighsFloat& offset);
 
   /**
    * @brief Get multiple columns from the model given by an interval
@@ -411,15 +411,15 @@ class Highs {
       const HighsInt to_col,    //!< One more than the last column to get
                                 //!< from the model
       HighsInt& num_col,        //!< Number of columns got from the model
-      double* costs,            //!< Array of size num_col with costs
-      double* lower,            //!< Array of size num_col with lower bounds
-      double* upper,            //!< Array of size num_col with upper bounds
+      HighsFloat* costs,            //!< Array of size num_col with costs
+      HighsFloat* lower,            //!< Array of size num_col with lower bounds
+      HighsFloat* upper,            //!< Array of size num_col with upper bounds
       HighsInt& num_nz,         //!< Number of nonzeros got from the model
       HighsInt* matrix_start,   //!< Array of size num_col with start
                                 //!< indices of the columns
       HighsInt* matrix_index,   //!< Array of size num_nz with row
                                 //!< indices for the columns
-      double* matrix_value      //!< Array of size num_nz with row values
+      HighsFloat* matrix_value      //!< Array of size num_nz with row values
                                 //!< for the columns
   );
 
@@ -431,15 +431,15 @@ class Highs {
       const HighsInt* set,     //!< Array of size num_set_entries with indices
                                //!< of columns to get
       HighsInt& num_col,       //!< Number of columns got from the model
-      double* costs,           //!< Array of size num_col with costs
-      double* lower,           //!< Array of size num_col with lower bounds
-      double* upper,           //!< Array of size num_col with upper bounds
+      HighsFloat* costs,           //!< Array of size num_col with costs
+      HighsFloat* lower,           //!< Array of size num_col with lower bounds
+      HighsFloat* upper,           //!< Array of size num_col with upper bounds
       HighsInt& num_nz,        //!< Number of nonzeros got from the model
       HighsInt* matrix_start,  //!< Array of size num_col with start indices
                                //!< of the columns
       HighsInt* matrix_index,  //!< Array of size num_nz with row indices
                                //!< for the columns
-      double* matrix_value     //!< Array of size num_nz with row values
+      HighsFloat* matrix_value     //!< Array of size num_nz with row values
                                //!< for the columns
   );
 
@@ -449,15 +449,15 @@ class Highs {
   HighsStatus getCols(
       const HighsInt* mask,    //!< Full length array with 1 => get; 0 => not
       HighsInt& num_col,       //!< Number of columns got from the model
-      double* costs,           //!< Array of size num_col with costs
-      double* lower,           //!< Array of size num_col with lower bounds
-      double* upper,           //!< Array of size num_col with upper bounds
+      HighsFloat* costs,           //!< Array of size num_col with costs
+      HighsFloat* lower,           //!< Array of size num_col with lower bounds
+      HighsFloat* upper,           //!< Array of size num_col with upper bounds
       HighsInt& num_nz,        //!< Number of nonzeros got from the model
       HighsInt* matrix_start,  //!<  Array of size num_col with start
                                //!<  indices of the columns
       HighsInt* matrix_index,  //!<  Array of size num_nz with row indices
                                //!<  for the columns
-      double* matrix_value     //!<  Array of size num_nz with row values
+      HighsFloat* matrix_value     //!<  Array of size num_nz with row values
                                //!<  for the columns
   );
 
@@ -469,14 +469,14 @@ class Highs {
           from_row,  //!< The index of the first row to get from the model
       const HighsInt to_row,  //!< One more than the last row get from the model
       HighsInt& num_row,      //!< Number of rows got from the model
-      double* lower,          //!< Array of size num_row with lower bounds
-      double* upper,          //!< Array of size num_row with upper bounds
+      HighsFloat* lower,          //!< Array of size num_row with lower bounds
+      HighsFloat* upper,          //!< Array of size num_row with upper bounds
       HighsInt& num_nz,       //!< Number of nonzeros got from the model
       HighsInt* matrix_start,  //!< Array of size num_row with start indices of
                                //!< the rows
       HighsInt* matrix_index,  //!< Array of size num_nz with column indices for
                                //!< the rows
-      double* matrix_value  //!< Array of size num_nz with column values for the
+      HighsFloat* matrix_value  //!< Array of size num_nz with column values for the
                             //!< rows
   );
 
@@ -488,14 +488,14 @@ class Highs {
       const HighsInt* set,     //!< Array of size num_set_entries with indices
                                //!< of rows to get
       HighsInt& num_row,       //!< Number of rows got from the model
-      double* lower,           //!< Array of size num_row with lower bounds
-      double* upper,           //!< Array of size num_row with upper bounds
+      HighsFloat* lower,           //!< Array of size num_row with lower bounds
+      HighsFloat* upper,           //!< Array of size num_row with upper bounds
       HighsInt& num_nz,        //!< Number of nonzeros got from the model
       HighsInt* matrix_start,  //!< Array of size num_row with start indices
                                //!< of the rows
       HighsInt* matrix_index,  //!< Array of size num_nz with column indices
                                //!< for the rows
-      double* matrix_value     //!< Array of size num_nz with column
+      HighsFloat* matrix_value     //!< Array of size num_nz with column
                                //!< values for the rows
   );
 
@@ -505,14 +505,14 @@ class Highs {
   HighsStatus getRows(
       const HighsInt* mask,    //!< Full length array with 1 => get; 0 => not
       HighsInt& num_row,       //!< Number of rows got from the model
-      double* lower,           //!< Array of size num_row with lower bounds
-      double* upper,           //!< Array of size num_row with upper bounds
+      HighsFloat* lower,           //!< Array of size num_row with lower bounds
+      HighsFloat* upper,           //!< Array of size num_row with upper bounds
       HighsInt& num_nz,        //!< Number of nonzeros got from the model
       HighsInt* matrix_start,  //!< Array of size num_row with start indices
                                //!< of the rows
       HighsInt* matrix_index,  //!< Array of size num_nz with column indices
                                //!< for the rows
-      double* matrix_value     //!< Array of size num_nz with column
+      HighsFloat* matrix_value     //!< Array of size num_nz with column
                                //!< values for the rows
   );
 
@@ -521,7 +521,7 @@ class Highs {
    */
   HighsStatus getCoeff(const HighsInt row,  //!< Row of coefficient to be got
                        const HighsInt col,  //!< Column of coefficient to be got
-                       double& value        //!< Coefficient
+                       HighsFloat& value        //!< Coefficient
   );
 
   /**
@@ -551,7 +551,7 @@ class Highs {
    * @brief Change the objective offset of the model
    */
   HighsStatus changeObjectiveOffset(
-      const double offset  //!< New objective offset
+      const HighsFloat offset  //!< New objective offset
   );
 
   /**
@@ -599,7 +599,7 @@ class Highs {
    */
   HighsStatus changeColCost(
       const HighsInt col,  //!< The index of the column whose cost is to change
-      const double cost    //!< The new cost
+      const HighsFloat cost    //!< The new cost
   );
 
   /**
@@ -610,7 +610,7 @@ class Highs {
           from_col,  //!< The index of the first column whose cost changes
       const HighsInt to_col,  //!< One more than the index of the last column
                               //!< whose cost changes
-      const double* cost      //!< Array of size num_set_entries with new costs
+      const HighsFloat* cost      //!< Array of size num_set_entries with new costs
   );
 
   /**
@@ -620,7 +620,7 @@ class Highs {
       const HighsInt num_set_entries,  //!< The number of indides in the set
       const HighsInt* set,  //!< Array of size num_set_entries with indices of
                             //!< columns whose costs change
-      const double* cost    //!< Array of size num_set_entries with new costs
+      const HighsFloat* cost    //!< Array of size num_set_entries with new costs
   );
 
   /**
@@ -628,7 +628,7 @@ class Highs {
    */
   HighsStatus changeColsCost(
       const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-      const double* cost     //!< Full length array of new costs
+      const HighsFloat* cost     //!< Full length array of new costs
   );
 
   /**
@@ -637,8 +637,8 @@ class Highs {
   HighsStatus changeColBounds(
       const HighsInt col,  //!< The index of the column whose
                            //!< bounds are to change
-      const double lower,  //!< The new lower bound
-      const double upper   //!< The new upper bound
+      const HighsFloat lower,  //!< The new lower bound
+      const HighsFloat upper   //!< The new upper bound
   );
 
   /**
@@ -649,9 +649,9 @@ class Highs {
           from_col,  //!< The index of the first column whose bounds change
       const HighsInt to_col,  //!< One more than the index of the last column
                               //!< whose bounds change
-      const double*
+      const HighsFloat*
           lower,  //!< Array of size to_col-from_col with new lower bounds
-      const double*
+      const HighsFloat*
           upper  //!< Array of size to_col-from_col with new upper bounds
   );
 
@@ -662,9 +662,9 @@ class Highs {
       const HighsInt num_set_entries,  //!< The number of indides in the set
       const HighsInt* set,  //!< Array of size num_set_entries with indices of
                             //!< columns whose bounds change
-      const double*
+      const HighsFloat*
           lower,  //!< Array of size num_set_entries with new lower bounds
-      const double*
+      const HighsFloat*
           upper  //!< Array of size num_set_entries with new upper bounds
   );
 
@@ -673,8 +673,8 @@ class Highs {
    */
   HighsStatus changeColsBounds(
       const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-      const double* lower,   //!< Full length array of new lower bounds
-      const double* upper    //!< Full length array of new upper bounds
+      const HighsFloat* lower,   //!< Full length array of new lower bounds
+      const HighsFloat* upper    //!< Full length array of new upper bounds
   );
 
   /**
@@ -682,15 +682,15 @@ class Highs {
    */
   HighsStatus changeRowBounds(
       const HighsInt row,  //!< The index of the row whose bounds are to change
-      const double lower,  //!< The new lower bound
-      const double upper   //!< The new upper bound
+      const HighsFloat lower,  //!< The new lower bound
+      const HighsFloat upper   //!< The new upper bound
   );
 
   /**
    * @brief Change the bounds of multiple rows given by an interval
    */
   HighsStatus changeRowsBounds(const HighsInt from_row, const HighsInt to_row,
-                               const double* lower, const double* upper);
+                               const HighsFloat* lower, const HighsFloat* upper);
 
   /**
    * @brief Change the bounds of multiple rows given by a set of indices
@@ -699,9 +699,9 @@ class Highs {
       const HighsInt num_set_entries,  //!< The number of indides in the set
       const HighsInt* set,  //!< Array of size num_set_entries with indices of
                             //!< rows whose bounds change
-      const double*
+      const HighsFloat*
           lower,  //!< Array of size num_set_entries with new lower bounds
-      const double*
+      const HighsFloat*
           upper  //!< Array of size num_set_entries with new upper bounds
   );
 
@@ -710,8 +710,8 @@ class Highs {
    */
   HighsStatus changeRowsBounds(
       const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-      const double* lower,   //!< Full length array of new lower bounds
-      const double* upper    //!< Full length array of new upper bounds
+      const HighsFloat* lower,   //!< Full length array of new lower bounds
+      const HighsFloat* upper    //!< Full length array of new upper bounds
   );
 
   /**
@@ -720,18 +720,18 @@ class Highs {
   HighsStatus changeCoeff(
       const HighsInt row,  //!< Row of coefficient to be changed
       const HighsInt col,  //!< Column of coefficient to be changed
-      const double value   //!< Coefficient
+      const HighsFloat value   //!< Coefficient
   );
   /**
    * @brief Adds a row to the model
    */
   HighsStatus addRow(
-      const double lower,         //!< Lower bound of the row
-      const double upper,         //!< Upper bound of the row
+      const HighsFloat lower,         //!< Lower bound of the row
+      const HighsFloat upper,         //!< Upper bound of the row
       const HighsInt num_new_nz,  //!< Number of nonzeros in the row
       const HighsInt*
           indices,          //!< Array of size num_new_nz with column indices
-      const double* values  //!< Array of size num_new_nz with column values
+      const HighsFloat* values  //!< Array of size num_new_nz with column values
   );
 
   /**
@@ -739,14 +739,14 @@ class Highs {
    */
   HighsStatus addRows(
       const HighsInt num_new_row,  //!< Number of new rows
-      const double* lower,  //!< Array of size num_new_row with lower bounds
-      const double* upper,  //!< Array of size num_new_row with upper bounds
+      const HighsFloat* lower,  //!< Array of size num_new_row with lower bounds
+      const HighsFloat* upper,  //!< Array of size num_new_row with upper bounds
       const HighsInt num_new_nz,  //!< Number of new nonzeros
       const HighsInt*
           starts,  //!< Array of size num_new_row with start indices of the rows
       const HighsInt* indices,  //!< Array of size num_new_nz with column
                                 //!< indices for all rows
-      const double*
+      const HighsFloat*
           values  //!< Array of size num_new_nz with column values for all rows
   );
 
@@ -754,12 +754,12 @@ class Highs {
    * @brief Adds a column to the model
    */
   HighsStatus addCol(
-      const double cost,          //!< Cost of the column
-      const double lower,         //!< Lower bound of the column
-      const double upper,         //!< Upper bound of the column
+      const HighsFloat cost,          //!< Cost of the column
+      const HighsFloat lower,         //!< Lower bound of the column
+      const HighsFloat upper,         //!< Upper bound of the column
       const HighsInt num_new_nz,  //!< Number of nonzeros in the column
       const HighsInt* indices,    //!< Array of size num_new_nz with row indices
-      const double* values        //!< Array of size num_new_nz with row values
+      const HighsFloat* values        //!< Array of size num_new_nz with row values
   );
 
   /**
@@ -767,15 +767,15 @@ class Highs {
    */
   HighsStatus addCols(
       const HighsInt num_new_col,  //!< Number of new columns
-      const double* costs,         //!< Array of size num_new_col with costs
-      const double* lower,  //!< Array of size num_new_col with lower bounds
-      const double* upper,  //!< Array of size num_new_col with upper bounds
+      const HighsFloat* costs,         //!< Array of size num_new_col with costs
+      const HighsFloat* lower,  //!< Array of size num_new_col with lower bounds
+      const HighsFloat* upper,  //!< Array of size num_new_col with upper bounds
       const HighsInt num_new_nz,  //!< Number of new nonzeros
       const HighsInt* starts,  //!< Array of size num_new_row with start indices
                                //!< of the columns
       const HighsInt* indices,  //!< Array of size num_new_nz with row indices
                                 //!< for all columns
-      const double*
+      const HighsFloat*
           values  //!< Array of size num_new_nz with row values for all columns
   );
 
@@ -840,7 +840,7 @@ class Highs {
    * the constant is negative
    */
   HighsStatus scaleCol(const HighsInt col,    //!< Column to change
-                       const double scaleval  //!< Scaling value
+                       const HighsFloat scaleval  //!< Scaling value
   );
 
   /**
@@ -848,7 +848,7 @@ class Highs {
    * is negative
    */
   HighsStatus scaleRow(const HighsInt row,    //!< Row to change
-                       const double scaleval  //!< Scaling value
+                       const HighsFloat scaleval  //!< Scaling value
   );
 
   /**
@@ -904,12 +904,12 @@ class Highs {
   /**
    * @brief Gets the value of infinity used by HiGHS
    */
-  double getInfinity() { return kHighsInf; }
+  HighsFloat getInfinity() { return kHighsInf; }
 
   /**
    * @brief Gets the run time of HiGHS
    */
-  double getRunTime() { return timer_.readRunHighsClock(); }
+  HighsFloat getRunTime() { return timer_.readRunHighsClock(); }
 
   std::string modelStatusToString(const HighsModelStatus model_status) const;
 
@@ -964,7 +964,7 @@ class Highs {
 
   HighsStatus setHighsOptionValue(
       const std::string& option,  //!< The option name
-      const double value          //!< The option value
+      const HighsFloat value          //!< The option value
   );
 
   HighsStatus setHighsOptionValue(
@@ -995,7 +995,7 @@ class Highs {
 
   HighsStatus getHighsOptionValue(
       const std::string& option,  //!< The option name
-      double& value               //!< The option value
+      HighsFloat& value               //!< The option value
   );
 
   HighsStatus getHighsOptionValue(
@@ -1036,14 +1036,14 @@ class Highs {
   );
 
   HighsStatus getHighsInfoValue(const std::string& info,  //!< The info name
-                                double& value) const;     //!< The info value
+                                HighsFloat& value) const;     //!< The info value
 
   HighsStatus writeHighsInfo(const std::string filename  //!< The filename
   );
 
-  double getHighsInfinity();
+  HighsFloat getHighsInfinity();
 
-  double getHighsRunTime();
+  HighsFloat getHighsRunTime();
 
   HighsStatus writeSolution(const std::string filename,
                             const bool pretty = false) const;
@@ -1143,51 +1143,51 @@ class Highs {
   void underDevelopmentLogMessage(const std::string method_name);
 
   // Interface methods
-  HighsStatus addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
-                               const double* XcolLower, const double* XcolUpper,
+  HighsStatus addColsInterface(HighsInt XnumNewCol, const HighsFloat* XcolCost,
+                               const HighsFloat* XcolLower, const HighsFloat* XcolUpper,
                                HighsInt XnumNewNZ, const HighsInt* XAstart,
-                               const HighsInt* XAindex, const double* XAvalue);
+                               const HighsInt* XAindex, const HighsFloat* XAvalue);
 
-  HighsStatus addRowsInterface(HighsInt XnumNewRow, const double* XrowLower,
-                               const double* XrowUpper, HighsInt XnumNewNZ,
+  HighsStatus addRowsInterface(HighsInt XnumNewRow, const HighsFloat* XrowLower,
+                               const HighsFloat* XrowUpper, HighsInt XnumNewNZ,
                                const HighsInt* XARstart,
                                const HighsInt* XARindex,
-                               const double* XARvalue);
+                               const HighsFloat* XARvalue);
 
   void deleteColsInterface(HighsIndexCollection& index_collection);
 
   void deleteRowsInterface(HighsIndexCollection& index_collection);
 
   void getColsInterface(const HighsIndexCollection& index_collection,
-                        HighsInt& num_col, double* col_cost, double* col_lower,
-                        double* col_upper, HighsInt& num_nz,
+                        HighsInt& num_col, HighsFloat* col_cost, HighsFloat* col_lower,
+                        HighsFloat* col_upper, HighsInt& num_nz,
                         HighsInt* col_matrix_start, HighsInt* col_matrix_index,
-                        double* col_matrix_value);
+                        HighsFloat* col_matrix_value);
 
   void getRowsInterface(const HighsIndexCollection& index_collection,
-                        HighsInt& num_row, double* row_lower, double* row_upper,
+                        HighsInt& num_row, HighsFloat* row_lower, HighsFloat* row_upper,
                         HighsInt& num_nz, HighsInt* row_matrix_start,
-                        HighsInt* row_matrix_index, double* row_matrix_value);
+                        HighsInt* row_matrix_index, HighsFloat* row_matrix_value);
 
   void getCoefficientInterface(const HighsInt Xrow, const HighsInt Xcol,
-                               double& value);
+                               HighsFloat& value);
 
   HighsStatus changeObjectiveSenseInterface(const ObjSense Xsense);
-  HighsStatus changeObjectiveOffsetInterface(const double Xoffset);
+  HighsStatus changeObjectiveOffsetInterface(const HighsFloat Xoffset);
   HighsStatus changeIntegralityInterface(HighsIndexCollection& index_collection,
                                          const HighsVarType* usr_inegrality);
   HighsStatus changeCostsInterface(HighsIndexCollection& index_collection,
-                                   const double* usr_col_cost);
+                                   const HighsFloat* usr_col_cost);
   HighsStatus changeColBoundsInterface(HighsIndexCollection& index_collection,
-                                       const double* usr_col_lower,
-                                       const double* usr_col_upper);
+                                       const HighsFloat* usr_col_lower,
+                                       const HighsFloat* usr_col_upper);
   HighsStatus changeRowBoundsInterface(HighsIndexCollection& index_collection,
-                                       const double* usr_row_lower,
-                                       const double* usr_row_upper);
+                                       const HighsFloat* usr_row_lower,
+                                       const HighsFloat* usr_row_upper);
   void changeCoefficientInterface(const HighsInt Xrow, const HighsInt Xcol,
-                                  const double XnewValue);
-  HighsStatus scaleColInterface(const HighsInt col, const double scaleval);
-  HighsStatus scaleRowInterface(const HighsInt row, const double scaleval);
+                                  const HighsFloat XnewValue);
+  HighsStatus scaleColInterface(const HighsInt col, const HighsFloat scaleval);
+  HighsStatus scaleRowInterface(const HighsInt row, const HighsFloat scaleval);
 
   void setNonbasicStatusInterface(const HighsIndexCollection& index_collection,
                                   const bool columns);
@@ -1195,8 +1195,8 @@ class Highs {
   void appendBasicRowsToBasisInterface(const HighsInt XnumNewRow);
 
   HighsStatus getBasicVariablesInterface(HighsInt* basic_variables);
-  HighsStatus basisSolveInterface(const vector<double>& rhs,
-                                  double* solution_vector,
+  HighsStatus basisSolveInterface(const vector<HighsFloat>& rhs,
+                                  HighsFloat* solution_vector,
                                   HighsInt* solution_num_nz,
                                   HighsInt* solution_indices, bool transpose);
 
@@ -1204,10 +1204,10 @@ class Highs {
 
   void zeroIterationCounts();
 
-  HighsStatus getDualRayInterface(bool& has_dual_ray, double* dual_ray_value);
+  HighsStatus getDualRayInterface(bool& has_dual_ray, HighsFloat* dual_ray_value);
 
   HighsStatus getPrimalRayInterface(bool& has_primal_ray,
-                                    double* primal_ray_value);
+                                    HighsFloat* primal_ray_value);
   bool aFormatOk(const HighsInt num_nz, const HighsInt format);
   bool qFormatOk(const HighsInt num_nz, const HighsInt format);
   void clearZeroHessian();

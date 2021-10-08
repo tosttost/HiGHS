@@ -145,7 +145,7 @@ TEST_CASE("filereader-read-mps-ems-lp", "[highs_filereader]") {
   REQUIRE(status == HighsStatus::kOk);
 
   const HighsInfo& info = highs.getInfo();
-  double mps_objective_function_value = info.objective_function_value;
+  HighsFloat mps_objective_function_value = info.objective_function_value;
 
   // Read lp and compare objective with mps
   if (dev_run) std::cout << "Reading " << filename_lp << std::endl;

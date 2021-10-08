@@ -23,7 +23,7 @@ void reportModelStatsOrError(const HighsLogOptions& log_options,
 
 int main(int argc, char** argv) {
   const HighsFloat quad = sqrt(2.0);
-  printf("HighsFloat quad = %g\n", (double)quad);
+  printf("HighsFloat quad = %g\n", (HighsFloat)quad);
   
 
 

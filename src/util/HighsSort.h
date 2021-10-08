@@ -22,9 +22,9 @@
 
 using std::vector;
 
-void addToDecreasingHeap(HighsInt& n, HighsInt mx_n, vector<double>& heap_v,
-                         vector<HighsInt>& heap_ix, double v, HighsInt ix);
-void sortDecreasingHeap(const HighsInt n, vector<double>& heap_v,
+void addToDecreasingHeap(HighsInt& n, HighsInt mx_n, vector<HighsFloat>& heap_v,
+                         vector<HighsInt>& heap_ix, HighsFloat v, HighsInt ix);
+void sortDecreasingHeap(const HighsInt n, vector<HighsFloat>& heap_v,
                         vector<HighsInt>& heap_ix);
 /**
  * @brief Sort values[1..n] of an array by increasing value
@@ -46,7 +46,7 @@ void maxheapsort(
  * indices
  */
 void maxheapsort(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -71,7 +71,7 @@ void buildMaxheap(
  * increasing value
  */
 void buildMaxheap(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -93,7 +93,7 @@ void maxHeapsort(
  * @brief Sort by increasing value a heap built with buildMaxheap
  */
 void maxHeapsort(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -110,7 +110,7 @@ void maxHeapify(HighsInt* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
 /**%
  * @brief Heapify function for sorting by increasing value
  */
-void maxHeapify(double* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
+void maxHeapify(HighsFloat* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
 
 /**
  * @brief Check that a set of integers is in increasing order and in bounds
@@ -120,15 +120,15 @@ bool increasingSetOk(const vector<HighsInt>& set,
                      const HighsInt set_entry_upper, bool strict);
 
 /**
- * @brief Check that a set of doubles is in increasing order and in bounds
+ * @brief Check that a set of HighsFloats is in increasing order and in bounds
  */
-bool increasingSetOk(const vector<double>& set, const double set_entry_lower,
-                     const double set_entry_upper, bool strict);
+bool increasingSetOk(const vector<HighsFloat>& set, const HighsFloat set_entry_lower,
+                     const HighsFloat set_entry_upper, bool strict);
 
 void sortSetData(const HighsInt num_entries, vector<HighsInt>& set,
-                 const double* data0, const double* data1, const double* data2,
-                 double* sorted_data0, double* sorted_data1,
-                 double* sorted_data2);
+                 const HighsFloat* data0, const HighsFloat* data1, const HighsFloat* data2,
+                 HighsFloat* sorted_data0, HighsFloat* sorted_data1,
+                 HighsFloat* sorted_data2);
 
 void sortSetData(const HighsInt num_entries, vector<HighsInt>& set,
                  const HighsVarType* data0, HighsVarType* sorted_data0);

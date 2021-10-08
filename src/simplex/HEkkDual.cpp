@@ -159,8 +159,8 @@ HighsStatus HEkkDual::solve() {
               row_ep.packFlag = false;
               simplex_nla->btran(row_ep, ekk_instance_.info_.row_ep_density,
                                  analysis->pointer_serial_factor_clocks);
-              const double local_row_ep_density =
-                  (double)row_ep.count / solver_num_row;
+              const HighsFloat local_row_ep_density =
+                  (HighsFloat)row_ep.count / solver_num_row;
               ekk_instance_.updateOperationResultDensity(local_row_ep_density,
                                                          info.row_ep_density);
               dualRHS.workEdWt[i] = row_ep.norm2();
@@ -168,7 +168,7 @@ HighsStatus HEkkDual::solve() {
             if (analysis->analyse_simplex_time) {
               analysis->simplexTimerStop(SimplexIzDseWtClock);
               analysis->simplexTimerStop(DseIzClock);
-              double IzDseWtTT =
+              HighsFloat IzDseWtTT =
                   analysis->simplexTimerRead(SimplexIzDseWtClock);
               highsLogDev(options.log_options, HighsLogType::kDetailed,
                           "Computed %" HIGHSINT_FORMAT
@@ -336,7 +336,7 @@ HighsStatus HEkkDual::solve() {
       HighsStatus return_status = HighsStatus::kOk;
       analysis->simplexTimerStart(SimplexPrimalPhase2Clock);
       // Switch off any bound perturbation
-      double save_primal_simplex_bound_perturbation_multiplier =
+      HighsFloat save_primal_simplex_bound_perturbation_multiplier =
           info.primal_simplex_bound_perturbation_multiplier;
       info.primal_simplex_bound_perturbation_multiplier = 0;
       HEkkPrimal primal_solver(ekk_instance_);
@@ -475,11 +475,11 @@ void HEkkDual::initSlice(const HighsInt initial_num_slice) {
   // Alias to the matrix
   const HighsInt* Astart = &a_matrix->start_[0];
   const HighsInt* Aindex = &a_matrix->index_[0];
-  const double* Avalue = &a_matrix->value_[0];
+  const HighsFloat* Avalue = &a_matrix->value_[0];
   const HighsInt AcountX = Astart[solver_num_col];
 
   // Figure out partition weight
-  double sliced_countX = AcountX / slice_num;
+  HighsFloat sliced_countX = AcountX / slice_num;
   slice_start[0] = 0;
   for (HighsInt i = 0; i < slice_num - 1; i++) {
     HighsInt endColumn = slice_start[i] + 1;  // At least one column
@@ -1023,7 +1023,7 @@ void HEkkDual::rebuild() {
   // Note that computePrimalObjectiveValue sets
   // has_primal_objective_value
   const bool check_updated_objective_value = status.has_dual_objective_value;
-  double previous_dual_objective_value;
+  HighsFloat previous_dual_objective_value;
   if (check_updated_objective_value) {
     //    debugUpdatedObjectiveValue(ekk_instance_, algorithm, solve_phase,
     //    "Before computeDual");
@@ -1060,7 +1060,7 @@ void HEkkDual::rebuild() {
   if (check_updated_objective_value) {
     // Apply the objective value correction due to computing duals
     // from scratch.
-    const double dual_objective_value_correction =
+    const HighsFloat dual_objective_value_correction =
         info.dual_objective_value - previous_dual_objective_value;
     info.updated_dual_objective_value += dual_objective_value_correction;
     //    debugUpdatedObjectiveValue(ekk_instance_, algorithm);
@@ -1123,7 +1123,7 @@ void HEkkDual::cleanup() {
   // when cleanup called in phase 1
   ekk_instance_.initialiseBound(SimplexAlgorithm::kDual, solve_phase);
   // Possibly take a copy of the original duals before recomputing them
-  vector<double> original_workDual;
+  vector<HighsFloat> original_workDual;
   if (ekk_instance_.options_->highs_debug_level > kHighsDebugLevelCheap)
     original_workDual = info.workDual_;
   // Compute the dual values
@@ -1279,7 +1279,7 @@ void HEkkDual::iterateTasks() {
 }
 
 void HEkkDual::iterationAnalysisData() {
-  double cost_scale_factor =
+  HighsFloat cost_scale_factor =
       pow(2.0, -ekk_instance_.options_->cost_scale_factor);
   HighsSimplexInfo& info = ekk_instance_.info_;
   analysis->simplex_strategy = info.simplex_strategy;
@@ -1401,7 +1401,7 @@ void HEkkDual::chooseRow() {
     if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
       // For DSE, see how accurate the updated weight is
       // Save the updated weight
-      double updated_edge_weight = dualRHS.workEdWt[row_out];
+      HighsFloat updated_edge_weight = dualRHS.workEdWt[row_out];
       // Compute the weight from row_ep and over-write the updated weight
       computed_edge_weight = dualRHS.workEdWt[row_out] = row_ep.norm2();
       // If the weight error is acceptable then break out of the
@@ -1439,12 +1439,12 @@ void HEkkDual::chooseRow() {
   move_out = delta_primal < 0 ? -1 : 1;
   // Update the record of average row_ep (pi_p) density. This ignores
   // any BTRANs done for skipped candidates
-  const double local_row_ep_density = (double)row_ep.count / solver_num_row;
+  const HighsFloat local_row_ep_density = (HighsFloat)row_ep.count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
       local_row_ep_density, ekk_instance_.info_.row_ep_density);
 }
 
-bool HEkkDual::acceptDualSteepestEdgeWeight(const double updated_edge_weight) {
+bool HEkkDual::acceptDualSteepestEdgeWeight(const HighsFloat updated_edge_weight) {
   // Accept the updated weight if it is at least a quarter of the
   // computed weight. Excessively large updated weights don't matter!
   const bool accept_weight =
@@ -1456,7 +1456,7 @@ bool HEkkDual::acceptDualSteepestEdgeWeight(const double updated_edge_weight) {
   return accept_weight;
 }
 
-bool HEkkDual::newDevexFramework(const double updated_edge_weight) {
+bool HEkkDual::newDevexFramework(const HighsFloat updated_edge_weight) {
   // Analyse the Devex weight to determine whether a new framework
   // should be set up
   //
@@ -1468,16 +1468,16 @@ bool HEkkDual::newDevexFramework(const double updated_edge_weight) {
   // numRow/kMinRlvNumberDevexIterations) Devex iterations
   //
   const HighsInt kMinAbsNumberDevexIterations = 25;
-  const double kMinRlvNumberDevexIterations = 1e-2;
-  const double kMaxAllowedDevexWeightRatio = 3.0;
+  const HighsFloat kMinRlvNumberDevexIterations = 1e-2;
+  const HighsFloat kMaxAllowedDevexWeightRatio = 3.0;
 
-  double devex_ratio = max(updated_edge_weight / computed_edge_weight,
+  HighsFloat devex_ratio = max(updated_edge_weight / computed_edge_weight,
                            computed_edge_weight / updated_edge_weight);
   HighsInt i_te = solver_num_row / kMinRlvNumberDevexIterations;
   i_te = max(kMinAbsNumberDevexIterations, i_te);
   // Square kMaxAllowedDevexWeightRatio due to keeping squared
   // weights
-  const double accept_ratio_threshold =
+  const HighsFloat accept_ratio_threshold =
       kMaxAllowedDevexWeightRatio * kMaxAllowedDevexWeightRatio;
   const bool accept_ratio = devex_ratio <= accept_ratio_threshold;
   const bool accept_it = num_devex_iterations <= i_te;
@@ -1588,7 +1588,7 @@ void HEkkDual::chooseColumnSlice(HVector* row_ep) {
   analysis->simplexTimerStop(Chuzc0Clock);
 
   //  const HighsInt solver_num_row = ekk_instance_.lp_.num_row_;
-  const double local_density = 1.0 * row_ep->count / solver_num_row;
+  const HighsFloat local_density = 1.0 * row_ep->count / solver_num_row;
   bool use_col_price;
   bool use_row_price_w_switch;
   HighsSimplexInfo& info = ekk_instance_.info_;
@@ -1752,7 +1752,7 @@ void HEkkDual::updateFtran() {
                      analysis->pointer_serial_factor_clocks);
   if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordAfter(kSimplexNlaFtran, col_aq);
-  const double local_col_aq_density = (double)col_aq.count / solver_num_row;
+  const HighsFloat local_col_aq_density = (HighsFloat)col_aq.count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
       local_col_aq_density, ekk_instance_.info_.col_aq_density);
   // Save the pivot value computed column-wise - used for numerical checking
@@ -1793,7 +1793,7 @@ void HEkkDual::updateFtranBFRT() {
   if (time_updateFtranBFRT) {
     analysis->simplexTimerStop(FtranBfrtClock);
   }
-  const double local_col_BFRT_density = (double)col_BFRT.count / solver_num_row;
+  const HighsFloat local_col_BFRT_density = (HighsFloat)col_BFRT.count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
       local_col_BFRT_density, ekk_instance_.info_.col_BFRT_density);
 }
@@ -1814,8 +1814,8 @@ void HEkkDual::updateFtranDSE(HVector* DSE_Vector) {
   if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordAfter(kSimplexNlaFtranDse, *DSE_Vector);
   analysis->simplexTimerStop(FtranDseClock);
-  const double local_row_DSE_density =
-      (double)DSE_Vector->count / solver_num_row;
+  const HighsFloat local_row_DSE_density =
+      (HighsFloat)DSE_Vector->count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
       local_row_DSE_density, ekk_instance_.info_.row_DSE_density);
 }
@@ -1864,9 +1864,9 @@ void HEkkDual::updateDual() {
     //    "After calling dualRow.updateDual");
   }
   // Identify the changes in the dual objective
-  double dual_objective_value_change;
-  const double variable_in_delta_dual = workDual[variable_in];
-  const double variable_in_value = workValue[variable_in];
+  HighsFloat dual_objective_value_change;
+  const HighsFloat variable_in_delta_dual = workDual[variable_in];
+  const HighsFloat variable_in_value = workValue[variable_in];
   const HighsInt variable_in_nonbasicFlag =
       ekk_instance_.basis_.nonbasicFlag_[variable_in];
   dual_objective_value_change =
@@ -1880,8 +1880,8 @@ void HEkkDual::updateDual() {
       ekk_instance_.basis_.nonbasicFlag_[variable_out];
   assert(variable_out_nonbasicFlag == 0);
   if (variable_out_nonbasicFlag) {
-    const double variable_out_delta_dual = workDual[variable_out] - theta_dual;
-    const double variable_out_value = workValue[variable_out];
+    const HighsFloat variable_out_delta_dual = workDual[variable_out] - theta_dual;
+    const HighsFloat variable_out_value = workValue[variable_out];
     dual_objective_value_change =
         variable_out_nonbasicFlag *
         (-variable_out_value * variable_out_delta_dual);
@@ -1905,7 +1905,7 @@ void HEkkDual::updatePrimal(HVector* DSE_Vector) {
   // If reinversion is needed then skip this method
   if (rebuild_reason) return;
   if (dual_edge_weight_mode == DualEdgeWeightMode::kDevex) {
-    const double updated_edge_weight = dualRHS.workEdWt[row_out];
+    const HighsFloat updated_edge_weight = dualRHS.workEdWt[row_out];
     dualRHS.workEdWt[row_out] = computed_edge_weight;
     new_devex_framework = newDevexFramework(updated_edge_weight);
   }
@@ -1915,15 +1915,15 @@ void HEkkDual::updatePrimal(HVector* DSE_Vector) {
   // Update - primal and weight
   dualRHS.updatePrimal(&col_BFRT, 1);
   dualRHS.updateInfeasList(&col_BFRT);
-  double x_out = baseValue[row_out];
-  double l_out = baseLower[row_out];
-  double u_out = baseUpper[row_out];
+  HighsFloat x_out = baseValue[row_out];
+  HighsFloat l_out = baseLower[row_out];
+  HighsFloat u_out = baseUpper[row_out];
   theta_primal = (x_out - (delta_primal < 0 ? l_out : u_out)) / alpha_col;
   dualRHS.updatePrimal(&col_aq, theta_primal);
   if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
-    const double new_pivotal_edge_weight =
+    const HighsFloat new_pivotal_edge_weight =
         dualRHS.workEdWt[row_out] / (alpha_col * alpha_col);
-    const double Kai = -2 / alpha_col;
+    const HighsFloat Kai = -2 / alpha_col;
     dualRHS.updateWeightDualSteepestEdge(&col_aq, new_pivotal_edge_weight, Kai,
                                          &DSE_Vector->array[0]);
     dualRHS.workEdWt[row_out] = new_pivotal_edge_weight;
@@ -1931,7 +1931,7 @@ void HEkkDual::updatePrimal(HVector* DSE_Vector) {
     // Pivotal row is for the current basis: weights are required for
     // the next basis so have to divide the current (exact) weight by
     // the pivotal value
-    double new_pivotal_edge_weight =
+    HighsFloat new_pivotal_edge_weight =
         dualRHS.workEdWt[row_out] / (alpha_col * alpha_col);
     new_pivotal_edge_weight = max(1.0, new_pivotal_edge_weight);
     // nw_wt is max(workEdWt[iRow], NewExactWeight*columnArray[iRow]^2);
@@ -1957,15 +1957,15 @@ void HEkkDual::updatePrimal(HVector* DSE_Vector) {
 }
 
 // Record the shift in the cost of a particular column
-void HEkkDual::shiftCost(const HighsInt iCol, const double amount) {
+void HEkkDual::shiftCost(const HighsInt iCol, const HighsFloat amount) {
   HighsSimplexInfo& info = ekk_instance_.info_;
   info.costs_shifted = true;
   assert(info.workShift_[iCol] == 0);
   if (!amount) return;
-  double use_amount = amount;
+  HighsFloat use_amount = amount;
   info.workShift_[iCol] = use_amount;
   // Analysis
-  const double shift = fabs(use_amount);
+  const HighsFloat shift = fabs(use_amount);
   analysis->net_num_single_cost_shift++;
   analysis->num_single_cost_shift++;
   analysis->sum_single_cost_shift += shift;
@@ -1981,7 +1981,7 @@ void HEkkDual::shiftCost(const HighsInt iCol, const double amount) {
 void HEkkDual::shiftBack(const HighsInt iCol) {
   HighsSimplexInfo& info = ekk_instance_.info_;
   if (!info.workShift_[iCol]) return;
-  const double shift = fabs(info.workShift_[iCol]);
+  const HighsFloat shift = fabs(info.workShift_[iCol]);
   info.workDual_[iCol] -= info.workShift_[iCol];
   info.workShift_[iCol] = 0;
   // Analysis
@@ -2118,7 +2118,7 @@ void HEkkDual::assessPhase1Optimality() {
 
   HighsSimplexInfo& info = ekk_instance_.info_;
   HighsModelStatus& model_status = ekk_instance_.model_status_;
-  double& dual_objective_value = info.dual_objective_value;
+  HighsFloat& dual_objective_value = info.dual_objective_value;
   // There are (possibly insignificant) LP dual infeasibilities that
   // can't be removed by dual Phase 1, so clean up any perturbations
   // before concluding dual infeasibility
@@ -2160,7 +2160,7 @@ void HEkkDual::assessPhase1Optimality() {
 void HEkkDual::assessPhase1OptimalityUnperturbed() {
   HighsSimplexInfo& info = ekk_instance_.info_;
   HighsModelStatus& model_status = ekk_instance_.model_status_;
-  double& dual_objective_value = info.dual_objective_value;
+  HighsFloat& dual_objective_value = info.dual_objective_value;
   assert(!info.costs_perturbed);
   if (dualInfeasCount == 0) {
     // No dual infeasibilities with respect to phase 1 bounds.
@@ -2229,11 +2229,11 @@ void HEkkDual::exitPhase1ResetDuals() {
 
   const HighsInt numTot = lp.num_col_ + lp.num_row_;
   HighsInt num_shift = 0;
-  double sum_shift = 0;
+  HighsFloat sum_shift = 0;
   for (HighsInt iVar = 0; iVar < numTot; iVar++) {
     if (basis.nonbasicFlag_[iVar]) {
-      double lp_lower;
-      double lp_upper;
+      HighsFloat lp_lower;
+      HighsFloat lp_upper;
       if (iVar < lp.num_col_) {
         lp_lower = lp.col_lower_[iVar];
         lp_upper = lp.col_upper_[iVar];
@@ -2243,7 +2243,7 @@ void HEkkDual::exitPhase1ResetDuals() {
         lp_upper = lp.row_upper_[iRow];
       }
       if (lp_lower <= -kHighsInf && lp_upper >= kHighsInf) {
-        const double shift = -info.workDual_[iVar];
+        const HighsFloat shift = -info.workDual_[iVar];
         info.workDual_[iVar] = 0;
         info.workCost_[iVar] = info.workCost_[iVar] + shift;
         num_shift++;
@@ -2340,7 +2340,7 @@ bool HEkkDual::reachedExactObjectiveBound() {
   // a relatively expensive calculation, so determine whether to do
   // it according to the sparsity of the pivotal row
   bool reached_exact_objective_bound = false;
-  double use_row_ap_density =
+  HighsFloat use_row_ap_density =
       std::min(std::max(ekk_instance_.info_.row_ap_density, 0.01), 1.0);
   HighsInt check_frequency = 1.0 / use_row_ap_density;
   assert(check_frequency > 0);
@@ -2349,13 +2349,13 @@ bool HEkkDual::reachedExactObjectiveBound() {
       ekk_instance_.info_.update_count % check_frequency == 0;
 
   if (check_exact_dual_objective_value) {
-    const double objective_bound = ekk_instance_.options_->objective_bound;
-    const double perturbed_dual_objective_value =
+    const HighsFloat objective_bound = ekk_instance_.options_->objective_bound;
+    const HighsFloat perturbed_dual_objective_value =
         ekk_instance_.info_.updated_dual_objective_value;
-    const double perturbed_value_residual =
+    const HighsFloat perturbed_value_residual =
         perturbed_dual_objective_value - objective_bound;
-    const double exact_dual_objective_value = computeExactDualObjectiveValue();
-    const double exact_value_residual =
+    const HighsFloat exact_dual_objective_value = computeExactDualObjectiveValue();
+    const HighsFloat exact_value_residual =
         exact_dual_objective_value - objective_bound;
     std::string action;
     if (exact_dual_objective_value > objective_bound) {
@@ -2381,7 +2381,7 @@ bool HEkkDual::reachedExactObjectiveBound() {
   return reached_exact_objective_bound;
 }
 
-double HEkkDual::computeExactDualObjectiveValue() {
+HighsFloat HEkkDual::computeExactDualObjectiveValue() {
   const HighsLp& lp = ekk_instance_.lp_;
   const SimplexBasis& basis = ekk_instance_.basis_;
   const HighsSimplexInfo& info = ekk_instance_.info_;
@@ -2392,7 +2392,7 @@ double HEkkDual::computeExactDualObjectiveValue() {
   for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
     if (iVar < lp.num_col_) {
-      const double value = lp.col_cost_[iVar];
+      const HighsFloat value = lp.col_cost_[iVar];
       if (value) {
         dual_col.array[iRow] = value;
         dual_col.index[dual_col.count++] = iRow;
@@ -2405,17 +2405,17 @@ double HEkkDual::computeExactDualObjectiveValue() {
   dual_row.setup(lp.num_col_);
   dual_row.clear();
   if (dual_col.count) {
-    const double expected_density = 1;
+    const HighsFloat expected_density = 1;
     simplex_nla->btran(dual_col, expected_density);
     lp.a_matrix_.priceByColumn(dual_row, dual_col);
   }
-  double dual_objective = lp.offset_;
-  double norm_dual = 0;
-  double norm_delta_dual = 0;
+  HighsFloat dual_objective = lp.offset_;
+  HighsFloat norm_dual = 0;
+  HighsFloat norm_delta_dual = 0;
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
     if (!basis.nonbasicFlag_[iCol]) continue;
-    double exact_dual = lp.col_cost_[iCol] - dual_row.array[iCol];
-    double residual = fabs(exact_dual - info.workDual_[iCol]);
+    HighsFloat exact_dual = lp.col_cost_[iCol] - dual_row.array[iCol];
+    HighsFloat residual = fabs(exact_dual - info.workDual_[iCol]);
     norm_dual += fabs(exact_dual);
     norm_delta_dual += residual;
     if (residual > 1e10)
@@ -2429,8 +2429,8 @@ double HEkkDual::computeExactDualObjectiveValue() {
   for (HighsInt iVar = lp.num_col_; iVar < numTot; iVar++) {
     if (!basis.nonbasicFlag_[iVar]) continue;
     HighsInt iRow = iVar - lp.num_col_;
-    double exact_dual = -dual_col.array[iRow];
-    double residual = fabs(exact_dual - info.workDual_[iVar]);
+    HighsFloat exact_dual = -dual_col.array[iRow];
+    HighsFloat residual = fabs(exact_dual - info.workDual_[iVar]);
     norm_dual += fabs(exact_dual);
     norm_delta_dual += residual;
     if (residual > 1e10)
@@ -2441,7 +2441,7 @@ double HEkkDual::computeExactDualObjectiveValue() {
           iRow, exact_dual, info.workDual_[iVar], residual);
     dual_objective += info.workValue_[iVar] * exact_dual;
   }
-  double relative_delta = norm_delta_dual / std::max(norm_dual, 1.0);
+  HighsFloat relative_delta = norm_delta_dual / std::max(norm_dual, 1.0);
   if (relative_delta > 1e-3)
     highsLogDev(
         ekk_instance_.options_->log_options, HighsLogType::kWarning,

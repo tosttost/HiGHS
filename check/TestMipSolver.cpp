@@ -1,16 +1,16 @@
 #include "Highs.h"
 #include "catch.hpp"
 
-const double inf = kHighsInf;
+const HighsFloat inf = kHighsInf;
 const bool dev_run = false;
-const double d0uble_equal_tolerance = 1e-5;
+const HighsFloat d0uble_equal_tolerance = 1e-5;
 
 void rowlessMIP(Highs& highs);
 void distillationMIP(Highs& highs);
 void solve(Highs& highs, std::string presolve,
            const HighsModelStatus require_model_status,
-           const double require_optimal_objective = 0,
-           const double require_iteration_count = -1);
+           const HighsFloat require_optimal_objective = 0,
+           const HighsFloat require_iteration_count = -1);
 void distillationMIP(Highs& highs);
 void rowlessMIP(Highs& highs);
 
@@ -70,7 +70,7 @@ TEST_CASE("MIP-integrality", "[highs_test_mip_solver]") {
   if (dev_run) highs.writeModel("");
   highs.run();
   if (dev_run) highs.writeSolution("", kWriteSolutionStylePretty);
-  double optimal_objective = info.objective_function_value;
+  HighsFloat optimal_objective = info.objective_function_value;
   if (dev_run) printf("Objective = %g\n", optimal_objective);
 
   highs.clearModel();
@@ -115,8 +115,8 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
   lp.col_lower_ = {-inf};
   lp.col_upper_ = {1.5};
   lp.integrality_ = {HighsVarType::kInteger};
-  double required_objective_value = -2;
-  double required_x0_value = 1;
+  HighsFloat required_objective_value = -2;
+  HighsFloat required_x0_value = 1;
 
   const HighsInfo& info = highs.getInfo();
   const HighsSolution& solution = highs.getSolution();
@@ -172,10 +172,10 @@ TEST_CASE("MIP-od", "[highs_test_mip_solver]") {
           d0uble_equal_tolerance);
 }
 
-bool objectiveOk(const double optimal_objective,
-                 const double require_optimal_objective,
+bool objectiveOk(const HighsFloat optimal_objective,
+                 const HighsFloat require_optimal_objective,
                  const bool dev_run = false) {
-  double error = std::fabs(optimal_objective - require_optimal_objective) /
+  HighsFloat error = std::fabs(optimal_objective - require_optimal_objective) /
                  std::max(1.0, std::fabs(require_optimal_objective));
   bool error_ok = error < 1e-10;
   if (!error_ok && dev_run)
@@ -186,8 +186,8 @@ bool objectiveOk(const double optimal_objective,
 
 void solve(Highs& highs, std::string presolve,
            const HighsModelStatus require_model_status,
-           const double require_optimal_objective,
-           const double require_iteration_count) {
+           const HighsFloat require_optimal_objective,
+           const HighsFloat require_iteration_count) {
   if (!dev_run) highs.setOptionValue("output_flag", false);
   const HighsInfo& info = highs.getInfo();
   REQUIRE(highs.setOptionValue("presolve", presolve) == HighsStatus::kOk);
@@ -208,7 +208,7 @@ void solve(Highs& highs, std::string presolve,
 void distillationMIP(Highs& highs) {
   HighsLp lp;
   HighsModelStatus require_model_status;
-  double optimal_objective;
+  HighsFloat optimal_objective;
   lp.num_col_ = 2;
   lp.num_row_ = 3;
   lp.col_cost_ = {8, 10};
@@ -233,7 +233,7 @@ void distillationMIP(Highs& highs) {
 void rowlessMIP(Highs& highs) {
   HighsLp lp;
   HighsModelStatus require_model_status;
-  double optimal_objective;
+  HighsFloat optimal_objective;
   lp.num_col_ = 2;
   lp.num_row_ = 0;
   lp.col_cost_ = {1, -1};

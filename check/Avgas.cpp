@@ -18,9 +18,9 @@
 const bool dev_run = false;
 
 void Avgas::row(HighsInt row, HighsInt& num_row, HighsInt& num_row_nz,
-                std::vector<double>& rowLower, std::vector<double>& rowUpper,
+                std::vector<HighsFloat>& rowLower, std::vector<HighsFloat>& rowUpper,
                 std::vector<HighsInt>& ARstart, std::vector<HighsInt>& ARindex,
-                std::vector<double>& ARvalue) {
+                std::vector<HighsFloat>& ARvalue) {
   rowLower.resize(num_row + 1);
   rowUpper.resize(num_row + 1);
   ARstart.resize(num_row + 1);
@@ -182,9 +182,9 @@ void Avgas::row(HighsInt row, HighsInt& num_row, HighsInt& num_row_nz,
 }
 
 void Avgas::col(HighsInt col, HighsInt& num_col, HighsInt& num_col_nz,
-                std::vector<double>& colCost, std::vector<double>& colLower,
-                std::vector<double>& colUpper, std::vector<HighsInt>& Astart,
-                std::vector<HighsInt>& Aindex, std::vector<double>& Avalue) {
+                std::vector<HighsFloat>& colCost, std::vector<HighsFloat>& colLower,
+                std::vector<HighsFloat>& colUpper, std::vector<HighsInt>& Astart,
+                std::vector<HighsInt>& Aindex, std::vector<HighsFloat>& Avalue) {
   colCost.resize(num_col + 1);
   colLower.resize(num_col + 1);
   colUpper.resize(num_col + 1);

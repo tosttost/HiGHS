@@ -180,7 +180,7 @@ class HighsRandom {
   /**
    * @brief Return a random fraction - real in (0, 1)
    */
-  double fraction() {
+  HighsFloat fraction() {
     advance();
     // 52 bit output is in interval [0,2^52-1]
     uint64_t output =
@@ -193,13 +193,13 @@ class HighsRandom {
   /**
    * @brief Return a random fraction - real in [0, 1]
    */
-  double closedFraction() {
+  HighsFloat closedFraction() {
     advance();
     // 53 bit result is in interval [0,2^53-1]
     uint64_t output =
         (HighsHashHelpers::pair_hash<0>(state, state >> 32) >> (64 - 53)) ^
         (HighsHashHelpers::pair_hash<1>(state, state >> 32) >> 32);
-    // compute output / (2^53-1) in double precision which is in the closed
+    // compute output / (2^53-1) in HighsFloat precision which is in the closed
     // interval [0,1]
     return output * 1.1102230246251566e-16;
   }
@@ -207,7 +207,7 @@ class HighsRandom {
   /**
    * @brief Return a random real value in the interval [a,b]
    */
-  double real(double a, double b) { return a + (b - a) * closedFraction(); }
+  HighsFloat real(HighsFloat a, HighsFloat b) { return a + (b - a) * closedFraction(); }
 
   /**
    * @brief Return a random bit

@@ -70,10 +70,10 @@ HighsInt HighsSparseMatrix::numNz() const {
   }
 }
 
-void HighsSparseMatrix::range(double& min_value, double& max_value) const {
+void HighsSparseMatrix::range(HighsFloat& min_value, HighsFloat& max_value) const {
   assert(this->formatOk());
   for (HighsInt iEl = 0; iEl < this->start_[this->num_col_]; iEl++) {
-    double value = fabs(this->value_[iEl]);
+    HighsFloat value = fabs(this->value_[iEl]);
     min_value = min(min_value, value);
     max_value = max(max_value, value);
   }
@@ -111,7 +111,7 @@ void HighsSparseMatrix::ensureColwise() {
     // the current matrix is filled colwise
     std::vector<HighsInt> ARstart = this->start_;
     std::vector<HighsInt> ARindex = this->index_;
-    std::vector<double> ARvalue = this->value_;
+    std::vector<HighsFloat> ARvalue = this->value_;
     this->start_.resize(num_col + 1);
     this->index_.resize(num_nz);
     this->value_.resize(num_nz);
@@ -167,7 +167,7 @@ void HighsSparseMatrix::ensureRowwise() {
     // the current matrix is filled rowwise
     vector<HighsInt> Astart = this->start_;
     vector<HighsInt> Aindex = this->index_;
-    vector<double> Avalue = this->value_;
+    vector<HighsFloat> Avalue = this->value_;
     this->start_.resize(num_row + 1);
     this->index_.resize(num_nz);
     this->value_.resize(num_nz);
@@ -200,7 +200,7 @@ void HighsSparseMatrix::ensureRowwise() {
 }
 
 void HighsSparseMatrix::addVec(const HighsInt num_nz, const HighsInt* index,
-                               const double* value, const double multiple) {
+                               const HighsFloat* value, const HighsFloat multiple) {
   HighsInt num_vec = 0;
   if (this->isColwise()) {
     num_vec = this->num_col_;
@@ -229,7 +229,7 @@ void HighsSparseMatrix::addCols(const HighsSparseMatrix new_cols,
   const HighsInt num_new_nz = new_cols.numNz();
   const vector<HighsInt>& new_matrix_start = new_cols.start_;
   const vector<HighsInt>& new_matrix_index = new_cols.index_;
-  const vector<double>& new_matrix_value = new_cols.value_;
+  const vector<HighsFloat>& new_matrix_value = new_cols.value_;
 
   assert(this->formatOk());
   // Adding columns to a row-wise partitioned matrix needs the
@@ -317,7 +317,7 @@ void HighsSparseMatrix::addRows(const HighsSparseMatrix new_rows,
   const HighsInt num_new_nz = new_rows.numNz();
   const vector<HighsInt>& new_matrix_start = new_rows.start_;
   const vector<HighsInt>& new_matrix_index = new_rows.index_;
-  const vector<double>& new_matrix_value = new_rows.value_;
+  const vector<HighsFloat>& new_matrix_value = new_rows.value_;
 
   assert(this->formatOk());
   // Adding rows to a row-wise partitioned matrix needs the
@@ -619,8 +619,8 @@ void HighsSparseMatrix::deleteRows(
 
 HighsStatus HighsSparseMatrix::assess(const HighsLogOptions& log_options,
                                       const std::string matrix_name,
-                                      const double small_matrix_value,
-                                      const double large_matrix_value) {
+                                      const HighsFloat small_matrix_value,
+                                      const HighsFloat large_matrix_value) {
   assert(this->formatOk());
   // Identify main dimensions
   HighsInt vec_dim;
@@ -639,22 +639,22 @@ HighsStatus HighsSparseMatrix::assess(const HighsLogOptions& log_options,
 }
 
 void HighsSparseMatrix::considerColScaling(
-    const HighsInt max_scale_factor_exponent, double* col_scale) {
-  const double log2 = log(2.0);
-  const double max_allow_scale = pow(2.0, max_scale_factor_exponent);
-  const double min_allow_scale = 1 / max_allow_scale;
+    const HighsInt max_scale_factor_exponent, HighsFloat* col_scale) {
+  const HighsFloat log2 = log(2.0);
+  const HighsFloat max_allow_scale = pow(2.0, max_scale_factor_exponent);
+  const HighsFloat min_allow_scale = 1 / max_allow_scale;
 
-  const double min_allow_col_scale = min_allow_scale;
-  const double max_allow_col_scale = max_allow_scale;
+  const HighsFloat min_allow_col_scale = min_allow_scale;
+  const HighsFloat max_allow_col_scale = max_allow_scale;
 
   if (this->isColwise()) {
     for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
-      double col_max_value = 0;
+      HighsFloat col_max_value = 0;
       for (HighsInt iEl = this->start_[iCol]; iEl < this->start_[iCol + 1];
            iEl++)
         col_max_value = max(fabs(this->value_[iEl]), col_max_value);
       if (col_max_value) {
-        double col_scale_value = 1 / col_max_value;
+        HighsFloat col_scale_value = 1 / col_max_value;
         // Convert the col scale factor to the nearest power of two, and
         // ensure that it is not excessively large or small
         col_scale_value = pow(2.0, floor(log(col_scale_value) / log2 + 0.5));
@@ -676,22 +676,22 @@ void HighsSparseMatrix::considerColScaling(
 }
 
 void HighsSparseMatrix::considerRowScaling(
-    const HighsInt max_scale_factor_exponent, double* row_scale) {
-  const double log2 = log(2.0);
-  const double max_allow_scale = pow(2.0, max_scale_factor_exponent);
-  const double min_allow_scale = 1 / max_allow_scale;
+    const HighsInt max_scale_factor_exponent, HighsFloat* row_scale) {
+  const HighsFloat log2 = log(2.0);
+  const HighsFloat max_allow_scale = pow(2.0, max_scale_factor_exponent);
+  const HighsFloat min_allow_scale = 1 / max_allow_scale;
 
-  const double min_allow_row_scale = min_allow_scale;
-  const double max_allow_row_scale = max_allow_scale;
+  const HighsFloat min_allow_row_scale = min_allow_scale;
+  const HighsFloat max_allow_row_scale = max_allow_scale;
 
   if (this->isRowwise()) {
     for (HighsInt iRow = 0; iRow < this->num_row_; iRow++) {
-      double row_max_value = 0;
+      HighsFloat row_max_value = 0;
       for (HighsInt iEl = this->start_[iRow]; iEl < this->start_[iRow + 1];
            iEl++)
         row_max_value = max(fabs(this->value_[iEl]), row_max_value);
       if (row_max_value) {
-        double row_scale_value = 1 / row_max_value;
+        HighsFloat row_scale_value = 1 / row_max_value;
         // Convert the row scale factor to the nearest power of two, and
         // ensure that it is not excessively large or small
         row_scale_value = pow(2.0, floor(log(row_scale_value) / log2 + 0.5));
@@ -712,7 +712,7 @@ void HighsSparseMatrix::considerRowScaling(
   }
 }
 
-void HighsSparseMatrix::scaleCol(const HighsInt col, const double colScale) {
+void HighsSparseMatrix::scaleCol(const HighsInt col, const HighsFloat colScale) {
   assert(this->formatOk());
   assert(col >= 0);
   assert(col < this->num_col_);
@@ -731,7 +731,7 @@ void HighsSparseMatrix::scaleCol(const HighsInt col, const double colScale) {
   }
 }
 
-void HighsSparseMatrix::scaleRow(const HighsInt row, const double rowScale) {
+void HighsSparseMatrix::scaleRow(const HighsInt row, const HighsFloat rowScale) {
   assert(this->formatOk());
   assert(row >= 0);
   assert(row < this->num_row_);
@@ -837,10 +837,10 @@ void HighsSparseMatrix::createSlice(const HighsSparseMatrix& matrix,
   HighsInt num_nz = matrix.numNz();
   const vector<HighsInt>& a_start = matrix.start_;
   const vector<HighsInt>& a_index = matrix.index_;
-  const vector<double>& a_value = matrix.value_;
+  const vector<HighsFloat>& a_value = matrix.value_;
   vector<HighsInt>& slice_start = this->start_;
   vector<HighsInt>& slice_index = this->index_;
-  vector<double>& slice_value = this->value_;
+  vector<HighsFloat>& slice_value = this->value_;
   HighsInt slice_num_col = to_col + 1 - from_col;
   HighsInt slice_num_nz = a_start[to_col + 1] - a_start[from_col];
   slice_start.resize(slice_num_col + 1);
@@ -869,10 +869,10 @@ void HighsSparseMatrix::createRowwise(const HighsSparseMatrix& matrix) {
   HighsInt num_nz = matrix.numNz();
   const vector<HighsInt>& a_start = matrix.start_;
   const vector<HighsInt>& a_index = matrix.index_;
-  const vector<double>& a_value = matrix.value_;
+  const vector<HighsFloat>& a_value = matrix.value_;
   vector<HighsInt>& ar_start = this->start_;
   vector<HighsInt>& ar_index = this->index_;
-  vector<double>& ar_value = this->value_;
+  vector<HighsFloat>& ar_value = this->value_;
 
   // Use ar_end to compute lengths, which are then transformed into
   // the ends of the inserted entries
@@ -918,10 +918,10 @@ void HighsSparseMatrix::createColwise(const HighsSparseMatrix& matrix) {
   HighsInt num_nz = matrix.numNz();
   const vector<HighsInt>& ar_start = matrix.start_;
   const vector<HighsInt>& ar_index = matrix.index_;
-  const vector<double>& ar_value = matrix.value_;
+  const vector<HighsFloat>& ar_value = matrix.value_;
   vector<HighsInt>& a_start = this->start_;
   vector<HighsInt>& a_index = this->index_;
-  vector<double>& a_value = this->value_;
+  vector<HighsFloat>& a_value = this->value_;
 
   // Use a_end to compute lengths, which are then transformed into
   // the ends of the inserted entries
@@ -957,8 +957,8 @@ void HighsSparseMatrix::createColwise(const HighsSparseMatrix& matrix) {
   this->num_row_ = num_row;
 }
 
-void HighsSparseMatrix::product(vector<double>& result,
-                                const vector<double>& row) const {
+void HighsSparseMatrix::product(vector<HighsFloat>& result,
+                                const vector<HighsFloat>& row) const {
   assert(this->formatOk());
   assert((int)row.size() >= this->num_col_);
   result.assign(this->num_row_, 0.0);
@@ -989,11 +989,11 @@ void HighsSparseMatrix::createRowwisePartitioned(
   HighsInt num_nz = matrix.numNz();
   const vector<HighsInt>& a_start = matrix.start_;
   const vector<HighsInt>& a_index = matrix.index_;
-  const vector<double>& a_value = matrix.value_;
+  const vector<HighsFloat>& a_value = matrix.value_;
   vector<HighsInt>& ar_start = this->start_;
   vector<HighsInt>& ar_p_end = this->p_end_;
   vector<HighsInt>& ar_index = this->index_;
-  vector<double>& ar_value = this->value_;
+  vector<HighsFloat>& ar_value = this->value_;
 
   // Use ar_p_end and ar_end to compute lengths, which are then transformed into
   // the p_ends and ends of the inserted entries
@@ -1076,7 +1076,7 @@ void HighsSparseMatrix::priceByColumn(HVector& result,
   assert(this->isColwise());
   result.count = 0;
   for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
-    double value = 0;
+    HighsFloat value = 0;
     for (HighsInt iEl = this->start_[iCol]; iEl < this->start_[iCol + 1];
          iEl++) {
       value += column.array[this->index_[iEl]] * this->value_[iEl];
@@ -1094,18 +1094,18 @@ void HighsSparseMatrix::priceByRow(HVector& result,
   // Vanilla hyper-sparse row-wise PRICE. Set up parameters so that
   // priceByRowWithSwitch runs as vanilla hyper-sparse PRICE
   // Expected density always forces hyper-sparse PRICE
-  const double expected_density = -kHighsInf;
+  const HighsFloat expected_density = -kHighsInf;
   // Always start from first index of column
   HighsInt from_index = 0;
   // Never switch to standard row-wise PRICE
-  const double switch_density = kHighsInf;
+  const HighsFloat switch_density = kHighsInf;
   this->priceByRowWithSwitch(result, column, expected_density, from_index,
                              switch_density);
 }
 
 void HighsSparseMatrix::priceByRowWithSwitch(
-    HVector& result, const HVector& column, const double expected_density,
-    const HighsInt from_index, const double switch_density) const {
+    HVector& result, const HVector& column, const HighsFloat expected_density,
+    const HighsInt from_index, const HighsFloat switch_density) const {
   assert(this->isRowwise());
   // (Continue) hyper-sparse row-wise PRICE with possible switches to
   // standard row-wise PRICE either immediately based on historical
@@ -1124,15 +1124,15 @@ void HighsSparseMatrix::priceByRowWithSwitch(
       }
       // Possibly switch to standard row-wise price
       HighsInt row_num_nz = to_iEl - this->start_[iRow];
-      double local_density = (1.0 * result.count) / this->num_col_;
+      HighsFloat local_density = (1.0 * result.count) / this->num_col_;
       bool switch_to_dense = result.count + row_num_nz >= this->num_col_ ||
                              local_density > switch_density;
       if (switch_to_dense) break;
-      double multiplier = column.array[iRow];
+      HighsFloat multiplier = column.array[iRow];
       for (HighsInt iEl = this->start_[iRow]; iEl < to_iEl; iEl++) {
         HighsInt iCol = this->index_[iEl];
-        double value0 = result.array[iCol];
-        double value1 = value0 + multiplier * this->value_[iEl];
+        HighsFloat value0 = result.array[iCol];
+        HighsFloat value1 = value0 + multiplier * this->value_[iEl];
         if (value0 == 0) result.index[result.count++] = iCol;
         result.array[iCol] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
       }
@@ -1181,10 +1181,10 @@ void HighsSparseMatrix::update(const HighsInt var_in, const HighsInt var_out,
   }
 }
 
-double HighsSparseMatrix::computeDot(const HVector& column,
+HighsFloat HighsSparseMatrix::computeDot(const HVector& column,
                                      const HighsInt use_col) const {
   assert(this->isColwise());
-  double result = 0;
+  HighsFloat result = 0;
   if (use_col < this->num_col_) {
     for (HighsInt iEl = this->start_[use_col]; iEl < this->start_[use_col + 1];
          iEl++)
@@ -1196,21 +1196,21 @@ double HighsSparseMatrix::computeDot(const HVector& column,
 }
 
 void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
-                                  const double multiplier) const {
+                                  const HighsFloat multiplier) const {
   assert(this->isColwise());
   if (use_col < this->num_col_) {
     for (HighsInt iEl = this->start_[use_col]; iEl < this->start_[use_col + 1];
          iEl++) {
       HighsInt iRow = this->index_[iEl];
-      double value0 = column.array[iRow];
-      double value1 = value0 + multiplier * this->value_[iEl];
+      HighsFloat value0 = column.array[iRow];
+      HighsFloat value1 = value0 + multiplier * this->value_[iEl];
       if (value0 == 0) column.index[column.count++] = iRow;
       column.array[iRow] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
     }
   } else {
     HighsInt iRow = use_col - this->num_col_;
-    double value0 = column.array[iRow];
-    double value1 = value0 + multiplier;
+    HighsFloat value0 = column.array[iRow];
+    HighsFloat value1 = value0 + multiplier;
     if (value0 == 0) column.index[column.count++] = iRow;
     column.array[iRow] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
   }
@@ -1222,7 +1222,7 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
   assert(this->isRowwise());
   for (HighsInt ix = from_index; ix < column.count; ix++) {
     HighsInt iRow = column.index[ix];
-    double multiplier = column.array[iRow];
+    HighsFloat multiplier = column.array[iRow];
     // Determine whether p_end_ or the next start_ should be used to end the
     // loop
     HighsInt to_iEl;
@@ -1233,15 +1233,15 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
     }
     for (HighsInt iEl = this->start_[iRow]; iEl < to_iEl; iEl++) {
       HighsInt iCol = this->index_[iEl];
-      double value0 = result.array[iCol];
-      double value1 = value0 + multiplier * this->value_[iEl];
+      HighsFloat value0 = result.array[iCol];
+      HighsFloat value1 = value0 + multiplier * this->value_[iEl];
       result.array[iCol] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
     }
   }
   // Determine indices of nonzeros in result
   result.count = 0;
   for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
-    double value1 = result.array[iCol];
+    HighsFloat value1 = result.array[iCol];
     if (fabs(value1) < kHighsTiny) {
       result.array[iCol] = 0;
     } else {

@@ -22,9 +22,9 @@
 #include "simplex/HEkk.h"
 
 class HVector;
-const double kInitialTotalChange = 1e-12;
-const double kInitialRemainTheta = 1e100;
-const double kMaxSelectTheta = 1e18;
+const HighsFloat kInitialTotalChange = 1e-12;
+const HighsFloat kInitialRemainTheta = 1e100;
+const HighsFloat kMaxSelectTheta = 1e18;
 
 /**
  * @brief Dual simplex ratio test for HiGHS
@@ -95,12 +95,12 @@ class HEkkDualRow {
 
   void chooseFinalLargeAlpha(
       HighsInt& breakIndex, HighsInt& breakGroup, HighsInt pass_workCount,
-      const std::vector<std::pair<HighsInt, double>>& pass_workData,
+      const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
       const std::vector<HighsInt>& pass_workGroup);
 
   void reportWorkDataAndGroup(
       const std::string message, const HighsInt reportWorkCount,
-      const std::vector<std::pair<HighsInt, double>>& reportWorkData,
+      const std::vector<std::pair<HighsInt, HighsFloat>>& reportWorkData,
       const std::vector<HighsInt>& reportWorkGroup);
   bool compareWorkDataAndGroup();
 
@@ -114,7 +114,7 @@ class HEkkDualRow {
    * @brief Update the dual values
    */
   void updateDual(
-      double theta  //!< Multiple of pivotal row to add HighsInt to duals
+      HighsFloat theta  //!< Multiple of pivotal row to add HighsInt to duals
                     //      HighsInt variable_out  //!< Index of leaving column
   );
   /**
@@ -148,11 +148,11 @@ class HEkkDualRow {
 
   HighsInt debugFindInWorkData(
       const HighsInt iCol, const HighsInt count,
-      const std::vector<std::pair<HighsInt, double>>& workData_);
+      const std::vector<std::pair<HighsInt, HighsFloat>>& workData_);
   HighsInt debugChooseColumnInfeasibilities() const;
   void debugReportBfrtVar(
       const HighsInt ix,
-      const std::vector<std::pair<HighsInt, double>>& pass_workData) const;
+      const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData) const;
   // References:
   HEkk& ekk_instance_;
 
@@ -162,9 +162,9 @@ class HEkkDualRow {
       nullptr;  //!< Pointer to ekk_instance_.numTotPermutation();
   const int8_t* workMove =
       nullptr;  //!< Pointer to ekk_instance_.basis_.nonbasicMove_;
-  const double* workDual =
+  const HighsFloat* workDual =
       nullptr;  //!< Pointer to ekk_instance_.info_.workDual_;
-  const double* workRange =
+  const HighsFloat* workRange =
       nullptr;  //!< Pointer to ekk_instance_.info_.workRange_;
   const HighsInt* work_devex_index =
       nullptr;  //!< Pointer to
@@ -176,27 +176,27 @@ class HEkkDualRow {
   // packed data:
   HighsInt packCount = 0;           //!< number of packed indices/values
   std::vector<HighsInt> packIndex;  //!< Packed indices
-  std::vector<double> packValue;    //!< Packed values
+  std::vector<HighsFloat> packValue;    //!< Packed values
 
   // (Local) value of computed weight
-  double computed_edge_weight = 0.;
+  HighsFloat computed_edge_weight = 0.;
 
-  double workDelta = 0.;   //!< Local copy of dual.delta_primal
-  double workAlpha = 0.;   //!< Original copy of pivotal computed row-wise
-  double workTheta = 0.;   //!< Original copy of dual step workDual[workPivot] /
+  HighsFloat workDelta = 0.;   //!< Local copy of dual.delta_primal
+  HighsFloat workAlpha = 0.;   //!< Original copy of pivotal computed row-wise
+  HighsFloat workTheta = 0.;   //!< Original copy of dual step workDual[workPivot] /
                            //!< workAlpha;
   HighsInt workPivot = 0;  //!< Index of the column entering the basis
   HighsInt workCount = 0;  //!< Number of BFRT flips
 
-  std::vector<std::pair<HighsInt, double>>
+  std::vector<std::pair<HighsInt, HighsFloat>>
       workData;  //!< Index-Value pairs for ratio test
   std::vector<HighsInt>
       workGroup;  //!< Pointers into workData for degenerate nodes in BFRT
 
   // Independent identifiers for heap-based sort in BFRT
   HighsInt alt_workCount = 0;
-  std::vector<std::pair<HighsInt, double>> original_workData;
-  std::vector<std::pair<HighsInt, double>> sorted_workData;
+  std::vector<std::pair<HighsInt, HighsFloat>> original_workData;
+  std::vector<std::pair<HighsInt, HighsFloat>> sorted_workData;
   std::vector<HighsInt> alt_workGroup;
 
   HighsSimplexAnalysis* analysis = nullptr;

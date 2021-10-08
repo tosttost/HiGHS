@@ -74,7 +74,7 @@ HighsStatus Highs::setOptionValue(const std::string& option,
 }
 
 HighsStatus Highs::setOptionValue(const std::string& option,
-                                  const double value) {
+                                  const HighsFloat value) {
   if (setLocalOptionValue(options_.log_options, option, options_.records,
                           value) == OptionStatus::kOk)
     return HighsStatus::kOk;
@@ -128,7 +128,7 @@ HighsStatus Highs::getOptionValue(const std::string& option, HighsInt& value) {
   return HighsStatus::kError;
 }
 
-HighsStatus Highs::getOptionValue(const std::string& option, double& value) {
+HighsStatus Highs::getOptionValue(const std::string& option, HighsFloat& value) {
   if (getLocalOptionValue(options_.log_options, option, options_.records,
                           value) == OptionStatus::kOk)
     return HighsStatus::kOk;
@@ -186,7 +186,7 @@ HighsStatus Highs::getInfoValue(const std::string& info, HighsInt& value) {
   }
 }
 
-HighsStatus Highs::getInfoValue(const std::string& info, double& value) const {
+HighsStatus Highs::getInfoValue(const std::string& info, HighsFloat& value) const {
   InfoStatus status =
       getLocalInfoValue(options_, info, info_.valid, info_.records, value);
   if (status == InfoStatus::kOk) {
@@ -279,11 +279,11 @@ HighsStatus Highs::passModel(HighsLp lp) {
 HighsStatus Highs::passModel(
     const HighsInt num_col, const HighsInt num_row, const HighsInt num_nz,
     const HighsInt q_num_nz, const HighsInt a_format, const HighsInt q_format,
-    const HighsInt sense, const double offset, const double* costs,
-    const double* col_lower, const double* col_upper, const double* row_lower,
-    const double* row_upper, const HighsInt* astart, const HighsInt* aindex,
-    const double* avalue, const HighsInt* q_start, const HighsInt* q_index,
-    const double* q_value, const HighsInt* integrality) {
+    const HighsInt sense, const HighsFloat offset, const HighsFloat* costs,
+    const HighsFloat* col_lower, const HighsFloat* col_upper, const HighsFloat* row_lower,
+    const HighsFloat* row_upper, const HighsInt* astart, const HighsInt* aindex,
+    const HighsFloat* avalue, const HighsInt* q_start, const HighsInt* q_index,
+    const HighsFloat* q_value, const HighsInt* integrality) {
   HighsModel model;
   HighsLp& lp = model.lp_;
   // Check that the formats of the constraint matrix and Hessian are valid
@@ -366,11 +366,11 @@ HighsStatus Highs::passModel(
 
 HighsStatus Highs::passModel(const HighsInt num_col, const HighsInt num_row,
                              const HighsInt num_nz, const HighsInt a_format,
-                             const HighsInt sense, const double offset,
-                             const double* costs, const double* col_lower,
-                             const double* col_upper, const double* row_lower,
-                             const double* row_upper, const HighsInt* astart,
-                             const HighsInt* aindex, const double* avalue,
+                             const HighsInt sense, const HighsFloat offset,
+                             const HighsFloat* costs, const HighsFloat* col_lower,
+                             const HighsFloat* col_upper, const HighsFloat* row_lower,
+                             const HighsFloat* row_upper, const HighsInt* astart,
+                             const HighsInt* aindex, const HighsFloat* avalue,
                              const HighsInt* integrality) {
   return passModel(num_col, num_row, num_nz, 0, a_format, 0, sense, offset,
                    costs, col_lower, col_upper, row_lower, row_upper, astart,
@@ -394,7 +394,7 @@ HighsStatus Highs::passHessian(HighsHessian hessian_) {
 
 HighsStatus Highs::passHessian(const HighsInt dim, const HighsInt num_nz,
                                const HighsInt format, const HighsInt* start,
-                               const HighsInt* index, const double* value) {
+                               const HighsInt* index, const HighsFloat* value) {
   HighsHessian hessian;
   if (!qFormatOk(num_nz, format)) return HighsStatus::kError;
   HighsInt num_col = model_.lp_.num_col_;
@@ -606,11 +606,11 @@ HighsStatus Highs::run() {
   //
   // Record the initial time and set the component times and postsolve
   // iteration count to -1 to identify whether they are not required
-  double initial_time = timer_.readRunHighsClock();
-  double this_presolve_time = -1;
-  double this_solve_presolved_lp_time = -1;
-  double this_postsolve_time = -1;
-  double this_solve_original_lp_time = -1;
+  HighsFloat initial_time = timer_.readRunHighsClock();
+  HighsFloat this_presolve_time = -1;
+  HighsFloat this_solve_presolved_lp_time = -1;
+  HighsFloat this_postsolve_time = -1;
+  HighsFloat this_solve_original_lp_time = -1;
   HighsInt postsolve_iteration_count = -1;
 
   if (basis_.valid || options_.presolve == kHighsOffString) {
@@ -640,18 +640,18 @@ HighsStatus Highs::run() {
       options_.run_crossover = true;
     }
     // Possibly presolve - according to option_.presolve
-    const double from_presolve_time = timer_.read(timer_.presolve_clock);
+    const HighsFloat from_presolve_time = timer_.read(timer_.presolve_clock);
     this_presolve_time = -from_presolve_time;
     timer_.start(timer_.presolve_clock);
     model_presolve_status_ = runPresolve();
     timer_.stop(timer_.presolve_clock);
-    const double to_presolve_time = timer_.read(timer_.presolve_clock);
+    const HighsFloat to_presolve_time = timer_.read(timer_.presolve_clock);
     this_presolve_time += to_presolve_time;
     presolve_.info_.presolve_time = this_presolve_time;
 
     // Set an illegal local pivot threshold value that's updated after
     // solving the presolved LP - if simplex is used
-    double factor_pivot_threshold = -1;
+    HighsFloat factor_pivot_threshold = -1;
 
     // Run solver.
     bool have_optimal_solution = false;
@@ -707,7 +707,7 @@ HighsStatus Highs::run() {
         ekk_instance_.lp_name_ = "Presolved LP";
         // Don't try dual cut-off when solving the presolved LP, as the
         // objective values aren't correct
-        const double save_objective_bound = options_.objective_bound;
+        const HighsFloat save_objective_bound = options_.objective_bound;
         options_.objective_bound = kHighsInf;
         this_solve_presolved_lp_time = -timer_.read(timer_.solve_clock);
         timer_.start(timer_.solve_clock);
@@ -940,8 +940,8 @@ HighsStatus Highs::run() {
     // true;
     setBasisValidity();
   }
-  double lp_solve_final_time = timer_.readRunHighsClock();
-  double this_solve_time = lp_solve_final_time - initial_time;
+  HighsFloat lp_solve_final_time = timer_.readRunHighsClock();
+  HighsFloat this_solve_time = lp_solve_final_time - initial_time;
   if (postsolve_iteration_count < 0) {
     highsLogDev(log_options, HighsLogType::kInfo, "Postsolve  : \n");
   } else {
@@ -960,7 +960,7 @@ HighsStatus Highs::run() {
   if (this_solve_time > 0) {
     highsLogDev(log_options, HighsLogType::kInfo, "For LP %16s",
                 incumbent_lp.model_name_.c_str());
-    double sum_time = 0;
+    HighsFloat sum_time = 0;
     if (this_presolve_time > 0) {
       sum_time += this_presolve_time;
       HighsInt pct = (100 * this_presolve_time) / this_solve_time;
@@ -990,7 +990,7 @@ HighsStatus Highs::run() {
                   this_solve_original_lp_time, pct);
     }
     highsLogDev(log_options, HighsLogType::kInfo, "\n");
-    double rlv_time_difference =
+    HighsFloat rlv_time_difference =
         fabs(sum_time - this_solve_time) / this_solve_time;
     if (rlv_time_difference > 0.1)
       highsLogDev(options_.log_options, HighsLogType::kInfo,
@@ -1006,14 +1006,14 @@ HighsStatus Highs::run() {
   return returnFromRun(return_status);
 }
 
-HighsStatus Highs::getDualRay(bool& has_dual_ray, double* dual_ray_value) {
+HighsStatus Highs::getDualRay(bool& has_dual_ray, HighsFloat* dual_ray_value) {
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getDualRay");
   return getDualRayInterface(has_dual_ray, dual_ray_value);
 }
 
 HighsStatus Highs::getPrimalRay(bool& has_primal_ray,
-                                double* primal_ray_value) {
+                                HighsFloat* primal_ray_value) {
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getPrimalRay");
   return getPrimalRayInterface(has_primal_ray, primal_ray_value);
@@ -1038,7 +1038,7 @@ HighsStatus Highs::getBasicVariables(HighsInt* basic_variables) {
   return getBasicVariablesInterface(basic_variables);
 }
 
-HighsStatus Highs::getBasisInverseRow(const HighsInt row, double* row_vector,
+HighsStatus Highs::getBasisInverseRow(const HighsInt row, HighsFloat* row_vector,
                                       HighsInt* row_num_nz,
                                       HighsInt* row_indices) {
   if (row_vector == NULL) {
@@ -1060,14 +1060,14 @@ HighsStatus Highs::getBasisInverseRow(const HighsInt row, double* row_vector,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getBasisInverseRow");
   // Compute a row i of the inverse of the basis matrix by solving B^Tx=e_i
-  vector<double> rhs;
+  vector<HighsFloat> rhs;
   rhs.assign(num_row, 0);
   rhs[row] = 1;
   basisSolveInterface(rhs, row_vector, row_num_nz, row_indices, true);
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getBasisInverseCol(const HighsInt col, double* col_vector,
+HighsStatus Highs::getBasisInverseCol(const HighsInt col, HighsFloat* col_vector,
                                       HighsInt* col_num_nz,
                                       HighsInt* col_indices) {
   if (col_vector == NULL) {
@@ -1089,14 +1089,14 @@ HighsStatus Highs::getBasisInverseCol(const HighsInt col, double* col_vector,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getBasisInverseCol");
   // Compute a col i of the inverse of the basis matrix by solving Bx=e_i
-  vector<double> rhs;
+  vector<HighsFloat> rhs;
   rhs.assign(num_row, 0);
   rhs[col] = 1;
   basisSolveInterface(rhs, col_vector, col_num_nz, col_indices, false);
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getBasisSolve(const double* Xrhs, double* solution_vector,
+HighsStatus Highs::getBasisSolve(const HighsFloat* Xrhs, HighsFloat* solution_vector,
                                  HighsInt* solution_num_nz,
                                  HighsInt* solution_indices) {
   if (Xrhs == NULL) {
@@ -1114,7 +1114,7 @@ HighsStatus Highs::getBasisSolve(const double* Xrhs, double* solution_vector,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getBasisSolve");
   HighsInt num_row = model_.lp_.num_row_;
-  vector<double> rhs;
+  vector<HighsFloat> rhs;
   rhs.assign(num_row, 0);
   for (HighsInt row = 0; row < num_row; row++) rhs[row] = Xrhs[row];
   basisSolveInterface(rhs, solution_vector, solution_num_nz, solution_indices,
@@ -1122,8 +1122,8 @@ HighsStatus Highs::getBasisSolve(const double* Xrhs, double* solution_vector,
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getBasisTransposeSolve(const double* Xrhs,
-                                          double* solution_vector,
+HighsStatus Highs::getBasisTransposeSolve(const HighsFloat* Xrhs,
+                                          HighsFloat* solution_vector,
                                           HighsInt* solution_num_nz,
                                           HighsInt* solution_indices) {
   if (Xrhs == NULL) {
@@ -1141,7 +1141,7 @@ HighsStatus Highs::getBasisTransposeSolve(const double* Xrhs,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getBasisTransposeSolve");
   HighsInt num_row = model_.lp_.num_row_;
-  vector<double> rhs;
+  vector<HighsFloat> rhs;
   rhs.assign(num_row, 0);
   for (HighsInt row = 0; row < num_row; row++) rhs[row] = Xrhs[row];
   basisSolveInterface(rhs, solution_vector, solution_num_nz, solution_indices,
@@ -1149,9 +1149,9 @@ HighsStatus Highs::getBasisTransposeSolve(const double* Xrhs,
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getReducedRow(const HighsInt row, double* row_vector,
+HighsStatus Highs::getReducedRow(const HighsInt row, HighsFloat* row_vector,
                                  HighsInt* row_num_nz, HighsInt* row_indices,
-                                 const double* pass_basis_inverse_row_vector) {
+                                 const HighsFloat* pass_basis_inverse_row_vector) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   // Ensure that the LP is column-wise
@@ -1174,10 +1174,10 @@ HighsStatus Highs::getReducedRow(const HighsInt row, double* row_vector,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getReducedRow");
   HighsInt num_row = lp.num_row_;
-  vector<double> basis_inverse_row;
-  double* basis_inverse_row_vector = (double*)pass_basis_inverse_row_vector;
+  vector<HighsFloat> basis_inverse_row;
+  HighsFloat* basis_inverse_row_vector = (HighsFloat*)pass_basis_inverse_row_vector;
   if (basis_inverse_row_vector == NULL) {
-    vector<double> rhs;
+    vector<HighsFloat> rhs;
     vector<HighsInt> col_indices;
     rhs.assign(num_row, 0);
     rhs[row] = 1;
@@ -1189,7 +1189,7 @@ HighsStatus Highs::getReducedRow(const HighsInt row, double* row_vector,
   bool return_indices = row_num_nz != NULL;
   if (return_indices) *row_num_nz = 0;
   for (HighsInt col = 0; col < lp.num_col_; col++) {
-    double value = 0;
+    HighsFloat value = 0;
     for (HighsInt el = lp.a_matrix_.start_[col];
          el < lp.a_matrix_.start_[col + 1]; el++) {
       HighsInt row = lp.a_matrix_.index_[el];
@@ -1204,7 +1204,7 @@ HighsStatus Highs::getReducedRow(const HighsInt row, double* row_vector,
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getReducedColumn(const HighsInt col, double* col_vector,
+HighsStatus Highs::getReducedColumn(const HighsInt col, HighsFloat* col_vector,
                                     HighsInt* col_num_nz,
                                     HighsInt* col_indices) {
   HighsStatus return_status = HighsStatus::kOk;
@@ -1229,7 +1229,7 @@ HighsStatus Highs::getReducedColumn(const HighsInt col, double* col_vector,
   if (!ekk_instance_.status_.has_invert)
     return invertRequirementError("getReducedColumn");
   HighsInt num_row = lp.num_row_;
-  vector<double> rhs;
+  vector<HighsFloat> rhs;
   rhs.assign(num_row, 0);
   for (HighsInt el = lp.a_matrix_.start_[col];
        el < lp.a_matrix_.start_[col + 1]; el++)
@@ -1348,19 +1348,19 @@ HighsStatus Highs::unfreezeBasis(const HighsInt frozen_basis_id) {
   return returnFromHighs(HighsStatus::kOk);
 }
 
-HighsStatus Highs::addRow(const double lower_bound, const double upper_bound,
+HighsStatus Highs::addRow(const HighsFloat lower_bound, const HighsFloat upper_bound,
                           const HighsInt num_new_nz, const HighsInt* indices,
-                          const double* values) {
+                          const HighsFloat* values) {
   HighsInt starts = 0;
   return addRows(1, &lower_bound, &upper_bound, num_new_nz, &starts, indices,
                  values);
 }
 
 HighsStatus Highs::addRows(const HighsInt num_new_row,
-                           const double* lower_bounds,
-                           const double* upper_bounds,
+                           const HighsFloat* lower_bounds,
+                           const HighsFloat* upper_bounds,
                            const HighsInt num_new_nz, const HighsInt* starts,
-                           const HighsInt* indices, const double* values) {
+                           const HighsInt* indices, const HighsFloat* values) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   return_status = interpretCallStatus(
@@ -1372,19 +1372,19 @@ HighsStatus Highs::addRows(const HighsInt num_new_row,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::addCol(const double cost, const double lower_bound,
-                          const double upper_bound, const HighsInt num_new_nz,
-                          const HighsInt* indices, const double* values) {
+HighsStatus Highs::addCol(const HighsFloat cost, const HighsFloat lower_bound,
+                          const HighsFloat upper_bound, const HighsInt num_new_nz,
+                          const HighsInt* indices, const HighsFloat* values) {
   HighsInt starts = 0;
   return addCols(1, &cost, &lower_bound, &upper_bound, num_new_nz, &starts,
                  indices, values);
 }
 
-HighsStatus Highs::addCols(const HighsInt num_new_col, const double* costs,
-                           const double* lower_bounds,
-                           const double* upper_bounds,
+HighsStatus Highs::addCols(const HighsInt num_new_col, const HighsFloat* costs,
+                           const HighsFloat* lower_bounds,
+                           const HighsFloat* upper_bounds,
                            const HighsInt num_new_nz, const HighsInt* starts,
-                           const HighsInt* indices, const double* values) {
+                           const HighsInt* indices, const HighsFloat* values) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   return_status = interpretCallStatus(
@@ -1407,7 +1407,7 @@ HighsStatus Highs::changeObjectiveSense(const ObjSense sense) {
   return returnFromHighs(HighsStatus::kOk);
 }
 
-HighsStatus Highs::changeObjectiveOffset(const double offset) {
+HighsStatus Highs::changeObjectiveOffset(const HighsFloat offset) {
   // Update the objective value
   info_.objective_function_value += (offset - model_.lp_.offset_);
   model_.lp_.offset_ = offset;
@@ -1477,12 +1477,12 @@ HighsStatus Highs::changeColsIntegrality(const HighsInt* mask,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeColCost(const HighsInt col, const double cost) {
+HighsStatus Highs::changeColCost(const HighsInt col, const HighsFloat cost) {
   return changeColsCost(1, &col, &cost);
 }
 
 HighsStatus Highs::changeColsCost(const HighsInt from_col,
-                                  const HighsInt to_col, const double* cost) {
+                                  const HighsInt to_col, const HighsFloat* cost) {
   clearPresolve();
   HighsIndexCollection index_collection;
   if (!create(index_collection, from_col, to_col, model_.lp_.num_col_)) {
@@ -1500,15 +1500,15 @@ HighsStatus Highs::changeColsCost(const HighsInt from_col,
 }
 
 HighsStatus Highs::changeColsCost(const HighsInt num_set_entries,
-                                  const HighsInt* set, const double* cost) {
+                                  const HighsInt* set, const HighsFloat* cost) {
   if (num_set_entries <= 0) return HighsStatus::kOk;
   // Check for NULL data in "set" version of changeColsCost since
   // values are sorted with set
-  if (doubleUserDataNotNull(options_.log_options, cost, "column costs"))
+  if (HighsFloatUserDataNotNull(options_.log_options, cost, "column costs"))
     return HighsStatus::kError;
   clearPresolve();
   // Ensure that the set and data are in ascending order
-  std::vector<double> local_cost{cost, cost + num_set_entries};
+  std::vector<HighsFloat> local_cost{cost, cost + num_set_entries};
   std::vector<HighsInt> local_set{set, set + num_set_entries};
   sortSetData(num_set_entries, local_set, cost, NULL, NULL, &local_cost[0],
               NULL, NULL);
@@ -1525,7 +1525,7 @@ HighsStatus Highs::changeColsCost(const HighsInt num_set_entries,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeColsCost(const HighsInt* mask, const double* cost) {
+HighsStatus Highs::changeColsCost(const HighsInt* mask, const HighsFloat* cost) {
   clearPresolve();
   HighsIndexCollection index_collection;
   create(index_collection, mask, model_.lp_.num_col_);
@@ -1537,14 +1537,14 @@ HighsStatus Highs::changeColsCost(const HighsInt* mask, const double* cost) {
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeColBounds(const HighsInt col, const double lower,
-                                   const double upper) {
+HighsStatus Highs::changeColBounds(const HighsInt col, const HighsFloat lower,
+                                   const HighsFloat upper) {
   return changeColsBounds(1, &col, &lower, &upper);
 }
 
 HighsStatus Highs::changeColsBounds(const HighsInt from_col,
-                                    const HighsInt to_col, const double* lower,
-                                    const double* upper) {
+                                    const HighsInt to_col, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   clearPresolve();
   HighsIndexCollection index_collection;
   if (!create(index_collection, from_col, to_col, model_.lp_.num_col_)) {
@@ -1563,23 +1563,23 @@ HighsStatus Highs::changeColsBounds(const HighsInt from_col,
 }
 
 HighsStatus Highs::changeColsBounds(const HighsInt num_set_entries,
-                                    const HighsInt* set, const double* lower,
-                                    const double* upper) {
+                                    const HighsInt* set, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   if (num_set_entries <= 0) return HighsStatus::kOk;
   // Check for NULL data in "set" version of changeColsBounds since
   // values are sorted with set
   bool null_data = false;
-  null_data = doubleUserDataNotNull(options_.log_options, lower,
+  null_data = HighsFloatUserDataNotNull(options_.log_options, lower,
                                     "column lower bounds") ||
               null_data;
-  null_data = doubleUserDataNotNull(options_.log_options, upper,
+  null_data = HighsFloatUserDataNotNull(options_.log_options, upper,
                                     "column upper bounds") ||
               null_data;
   if (null_data) return HighsStatus::kError;
   clearPresolve();
   // Ensure that the set and data are in ascending order
-  std::vector<double> local_lower{lower, lower + num_set_entries};
-  std::vector<double> local_upper{upper, upper + num_set_entries};
+  std::vector<HighsFloat> local_lower{lower, lower + num_set_entries};
+  std::vector<HighsFloat> local_upper{upper, upper + num_set_entries};
   std::vector<HighsInt> local_set{set, set + num_set_entries};
   sortSetData(num_set_entries, local_set, lower, upper, NULL, &local_lower[0],
               &local_upper[0], NULL);
@@ -1596,8 +1596,8 @@ HighsStatus Highs::changeColsBounds(const HighsInt num_set_entries,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeColsBounds(const HighsInt* mask, const double* lower,
-                                    const double* upper) {
+HighsStatus Highs::changeColsBounds(const HighsInt* mask, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   clearPresolve();
   HighsIndexCollection index_collection;
   create(index_collection, mask, model_.lp_.num_col_);
@@ -1610,14 +1610,14 @@ HighsStatus Highs::changeColsBounds(const HighsInt* mask, const double* lower,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeRowBounds(const HighsInt row, const double lower,
-                                   const double upper) {
+HighsStatus Highs::changeRowBounds(const HighsInt row, const HighsFloat lower,
+                                   const HighsFloat upper) {
   return changeRowsBounds(1, &row, &lower, &upper);
 }
 
 HighsStatus Highs::changeRowsBounds(const HighsInt from_row,
-                                    const HighsInt to_row, const double* lower,
-                                    const double* upper) {
+                                    const HighsInt to_row, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   clearPresolve();
   HighsIndexCollection index_collection;
   if (!create(index_collection, from_row, to_row, model_.lp_.num_row_)) {
@@ -1636,23 +1636,23 @@ HighsStatus Highs::changeRowsBounds(const HighsInt from_row,
 }
 
 HighsStatus Highs::changeRowsBounds(const HighsInt num_set_entries,
-                                    const HighsInt* set, const double* lower,
-                                    const double* upper) {
+                                    const HighsInt* set, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   if (num_set_entries <= 0) return HighsStatus::kOk;
   // Check for NULL data in "set" version of changeRowsBounds since
   // values are sorted with set
   bool null_data = false;
   null_data =
-      doubleUserDataNotNull(options_.log_options, lower, "row lower bounds") ||
+      HighsFloatUserDataNotNull(options_.log_options, lower, "row lower bounds") ||
       null_data;
   null_data =
-      doubleUserDataNotNull(options_.log_options, upper, "row upper bounds") ||
+      HighsFloatUserDataNotNull(options_.log_options, upper, "row upper bounds") ||
       null_data;
   if (null_data) return HighsStatus::kError;
   clearPresolve();
   // Ensure that the set and data are in ascending order
-  std::vector<double> local_lower{lower, lower + num_set_entries};
-  std::vector<double> local_upper{upper, upper + num_set_entries};
+  std::vector<HighsFloat> local_lower{lower, lower + num_set_entries};
+  std::vector<HighsFloat> local_upper{upper, upper + num_set_entries};
   std::vector<HighsInt> local_set{set, set + num_set_entries};
   sortSetData(num_set_entries, local_set, lower, upper, NULL, &local_lower[0],
               &local_upper[0], NULL);
@@ -1669,8 +1669,8 @@ HighsStatus Highs::changeRowsBounds(const HighsInt num_set_entries,
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::changeRowsBounds(const HighsInt* mask, const double* lower,
-                                    const double* upper) {
+HighsStatus Highs::changeRowsBounds(const HighsInt* mask, const HighsFloat* lower,
+                                    const HighsFloat* upper) {
   clearPresolve();
   HighsIndexCollection index_collection;
   create(index_collection, mask, model_.lp_.num_row_);
@@ -1684,7 +1684,7 @@ HighsStatus Highs::changeRowsBounds(const HighsInt* mask, const double* lower,
 }
 
 HighsStatus Highs::changeCoeff(const HighsInt row, const HighsInt col,
-                               const double value) {
+                               const HighsFloat value) {
   if (row < 0 || row >= model_.lp_.num_row_) {
     highsLogUser(options_.log_options, HighsLogType::kError,
                  "Row %" HIGHSINT_FORMAT
@@ -1710,15 +1710,15 @@ HighsStatus Highs::getObjectiveSense(ObjSense& sense) {
   return HighsStatus::kOk;
 }
 
-HighsStatus Highs::getObjectiveOffset(double& offset) {
+HighsStatus Highs::getObjectiveOffset(HighsFloat& offset) {
   offset = model_.lp_.offset_;
   return HighsStatus::kOk;
 }
 
 HighsStatus Highs::getCols(const HighsInt from_col, const HighsInt to_col,
-                           HighsInt& num_col, double* costs, double* lower,
-                           double* upper, HighsInt& num_nz, HighsInt* start,
-                           HighsInt* index, double* value) {
+                           HighsInt& num_col, HighsFloat* costs, HighsFloat* lower,
+                           HighsFloat* upper, HighsInt& num_nz, HighsInt* start,
+                           HighsInt* index, HighsFloat* value) {
   HighsIndexCollection index_collection;
   if (!create(index_collection, from_col, to_col, model_.lp_.num_col_)) {
     highsLogUser(options_.log_options, HighsLogType::kError,
@@ -1731,9 +1731,9 @@ HighsStatus Highs::getCols(const HighsInt from_col, const HighsInt to_col,
 }
 
 HighsStatus Highs::getCols(const HighsInt num_set_entries, const HighsInt* set,
-                           HighsInt& num_col, double* costs, double* lower,
-                           double* upper, HighsInt& num_nz, HighsInt* start,
-                           HighsInt* index, double* value) {
+                           HighsInt& num_col, HighsFloat* costs, HighsFloat* lower,
+                           HighsFloat* upper, HighsInt& num_nz, HighsInt* start,
+                           HighsInt* index, HighsFloat* value) {
   if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsIndexCollection index_collection;
   if (!create(index_collection, num_set_entries, set, model_.lp_.num_col_)) {
@@ -1747,9 +1747,9 @@ HighsStatus Highs::getCols(const HighsInt num_set_entries, const HighsInt* set,
 }
 
 HighsStatus Highs::getCols(const HighsInt* mask, HighsInt& num_col,
-                           double* costs, double* lower, double* upper,
+                           HighsFloat* costs, HighsFloat* lower, HighsFloat* upper,
                            HighsInt& num_nz, HighsInt* start, HighsInt* index,
-                           double* value) {
+                           HighsFloat* value) {
   HighsIndexCollection index_collection;
   create(index_collection, mask, model_.lp_.num_col_);
   getColsInterface(index_collection, num_col, costs, lower, upper, num_nz,
@@ -1758,9 +1758,9 @@ HighsStatus Highs::getCols(const HighsInt* mask, HighsInt& num_col,
 }
 
 HighsStatus Highs::getRows(const HighsInt from_row, const HighsInt to_row,
-                           HighsInt& num_row, double* lower, double* upper,
+                           HighsInt& num_row, HighsFloat* lower, HighsFloat* upper,
                            HighsInt& num_nz, HighsInt* start, HighsInt* index,
-                           double* value) {
+                           HighsFloat* value) {
   HighsIndexCollection index_collection;
   if (!create(index_collection, from_row, to_row, model_.lp_.num_row_)) {
     highsLogUser(options_.log_options, HighsLogType::kError,
@@ -1773,9 +1773,9 @@ HighsStatus Highs::getRows(const HighsInt from_row, const HighsInt to_row,
 }
 
 HighsStatus Highs::getRows(const HighsInt num_set_entries, const HighsInt* set,
-                           HighsInt& num_row, double* lower, double* upper,
+                           HighsInt& num_row, HighsFloat* lower, HighsFloat* upper,
                            HighsInt& num_nz, HighsInt* start, HighsInt* index,
-                           double* value) {
+                           HighsFloat* value) {
   if (num_set_entries <= 0) return HighsStatus::kOk;
   HighsIndexCollection index_collection;
   if (!create(index_collection, num_set_entries, set, model_.lp_.num_row_)) {
@@ -1789,8 +1789,8 @@ HighsStatus Highs::getRows(const HighsInt num_set_entries, const HighsInt* set,
 }
 
 HighsStatus Highs::getRows(const HighsInt* mask, HighsInt& num_row,
-                           double* lower, double* upper, HighsInt& num_nz,
-                           HighsInt* start, HighsInt* index, double* value) {
+                           HighsFloat* lower, HighsFloat* upper, HighsInt& num_nz,
+                           HighsInt* start, HighsInt* index, HighsFloat* value) {
   HighsIndexCollection index_collection;
   create(index_collection, mask, model_.lp_.num_row_);
   getRowsInterface(index_collection, num_row, lower, upper, num_nz, start,
@@ -1799,7 +1799,7 @@ HighsStatus Highs::getRows(const HighsInt* mask, HighsInt& num_row,
 }
 
 HighsStatus Highs::getCoeff(const HighsInt row, const HighsInt col,
-                            double& value) {
+                            HighsFloat& value) {
   if (row < 0 || row >= model_.lp_.num_row_) {
     highsLogUser(
         options_.log_options, HighsLogType::kError,
@@ -1896,7 +1896,7 @@ HighsStatus Highs::deleteRows(HighsInt* mask) {
   return returnFromHighs(HighsStatus::kOk);
 }
 
-HighsStatus Highs::scaleCol(const HighsInt col, const double scaleval) {
+HighsStatus Highs::scaleCol(const HighsInt col, const HighsFloat scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status = scaleColInterface(col, scaleval);
@@ -1906,7 +1906,7 @@ HighsStatus Highs::scaleCol(const HighsInt col, const double scaleval) {
   return returnFromHighs(return_status);
 }
 
-HighsStatus Highs::scaleRow(const HighsInt row, const double scaleval) {
+HighsStatus Highs::scaleRow(const HighsInt row, const HighsFloat scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   clearPresolve();
   HighsStatus call_status = scaleRowInterface(row, scaleval);
@@ -1970,11 +1970,11 @@ HighsPresolveStatus Highs::runPresolve() {
     return HighsPresolveStatus::kNullError;
 
   // Clear info from previous runs if original_lp has been modified.
-  double start_presolve = timer_.readRunHighsClock();
+  HighsFloat start_presolve = timer_.readRunHighsClock();
 
   // Set time limit.
   if (options_.time_limit > 0 && options_.time_limit < kHighsInf) {
-    double left = options_.time_limit - start_presolve;
+    HighsFloat left = options_.time_limit - start_presolve;
     if (left <= 0) {
       highsLogDev(options_.log_options, HighsLogType::kError,
                   "Time limit reached while reading in matrix\n");
@@ -1991,9 +1991,9 @@ HighsPresolveStatus Highs::runPresolve() {
   presolve_.init(original_lp, timer_);
   presolve_.options_ = &options_;
   if (options_.time_limit > 0 && options_.time_limit < kHighsInf) {
-    double current = timer_.readRunHighsClock();
-    double time_init = current - start_presolve;
-    double left = presolve_.options_->time_limit - time_init;
+    HighsFloat current = timer_.readRunHighsClock();
+    HighsFloat time_init = current - start_presolve;
+    HighsFloat left = presolve_.options_->time_limit - time_init;
     if (left <= 0) {
       highsLogDev(options_.log_options, HighsLogType::kError,
                   "Time limit reached while copying matrix into presolve.\n");
@@ -2173,7 +2173,7 @@ HighsStatus Highs::callSolveQp() {
   }
 
   if (lp.sense_ != ObjSense::kMinimize) {
-    for (double& i : instance.c.value) {
+    for (HighsFloat& i : instance.c.value) {
       i *= -1.0;
     }
   }
@@ -2272,7 +2272,7 @@ HighsStatus Highs::callSolveMip() {
   // Get the objective and any KKT failures
   info_.objective_function_value = solver.solution_objective_;
   const bool use_mip_feasibility_tolerance = false;
-  double primal_feasibility_tolerance = options_.primal_feasibility_tolerance;
+  HighsFloat primal_feasibility_tolerance = options_.primal_feasibility_tolerance;
   if (use_mip_feasibility_tolerance) {
     options_.primal_feasibility_tolerance = options_.mip_feasibility_tolerance;
   }
@@ -2626,7 +2626,7 @@ void Highs::reportSolvedLpQpStats() {
   highsLogUser(log_options, HighsLogType::kInfo,
                "Objective value     : %17.10e\n",
                info_.objective_function_value);
-  double run_time = timer_.readRunHighsClock();
+  HighsFloat run_time = timer_.readRunHighsClock();
   highsLogUser(log_options, HighsLogType::kInfo,
                "HiGHS run time      : %13.2f\n", run_time);
 }

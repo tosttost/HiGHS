@@ -38,7 +38,7 @@ void Solver::loginformation(Runtime& rt, Basis& basis,
                                              basis.getnumactive());
   rt.statistics.objval.push_back(rt.instance.objval(rt.primal));
   rt.statistics.time.push_back(
-      std::chrono::duration_cast<std::chrono::duration<double>>(
+      std::chrono::duration_cast<std::chrono::duration<HighsFloat>>(
           std::chrono::high_resolution_clock::now() - rt.statistics.time_start)
           .count());
   SumNum sm =
@@ -72,7 +72,7 @@ void computerowmove(Runtime& runtime, Basis& basis, Vector& p,
   for (HighsInt i = 0; i < runtime.instance.num_con; i++) {
     if (basis.getstatus(i) == BasisStatus::Default) {
       // check with assertions, is it really the same?
-      double val =
+      HighsFloat val =
           p.dot(&Atran.index[Atran.start[i]], &Atran.value[Atran.start[i]],
                 Atran.start[i + 1] - Atran.start[i]);
       // Vector col = Atran.extractcol(i);
@@ -119,11 +119,11 @@ Vector& computesearchdirection_major(Runtime& runtime, Basis& basis,
   }
 }
 
-double computemaxsteplength(Runtime& runtime, const Vector& p,
+HighsFloat computemaxsteplength(Runtime& runtime, const Vector& p,
                             Gradient& gradient, Vector& buffer_Qp) {
-  double denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
+  HighsFloat denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
   if (fabs(denominator) > 10E-5) {
-    double numerator = -(p * gradient.getGradient());
+    HighsFloat numerator = -(p * gradient.getGradient());
     if (numerator < 0.0) {
       return 0.0;
     } else {
@@ -197,7 +197,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
   bool atfsep = basis.getnumactive() == runtime.instance.num_var;
   while (true &&
          runtime.statistics.num_iterations < runtime.settings.iterationlimit &&
-         std::chrono::duration_cast<std::chrono::duration<double>>(
+         std::chrono::duration_cast<std::chrono::duration<HighsFloat>>(
              std::chrono::high_resolution_clock::now() -
              runtime.statistics.time_start)
                  .count() < runtime.settings.timelimit) {
@@ -210,7 +210,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
     }
     runtime.statistics.num_iterations++;
 
-    double maxsteplength = 1.0;
+    HighsFloat maxsteplength = 1.0;
     if (atfsep) {
       HighsInt minidx = pricing->price(runtime.primal, gradient.getGradient());
       // printf("%u -> ", minidx);
@@ -229,9 +229,9 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
       basis.deactivate(minidx);
       computerowmove(runtime, basis, p, rowmove);
       tidyup(p, rowmove, basis, runtime);
-      maxsteplength = std::numeric_limits<double>::infinity();
+      maxsteplength = std::numeric_limits<HighsFloat>::infinity();
       if (runtime.instance.Q.mat.value.size() > 0) {
-        double denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
+        HighsFloat denominator = p * runtime.instance.Q.mat_vec(p, buffer_Qp);
         maxsteplength = computemaxsteplength(runtime, p, gradient, buffer_Qp);
         factor.expand(buffer_yp, buffer_gyp, buffer_l);
       }
@@ -272,7 +272,7 @@ void Solver::solve(const Vector& x0, const Vector& ra, Basis& b0) {
         }
       } else {
         if (stepres.limitingconstraint ==
-            std::numeric_limits<double>::infinity()) {
+            std::numeric_limits<HighsFloat>::infinity()) {
           // unbounded
           runtime.status = ProblemStatus::UNBOUNDED;
         }

@@ -35,7 +35,7 @@ class HighsSparseVectorSum {
     nonzeroinds.reserve(dimension);
   }
 
-  void add(HighsInt index, double value) {
+  void add(HighsInt index, HighsFloat value) {
     assert(index >= 0 && index < (HighsInt)nonzeroflag.size());
     if (nonzeroflag[index]) {
       values[index] += value;
@@ -56,7 +56,7 @@ class HighsSparseVectorSum {
     }
   }
 
-  void set(HighsInt index, double value) {
+  void set(HighsInt index, HighsFloat value) {
     values[index] = value;
     nonzeroinds.push_back(index);
   }
@@ -66,12 +66,12 @@ class HighsSparseVectorSum {
     nonzeroinds.push_back(index);
   }
 
-  void chgValue(HighsInt index, double val) { values[index] = val; }
+  void chgValue(HighsInt index, HighsFloat val) { values[index] = val; }
   void chgValue(HighsInt index, HighsCD0uble val) { values[index] = val; }
 
   const std::vector<HighsInt>& getNonzeros() const { return nonzeroinds; }
 
-  double getValue(HighsInt index) const { return double(values[index]); }
+  HighsFloat getValue(HighsInt index) const { return HighsFloat(values[index]); }
 
   void clear() {
     for (HighsInt i : nonzeroinds) nonzeroflag[i] = false;
@@ -91,7 +91,7 @@ class HighsSparseVectorSum {
 
     for (HighsInt i = numNz - 1; i >= 0; --i) {
       HighsInt pos = nonzeroinds[i];
-      double val = double(values[pos]);
+      HighsFloat val = HighsFloat(values[pos]);
 
       if (isZero(pos, val)) {
         values[pos] = 0.0;

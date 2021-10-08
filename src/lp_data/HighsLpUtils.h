@@ -42,13 +42,13 @@ HighsStatus assessLp(HighsLp& lp, const HighsOptions& options);
 
 HighsStatus assessCosts(const HighsOptions& options, const HighsInt ml_col_os,
                         const HighsIndexCollection& index_collection,
-                        vector<double>& cost, const double infinite_cost);
+                        vector<HighsFloat>& cost, const HighsFloat infinite_cost);
 
 HighsStatus assessBounds(const HighsOptions& options, const char* type,
                          const HighsInt ml_ix_os,
                          const HighsIndexCollection& index_collection,
-                         vector<double>& lower, vector<double>& upper,
-                         const double infinite_bound);
+                         vector<HighsFloat>& lower, vector<HighsFloat>& upper,
+                         const HighsFloat infinite_bound);
 
 HighsStatus cleanBounds(const HighsOptions& options, HighsLp& lp);
 
@@ -60,19 +60,19 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
                          const HighsInt use_scale_strategy);
 
 HighsStatus applyScalingToLpCol(HighsLp& lp, const HighsInt col,
-                                const double colScale);
+                                const HighsFloat colScale);
 
 HighsStatus applyScalingToLpRow(HighsLp& lp, const HighsInt row,
-                                const double rowScale);
+                                const HighsFloat rowScale);
 
 void appendColsToLpVectors(HighsLp& lp, const HighsInt num_new_col,
-                           const vector<double>& colCost,
-                           const vector<double>& colLower,
-                           const vector<double>& colUpper);
+                           const vector<HighsFloat>& colCost,
+                           const vector<HighsFloat>& colLower,
+                           const vector<HighsFloat>& colUpper);
 
 void appendRowsToLpVectors(HighsLp& lp, const HighsInt num_new_row,
-                           const vector<double>& rowLower,
-                           const vector<double>& rowUpper);
+                           const vector<HighsFloat>& rowLower,
+                           const vector<HighsFloat>& rowUpper);
 
 void deleteLpCols(HighsLp& lp, const HighsIndexCollection& index_collection);
 
@@ -84,33 +84,33 @@ void deleteLpRows(HighsLp& lp, const HighsIndexCollection& index_collection);
 void deleteRowsFromLpVectors(HighsLp& lp, HighsInt& new_num_row,
                              const HighsIndexCollection& index_collection);
 
-void deleteScale(vector<double>& scale,
+void deleteScale(vector<HighsFloat>& scale,
                  const HighsIndexCollection& index_collection);
 
 void changeLpMatrixCoefficient(HighsLp& lp, const HighsInt row,
-                               const HighsInt col, const double new_value);
+                               const HighsInt col, const HighsFloat new_value);
 
 void changeLpIntegrality(HighsLp& lp,
                          const HighsIndexCollection& index_collection,
                          const vector<HighsVarType>& new_integrality);
 
 void changeLpCosts(HighsLp& lp, const HighsIndexCollection& index_collection,
-                   const vector<double>& new_col_cost);
+                   const vector<HighsFloat>& new_col_cost);
 
 void changeLpColBounds(HighsLp& lp,
                        const HighsIndexCollection& index_collection,
-                       const vector<double>& new_col_lower,
-                       const vector<double>& new_col_upper);
+                       const vector<HighsFloat>& new_col_lower,
+                       const vector<HighsFloat>& new_col_upper);
 
 void changeLpRowBounds(HighsLp& lp,
                        const HighsIndexCollection& index_collection,
-                       const vector<double>& new_row_lower,
-                       const vector<double>& new_row_upper);
+                       const vector<HighsFloat>& new_row_lower,
+                       const vector<HighsFloat>& new_row_upper);
 
-void changeBounds(vector<double>& lower, vector<double>& upper,
+void changeBounds(vector<HighsFloat>& lower, vector<HighsFloat>& upper,
                   const HighsIndexCollection& index_collection,
-                  const vector<double>& new_lower,
-                  const vector<double>& new_upper);
+                  const vector<HighsFloat>& new_lower,
+                  const vector<HighsFloat>& new_upper);
 
 /**
  * @brief Report the data of an LP
@@ -162,27 +162,27 @@ void reportLpColMatrix(const HighsLogOptions& log_options,
 void reportMatrix(const HighsLogOptions& log_options, const std::string message,
                   const HighsInt num_col, const HighsInt num_nz,
                   const HighsInt* start, const HighsInt* index,
-                  const double* value);
+                  const HighsFloat* value);
 
 // Get the number of integer-valued columns in the LP
 HighsInt getNumInt(const HighsLp& lp);
 
 // Get the costs for a contiguous set of columns
 void getLpCosts(const HighsLp& lp, const HighsInt from_col,
-                const HighsInt to_col, double* XcolCost);
+                const HighsInt to_col, HighsFloat* XcolCost);
 
 // Get the bounds for a contiguous set of columns
 void getLpColBounds(const HighsLp& lp, const HighsInt from_col,
-                    const HighsInt to_col, double* XcolLower,
-                    double* XcolUpper);
+                    const HighsInt to_col, HighsFloat* XcolLower,
+                    HighsFloat* XcolUpper);
 
 // Get the bounds for a contiguous set of rows
 void getLpRowBounds(const HighsLp& lp, const HighsInt from_row,
-                    const HighsInt to_row, double* XrowLower,
-                    double* XrowUpper);
+                    const HighsInt to_row, HighsFloat* XrowLower,
+                    HighsFloat* XrowUpper);
 
 void getLpMatrixCoefficient(const HighsLp& lp, const HighsInt row,
-                            const HighsInt col, double* val);
+                            const HighsInt col, HighsFloat* val);
 // Analyse the data in an LP problem
 void analyseLp(const HighsLogOptions& log_options, const HighsLp& lp);
 
@@ -196,14 +196,14 @@ HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution);
 bool isBoundInfeasible(const HighsLogOptions& log_options, const HighsLp& lp);
 
 bool isColDataNull(const HighsLogOptions& log_options,
-                   const double* usr_col_cost, const double* usr_col_lower,
-                   const double* usr_col_upper);
+                   const HighsFloat* usr_col_cost, const HighsFloat* usr_col_lower,
+                   const HighsFloat* usr_col_upper);
 bool isRowDataNull(const HighsLogOptions& log_options,
-                   const double* usr_row_lower, const double* usr_row_upper);
+                   const HighsFloat* usr_row_lower, const HighsFloat* usr_row_upper);
 bool isMatrixDataNull(const HighsLogOptions& log_options,
                       const HighsInt* usr_matrix_start,
                       const HighsInt* usr_matrix_index,
-                      const double* usr_matrix_value);
+                      const HighsFloat* usr_matrix_value);
 
 void reportPresolveReductions(const HighsLogOptions& log_options,
                               const HighsLp& lp, const HighsLp& presolve_lp);

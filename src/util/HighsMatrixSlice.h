@@ -41,14 +41,14 @@ class HighsSliceNonzero {
 
  private:
   const HighsInt* index_;
-  const double* value_;
+  const HighsFloat* value_;
 
  public:
   HighsSliceNonzero() = default;
-  HighsSliceNonzero(const HighsInt* index, const double* value)
+  HighsSliceNonzero(const HighsInt* index, const HighsFloat* value)
       : index_(index), value_(value) {}
   HighsInt index() const { return *index_; }
-  double value() const { return *value_; }
+  HighsFloat value() const { return *value_; }
 };
 
 template <>
@@ -62,7 +62,7 @@ class HighsMatrixSlice<HighsEmptySlice> {
 template <>
 class HighsMatrixSlice<HighsCompressedSlice> {
   const HighsInt* index;
-  const double* value;
+  const HighsFloat* value;
   HighsInt len;
 
  public:
@@ -76,7 +76,7 @@ class HighsMatrixSlice<HighsCompressedSlice> {
     using pointer = const HighsSliceNonzero*;
     using reference = const HighsSliceNonzero&;
 
-    iterator(const HighsInt* index, const double* value) : pos_(index, value) {}
+    iterator(const HighsInt* index, const HighsFloat* value) : pos_(index, value) {}
     iterator() = default;
 
     iterator operator++(int) {
@@ -107,7 +107,7 @@ class HighsMatrixSlice<HighsCompressedSlice> {
     }
   };
 
-  HighsMatrixSlice(const HighsInt* index, const double* value, HighsInt len)
+  HighsMatrixSlice(const HighsInt* index, const HighsFloat* value, HighsInt len)
       : index(index), value(value), len(len) {}
   iterator begin() const { return iterator{index, value}; }
   iterator end() const { return iterator{index + len, nullptr}; }
@@ -116,13 +116,13 @@ class HighsMatrixSlice<HighsCompressedSlice> {
 template <>
 class HighsMatrixSlice<HighsIndexedSlice> {
   const HighsInt* index;
-  const double* denseValues;
+  const HighsFloat* denseValues;
   HighsInt len;
 
  public:
   class iterator {
     HighsSliceNonzero pos_;
-    const double* denseValues;
+    const HighsFloat* denseValues;
 
    public:
     using iterator_category = std::forward_iterator_tag;
@@ -131,7 +131,7 @@ class HighsMatrixSlice<HighsIndexedSlice> {
     using pointer = const HighsSliceNonzero*;
     using reference = const HighsSliceNonzero&;
 
-    iterator(const HighsInt* index, const double* denseValues)
+    iterator(const HighsInt* index, const HighsFloat* denseValues)
         : pos_(index, denseValues), denseValues(denseValues) {}
     iterator() = default;
 
@@ -171,7 +171,7 @@ class HighsMatrixSlice<HighsIndexedSlice> {
     }
   };
 
-  HighsMatrixSlice(const HighsInt* index, const double* denseValues,
+  HighsMatrixSlice(const HighsInt* index, const HighsFloat* denseValues,
                    HighsInt len)
       : index(index), denseValues(denseValues), len(len) {}
   iterator begin() const { return iterator{index, denseValues}; }
@@ -181,7 +181,7 @@ class HighsMatrixSlice<HighsIndexedSlice> {
 template <>
 class HighsMatrixSlice<HighsTripletListSlice> {
   const HighsInt* nodeIndex;
-  const double* nodeValue;
+  const HighsFloat* nodeValue;
   const HighsInt* nodeNext;
   HighsInt head;
 
@@ -199,7 +199,7 @@ class HighsMatrixSlice<HighsTripletListSlice> {
     using reference = const HighsSliceNonzero&;
 
     iterator(HighsInt node) : currentNode(node) {}
-    iterator(const HighsInt* nodeIndex, const double* nodeValue,
+    iterator(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
              const HighsInt* nodeNext, HighsInt node)
         : pos_(nodeIndex + node, nodeValue + node),
           nodeNext(nodeNext),
@@ -242,7 +242,7 @@ class HighsMatrixSlice<HighsTripletListSlice> {
     }
   };
 
-  HighsMatrixSlice(const HighsInt* nodeIndex, const double* nodeValue,
+  HighsMatrixSlice(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
                    const HighsInt* nodeNext, HighsInt head)
       : nodeIndex(nodeIndex),
         nodeValue(nodeValue),
@@ -257,7 +257,7 @@ class HighsMatrixSlice<HighsTripletListSlice> {
 template <>
 class HighsMatrixSlice<HighsTripletTreeSlicePreOrder> {
   const HighsInt* nodeIndex;
-  const double* nodeValue;
+  const HighsFloat* nodeValue;
   const HighsInt* nodeLeft;
   const HighsInt* nodeRight;
   HighsInt root;
@@ -278,7 +278,7 @@ class HighsMatrixSlice<HighsTripletTreeSlicePreOrder> {
     using reference = const HighsSliceNonzero&;
 
     iterator(HighsInt node) : currentNode(node) {}
-    iterator(const HighsInt* nodeIndex, const double* nodeValue,
+    iterator(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
              const HighsInt* nodeLeft, const HighsInt* nodeRight, HighsInt node)
         : pos_(nodeIndex + node, nodeValue + node),
           nodeLeft(nodeLeft),
@@ -335,7 +335,7 @@ class HighsMatrixSlice<HighsTripletTreeSlicePreOrder> {
     }
   };
 
-  HighsMatrixSlice(const HighsInt* nodeIndex, const double* nodeValue,
+  HighsMatrixSlice(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
                    const HighsInt* nodeLeft, const HighsInt* nodeRight,
                    HighsInt root)
       : nodeIndex(nodeIndex),
@@ -355,7 +355,7 @@ class HighsMatrixSlice<HighsTripletTreeSlicePreOrder> {
 template <>
 class HighsMatrixSlice<HighsTripletTreeSliceInOrder> {
   const HighsInt* nodeIndex;
-  const double* nodeValue;
+  const HighsFloat* nodeValue;
   const HighsInt* nodeLeft;
   const HighsInt* nodeRight;
   HighsInt root;
@@ -376,7 +376,7 @@ class HighsMatrixSlice<HighsTripletTreeSliceInOrder> {
     using reference = const HighsSliceNonzero&;
 
     iterator(HighsInt node) : currentNode(node) {}
-    iterator(const HighsInt* nodeIndex, const double* nodeValue,
+    iterator(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
              const HighsInt* nodeLeft, const HighsInt* nodeRight, HighsInt node)
         : pos_(nodeIndex, nodeValue),
           nodeLeft(nodeLeft),
@@ -441,7 +441,7 @@ class HighsMatrixSlice<HighsTripletTreeSliceInOrder> {
     }
   };
 
-  HighsMatrixSlice(const HighsInt* nodeIndex, const double* nodeValue,
+  HighsMatrixSlice(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
                    const HighsInt* nodeLeft, const HighsInt* nodeRight,
                    HighsInt root)
       : nodeIndex(nodeIndex),
@@ -461,7 +461,7 @@ class HighsMatrixSlice<HighsTripletTreeSliceInOrder> {
 template <>
 class HighsMatrixSlice<HighsTripletPositionSlice> {
   const HighsInt* nodeIndex;
-  const double* nodeValue;
+  const HighsFloat* nodeValue;
   const HighsInt* nodePositions;
   HighsInt len;
 
@@ -479,7 +479,7 @@ class HighsMatrixSlice<HighsTripletPositionSlice> {
     using reference = const HighsSliceNonzero&;
 
     iterator(const HighsInt* node) : node(node) {}
-    iterator(const HighsInt* nodeIndex, const double* nodeValue,
+    iterator(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
              const HighsInt* node)
         : pos_(nodeIndex, nodeValue), node(node), currentNode(0) {}
     iterator() = default;
@@ -521,7 +521,7 @@ class HighsMatrixSlice<HighsTripletPositionSlice> {
     bool operator!=(const iterator& rhs) const { return node != rhs.node; }
   };
 
-  HighsMatrixSlice(const HighsInt* nodeIndex, const double* nodeValue,
+  HighsMatrixSlice(const HighsInt* nodeIndex, const HighsFloat* nodeValue,
                    const HighsInt* nodePositions, HighsInt len)
       : nodeIndex(nodeIndex),
         nodeValue(nodeValue),

@@ -4,7 +4,7 @@
 
 void solve(Highs& highs, std::string presolve, std::string solver,
            const HighsModelStatus require_model_status,
-           const double require_optimal_objective = 0) {
+           const HighsFloat require_optimal_objective = 0) {
   const HighsInfo& info = highs.getHighsInfo();
 
   REQUIRE(highs.setOptionValue("solver", solver) == HighsStatus::kOk);

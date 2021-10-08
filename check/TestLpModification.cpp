@@ -6,34 +6,34 @@
 #include "util/HighsUtils.h"
 
 const bool dev_run = false;
-const double d0uble_equal_tolerance = 1e-5;
+const HighsFloat d0uble_equal_tolerance = 1e-5;
 void HighsStatusReport(const HighsLogOptions& log_options, std::string message,
                        HighsStatus status);
 
 void callRun(Highs& highs, const HighsLogOptions& log_options,
              std::string message, const HighsStatus require_return_status);
 
-bool areLpColEqual(const HighsInt num_col0, const double* colCost0,
-                   const double* colLower0, const double* colUpper0,
+bool areLpColEqual(const HighsInt num_col0, const HighsFloat* colCost0,
+                   const HighsFloat* colLower0, const HighsFloat* colUpper0,
                    const HighsInt num_nz0, const HighsInt* Astart0,
-                   const HighsInt* Aindex0, const double* Avalue0,
-                   const HighsInt num_col1, const double* colCost1,
-                   const double* colLower1, const double* colUpper1,
+                   const HighsInt* Aindex0, const HighsFloat* Avalue0,
+                   const HighsInt num_col1, const HighsFloat* colCost1,
+                   const HighsFloat* colLower1, const HighsFloat* colUpper1,
                    const HighsInt num_nz1, const HighsInt* Astart1,
-                   const HighsInt* Aindex1, const double* Avalue1,
-                   const double infinite_bound);
+                   const HighsInt* Aindex1, const HighsFloat* Avalue1,
+                   const HighsFloat infinite_bound);
 
-bool areLpRowEqual(const HighsInt num_row0, const double* rowLower0,
-                   const double* rowUpper0, const HighsInt num_nz0,
+bool areLpRowEqual(const HighsInt num_row0, const HighsFloat* rowLower0,
+                   const HighsFloat* rowUpper0, const HighsInt num_nz0,
                    const HighsInt* ARstart0, const HighsInt* ARindex0,
-                   const double* ARvalue0, const HighsInt num_row1,
-                   const double* rowLower1, const double* rowUpper1,
+                   const HighsFloat* ARvalue0, const HighsInt num_row1,
+                   const HighsFloat* rowLower1, const HighsFloat* rowUpper1,
                    const HighsInt num_nz1, const HighsInt* ARstart1,
-                   const HighsInt* ARindex1, const double* ARvalue1,
-                   const double infinite_bound);
+                   const HighsInt* ARindex1, const HighsFloat* ARvalue1,
+                   const HighsFloat infinite_bound);
 
 bool areLpEqual(const HighsLp lp0, const HighsLp lp1,
-                const double infinite_bound);
+                const HighsFloat infinite_bound);
 
 void testDeleteKeep(const HighsIndexCollection& index_collection);
 
@@ -43,7 +43,7 @@ void messageReportLp(const char* message, const HighsLp& lp);
 
 void messageReportMatrix(const char* message, const HighsInt num_col,
                          const HighsInt num_nz, const HighsInt* start,
-                         const HighsInt* index, const double* value);
+                         const HighsInt* index, const HighsFloat* value);
 
 // No commas in test case name.
 TEST_CASE("LP-modification", "[highs_data]") {
@@ -58,11 +58,11 @@ TEST_CASE("LP-modification", "[highs_data]") {
   const HighsInt avgas_num_row = 10;
   HighsInt num_row = 0;
   HighsInt num_row_nz = 0;
-  vector<double> rowLower;
-  vector<double> rowUpper;
+  vector<HighsFloat> rowLower;
+  vector<HighsFloat> rowUpper;
   vector<HighsInt> ARstart;
   vector<HighsInt> ARindex;
-  vector<double> ARvalue;
+  vector<HighsFloat> ARvalue;
 
   for (HighsInt row = 0; row < avgas_num_row; row++) {
     avgas.row(row, num_row, num_row_nz, rowLower, rowUpper, ARstart, ARindex,
@@ -71,12 +71,12 @@ TEST_CASE("LP-modification", "[highs_data]") {
 
   HighsInt num_col = 0;
   HighsInt num_col_nz = 0;
-  vector<double> colCost;
-  vector<double> colLower;
-  vector<double> colUpper;
+  vector<HighsFloat> colCost;
+  vector<HighsFloat> colLower;
+  vector<HighsFloat> colUpper;
   vector<HighsInt> Astart;
   vector<HighsInt> Aindex;
-  vector<double> Avalue;
+  vector<HighsFloat> Avalue;
   for (HighsInt col = 0; col < avgas_num_col; col++) {
     avgas.col(col, num_col, num_col_nz, colCost, colLower, colUpper, Astart,
               Aindex, Avalue);
@@ -153,9 +153,9 @@ TEST_CASE("LP-modification", "[highs_data]") {
   model_status = highs.getModelStatus();
   REQUIRE(model_status == HighsModelStatus::kOptimal);
 
-  double avgas_optimal_objective_value;
+  HighsFloat avgas_optimal_objective_value;
   highs.getInfoValue("objective_function_value", avgas_optimal_objective_value);
-  double optimal_objective_value;
+  HighsFloat optimal_objective_value;
 
   // Getting columns from the LP is OK
   HighsInt col1357_col_mask[] = {0, 1, 0, 1, 0, 1, 0, 1};
@@ -164,13 +164,13 @@ TEST_CASE("LP-modification", "[highs_data]") {
   HighsInt col1357_num_ix = 4;
   HighsInt col1357_num_col;
   HighsInt col1357_num_nz;
-  double* col1357_cost = (double*)malloc(sizeof(double) * col1357_num_ix);
-  double* col1357_lower = (double*)malloc(sizeof(double) * col1357_num_ix);
-  double* col1357_upper = (double*)malloc(sizeof(double) * col1357_num_ix);
+  HighsFloat* col1357_cost = (HighsFloat*)malloc(sizeof(HighsFloat) * col1357_num_ix);
+  HighsFloat* col1357_lower = (HighsFloat*)malloc(sizeof(HighsFloat) * col1357_num_ix);
+  HighsFloat* col1357_upper = (HighsFloat*)malloc(sizeof(HighsFloat) * col1357_num_ix);
   HighsInt* col1357_start =
       (HighsInt*)malloc(sizeof(HighsInt) * col1357_num_ix);
   HighsInt* col1357_index = (HighsInt*)malloc(sizeof(HighsInt) * num_col_nz);
-  double* col1357_value = (double*)malloc(sizeof(double) * num_col_nz);
+  HighsFloat* col1357_value = (HighsFloat*)malloc(sizeof(HighsFloat) * num_col_nz);
 
   REQUIRE(highs.getCols(3, 6, col1357_num_col, col1357_cost, col1357_lower,
                         col1357_upper, col1357_num_nz, col1357_start,
@@ -245,14 +245,14 @@ TEST_CASE("LP-modification", "[highs_data]") {
   HighsInt row0135789_num_ix = 7;
   HighsInt row0135789_num_row;
   HighsInt row0135789_num_nz;
-  double* row0135789_lower =
-      (double*)malloc(sizeof(double) * row0135789_num_ix);
-  double* row0135789_upper =
-      (double*)malloc(sizeof(double) * row0135789_num_ix);
+  HighsFloat* row0135789_lower =
+      (HighsFloat*)malloc(sizeof(HighsFloat) * row0135789_num_ix);
+  HighsFloat* row0135789_upper =
+      (HighsFloat*)malloc(sizeof(HighsFloat) * row0135789_num_ix);
   HighsInt* row0135789_start =
       (HighsInt*)malloc(sizeof(HighsInt) * row0135789_num_ix);
   HighsInt* row0135789_index = (HighsInt*)malloc(sizeof(HighsInt) * num_row_nz);
-  double* row0135789_value = (double*)malloc(sizeof(double) * num_row_nz);
+  HighsFloat* row0135789_value = (HighsFloat*)malloc(sizeof(HighsFloat) * num_row_nz);
 
   REQUIRE(highs.getRows(from_row_ix, to_row_ix, row0135789_num_row,
                         row0135789_lower, row0135789_upper, row0135789_num_nz,
@@ -282,11 +282,11 @@ TEST_CASE("LP-modification", "[highs_data]") {
   HighsInt row012_num_ix = 3;
   HighsInt row012_num_row;
   HighsInt row012_num_nz;
-  double* row012_lower = (double*)malloc(sizeof(double) * row012_num_ix);
-  double* row012_upper = (double*)malloc(sizeof(double) * row012_num_ix);
+  HighsFloat* row012_lower = (HighsFloat*)malloc(sizeof(HighsFloat) * row012_num_ix);
+  HighsFloat* row012_upper = (HighsFloat*)malloc(sizeof(HighsFloat) * row012_num_ix);
   HighsInt* row012_start = (HighsInt*)malloc(sizeof(HighsInt) * row012_num_ix);
   HighsInt* row012_index = (HighsInt*)malloc(sizeof(HighsInt) * num_row_nz);
-  double* row012_value = (double*)malloc(sizeof(double) * num_row_nz);
+  HighsFloat* row012_value = (HighsFloat*)malloc(sizeof(HighsFloat) * num_row_nz);
 
   REQUIRE(highs.getRows(row012_num_ix, row012_row_set, row012_num_row,
                         row012_lower, row012_upper, row012_num_nz, row012_start,
@@ -363,13 +363,13 @@ TEST_CASE("LP-modification", "[highs_data]") {
   HighsInt col0123_num_ix = 4;
   HighsInt col0123_num_col;
   HighsInt col0123_num_nz;
-  double* col0123_cost = (double*)malloc(sizeof(double) * col0123_num_ix);
-  double* col0123_lower = (double*)malloc(sizeof(double) * col0123_num_ix);
-  double* col0123_upper = (double*)malloc(sizeof(double) * col0123_num_ix);
+  HighsFloat* col0123_cost = (HighsFloat*)malloc(sizeof(HighsFloat) * col0123_num_ix);
+  HighsFloat* col0123_lower = (HighsFloat*)malloc(sizeof(HighsFloat) * col0123_num_ix);
+  HighsFloat* col0123_upper = (HighsFloat*)malloc(sizeof(HighsFloat) * col0123_num_ix);
   HighsInt* col0123_start =
       (HighsInt*)malloc(sizeof(HighsInt) * col0123_num_ix);
   HighsInt* col0123_index = (HighsInt*)malloc(sizeof(HighsInt) * num_col_nz);
-  double* col0123_value = (double*)malloc(sizeof(double) * num_col_nz);
+  HighsFloat* col0123_value = (HighsFloat*)malloc(sizeof(HighsFloat) * num_col_nz);
 
   REQUIRE(highs.getCols(col0123_col_mask, col0123_num_col, col0123_cost,
                         col0123_lower, col0123_upper, col0123_num_nz,
@@ -681,7 +681,7 @@ TEST_CASE("LP-getcols", "[highs_data]") {
   highs.addCol(-1.0, 0.0, 1.0, 0, NULL, NULL);
   highs.addCol(-1.0, 0.0, 1.0, 0, NULL, NULL);
   HighsInt aindex[2] = {0, 1};
-  double avalue[2] = {1.0, -1.0};
+  HighsFloat avalue[2] = {1.0, -1.0};
   highs.addRow(0.0, 0.0, 2, aindex, avalue);
   HighsInt num_cols;
   HighsInt num_nz;
@@ -693,7 +693,7 @@ TEST_CASE("LP-getcols", "[highs_data]") {
   REQUIRE(matrix_start[0] == 0);
   REQUIRE(matrix_start[1] == 1);
   HighsInt matrix_indices[2] = {-1, -1};
-  double matrix_values[2] = {0.0, 0.0};
+  HighsFloat matrix_values[2] = {0.0, 0.0};
   highs.getCols(0, 1, num_cols, NULL, NULL, NULL, num_nz, matrix_start,
                 matrix_indices, matrix_values);
   REQUIRE(matrix_indices[0] == 0);
@@ -707,7 +707,7 @@ TEST_CASE("LP-getrows", "[highs_data]") {
   highs.addCol(-1.0, 0.0, 1.0, 0, NULL, NULL);
   highs.addCol(-1.0, 0.0, 1.0, 0, NULL, NULL);
   HighsInt aindex = 0;
-  double avalue = 1.0;
+  HighsFloat avalue = 1.0;
   highs.addRow(0.0, 0.0, 1, &aindex, &avalue);
   aindex = 1;
   avalue = -2.0;
@@ -721,7 +721,7 @@ TEST_CASE("LP-getrows", "[highs_data]") {
   REQUIRE(matrix_start[0] == 0);
   REQUIRE(matrix_start[1] == 1);
   HighsInt matrix_indices[2] = {-1, -1};
-  double matrix_values[2] = {0.0, 0.0};
+  HighsFloat matrix_values[2] = {0.0, 0.0};
   highs.getRows(0, 1, num_rows, NULL, NULL, num_nz, matrix_start,
                 matrix_indices, matrix_values);
   REQUIRE(matrix_indices[0] == 0);
@@ -747,7 +747,7 @@ TEST_CASE("LP-interval-changes", "[highs_data]") {
 
   callRun(highs, options.log_options, "highs.run()", HighsStatus::kOk);
 
-  double avgas_optimal_objective_function_value = info.objective_function_value;
+  HighsFloat avgas_optimal_objective_function_value = info.objective_function_value;
 
   REQUIRE(info.objective_function_value ==
           avgas_optimal_objective_function_value);
@@ -759,9 +759,9 @@ TEST_CASE("LP-interval-changes", "[highs_data]") {
   HighsInt set_num_col = to_col - from_col + 1;
   HighsInt get_num_col;
   HighsInt get_num_nz;
-  vector<double> og_col2345_cost;
-  vector<double> set_col2345_cost;
-  vector<double> get_col2345_cost;
+  vector<HighsFloat> og_col2345_cost;
+  vector<HighsFloat> set_col2345_cost;
+  vector<HighsFloat> get_col2345_cost;
   og_col2345_cost.resize(lp.num_col_);
   set_col2345_cost.resize(set_num_col);
   get_col2345_cost.resize(lp.num_col_);
@@ -785,7 +785,7 @@ TEST_CASE("LP-interval-changes", "[highs_data]") {
 
   callRun(highs, options.log_options, "highs.run()", HighsStatus::kOk);
 
-  double optimal_objective_function_value;
+  HighsFloat optimal_objective_function_value;
   highs.getInfoValue("objective_function_value",
                      optimal_objective_function_value);
   REQUIRE(optimal_objective_function_value ==
@@ -794,10 +794,10 @@ TEST_CASE("LP-interval-changes", "[highs_data]") {
   from_col = 0;
   to_col = 4;
   set_num_col = to_col - from_col + 1;
-  vector<double> og_col01234_lower;
-  vector<double> og_col01234_upper;
-  vector<double> set_col01234_lower;
-  vector<double> get_col01234_lower;
+  vector<HighsFloat> og_col01234_lower;
+  vector<HighsFloat> og_col01234_upper;
+  vector<HighsFloat> set_col01234_lower;
+  vector<HighsFloat> get_col01234_lower;
   og_col01234_lower.resize(lp.num_col_);
   og_col01234_upper.resize(lp.num_col_);
   set_col01234_lower.resize(set_num_col);
@@ -832,10 +832,10 @@ TEST_CASE("LP-interval-changes", "[highs_data]") {
   HighsInt to_row = 9;
   HighsInt set_num_row = to_row - from_row + 1;
   HighsInt get_num_row;
-  vector<double> og_row56789_lower;
-  vector<double> og_row56789_upper;
-  vector<double> set_row56789_lower;
-  vector<double> get_row56789_lower;
+  vector<HighsFloat> og_row56789_lower;
+  vector<HighsFloat> og_row56789_upper;
+  vector<HighsFloat> set_row56789_lower;
+  vector<HighsFloat> get_row56789_lower;
   og_row56789_lower.resize(lp.num_row_);
   og_row56789_upper.resize(lp.num_row_);
   set_row56789_lower.resize(set_num_row);
@@ -887,22 +887,22 @@ TEST_CASE("LP-delete", "[highs_data]") {
 
   callRun(highs, log_options, "highs.run()", HighsStatus::kOk);
 
-  double adlittle_objective_function_value;
+  HighsFloat adlittle_objective_function_value;
   highs.getInfoValue("objective_function_value",
                      adlittle_objective_function_value);
 
   HighsRandom random(0);
-  double objective_function_value;
+  HighsFloat objective_function_value;
   HighsInt num_nz = lp.a_matrix_.numNz();
   vector<HighsInt> mask;
   vector<HighsInt> mask_check;
   HighsInt get_num_nz;
   vector<HighsInt> get_start;
   vector<HighsInt> get_index;
-  vector<double> get_cost;
-  vector<double> get_lower;
-  vector<double> get_upper;
-  vector<double> get_value;
+  vector<HighsFloat> get_cost;
+  vector<HighsFloat> get_lower;
+  vector<HighsFloat> get_upper;
+  vector<HighsFloat> get_value;
 
   // Test deleteCols
   HighsInt num_col = lp.num_col_;
@@ -1035,15 +1035,15 @@ void callRun(Highs& highs, const HighsLogOptions& log_options,
   REQUIRE(return_status == require_return_status);
 }
 
-bool areLpColEqual(const HighsInt num_col0, const double* colCost0,
-                   const double* colLower0, const double* colUpper0,
+bool areLpColEqual(const HighsInt num_col0, const HighsFloat* colCost0,
+                   const HighsFloat* colLower0, const HighsFloat* colUpper0,
                    const HighsInt num_nz0, const HighsInt* Astart0,
-                   const HighsInt* Aindex0, const double* Avalue0,
-                   const HighsInt num_col1, const double* colCost1,
-                   const double* colLower1, const double* colUpper1,
+                   const HighsInt* Aindex0, const HighsFloat* Avalue0,
+                   const HighsInt num_col1, const HighsFloat* colCost1,
+                   const HighsFloat* colLower1, const HighsFloat* colUpper1,
                    const HighsInt num_nz1, const HighsInt* Astart1,
-                   const HighsInt* Aindex1, const double* Avalue1,
-                   const double infinite_bound) {
+                   const HighsInt* Aindex1, const HighsFloat* Avalue1,
+                   const HighsFloat infinite_bound) {
   if (num_col0 != num_col1) {
     if (dev_run)
       printf("areLpColEqual: %" HIGHSINT_FORMAT
@@ -1119,14 +1119,14 @@ bool areLpColEqual(const HighsInt num_col0, const double* colCost0,
   return true;
 }
 
-bool areLpRowEqual(const HighsInt num_row0, const double* rowLower0,
-                   const double* rowUpper0, const HighsInt num_nz0,
+bool areLpRowEqual(const HighsInt num_row0, const HighsFloat* rowLower0,
+                   const HighsFloat* rowUpper0, const HighsInt num_nz0,
                    const HighsInt* ARstart0, const HighsInt* ARindex0,
-                   const double* ARvalue0, const HighsInt num_row1,
-                   const double* rowLower1, const double* rowUpper1,
+                   const HighsFloat* ARvalue0, const HighsInt num_row1,
+                   const HighsFloat* rowLower1, const HighsFloat* rowUpper1,
                    const HighsInt num_nz1, const HighsInt* ARstart1,
-                   const HighsInt* ARindex1, const double* ARvalue1,
-                   const double infinite_bound) {
+                   const HighsInt* ARindex1, const HighsFloat* ARvalue1,
+                   const HighsFloat infinite_bound) {
   if (num_row0 != num_row1) {
     if (dev_run)
       printf("areLpRowEqual: %" HIGHSINT_FORMAT
@@ -1196,7 +1196,7 @@ bool areLpRowEqual(const HighsInt num_row0, const double* rowLower0,
 }
 
 bool areLpEqual(const HighsLp lp0, const HighsLp lp1,
-                const double infinite_bound) {
+                const HighsFloat infinite_bound) {
   bool return_bool;
   if (lp0.a_matrix_.format_ != lp1.a_matrix_.format_) return false;
   if (lp0.num_col_ > 0 && lp1.num_col_ > 0) {
@@ -1360,7 +1360,7 @@ void messageReportLp(const char* message, const HighsLp& lp) {
 
 void messageReportMatrix(const char* message, const HighsInt num_col,
                          const HighsInt num_nz, const HighsInt* start,
-                         const HighsInt* index, const double* value) {
+                         const HighsInt* index, const HighsFloat* value) {
   HighsLogOptions log_options;
   bool output_flag = true;
   bool log_to_console = false;

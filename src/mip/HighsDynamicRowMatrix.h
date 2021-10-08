@@ -27,7 +27,7 @@ class HighsDynamicRowMatrix {
   /// column indices for each nonzero in AR
   std::vector<HighsInt> ARindex_;
   /// values for each nonzero in AR
-  std::vector<double> ARvalue_;
+  std::vector<HighsFloat> ARvalue_;
 
   std::vector<HighsInt> ARrowindex_;
   std::vector<HighsInt> AnextPos_;
@@ -60,7 +60,7 @@ class HighsDynamicRowMatrix {
   void unlinkColumns(HighsInt rowindex);
 
   /// adds a row to the matrix with the given values and returns its index
-  HighsInt addRow(HighsInt* Rindex, double* Rvalue, HighsInt Rlen,
+  HighsInt addRow(HighsInt* Rindex, HighsFloat* Rvalue, HighsInt Rlen,
                   bool linkCols = true);
 
   /// removes the row with the given index from the matrix, afterwards the index
@@ -104,7 +104,7 @@ class HighsDynamicRowMatrix {
 
   const HighsInt* getARindex() const { return ARindex_.data(); }
 
-  const double* getARvalue() const { return ARvalue_.data(); }
+  const HighsFloat* getARvalue() const { return ARvalue_.data(); }
 };
 
 #endif

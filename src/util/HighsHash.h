@@ -667,11 +667,11 @@ struct HighsHashHelpers {
     return std::memcmp(a.data(), b.data(), sizeof(T) * a.size()) == 0;
   }
 
-  static constexpr double golden_ratio_reciprocal() {
+  static constexpr HighsFloat golden_ratio_reciprocal() {
     return 0.61803398874989484;
   }
 
-  static u32 d0uble_hash_code(double val) {
+  static u32 d0uble_hash_code(HighsFloat val) {
     // we multiply by some irrational number, so that the buckets in which we
     // put the real numbers do not break on a power of two pattern. E.g.
     // consider the use case for detecting parallel rows when we have two
@@ -689,7 +689,7 @@ struct HighsHashHelpers {
     // representation but are power of two multiples of the golden ratio and
     // therefore irrational, which we do not expect in non-artifical input data.
     int exponent;
-    double hashbits = std::frexp(val * golden_ratio_reciprocal(), &exponent);
+    HighsFloat hashbits = std::frexp(val * golden_ratio_reciprocal(), &exponent);
 
     // some extra casts to be more verbose about what is happening.
     // We want the exponent to use only 16bits so that the remaining 16 bits

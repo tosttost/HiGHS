@@ -274,7 +274,7 @@ HighsInt StabilizerOrbits::orbitalFixing(HighsDomain& domain) const {
 
     if (fixcol != -1) {
       HighsInt oldNumFixed = numFixed;
-      double fixVal = domain.col_lower_[fixcol];
+      HighsFloat fixVal = domain.col_lower_[fixcol];
       auto oldSize = domain.getDomainChangeStack().size();
       if (domain.col_lower_[fixcol] == 1.0) {
         for (HighsInt j = orbitStarts[i]; j < orbitStarts[i + 1]; ++j) {
@@ -418,7 +418,7 @@ void HighsOrbitopeMatrix::determineOrbitopeType(HighsCliqueTable& cliquetable,
 }
 
 HighsInt HighsOrbitopeMatrix::getBranchingColumn(
-    const std::vector<double>& colLower, const std::vector<double>& colUpper,
+    const std::vector<HighsFloat>& colLower, const std::vector<HighsFloat>& colUpper,
     HighsInt col) const {
   const HighsInt* i = columnToRow.find(col);
   if (i && rowIsSetPacking[*i]) {
@@ -1168,7 +1168,7 @@ struct MatrixRow {
 };
 
 void HighsSymmetryDetection::loadModelAsGraph(const HighsLp& model,
-                                              double epsilon) {
+                                              HighsFloat epsilon) {
   this->model = &model;
   numCol = model.num_col_;
   numRow = model.num_row_;

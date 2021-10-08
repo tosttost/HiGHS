@@ -37,11 +37,11 @@ class HighsImplications {
 
  public:
   struct VarBound {
-    double coef;
-    double constant;
+    HighsFloat coef;
+    HighsFloat constant;
 
-    double minValue() const { return constant + std::min(coef, 0.0); }
-    double maxValue() const { return constant + std::max(coef, 0.0); }
+    HighsFloat minValue() const { return constant + std::min(coef, 0.0); }
+    HighsFloat maxValue() const { return constant + std::max(coef, 0.0); }
   };
 
  private:
@@ -100,11 +100,11 @@ class HighsImplications {
     return implicationmap[loc].start != -1;
   }
 
-  void addVUB(HighsInt col, HighsInt vubcol, double vubcoef,
-              double vubconstant);
+  void addVUB(HighsInt col, HighsInt vubcol, HighsFloat vubcoef,
+              HighsFloat vubconstant);
 
-  void addVLB(HighsInt col, HighsInt vlbcol, double vlbcoef,
-              double vlbconstant);
+  void addVLB(HighsInt col, HighsInt vlbcol, HighsFloat vlbcoef,
+              HighsFloat vlbconstant);
 
   const std::map<HighsInt, VarBound>& getVUBs(HighsInt col) const {
     return vubs[col];
@@ -126,8 +126,8 @@ class HighsImplications {
   void buildFrom(const HighsImplications& init);
 
   void separateImpliedBounds(const HighsLpRelaxation& lpRelaxation,
-                             const std::vector<double>& sol,
-                             HighsCutPool& cutpool, double feastol);
+                             const std::vector<HighsFloat>& sol,
+                             HighsCutPool& cutpool, HighsFloat feastol);
 
   void cleanupVarbounds(HighsInt col);
 };

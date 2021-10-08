@@ -177,7 +177,7 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
     assert(!ekk_instance.status_.is_permuted &&
            !ekk_instance.status_.is_dualised);
     if (options.cost_scale_factor) {
-      double cost_scale_factor = pow(2.0, -options.cost_scale_factor);
+      HighsFloat cost_scale_factor = pow(2.0, -options.cost_scale_factor);
       printf("Objective = %11.4g\n",
              cost_scale_factor * ekk_instance.info_.dual_objective_value);
       ekk_instance.model_status_ = HighsModelStatus::kNotset;
@@ -202,7 +202,7 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
              !ekk_instance.status_.is_dualised);
       //
       if (options.cost_scale_factor) {
-        double cost_scale_factor = pow(2.0, -options.cost_scale_factor);
+        HighsFloat cost_scale_factor = pow(2.0, -options.cost_scale_factor);
         printf("Objective = %11.4g\n",
                cost_scale_factor * ekk_instance.info_.dual_objective_value);
         ekk_instance.model_status_ = HighsModelStatus::kNotset;
@@ -280,7 +280,7 @@ HighsStatus solveLpSimplex(HighsLpSolverObject& solver_object) {
     ekk_instance.moveLp(solver_object);
     // Save options/strategies that may be changed
     HighsInt simplex_strategy = options.simplex_strategy;
-    double dual_simplex_cost_perturbation_multiplier =
+    HighsFloat dual_simplex_cost_perturbation_multiplier =
         options.dual_simplex_cost_perturbation_multiplier;
     HighsInt simplex_dual_edge_weight_strategy =
         ekk_info.dual_edge_weight_strategy;

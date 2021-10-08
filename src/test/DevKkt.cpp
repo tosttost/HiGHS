@@ -26,7 +26,7 @@ namespace presolve {
 namespace dev_kkt_check {
 
 constexpr int dev_print = 1;
-constexpr double tol = 1e-07;
+constexpr HighsFloat tol = 1e-07;
 
 KktInfo initInfo() {
   KktInfo info;
@@ -55,7 +55,7 @@ void checkPrimalBounds(const State& state, KktConditionDetails& details) {
   for (int i = 0; i < state.numCol; i++) {
     if (state.flagCol[i]) {
       details.checked++;
-      double infeas = 0;
+      HighsFloat infeas = 0;
 
       if ((state.colLower[i] - state.colValue[i] > tol) ||
           (state.colValue[i] - state.colUpper[i] > tol)) {
@@ -89,10 +89,10 @@ void checkPrimalFeasMatrix(const State& state, KktConditionDetails& details) {
   for (int i = 0; i < state.numRow; i++) {
     if (state.flagRow[i]) {
       details.checked++;
-      double rowV = state.rowValue[i];
+      HighsFloat rowV = state.rowValue[i];
 
       if (state.rowLower[i] < rowV && rowV < state.rowUpper[i]) continue;
-      double infeas = 0;
+      HighsFloat infeas = 0;
 
       if (((rowV - state.rowLower[i]) < 0) &&
           (fabs(rowV - state.rowLower[i]) > tol)) {
@@ -138,7 +138,7 @@ void checkDualFeasibility(const State& state, KktConditionDetails& details) {
   for (int i = 0; i < state.numCol; i++) {
     if (state.flagCol[i]) {
       details.checked++;
-      double infeas = 0;
+      HighsFloat infeas = 0;
       // j not in L or U
       if (state.colLower[i] <= -kHighsInf &&
           state.colUpper[i] >= kHighsInf) {
@@ -188,14 +188,14 @@ void checkDualFeasibility(const State& state, KktConditionDetails& details) {
     if (state.flagRow[i]) {
       details.checked++;
 
-      double rowV = state.rowValue[i];
+      HighsFloat rowV = state.rowValue[i];
 
       // L = Ax = U can be any sign
       if (fabs(state.rowLower[i] - rowV) < tol &&
           fabs(state.rowUpper[i] - rowV) < tol)
         continue;
 
-      double infeas = 0;
+      HighsFloat infeas = 0;
       // L = Ax < U
       if (fabs(state.rowLower[i] - rowV) < tol && rowV < state.rowUpper[i]) {
         if (state.rowDual[i] > tol) {
@@ -258,7 +258,7 @@ void checkComplementarySlackness(const State& state,
 
   for (int i = 0; i < state.numCol; i++) {
     if (state.flagCol[i]) {
-      double infeas = 0;
+      HighsFloat infeas = 0;
       details.checked++;
       if (state.colLower[i] > -kHighsInf &&
           fabs(state.colValue[i] - state.colLower[i]) > tol) {
@@ -313,7 +313,7 @@ void checkStationarityOfLagrangian(const State& state,
   for (int j = 0; j < state.numCol; j++) {
     if (state.flagCol[j]) {
       details.checked++;
-      double infeas = 0;
+      HighsFloat infeas = 0;
 
       HighsCD0uble lagrV = HighsCD0uble(state.colCost[j]) - state.colDual[j];
       for (int k = state.Astart[j]; k < state.Aend[j]; k++) {
@@ -323,12 +323,12 @@ void checkStationarityOfLagrangian(const State& state,
           lagrV = lagrV + state.rowDual[row] * state.Avalue[k];
       }
 
-      if (fabs(double(lagrV)) > tol) {
+      if (fabs(HighsFloat(lagrV)) > tol) {
         if (dev_print == 1)
           std::cout << "Column " << j
                     << " fails stationary of Lagrangian: dL/dx" << j << " = "
-                    << double(lagrV) << ", rather than zero." << std::endl;
-        infeas = fabs(double(lagrV));
+                    << HighsFloat(lagrV) << ", rather than zero." << std::endl;
+        infeas = fabs(HighsFloat(lagrV));
       }
 
       if (infeas > 0) {
@@ -356,7 +356,7 @@ void checkBasicFeasibleSolution(const State& state,
   for (int j = 0; j < state.numCol; j++) {
     if (state.flagCol[j]) {
       details.checked++;
-      double infeas = 0;
+      HighsFloat infeas = 0;
       if (state.col_status[j] == HighsBasisStatus::kBasic &&
           fabs(state.colDual[j]) > tol) {
         if (dev_print == 1)
@@ -380,7 +380,7 @@ void checkBasicFeasibleSolution(const State& state,
   for (int i = 0; i < state.numRow; i++) {
     if (state.flagRow[i]) {
       details.checked++;
-      double infeas = 0;
+      HighsFloat infeas = 0;
       if (state.row_status[i] == HighsBasisStatus::kBasic &&
           fabs(state.rowDual[i]) > tol) {
         if (dev_print == 1)

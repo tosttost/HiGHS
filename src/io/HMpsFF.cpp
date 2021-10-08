@@ -133,7 +133,7 @@ HighsInt HMpsFF::fillHessian() {
   for (HighsInt iEl = 0; iEl < num_entries; iEl++) {
     HighsInt iRow = std::get<0>(q_entries[iEl]);
     HighsInt iCol = std::get<1>(q_entries[iEl]);
-    double value = std::get<2>(q_entries[iEl]);
+    HighsFloat value = std::get<2>(q_entries[iEl]);
     q_index[q_start[iCol]] = iRow;
     q_value[q_start[iCol]] = value;
     q_start[iCol]++;
@@ -377,9 +377,9 @@ HMpsFF::Parsekey HMpsFF::parseDefault(const HighsLogOptions& log_options,
   return HMpsFF::Parsekey::kFail;
 }
 
-double getWallTime() {
+HighsFloat getWallTime() {
   using namespace std::chrono;
-  return duration_cast<duration<double> >(wall_clock::now().time_since_epoch())
+  return duration_cast<duration<HighsFloat> >(wall_clock::now().time_since_epoch())
       .count();
 }
 
@@ -423,7 +423,7 @@ HMpsFF::Parsekey HMpsFF::parseRows(const HighsLogOptions& log_options,
 
   while (getline(file, strline)) {
     if (is_empty(strline) || strline[0] == '*') continue;
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
 
@@ -541,7 +541,7 @@ typename HMpsFF::Parsekey HMpsFF::parseCols(const HighsLogOptions& log_options,
       assert(-1 == rowidx || -2 == rowidx);
   };
 
-  auto addtuple = [&rowidx, &ncols, this](double coeff) {
+  auto addtuple = [&rowidx, &ncols, this](HighsFloat coeff) {
     if (rowidx >= 0)
       entries.push_back(std::make_tuple(ncols - 1, rowidx, coeff));
     else if (rowidx == -1)
@@ -549,7 +549,7 @@ typename HMpsFF::Parsekey HMpsFF::parseCols(const HighsLogOptions& log_options,
   };
 
   while (getline(file, strline)) {
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
 
@@ -668,7 +668,7 @@ typename HMpsFF::Parsekey HMpsFF::parseCols(const HighsLogOptions& log_options,
                    "COLUMNS section contains row %s not in ROWS section\n",
                    marker.c_str());
     } else {
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       if (value) {
         parsename(marker);  // rowidx set and nnz incremented
         addtuple(value);
@@ -701,7 +701,7 @@ typename HMpsFF::Parsekey HMpsFF::parseCols(const HighsLogOptions& log_options,
             marker.c_str());
         continue;
       };
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       if (value) {
         parsename(marker);  // rowidx set and nnz incremented
         addtuple(value);
@@ -725,7 +725,7 @@ HMpsFF::Parsekey HMpsFF::parseRhs(const HighsLogOptions& log_options,
     assert(rowidx < numRow);
   };
 
-  auto addrhs = [this](double val, HighsInt rowidx) {
+  auto addrhs = [this](HighsFloat val, HighsInt rowidx) {
     if (rowidx > -1) {
       if (row_type[rowidx] == Boundtype::kEq ||
           row_type[rowidx] == Boundtype::kLe) {
@@ -745,7 +745,7 @@ HMpsFF::Parsekey HMpsFF::parseRhs(const HighsLogOptions& log_options,
   };
 
   while (getline(file, strline)) {
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
 
@@ -824,7 +824,7 @@ HMpsFF::Parsekey HMpsFF::parseRhs(const HighsLogOptions& log_options,
                    marker.c_str());
     } else {
       parsename(marker, rowidx);
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       addrhs(value, rowidx);
     }
 
@@ -857,7 +857,7 @@ HMpsFF::Parsekey HMpsFF::parseRhs(const HighsLogOptions& log_options,
       };
 
       parsename(marker, rowidx);
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       addrhs(value, rowidx);
     }
   }
@@ -888,7 +888,7 @@ HMpsFF::Parsekey HMpsFF::parseBounds(const HighsLogOptions& log_options,
   };
 
   while (getline(file, strline)) {
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
 
@@ -1080,11 +1080,11 @@ HMpsFF::Parsekey HMpsFF::parseBounds(const HighsLogOptions& log_options,
                    "No bound given for row %s\n", marker.c_str());
       return HMpsFF::Parsekey::kFail;
     }
-    double value = atof(word.c_str());
+    HighsFloat value = atof(word.c_str());
     if (isintegral) {
       // Must be LI or UI, and value should be integer
       HighsInt i_value = static_cast<HighsInt>(value);
-      double dl = value - i_value;
+      HighsFloat dl = value - i_value;
       if (dl)
         highsLogUser(log_options, HighsLogType::kError,
                      "Bound for LI/UI row %s is %g: not integer\n",
@@ -1115,7 +1115,7 @@ HMpsFF::Parsekey HMpsFF::parseRanges(const HighsLogOptions& log_options,
     assert(rowidx < numRow);
   };
 
-  auto addrhs = [this](double val, HighsInt& rowidx) {
+  auto addrhs = [this](HighsFloat val, HighsInt& rowidx) {
     if ((row_type[rowidx] == Boundtype::kEq && val < 0) ||
         row_type[rowidx] == Boundtype::kLe) {
       assert(rowUpper.at(rowidx) < kHighsInf);
@@ -1130,7 +1130,7 @@ HMpsFF::Parsekey HMpsFF::parseRanges(const HighsLogOptions& log_options,
   };
 
   while (getline(file, strline)) {
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
 
@@ -1181,7 +1181,7 @@ HMpsFF::Parsekey HMpsFF::parseRanges(const HighsLogOptions& log_options,
       continue;
     } else {
       parsename(marker, rowidx);
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       addrhs(value, rowidx);
     }
 
@@ -1210,7 +1210,7 @@ HMpsFF::Parsekey HMpsFF::parseRanges(const HighsLogOptions& log_options,
       };
 
       parsename(marker, rowidx);
-      double value = atof(word.c_str());
+      HighsFloat value = atof(word.c_str());
       addrhs(value, rowidx);
 
       if (!is_end(strline, end)) {
@@ -1248,10 +1248,10 @@ typename HMpsFF::Parsekey HMpsFF::parseHessian(
   HighsInt end_row_name;
   HighsInt end_coeff_name;
   HighsInt colidx, rowidx, start, end;
-  double coeff;
+  HighsFloat coeff;
 
   while (getline(file, strline)) {
-    double current = getWallTime();
+    HighsFloat current = getWallTime();
     if (time_limit > 0 && current - start_time > time_limit)
       return HMpsFF::Parsekey::kTimeout;
     if (any_first_non_blank_as_star_implies_comment) {
@@ -1319,7 +1319,7 @@ typename HMpsFF::Parsekey HMpsFF::parseHessian(
       rowidx = mit->second;
       assert(rowidx >= 0 && rowidx < numCol);
 
-      double coeff = atof(coeff_name.c_str());
+      HighsFloat coeff = atof(coeff_name.c_str());
       if (coeff) {
         if (qmatrix) {
           // QMATRIX has the whole Hessian, so store the entry if the

@@ -33,61 +33,61 @@ class HighsLpPropagator {
   std::vector<uint8_t> propagateflags_;
   std::vector<HighsInt> propagateinds_;
 
-  std::vector<double>& Avalue_;
+  std::vector<HighsFloat>& Avalue_;
   std::vector<HighsInt>& Aindex_;
   std::vector<HighsInt>& Astart_;
   std::vector<HighsInt>& Aend_;
 
-  std::vector<double>& ARvalue_;
+  std::vector<HighsFloat>& ARvalue_;
   std::vector<HighsInt>& ARindex_;
   std::vector<HighsInt>& ARstart_;
 
   const std::vector<HighsInt>& flagRow;
   const std::vector<HighsInt>& flagCol;
-  std::vector<double>& rowLower_;
-  std::vector<double>& rowUpper_;
+  std::vector<HighsFloat>& rowLower_;
+  std::vector<HighsFloat>& rowUpper_;
   const std::vector<HighsVarType>& integrality_;
 
   HighsInt infeasible_ = 0;
   HighsInt numBoundChgs_ = 0;
 
   void computeMinActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
-                          const double* ARvalue, HighsInt& ninfmin,
+                          const HighsFloat* ARvalue, HighsInt& ninfmin,
                           HighsCD0uble& activitymin);
 
   void computeMaxActivity(HighsInt start, HighsInt end, const HighsInt* ARindex,
-                          const double* ARvalue, HighsInt& ninfmax,
+                          const HighsFloat* ARvalue, HighsInt& ninfmax,
                           HighsCD0uble& activitymax);
 
-  HighsInt propagateRowUpper(const HighsInt* Rindex, const double* Rvalue,
-                             HighsInt Rlen, double Rupper,
+  HighsInt propagateRowUpper(const HighsInt* Rindex, const HighsFloat* Rvalue,
+                             HighsInt Rlen, HighsFloat Rupper,
                              const HighsCD0uble& minactivity, HighsInt ninfmin,
                              HighsDomainChange* boundchgs);
 
-  HighsInt propagateRowLower(const HighsInt* Rindex, const double* Rvalue,
-                             HighsInt Rlen, double Rlower,
+  HighsInt propagateRowLower(const HighsInt* Rindex, const HighsFloat* Rvalue,
+                             HighsInt Rlen, HighsFloat Rlower,
                              const HighsCD0uble& maxactivity, HighsInt ninfmax,
                              HighsDomainChange* boundchgs);
 
-  void updateActivityLbChange(HighsInt col, double oldbound, double newbound);
+  void updateActivityLbChange(HighsInt col, HighsFloat oldbound, HighsFloat newbound);
 
-  void updateActivityUbChange(HighsInt col, double oldbound, double newbound);
+  void updateActivityUbChange(HighsInt col, HighsFloat oldbound, HighsFloat newbound);
 
-  double doChangeBound(const HighsDomainChange& boundchg);
+  HighsFloat doChangeBound(const HighsDomainChange& boundchg);
 
  public:
-  std::vector<double> colLower_;
-  std::vector<double> colUpper_;
+  std::vector<HighsFloat> colLower_;
+  std::vector<HighsFloat> colUpper_;
 
   HighsLpPropagator(
-      const std::vector<double>& colLower, const std::vector<double>& colUpper,
+      const std::vector<HighsFloat>& colLower, const std::vector<HighsFloat>& colUpper,
       const std::vector<HighsVarType>& integrality_,
-      std::vector<double>& Avalue_, std::vector<HighsInt>& Aindex_,
+      std::vector<HighsFloat>& Avalue_, std::vector<HighsInt>& Aindex_,
       std::vector<HighsInt>& Astart_, std::vector<HighsInt>& Aend_,
-      std::vector<double>& ARvalue_, std::vector<HighsInt>& ARindex_,
+      std::vector<HighsFloat>& ARvalue_, std::vector<HighsInt>& ARindex_,
       std::vector<HighsInt>& ARstart_, const std::vector<HighsInt>& flagRow,
-      const std::vector<HighsInt>& flagCol, std::vector<double>& rowLower_,
-      std::vector<double>& rowUpper_);
+      const std::vector<HighsInt>& flagCol, std::vector<HighsFloat>& rowLower_,
+      std::vector<HighsFloat>& rowUpper_);
 
   void markPropagate(HighsInt row);
 

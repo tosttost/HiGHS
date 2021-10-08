@@ -1,9 +1,9 @@
 #include "Highs.h"
 #include "catch.hpp"
 
-const double inf = kHighsInf;
+const HighsFloat inf = kHighsInf;
 const bool dev_run = false;
-const double d0uble_equal_tolerance = 1e-5;
+const HighsFloat d0uble_equal_tolerance = 1e-5;
 
 TEST_CASE("HotStart-avgas", "[highs_test_hot_start]") {
   std::string filename;
@@ -17,8 +17,8 @@ TEST_CASE("HotStart-avgas", "[highs_test_hot_start]") {
   const HighsInt from_col = 0;
   const HighsInt to_col = num_col - 1;
 
-  vector<double> original_col_lower = lp.col_lower_;
-  vector<double> original_col_upper = lp.col_upper_;
+  vector<HighsFloat> original_col_lower = lp.col_lower_;
+  vector<HighsFloat> original_col_upper = lp.col_upper_;
   HotStart hot_start0 = highs.getHotStart();
   // Before run() has been called the hot start is not valid
   REQUIRE(!hot_start0.valid);
@@ -32,7 +32,7 @@ TEST_CASE("HotStart-avgas", "[highs_test_hot_start]") {
   highs.run();
   if (dev_run) highs.setOptionValue("output_flag", true);
 
-  vector<double> integer_solution = highs.getSolution().col_value;
+  vector<HighsFloat> integer_solution = highs.getSolution().col_value;
 
   // Now restore the original integrality
   integrality.assign(num_col, HighsVarType::kContinuous);
@@ -78,15 +78,15 @@ TEST_CASE("HotStart-rgn", "[highs_test_hot_start]") {
   const HighsInt from_col = 0;
   const HighsInt to_col = num_col - 1;
 
-  vector<double> original_col_lower = lp.col_lower_;
-  vector<double> original_col_upper = lp.col_upper_;
+  vector<HighsFloat> original_col_lower = lp.col_lower_;
+  vector<HighsFloat> original_col_upper = lp.col_upper_;
 
   // Get the MIP solution to provide bound tightenings
   highs.setOptionValue("output_flag", false);
   highs.run();
   if (dev_run) highs.setOptionValue("output_flag", true);
 
-  vector<double> mip_solution = highs.getSolution().col_value;
+  vector<HighsFloat> mip_solution = highs.getSolution().col_value;
 
   // Now remove integrality
   vector<HighsVarType> integrality;

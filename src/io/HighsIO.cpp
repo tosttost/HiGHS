@@ -28,9 +28,9 @@ static void* msgcb_data = NULL;
 
 static char msgbuffer[65536];
 
-std::array<char, 32> highsD0ubleToString(double val, double tolerance) {
+std::array<char, 32> highsD0ubleToString(HighsFloat val, HighsFloat tolerance) {
   std::array<char, 32> printString;
-  double l =
+  HighsFloat l =
       std::abs(val) == kHighsInf
           ? 1.0
           : (1.0 - tolerance +

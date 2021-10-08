@@ -76,10 +76,10 @@ class InfoRecordInt : public InfoRecord {
 
 class InfoRecordD0uble : public InfoRecord {
  public:
-  double* value;
-  double default_value;
+  HighsFloat* value;
+  HighsFloat default_value;
   InfoRecordD0uble(std::string Xname, std::string Xdescription, bool Xadvanced,
-                   double* Xvalue_pointer, double Xdefault_value)
+                   HighsFloat* Xvalue_pointer, HighsFloat Xdefault_value)
       : InfoRecord(HighsInfoType::kD0uble, Xname, Xdescription, Xadvanced) {
     value = Xvalue_pointer;
     default_value = Xdefault_value;
@@ -109,7 +109,7 @@ InfoStatus getLocalInfoValue(const HighsOptions& options,
 InfoStatus getLocalInfoValue(const HighsOptions& options,
                              const std::string& name, const bool valid,
                              const std::vector<InfoRecord*>& info_records,
-                             double& value);
+                             HighsFloat& value);
 
 HighsStatus writeInfoToFile(FILE* file, const bool valid,
                             const std::vector<InfoRecord*>& info_records,
@@ -137,15 +137,15 @@ struct HighsInfoStruct {
   HighsInt primal_solution_status;
   HighsInt dual_solution_status;
   HighsInt basis_validity;
-  double objective_function_value;
-  double mip_dual_bound;
-  double mip_gap;
+  HighsFloat objective_function_value;
+  HighsFloat mip_dual_bound;
+  HighsFloat mip_gap;
   HighsInt num_primal_infeasibilities;
-  double max_primal_infeasibility;
-  double sum_primal_infeasibilities;
+  HighsFloat max_primal_infeasibility;
+  HighsFloat sum_primal_infeasibilities;
   HighsInt num_dual_infeasibilities;
-  double max_dual_infeasibility;
-  double sum_dual_infeasibilities;
+  HighsFloat max_dual_infeasibility;
+  HighsFloat sum_dual_infeasibilities;
 };
 
 class HighsInfo : public HighsInfoStruct {

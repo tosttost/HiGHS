@@ -147,11 +147,11 @@ void HighsSeparation::separate(HighsDomain& propdomain) {
   const HighsMipSolver& mipsolver = lp->getMipSolver();
 
   if (lp->scaledOptimal(status) && !lp->getFractionalIntegers().empty()) {
-    // double firstobj = lp->getObjective();
-    double firstobj = mipsolver.mipdata_->rootlpsolobj;
+    // HighsFloat firstobj = lp->getObjective();
+    HighsFloat firstobj = mipsolver.mipdata_->rootlpsolobj;
 
     while (lp->getObjective() < mipsolver.mipdata_->upper_limit) {
-      double lastobj = lp->getObjective();
+      HighsFloat lastobj = lp->getObjective();
 
       size_t nlpiters = -lp->getNumLpIterations();
       HighsInt ncuts = separationRound(propdomain, status);

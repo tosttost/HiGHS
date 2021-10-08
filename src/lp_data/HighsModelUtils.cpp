@@ -25,8 +25,8 @@
 #include "util/HighsUtils.h"
 
 void analyseModelBounds(const HighsLogOptions& log_options, const char* message,
-                        HighsInt numBd, const std::vector<double>& lower,
-                        const std::vector<double>& upper) {
+                        HighsInt numBd, const std::vector<HighsFloat>& lower,
+                        const std::vector<HighsFloat>& upper) {
   if (numBd == 0) return;
   HighsInt numFr = 0;
   HighsInt numLb = 0;
@@ -91,8 +91,8 @@ void analyseModelBounds(const HighsLogOptions& log_options, const char* message,
               numBd, numFr, numLb, numUb, numBx, numFx);
 }
 
-std::string statusToString(const HighsBasisStatus status, const double lower,
-                           const double upper) {
+std::string statusToString(const HighsBasisStatus status, const HighsFloat lower,
+                           const HighsFloat upper) {
   switch (status) {
     case HighsBasisStatus::kLower:
       if (lower == upper) {
@@ -118,11 +118,11 @@ std::string statusToString(const HighsBasisStatus status, const double lower,
 }
 
 void writeModelBoundSolution(FILE* file, const bool columns, const HighsInt dim,
-                             const std::vector<double>& lower,
-                             const std::vector<double>& upper,
+                             const std::vector<HighsFloat>& lower,
+                             const std::vector<HighsFloat>& upper,
                              const std::vector<std::string>& names,
-                             const std::vector<double>& primal,
-                             const std::vector<double>& dual,
+                             const std::vector<HighsFloat>& primal,
+                             const std::vector<HighsFloat>& dual,
                              const std::vector<HighsBasisStatus>& status) {
   const bool have_names = names.size() > 0;
   const bool have_primal = primal.size() > 0;
@@ -173,9 +173,9 @@ void writeModelBoundSolution(FILE* file, const bool columns, const HighsInt dim,
 }
 
 void writeModelSolution(FILE* file, const HighsOptions& options,
-                        double solutionObjective, const HighsInt dim,
+                        HighsFloat solutionObjective, const HighsInt dim,
                         const std::vector<std::string>& names,
-                        const std::vector<double>& primal,
+                        const std::vector<HighsFloat>& primal,
                         const std::vector<HighsVarType>& integrality) {
   const bool have_names = names.size() > 0;
   const bool have_primal = primal.size() > 0;
@@ -267,8 +267,8 @@ HighsStatus normaliseNames(const HighsLogOptions& log_options,
 }
 
 HighsBasisStatus checkedVarHighsNonbasicStatus(
-    const HighsBasisStatus ideal_status, const double lower,
-    const double upper) {
+    const HighsBasisStatus ideal_status, const HighsFloat lower,
+    const HighsFloat upper) {
   HighsBasisStatus checked_status;
   if (ideal_status == HighsBasisStatus::kLower ||
       ideal_status == HighsBasisStatus::kZero) {

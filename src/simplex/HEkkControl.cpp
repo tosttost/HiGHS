@@ -44,15 +44,15 @@ void HEkk::initialiseControl() {
   info_.average_log_high_DSE_weight_error = 0;
 }
 
-void HEkk::updateOperationResultDensity(const double local_density,
-                                        double& density) {
+void HEkk::updateOperationResultDensity(const HighsFloat local_density,
+                                        HighsFloat& density) {
   density = (1 - kRunningAverageMultiplier) * density +
             kRunningAverageMultiplier * local_density;
 }
 
-void HEkk::assessDSEWeightError(const double computed_edge_weight,
-                                const double updated_edge_weight) {
-  double weight_error;
+void HEkk::assessDSEWeightError(const HighsFloat computed_edge_weight,
+                                const HighsFloat updated_edge_weight) {
+  HighsFloat weight_error;
   if (updated_edge_weight < computed_edge_weight) {
     // Updated weight is low
     weight_error = computed_edge_weight / updated_edge_weight;
@@ -70,13 +70,13 @@ void HEkk::assessDSEWeightError(const double computed_edge_weight,
 
 bool HEkk::switchToDevex() {
   // Parameters controlling switch from DSE to Devex on cost
-  const double kCostlyDseMeasureLimit = 1000.0;
-  const double kCostlyDseMinimumDensity = 0.01;
-  const double kCostlyDseFractionNumTotalIterationBeforeSwitch = 0.1;
-  const double kCostlyDseFractionNumCostlyDseIterationBeforeSwitch = 0.05;
+  const HighsFloat kCostlyDseMeasureLimit = 1000.0;
+  const HighsFloat kCostlyDseMinimumDensity = 0.01;
+  const HighsFloat kCostlyDseFractionNumTotalIterationBeforeSwitch = 0.1;
+  const HighsFloat kCostlyDseFractionNumCostlyDseIterationBeforeSwitch = 0.05;
   bool switch_to_devex = false;
   // Firstly consider switching on the basis of NLA cost
-  double costly_DSE_measure_denominator;
+  HighsFloat costly_DSE_measure_denominator;
   costly_DSE_measure_denominator = max(
       max(info_.row_ep_density, info_.col_aq_density), info_.row_ap_density);
   if (costly_DSE_measure_denominator > 0) {
@@ -123,9 +123,9 @@ bool HEkk::switchToDevex() {
   }
   if (!switch_to_devex) {
     // Secondly consider switching on the basis of weight accuracy
-    double local_measure = info_.average_log_low_DSE_weight_error +
+    HighsFloat local_measure = info_.average_log_low_DSE_weight_error +
                            info_.average_log_high_DSE_weight_error;
-    double local_threshold =
+    HighsFloat local_threshold =
         info_.dual_steepest_edge_weight_log_error_threshold;
     switch_to_devex = info_.allow_dual_steepest_edge_to_devex_switch &&
                       local_measure > local_threshold;

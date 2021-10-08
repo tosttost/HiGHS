@@ -271,7 +271,7 @@ set(headers
     presolve/PresolveUtils.h
     test/DevKkt.h
     test/KktCh2.h
-    util/HighsCDouble.h
+    util/HighsCD0uble.h
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsDisjointSets.h
@@ -707,7 +707,7 @@ set(headers_fast_build_
     presolve/PresolveUtils.h
     test/DevKkt.h
     test/KktCh2.h
-    util/HighsCDouble.h
+    util/HighsCD0uble.h
     util/HighsComponent.h
     util/HighsDataStack.h
     util/HighsDisjointSets.h

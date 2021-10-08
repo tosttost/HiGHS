@@ -51,33 +51,33 @@ class HPreData {
 
   vector<HighsInt> Astart;
   vector<HighsInt> Aindex;
-  vector<double> Avalue;
-  vector<double> colCost;
-  vector<double> colLower;
-  vector<double> colUpper;
-  vector<double> rowLower;
-  vector<double> rowUpper;
+  vector<HighsFloat> Avalue;
+  vector<HighsFloat> colCost;
+  vector<HighsFloat> colLower;
+  vector<HighsFloat> colUpper;
+  vector<HighsFloat> rowLower;
+  vector<HighsFloat> rowUpper;
   vector<HighsVarType> integrality;
 
   // during postsolve hold the reduced solution, then at the end of postsolve
   // they hold the recovered. passed to dev kkt checker.
-  vector<double> colValue;
-  vector<double> colDual;
-  vector<double> rowValue;
-  vector<double> rowDual;
+  vector<HighsFloat> colValue;
+  vector<HighsFloat> colDual;
+  vector<HighsFloat> rowValue;
+  vector<HighsFloat> rowDual;
 
   // Row wise copy of matrix.
   vector<HighsInt> ARstart;
   vector<HighsInt> ARindex;
-  vector<double> ARvalue;
+  vector<HighsFloat> ARvalue;
 
   vector<HighsInt> Aend;
 
   // Solution
   // The first numColOriginal elements are the primal variables, slacks after
-  vector<double> valuePrimal;
-  vector<double> valueColDual;
-  vector<double> valueRowDual;
+  vector<HighsFloat> valuePrimal;
+  vector<HighsFloat> valueColDual;
+  vector<HighsFloat> valueRowDual;
 
   vector<HighsInt> nzCol;  // nonzeros in columns and rows
   vector<HighsInt> nzRow;
@@ -91,15 +91,15 @@ class HPreData {
   vector<HighsBasisStatus> col_status;
   vector<HighsBasisStatus> row_status;
 
-  vector<double> colCostAtEl;
+  vector<HighsFloat> colCostAtEl;
 
   void makeARCopy();
   void makeACopy();
-  double getaij(HighsInt i, HighsInt j);
+  HighsFloat getaij(HighsInt i, HighsInt j);
   bool isZeroA(HighsInt i, HighsInt j);
-  double getRowValue(HighsInt i);
+  HighsFloat getRowValue(HighsInt i);
 
-  stack<double> postValue;
+  stack<HighsFloat> postValue;
 
   // to match reduced solution to original
   vector<HighsInt> rIndex;
@@ -108,7 +108,7 @@ class HPreData {
   dev_kkt_check::KktChStep chk2;
 
   stack<change> chng;
-  stack<pair<HighsInt, vector<double>>> oldBounds;  //(j, l, u)
+  stack<pair<HighsInt, vector<HighsFloat>>> oldBounds;  //(j, l, u)
 };
 
 struct MainLoop {

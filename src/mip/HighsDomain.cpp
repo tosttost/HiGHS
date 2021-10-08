@@ -22,8 +22,8 @@
 #include "mip/HighsMipSolverData.h"
 #include "pdqsort/pdqsort.h"
 
-static double activityContributionMin(double coef, const double& lb,
-                                      const double& ub) {
+static HighsFloat activityContributionMin(HighsFloat coef, const HighsFloat& lb,
+                                      const HighsFloat& ub) {
   if (coef < 0) {
     if (ub == kHighsInf) return -kHighsInf;
 
@@ -35,8 +35,8 @@ static double activityContributionMin(double coef, const double& lb,
   }
 }
 
-static double activityContributionMax(double coef, const double& lb,
-                                      const double& ub) {
+static HighsFloat activityContributionMax(HighsFloat coef, const HighsFloat& lb,
+                                      const HighsFloat& ub) {
   if (coef < 0) {
     if (lb == -kHighsInf) return kHighsInf;
 
@@ -230,7 +230,7 @@ void HighsDomain::ConflictPoolPropagation::markPropagateConflict(
 }
 
 void HighsDomain::ConflictPoolPropagation::updateActivityLbChange(
-    HighsInt col, double oldbound, double newbound) {
+    HighsInt col, HighsFloat oldbound, HighsFloat newbound) {
   assert(!domain->infeasible_);
 
   const std::vector<HighsDomainChange>& conflictEntries =
@@ -251,7 +251,7 @@ void HighsDomain::ConflictPoolPropagation::updateActivityLbChange(
 }
 
 void HighsDomain::ConflictPoolPropagation::updateActivityUbChange(
-    HighsInt col, double oldbound, double newbound) {
+    HighsInt col, HighsFloat oldbound, HighsFloat newbound) {
   assert(!domain->infeasible_);
 
   const std::vector<HighsDomainChange>& conflictEntries =
@@ -373,13 +373,13 @@ void HighsDomain::CutpoolPropagation::recomputeCapacityThreshold(HighsInt cut) {
   HighsInt start = cutpool->getMatrix().getRowStart(cut);
   HighsInt end = cutpool->getMatrix().getRowEnd(cut);
   const HighsInt* arindex = cutpool->getMatrix().getARindex();
-  const double* arvalue = cutpool->getMatrix().getARvalue();
+  const HighsFloat* arvalue = cutpool->getMatrix().getARvalue();
   capacityThreshold_[cut] = 0.0;
   for (HighsInt i = start; i < end; ++i) {
     if (domain->col_upper_[arindex[i]] == domain->col_lower_[arindex[i]])
       continue;
 
-    double boundRange =
+    HighsFloat boundRange =
         domain->col_upper_[arindex[i]] - domain->col_lower_[arindex[i]];
 
     boundRange -= domain->variableType(arindex[i]) == HighsVarType::kContinuous
@@ -387,7 +387,7 @@ void HighsDomain::CutpoolPropagation::recomputeCapacityThreshold(HighsInt cut) {
                                  1000.0 * domain->mipsolver->mipdata_->feastol)
                       : domain->mipsolver->mipdata_->feastol;
 
-    double threshold = std::abs(arvalue[i]) * boundRange;
+    HighsFloat threshold = std::abs(arvalue[i]) * boundRange;
 
     capacityThreshold_[cut] = std::max({capacityThreshold_[cut], threshold,
                                         domain->mipsolver->mipdata_->feastol});
@@ -400,7 +400,7 @@ void HighsDomain::CutpoolPropagation::cutAdded(HighsInt cut, bool propagate) {
     HighsInt start = cutpool->getMatrix().getRowStart(cut);
     HighsInt end = cutpool->getMatrix().getRowEnd(cut);
     const HighsInt* arindex = cutpool->getMatrix().getARindex();
-    const double* arvalue = cutpool->getMatrix().getARvalue();
+    const HighsFloat* arvalue = cutpool->getMatrix().getARvalue();
 
     if (HighsInt(activitycuts_.size()) <= cut) {
       activitycuts_.resize(cut + 1);
@@ -416,7 +416,7 @@ void HighsDomain::CutpoolPropagation::cutAdded(HighsInt cut, bool propagate) {
     HighsInt start = cutpool->getMatrix().getRowStart(cut);
     HighsInt end = cutpool->getMatrix().getRowEnd(cut);
     const HighsInt* arindex = cutpool->getMatrix().getARindex();
-    const double* arvalue = cutpool->getMatrix().getARvalue();
+    const HighsFloat* arvalue = cutpool->getMatrix().getARvalue();
 
     if (HighsInt(activitycuts_.size()) <= cut) {
       activitycuts_.resize(cut + 1);
@@ -448,7 +448,7 @@ void HighsDomain::CutpoolPropagation::cutDeleted(
 void HighsDomain::CutpoolPropagation::markPropagateCut(HighsInt cut) {
   if (!propagatecutflags_[cut] &&
       (activitycutsinf_[cut] == 1 ||
-       (cutpool->getRhs()[cut] - double(activitycuts_[cut]) <=
+       (cutpool->getRhs()[cut] - HighsFloat(activitycuts_[cut]) <=
         capacityThreshold_[cut]))) {
     propagatecutinds_.push_back(cut);
     propagatecutflags_[cut] |= 1;
@@ -456,13 +456,13 @@ void HighsDomain::CutpoolPropagation::markPropagateCut(HighsInt cut) {
 }
 
 void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
-                                                             double oldbound,
-                                                             double newbound) {
+                                                             HighsFloat oldbound,
+                                                             HighsFloat newbound) {
   assert(!domain->infeasible_);
 
   if (newbound < oldbound) {
     cutpool->getMatrix().forEachNegativeColumnEntry(
-        col, [&](HighsInt row, double val) {
+        col, [&](HighsInt row, HighsFloat val) {
           domain->updateThresholdLbChange(col, newbound, val,
                                           capacityThreshold_[row]);
           return true;
@@ -470,9 +470,9 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
   }
 
   cutpool->getMatrix().forEachPositiveColumnEntry(
-      col, [&](HighsInt row, double val) {
+      col, [&](HighsInt row, HighsFloat val) {
         assert(val > 0);
-        double deltamin;
+        HighsFloat deltamin;
 
         if (oldbound == -kHighsInf) {
           --activitycutsinf_[row];
@@ -513,9 +513,9 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
     assert(domain->infeasible_reason.index >= 0);
     std::swap(oldbound, newbound);
     cutpool->getMatrix().forEachPositiveColumnEntry(
-        col, [&](HighsInt row, double val) {
+        col, [&](HighsInt row, HighsFloat val) {
           assert(val > 0);
-          double deltamin;
+          HighsFloat deltamin;
 
           if (oldbound == -kHighsInf) {
             --activitycutsinf_[row];
@@ -536,13 +536,13 @@ void HighsDomain::CutpoolPropagation::updateActivityLbChange(HighsInt col,
 }
 
 void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
-                                                             double oldbound,
-                                                             double newbound) {
+                                                             HighsFloat oldbound,
+                                                             HighsFloat newbound) {
   assert(!domain->infeasible_);
 
   if (newbound > oldbound) {
     cutpool->getMatrix().forEachNegativeColumnEntry(
-        col, [&](HighsInt row, double val) {
+        col, [&](HighsInt row, HighsFloat val) {
           domain->updateThresholdUbChange(col, newbound, val,
                                           capacityThreshold_[row]);
           return true;
@@ -550,9 +550,9 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
   }
 
   cutpool->getMatrix().forEachNegativeColumnEntry(
-      col, [&](HighsInt row, double val) {
+      col, [&](HighsInt row, HighsFloat val) {
         assert(val < 0);
-        double deltamin;
+        HighsFloat deltamin;
 
         if (oldbound == kHighsInf) {
           --activitycutsinf_[row];
@@ -591,9 +591,9 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
     assert(domain->infeasible_reason.index >= 0);
     std::swap(oldbound, newbound);
     cutpool->getMatrix().forEachNegativeColumnEntry(
-        col, [&](HighsInt row, double val) {
+        col, [&](HighsInt row, HighsFloat val) {
           assert(val < 0);
-          double deltamin;
+          HighsFloat deltamin;
 
           if (oldbound == kHighsInf) {
             --activitycutsinf_[row];
@@ -615,21 +615,21 @@ void HighsDomain::CutpoolPropagation::updateActivityUbChange(HighsInt col,
 
 void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
                                      const HighsInt* ARindex,
-                                     const double* ARvalue, HighsInt& ninfmin,
+                                     const HighsFloat* ARvalue, HighsInt& ninfmin,
                                      HighsCD0uble& activitymin) {
   if (infeasible_) {
     activitymin = 0.0;
     ninfmin = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      double val = ARvalue[j];
+      HighsFloat val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
 
       HighsInt tmp;
-      double lb = getColLowerPos(col, infeasible_pos - 1, tmp);
-      double ub = getColUpperPos(col, infeasible_pos - 1, tmp);
-      double contributionmin = activityContributionMin(val, lb, ub);
+      HighsFloat lb = getColLowerPos(col, infeasible_pos - 1, tmp);
+      HighsFloat ub = getColUpperPos(col, infeasible_pos - 1, tmp);
+      HighsFloat contributionmin = activityContributionMin(val, lb, ub);
 
       if (contributionmin == -kHighsInf)
         ++ninfmin;
@@ -643,11 +643,11 @@ void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
     ninfmin = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      double val = ARvalue[j];
+      HighsFloat val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
 
-      double contributionmin =
+      HighsFloat contributionmin =
           activityContributionMin(val, col_lower_[col], col_upper_[col]);
 
       if (contributionmin == -kHighsInf)
@@ -662,21 +662,21 @@ void HighsDomain::computeMinActivity(HighsInt start, HighsInt end,
 
 void HighsDomain::computeMaxActivity(HighsInt start, HighsInt end,
                                      const HighsInt* ARindex,
-                                     const double* ARvalue, HighsInt& ninfmax,
+                                     const HighsFloat* ARvalue, HighsInt& ninfmax,
                                      HighsCD0uble& activitymax) {
   if (infeasible_) {
     activitymax = 0.0;
     ninfmax = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      double val = ARvalue[j];
+      HighsFloat val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
 
       HighsInt tmp;
-      double lb = getColLowerPos(col, infeasible_pos - 1, tmp);
-      double ub = getColUpperPos(col, infeasible_pos - 1, tmp);
-      double contributionmin = activityContributionMax(val, lb, ub);
+      HighsFloat lb = getColLowerPos(col, infeasible_pos - 1, tmp);
+      HighsFloat ub = getColUpperPos(col, infeasible_pos - 1, tmp);
+      HighsFloat contributionmin = activityContributionMax(val, lb, ub);
 
       if (contributionmin == kHighsInf)
         ++ninfmax;
@@ -690,11 +690,11 @@ void HighsDomain::computeMaxActivity(HighsInt start, HighsInt end,
     ninfmax = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      double val = ARvalue[j];
+      HighsFloat val = ARvalue[j];
 
       assert(col < int(col_lower_.size()));
 
-      double contributionmin =
+      HighsFloat contributionmin =
           activityContributionMax(val, col_lower_[col], col_upper_[col]);
 
       if (contributionmin == kHighsInf)
@@ -708,17 +708,17 @@ void HighsDomain::computeMaxActivity(HighsInt start, HighsInt end,
 }
 
 HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
-                                        const double* Rvalue, HighsInt Rlen,
-                                        double Rupper,
+                                        const HighsFloat* Rvalue, HighsInt Rlen,
+                                        HighsFloat Rupper,
                                         const HighsCD0uble& minactivity,
                                         HighsInt ninfmin,
                                         HighsDomainChange* boundchgs) {
-  assert(std::isfinite(double(minactivity)));
+  assert(std::isfinite(HighsFloat(minactivity)));
   if (ninfmin > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
     HighsCD0uble minresact;
-    double actcontribution = activityContributionMin(
+    HighsFloat actcontribution = activityContributionMin(
         Rvalue[i], col_lower_[Rindex[i]], col_upper_[Rindex[i]]);
     if (ninfmin == 1) {
       if (actcontribution != -kHighsInf) continue;
@@ -729,15 +729,15 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
     }
 
     HighsCD0uble boundVal = (Rupper - minresact) / Rvalue[i];
-    if (std::abs(double(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
+    if (std::abs(HighsFloat(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
       continue;
 
     if (Rvalue[i] > 0) {
       bool accept;
 
-      double bound;
+      HighsFloat bound;
       if (mipsolver->variableType(Rindex[i]) != HighsVarType::kContinuous) {
-        bound = std::floor(double(boundVal + mipsolver->mipdata_->feastol));
+        bound = std::floor(HighsFloat(boundVal + mipsolver->mipdata_->feastol));
         if (bound < col_upper_[Rindex[i]] &&
             col_upper_[Rindex[i]] - bound >
                 1000.0 * mipsolver->mipdata_->feastol * std::abs(bound))
@@ -745,16 +745,16 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
         else
           accept = false;
       } else {
-        if (std::abs(double(boundVal) - col_lower_[Rindex[i]]) <=
+        if (std::abs(HighsFloat(boundVal) - col_lower_[Rindex[i]]) <=
             mipsolver->mipdata_->epsilon)
           bound = col_lower_[Rindex[i]];
         else
-          bound = double(boundVal);
+          bound = HighsFloat(boundVal);
         if (col_upper_[Rindex[i]] == kHighsInf)
           accept = true;
         else if (bound + 1000.0 * mipsolver->mipdata_->feastol <
                  col_upper_[Rindex[i]]) {
-          double relativeImprove = col_upper_[Rindex[i]] - bound;
+          HighsFloat relativeImprove = col_upper_[Rindex[i]] - bound;
           if (col_lower_[Rindex[i]] != -kHighsInf)
             relativeImprove /= col_upper_[Rindex[i]] - col_lower_[Rindex[i]];
           else
@@ -771,9 +771,9 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
     } else {
       bool accept;
 
-      double bound;
+      HighsFloat bound;
       if (mipsolver->variableType(Rindex[i]) != HighsVarType::kContinuous) {
-        bound = std::ceil(double(boundVal - mipsolver->mipdata_->feastol));
+        bound = std::ceil(HighsFloat(boundVal - mipsolver->mipdata_->feastol));
         if (bound > col_lower_[Rindex[i]] &&
             bound - col_lower_[Rindex[i]] >
                 1000.0 * mipsolver->mipdata_->feastol * std::abs(bound))
@@ -781,16 +781,16 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
         else
           accept = false;
       } else {
-        if (std::abs(col_upper_[Rindex[i]] - double(boundVal)) <=
+        if (std::abs(col_upper_[Rindex[i]] - HighsFloat(boundVal)) <=
             mipsolver->mipdata_->epsilon)
           bound = col_upper_[Rindex[i]];
         else
-          bound = double(boundVal);
+          bound = HighsFloat(boundVal);
         if (col_lower_[Rindex[i]] == -kHighsInf)
           accept = true;
         else if (bound - 1000.0 * mipsolver->mipdata_->feastol >
                  col_lower_[Rindex[i]]) {
-          double relativeImprove = bound - col_lower_[Rindex[i]];
+          HighsFloat relativeImprove = bound - col_lower_[Rindex[i]];
           if (col_upper_[Rindex[i]] != kHighsInf)
             relativeImprove /= col_upper_[Rindex[i]] - col_lower_[Rindex[i]];
           else
@@ -810,17 +810,17 @@ HighsInt HighsDomain::propagateRowUpper(const HighsInt* Rindex,
 }
 
 HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
-                                        const double* Rvalue, HighsInt Rlen,
-                                        double Rlower,
+                                        const HighsFloat* Rvalue, HighsInt Rlen,
+                                        HighsFloat Rlower,
                                         const HighsCD0uble& maxactivity,
                                         HighsInt ninfmax,
                                         HighsDomainChange* boundchgs) {
-  assert(std::isfinite(double(maxactivity)));
+  assert(std::isfinite(HighsFloat(maxactivity)));
   if (ninfmax > 1) return 0;
   HighsInt numchgs = 0;
   for (HighsInt i = 0; i != Rlen; ++i) {
     HighsCD0uble maxresact;
-    double actcontribution = activityContributionMax(
+    HighsFloat actcontribution = activityContributionMax(
         Rvalue[i], col_lower_[Rindex[i]], col_upper_[Rindex[i]]);
     if (ninfmax == 1) {
       if (actcontribution != kHighsInf) continue;
@@ -831,15 +831,15 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
     }
 
     HighsCD0uble boundVal = (Rlower - maxresact) / Rvalue[i];
-    if (std::abs(double(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
+    if (std::abs(HighsFloat(boundVal) * kHighsTiny) > mipsolver->mipdata_->feastol)
       continue;
 
     if (Rvalue[i] < 0) {
       bool accept;
 
-      double bound;
+      HighsFloat bound;
       if (mipsolver->variableType(Rindex[i]) != HighsVarType::kContinuous) {
-        bound = std::floor(double(boundVal + mipsolver->mipdata_->feastol));
+        bound = std::floor(HighsFloat(boundVal + mipsolver->mipdata_->feastol));
         if (bound < col_upper_[Rindex[i]] &&
             col_upper_[Rindex[i]] - bound >
                 1000.0 * mipsolver->mipdata_->feastol * std::abs(bound))
@@ -847,16 +847,16 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
         else
           accept = false;
       } else {
-        if (std::abs(double(boundVal) - col_lower_[Rindex[i]]) <=
+        if (std::abs(HighsFloat(boundVal) - col_lower_[Rindex[i]]) <=
             mipsolver->mipdata_->epsilon)
           bound = col_lower_[Rindex[i]];
         else
-          bound = double(boundVal);
+          bound = HighsFloat(boundVal);
         if (col_upper_[Rindex[i]] == kHighsInf)
           accept = true;
         else if (bound + 1000.0 * mipsolver->mipdata_->feastol <
                  col_upper_[Rindex[i]]) {
-          double relativeImprove = col_upper_[Rindex[i]] - bound;
+          HighsFloat relativeImprove = col_upper_[Rindex[i]] - bound;
           if (col_lower_[Rindex[i]] != -kHighsInf)
             relativeImprove /= col_upper_[Rindex[i]] - col_lower_[Rindex[i]];
           else
@@ -872,9 +872,9 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
     } else {
       bool accept;
 
-      double bound;
+      HighsFloat bound;
       if (mipsolver->variableType(Rindex[i]) != HighsVarType::kContinuous) {
-        bound = std::ceil(double(boundVal - mipsolver->mipdata_->feastol));
+        bound = std::ceil(HighsFloat(boundVal - mipsolver->mipdata_->feastol));
         if (bound > col_lower_[Rindex[i]] &&
             bound - col_lower_[Rindex[i]] >
                 1000.0 * mipsolver->mipdata_->feastol * std::abs(bound))
@@ -882,16 +882,16 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
         else
           accept = false;
       } else {
-        if (std::abs(col_upper_[Rindex[i]] - double(boundVal)) <=
+        if (std::abs(col_upper_[Rindex[i]] - HighsFloat(boundVal)) <=
             mipsolver->mipdata_->epsilon)
           bound = col_upper_[Rindex[i]];
         else
-          bound = double(boundVal);
+          bound = HighsFloat(boundVal);
         if (col_lower_[Rindex[i]] == -kHighsInf)
           accept = true;
         else if (bound - 1000.0 * mipsolver->mipdata_->feastol >
                  col_lower_[Rindex[i]]) {
-          double relativeImprove = bound - col_lower_[Rindex[i]];
+          HighsFloat relativeImprove = bound - col_lower_[Rindex[i]];
           if (col_upper_[Rindex[i]] != kHighsInf)
             relativeImprove /= col_upper_[Rindex[i]] - col_lower_[Rindex[i]];
           else
@@ -910,17 +910,17 @@ HighsInt HighsDomain::propagateRowLower(const HighsInt* Rindex,
   return numchgs;
 }
 
-void HighsDomain::updateThresholdLbChange(HighsInt col, double newbound,
-                                          double val, double& threshold) {
+void HighsDomain::updateThresholdLbChange(HighsInt col, HighsFloat newbound,
+                                          HighsFloat val, HighsFloat& threshold) {
   if (newbound != col_upper_[col]) {
-    double boundRange = (col_upper_[col] - newbound);
+    HighsFloat boundRange = (col_upper_[col] - newbound);
 
     boundRange -=
         variableType(col) == HighsVarType::kContinuous
             ? std::max(0.3 * boundRange, 1000.0 * mipsolver->mipdata_->feastol)
             : mipsolver->mipdata_->feastol;
 
-    double thresholdNew = std::abs(val) * boundRange;
+    HighsFloat thresholdNew = std::abs(val) * boundRange;
 
     // the new threshold is now the maximum of the new threshold and the current
     // one
@@ -929,17 +929,17 @@ void HighsDomain::updateThresholdLbChange(HighsInt col, double newbound,
   }
 }
 
-void HighsDomain::updateThresholdUbChange(HighsInt col, double newbound,
-                                          double val, double& threshold) {
+void HighsDomain::updateThresholdUbChange(HighsInt col, HighsFloat newbound,
+                                          HighsFloat val, HighsFloat& threshold) {
   if (newbound != col_lower_[col]) {
-    double boundRange = (newbound - col_lower_[col]);
+    HighsFloat boundRange = (newbound - col_lower_[col]);
 
     boundRange -=
         variableType(col) == HighsVarType::kContinuous
             ? std::max(0.3 * boundRange, 1000.0 * mipsolver->mipdata_->feastol)
             : mipsolver->mipdata_->feastol;
 
-    double thresholdNew = std::abs(val) * boundRange;
+    HighsFloat thresholdNew = std::abs(val) * boundRange;
 
     // the new threshold is now the maximum of the new threshold and the current
     // one
@@ -948,8 +948,8 @@ void HighsDomain::updateThresholdUbChange(HighsInt col, double newbound,
   }
 }
 
-void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
-                                         double newbound) {
+void HighsDomain::updateActivityLbChange(HighsInt col, HighsFloat oldbound,
+                                         HighsFloat newbound) {
   auto mip = mipsolver->model_;
   HighsInt start = mip->a_matrix_.start_[col];
   HighsInt end = mip->a_matrix_.start_[col + 1];
@@ -958,7 +958,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
 
   for (HighsInt i = start; i != end; ++i) {
     if (mip->a_matrix_.value_[i] > 0) {
-      double deltamin;
+      HighsFloat deltamin;
       if (oldbound == -kHighsInf) {
         --activitymininf_[mip->a_matrix_.index_[i]];
         deltamin = newbound * mip->a_matrix_.value_[i];
@@ -979,7 +979,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
             mipsolver->mipdata_->ARindex_.data(),
             mipsolver->mipdata_->ARvalue_.data(), tmpinf, tmpminact);
-        assert(std::abs(double(activitymin_[mip->a_matrix_.index_[i]] -
+        assert(std::abs(HighsFloat(activitymin_[mip->a_matrix_.index_[i]] -
                                tmpminact)) <= mipsolver->mipdata_->feastol);
         assert(tmpinf == activitymininf_[mip->a_matrix_.index_[i]]);
       }
@@ -1009,7 +1009,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
           mip->row_upper_[mip->a_matrix_.index_[i]] != kHighsInf)
         markPropagate(mip->a_matrix_.index_[i]);
     } else {
-      double deltamax;
+      HighsFloat deltamax;
       if (oldbound == -kHighsInf) {
         --activitymaxinf_[mip->a_matrix_.index_[i]];
         deltamax = newbound * mip->a_matrix_.value_[i];
@@ -1030,7 +1030,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
             mipsolver->mipdata_->ARindex_.data(),
             mipsolver->mipdata_->ARvalue_.data(), tmpinf, tmpmaxact);
-        assert(std::abs(double(activitymax_[mip->a_matrix_.index_[i]] -
+        assert(std::abs(HighsFloat(activitymax_[mip->a_matrix_.index_[i]] -
                                tmpmaxact)) <= mipsolver->mipdata_->feastol);
         assert(tmpinf == activitymaxinf_[mip->a_matrix_.index_[i]]);
       }
@@ -1071,7 +1071,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
     std::swap(oldbound, newbound);
     for (HighsInt i = start; i != end; ++i) {
       if (mip->a_matrix_.value_[i] > 0) {
-        double deltamin;
+        HighsFloat deltamin;
         if (oldbound == -kHighsInf) {
           --activitymininf_[mip->a_matrix_.index_[i]];
           deltamin = newbound * mip->a_matrix_.value_[i];
@@ -1083,7 +1083,7 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
         }
         activitymin_[mip->a_matrix_.index_[i]] += deltamin;
       } else {
-        double deltamax;
+        HighsFloat deltamax;
         if (oldbound == -kHighsInf) {
           --activitymaxinf_[mip->a_matrix_.index_[i]];
           deltamax = newbound * mip->a_matrix_.value_[i];
@@ -1104,8 +1104,8 @@ void HighsDomain::updateActivityLbChange(HighsInt col, double oldbound,
   }
 }
 
-void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
-                                         double newbound) {
+void HighsDomain::updateActivityUbChange(HighsInt col, HighsFloat oldbound,
+                                         HighsFloat newbound) {
   auto mip = mipsolver->model_;
   HighsInt start = mip->a_matrix_.start_[col];
   HighsInt end = mip->a_matrix_.start_[col + 1];
@@ -1114,7 +1114,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
 
   for (HighsInt i = start; i != end; ++i) {
     if (mip->a_matrix_.value_[i] > 0) {
-      double deltamax;
+      HighsFloat deltamax;
       if (oldbound == kHighsInf) {
         --activitymaxinf_[mip->a_matrix_.index_[i]];
         deltamax = newbound * mip->a_matrix_.value_[i];
@@ -1135,7 +1135,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
             mipsolver->mipdata_->ARindex_.data(),
             mipsolver->mipdata_->ARvalue_.data(), tmpinf, tmpmaxact);
-        assert(std::abs(double(activitymax_[mip->a_matrix_.index_[i]] -
+        assert(std::abs(HighsFloat(activitymax_[mip->a_matrix_.index_[i]] -
                                tmpmaxact)) <= mipsolver->mipdata_->feastol);
         assert(tmpinf == activitymaxinf_[mip->a_matrix_.index_[i]]);
       }
@@ -1168,7 +1168,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
         // propagateinds_.push_back(mip->a_matrix_.index_[i]);
       }
     } else {
-      double deltamin;
+      HighsFloat deltamin;
       if (oldbound == kHighsInf) {
         --activitymininf_[mip->a_matrix_.index_[i]];
         deltamin = newbound * mip->a_matrix_.value_[i];
@@ -1190,7 +1190,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
             mipsolver->mipdata_->ARstart_[mip->a_matrix_.index_[i] + 1],
             mipsolver->mipdata_->ARindex_.data(),
             mipsolver->mipdata_->ARvalue_.data(), tmpinf, tmpminact);
-        assert(std::abs(double(activitymin_[mip->a_matrix_.index_[i]] -
+        assert(std::abs(HighsFloat(activitymin_[mip->a_matrix_.index_[i]] -
                                tmpminact)) <= mipsolver->mipdata_->feastol);
         assert(tmpinf == activitymininf_[mip->a_matrix_.index_[i]]);
       }
@@ -1234,7 +1234,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
     std::swap(oldbound, newbound);
     for (HighsInt i = start; i != end; ++i) {
       if (mip->a_matrix_.value_[i] > 0) {
-        double deltamax;
+        HighsFloat deltamax;
         if (oldbound == kHighsInf) {
           --activitymaxinf_[mip->a_matrix_.index_[i]];
           deltamax = newbound * mip->a_matrix_.value_[i];
@@ -1246,7 +1246,7 @@ void HighsDomain::updateActivityUbChange(HighsInt col, double oldbound,
         }
         activitymax_[mip->a_matrix_.index_[i]] += deltamax;
       } else {
-        double deltamin;
+        HighsFloat deltamin;
         if (oldbound == kHighsInf) {
           --activitymininf_[mip->a_matrix_.index_[i]];
           deltamin = newbound * mip->a_matrix_.value_[i];
@@ -1278,14 +1278,14 @@ void HighsDomain::recomputeCapacityThreshold(HighsInt row) {
 
     if (col_upper_[col] == col_lower_[col]) continue;
 
-    double boundRange = col_upper_[col] - col_lower_[col];
+    HighsFloat boundRange = col_upper_[col] - col_lower_[col];
 
     boundRange -=
         variableType(col) == HighsVarType::kContinuous
             ? std::max(0.3 * boundRange, 1000.0 * mipsolver->mipdata_->feastol)
             : mipsolver->mipdata_->feastol;
 
-    double threshold = std::abs(mipsolver->mipdata_->ARvalue_[i]) * boundRange;
+    HighsFloat threshold = std::abs(mipsolver->mipdata_->ARvalue_[i]) * boundRange;
 
     capacityThreshold_[row] = std::max(
         {capacityThreshold_[row], threshold, mipsolver->mipdata_->feastol});
@@ -1317,11 +1317,11 @@ void HighsDomain::markPropagate(HighsInt row) {
   if (!propagateflags_[row]) {
     bool proplower = mipsolver->rowLower(row) != -kHighsInf &&
                      (activitymaxinf_[row] == 1 ||
-                      (double(activitymax_[row]) - mipsolver->rowLower(row)) <=
+                      (HighsFloat(activitymax_[row]) - mipsolver->rowLower(row)) <=
                           capacityThreshold_[row]);
     bool propupper = mipsolver->rowUpper(row) != kHighsInf &&
                      (activitymininf_[row] == 1 ||
-                      (mipsolver->rowUpper(row) - double(activitymin_[row])) <=
+                      (mipsolver->rowUpper(row) - HighsFloat(activitymin_[row])) <=
                           capacityThreshold_[row]);
 
     if (proplower || propupper) {
@@ -1362,8 +1362,8 @@ void HighsDomain::computeRowActivities() {
   }
 }
 
-double HighsDomain::doChangeBound(const HighsDomainChange& boundchg) {
-  double oldbound;
+HighsFloat HighsDomain::doChangeBound(const HighsDomainChange& boundchg) {
+  HighsFloat oldbound;
 
   if (boundchg.boundtype == HighsBoundType::kLower) {
     oldbound = col_lower_[boundchg.column];
@@ -1455,7 +1455,7 @@ void HighsDomain::changeBound(HighsDomainChange boundchg, Reason reason) {
 
   bool binary = isBinary(boundchg.column);
 
-  double oldbound = doChangeBound(boundchg);
+  HighsFloat oldbound = doChangeBound(boundchg);
 
   prevboundval_.emplace_back(oldbound, prevPos);
   domchgstack_.push_back(boundchg);
@@ -1574,7 +1574,7 @@ void HighsDomain::backtrackToGlobal() {
   }
 
   while (k >= 0) {
-    double prevbound = prevboundval_[k].first;
+    HighsFloat prevbound = prevboundval_[k].first;
     HighsInt prevpos = prevboundval_[k].second;
     assert(prevpos < k);
 
@@ -1633,7 +1633,7 @@ HighsDomainChange HighsDomain::backtrack() {
     infeasible_reason = Reason::unspecified();
   }
   while (k >= 0) {
-    double prevbound = prevboundval_[k].first;
+    HighsFloat prevbound = prevboundval_[k].first;
     HighsInt prevpos = prevboundval_[k].second;
     assert(prevpos < k);
 
@@ -1765,7 +1765,7 @@ bool HighsDomain::propagate() {
           HighsInt end = mipsolver->mipdata_->ARstart_[i + 1];
           HighsInt Rlen = end - start;
           const HighsInt* Rindex = mipsolver->mipdata_->ARindex_.data() + start;
-          const double* Rvalue = mipsolver->mipdata_->ARvalue_.data() + start;
+          const HighsFloat* Rvalue = mipsolver->mipdata_->ARvalue_.data() + start;
 
           if (mipsolver->rowUpper(i) != kHighsInf) {
             // computeMinActivity(start, end, mipsolver->ARstart_.data(),
@@ -1848,7 +1848,7 @@ bool HighsDomain::propagate() {
 
             HighsInt Rlen;
             const HighsInt* Rindex;
-            const double* Rvalue;
+            const HighsFloat* Rvalue;
             cutpoolprop.cutpool->getCut(i, Rlen, Rindex, Rvalue);
             cutpoolprop.activitycuts_[i].renormalize();
 
@@ -1887,9 +1887,9 @@ bool HighsDomain::propagate() {
   return true;
 }
 
-double HighsDomain::getColLowerPos(HighsInt col, HighsInt stackpos,
+HighsFloat HighsDomain::getColLowerPos(HighsInt col, HighsInt stackpos,
                                    HighsInt& pos) const {
-  double lb = col_lower_[col];
+  HighsFloat lb = col_lower_[col];
   pos = colLowerPos_[col];
   while (pos > stackpos || (pos != -1 && prevboundval_[pos].first == lb)) {
     lb = prevboundval_[pos].first;
@@ -1898,9 +1898,9 @@ double HighsDomain::getColLowerPos(HighsInt col, HighsInt stackpos,
   return lb;
 }
 
-double HighsDomain::getColUpperPos(HighsInt col, HighsInt stackpos,
+HighsFloat HighsDomain::getColUpperPos(HighsInt col, HighsInt stackpos,
                                    HighsInt& pos) const {
-  double ub = col_upper_[col];
+  HighsFloat ub = col_upper_[col];
   pos = colUpperPos_[col];
   while (pos > stackpos || (pos != -1 && prevboundval_[pos].first == ub)) {
     ub = prevboundval_[pos].first;
@@ -1920,8 +1920,8 @@ void HighsDomain::conflictAnalysis(HighsConflictPool& conflictPool) {
 }
 
 void HighsDomain::conflictAnalysis(const HighsInt* proofinds,
-                                   const double* proofvals, HighsInt prooflen,
-                                   double proofrhs,
+                                   const HighsFloat* proofvals, HighsInt prooflen,
+                                   HighsFloat proofrhs,
                                    HighsConflictPool& conflictPool) {
   if (&mipsolver->mipdata_->domain == this) return;
   if (mipsolver->mipdata_->domain.infeasible()) return;
@@ -1933,7 +1933,7 @@ void HighsDomain::conflictAnalysis(const HighsInt* proofinds,
 
 void HighsDomain::conflictAnalyzeReconvergence(
     const HighsDomainChange& domchg, const HighsInt* proofinds,
-    const double* proofvals, HighsInt prooflen, double proofrhs,
+    const HighsFloat* proofvals, HighsInt prooflen, HighsFloat proofrhs,
     HighsConflictPool& conflictPool) {
   if (&mipsolver->mipdata_->domain == this) return;
   ConflictSet conflictSet(*this);
@@ -1946,7 +1946,7 @@ void HighsDomain::conflictAnalyzeReconvergence(
 
   if (!conflictSet.explainBoundChangeLeq(domchg, domchgstack_.size(), proofinds,
                                          proofvals, prooflen, proofrhs,
-                                         double(activitymin)))
+                                         HighsFloat(activitymin)))
     return;
 
   if (conflictSet.resolvedDomainChanges.size() >
@@ -1962,8 +1962,8 @@ void HighsDomain::conflictAnalyzeReconvergence(
                                    domchg);
 }
 
-void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
-                                      HighsInt len, double& rhs) const {
+void HighsDomain::tightenCoefficients(HighsInt* inds, HighsFloat* vals,
+                                      HighsInt len, HighsFloat& rhs) const {
   HighsCD0uble maxactivity = 0;
 
   for (HighsInt i = 0; i != len; ++i) {
@@ -1988,12 +1988,12 @@ void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
       if (vals[i] > maxabscoef) {
         HighsCD0uble delta = vals[i] - maxabscoef;
         upper -= delta * col_upper_[inds[i]];
-        vals[i] = double(maxabscoef);
+        vals[i] = HighsFloat(maxabscoef);
         ++tightened;
       } else if (vals[i] < -maxabscoef) {
         HighsCD0uble delta = -vals[i] - maxabscoef;
         upper += delta * col_lower_[inds[i]];
-        vals[i] = -double(maxabscoef);
+        vals[i] = -HighsFloat(maxabscoef);
         ++tightened;
       }
     }
@@ -2001,13 +2001,13 @@ void HighsDomain::tightenCoefficients(HighsInt* inds, double* vals,
     if (tightened != 0) {
       // printf("tightened %" HIGHSINT_FORMAT " coefficients, rhs changed from
       // %g to %g\n",
-      //       tightened, rhs, double(upper));
-      rhs = double(upper);
+      //       tightened, rhs, HighsFloat(upper));
+      rhs = HighsFloat(upper);
     }
   }
 }
 
-double HighsDomain::getMinCutActivity(const HighsCutPool& cutpool,
+HighsFloat HighsDomain::getMinCutActivity(const HighsCutPool& cutpool,
                                       HighsInt cut) const {
   for (auto& cutpoolprop : cutpoolpropagation) {
     if (cutpoolprop.cutpool == &cutpool) {
@@ -2016,7 +2016,7 @@ double HighsDomain::getMinCutActivity(const HighsCutPool& cutpool,
       return cut < (HighsInt)cutpoolprop.propagatecutflags_.size() &&
                      (cutpoolprop.propagatecutflags_[cut] & 2) == 0 &&
                      cutpoolprop.activitycutsinf_[cut] == 0
-                 ? double(cutpoolprop.activitycuts_[cut])
+                 ? HighsFloat(cutpoolprop.activitycuts_[cut])
                  : -kHighsInf;
     }
   }
@@ -2025,7 +2025,7 @@ double HighsDomain::getMinCutActivity(const HighsCutPool& cutpool,
 }
 
 bool HighsDomain::isFixing(const HighsDomainChange& domchg) const {
-  double otherbound = domchg.boundtype == HighsBoundType::kUpper
+  HighsFloat otherbound = domchg.boundtype == HighsBoundType::kUpper
                           ? col_lower_[domchg.column]
                           : col_upper_[domchg.column];
   return std::abs(domchg.boundval - otherbound) <= mipsolver->mipdata_->epsilon;
@@ -2047,7 +2047,7 @@ HighsDomainChange HighsDomain::flip(const HighsDomainChange& domchg) const {
   }
 }
 
-double HighsDomain::feastol() const { return mipsolver->mipdata_->feastol; }
+HighsFloat HighsDomain::feastol() const { return mipsolver->mipdata_->feastol; }
 
 HighsDomain::ConflictSet::ConflictSet(HighsDomain& localdom_)
     : localdom(localdom_),
@@ -2059,12 +2059,12 @@ HighsDomain::ConflictSet::ConflictSet(HighsDomain& localdom_)
 
 bool HighsDomain::ConflictSet::explainBoundChangeGeq(
     const HighsDomainChange& domchg, HighsInt pos, const HighsInt* inds,
-    const double* vals, HighsInt len, double rhs, double maxAct) {
+    const HighsFloat* vals, HighsInt len, HighsFloat rhs, HighsFloat maxAct) {
   if (maxAct == kHighsInf) return false;
 
   // get the coefficient value of the column for which we want to explain
   // the bound change
-  double domchgVal = 0;
+  HighsFloat domchgVal = 0;
 
   resolveBuffer.reserve(len);
   resolveBuffer.clear();
@@ -2077,16 +2077,16 @@ bool HighsDomain::ConflictSet::explainBoundChangeGeq(
       continue;
     }
 
-    double delta;
+    HighsFloat delta;
     HighsInt numNodes;
     HighsInt boundpos;
     if (vals[i] > 0) {
-      double ub = localdom.getColUpperPos(col, pos, boundpos);
+      HighsFloat ub = localdom.getColUpperPos(col, pos, boundpos);
       if (globaldom.col_upper_[col] <= ub) continue;
       delta = vals[i] * (ub - globaldom.col_upper_[col]);
       numNodes = nodequeue.numNodesDown(col);
     } else {
-      double lb = localdom.getColLowerPos(col, pos, boundpos);
+      HighsFloat lb = localdom.getColLowerPos(col, pos, boundpos);
       if (globaldom.col_lower_[col] >= lb) continue;
       delta = vals[i] * (lb - globaldom.col_lower_[col]);
       numNodes = nodequeue.numNodesUp(col);
@@ -2100,10 +2100,10 @@ bool HighsDomain::ConflictSet::explainBoundChangeGeq(
   if (domchgVal == 0) return false;
 
   pdqsort(resolveBuffer.begin(), resolveBuffer.end(),
-          [&](const std::tuple<double, HighsInt, HighsInt>& a,
-              const std::tuple<double, HighsInt, HighsInt>& b) {
-            double prioA = std::get<0>(a) * (std::get<1>(a) + 1);
-            double prioB = std::get<0>(b) * (std::get<1>(b) + 1);
+          [&](const std::tuple<HighsFloat, HighsInt, HighsInt>& a,
+              const std::tuple<HighsFloat, HighsInt, HighsInt>& b) {
+            HighsFloat prioA = std::get<0>(a) * (std::get<1>(a) + 1);
+            HighsFloat prioB = std::get<0>(b) * (std::get<1>(b) + 1);
             return prioA > prioB;
           });
 
@@ -2115,7 +2115,7 @@ bool HighsDomain::ConflictSet::explainBoundChangeGeq(
   // sufficiently small the bound constraint is implied. Therefore we
   // decrease M by updating it with the stronger local bounds until
   // M <= b - b0 holds.
-  double b0 = domchg.boundval;
+  HighsFloat b0 = domchg.boundval;
   if (localdom.mipsolver->variableType(domchg.column) !=
       HighsVarType::kContinuous) {
     // in case of an integral variable the bound was rounded and can be
@@ -2138,17 +2138,17 @@ bool HighsDomain::ConflictSet::explainBoundChangeGeq(
   b0 *= domchgVal;
 
   // compute the lower bound of M that is necessary
-  double Mupper = rhs - b0;
+  HighsFloat Mupper = rhs - b0;
 
   // M is the global residual activity initially
-  double M = maxAct;
+  HighsFloat M = maxAct;
   if (domchgVal < 0)
     M -= domchgVal * globaldom.col_lower_[domchg.column];
   else
     M -= domchgVal * globaldom.col_upper_[domchg.column];
 
   resolvedDomainChanges.clear();
-  for (const std::tuple<double, HighsInt, HighsInt>& reasonDomchg :
+  for (const std::tuple<HighsFloat, HighsInt, HighsInt>& reasonDomchg :
        resolveBuffer) {
     M += std::get<0>(reasonDomchg);
     resolvedDomainChanges.push_back(std::get<2>(reasonDomchg));
@@ -2182,12 +2182,12 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
       HighsInt otherBoundPos;
       if (localdom.domchgstack_[conflictingBoundPos].boundtype ==
           HighsBoundType::kLower) {
-        double ub =
+        HighsFloat ub =
             localdom.getColUpperPos(col, conflictingBoundPos, otherBoundPos);
         assert(localdom.domchgstack_[conflictingBoundPos].boundval - ub >
                +localdom.mipsolver->mipdata_->feastol);
       } else {
-        double lb =
+        HighsFloat lb =
             localdom.getColLowerPos(col, conflictingBoundPos, otherBoundPos);
         assert(localdom.domchgstack_[conflictingBoundPos].boundval - lb <
                -localdom.mipsolver->mipdata_->feastol);
@@ -2204,10 +2204,10 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
       // retrieve the matrix values of the cut
       HighsInt len;
       const HighsInt* inds;
-      const double* vals;
+      const HighsFloat* vals;
       localdom.mipsolver->mipdata_->getRow(rowIndex, len, inds, vals);
 
-      double maxAct = globaldom.getMaxActivity(rowIndex);
+      HighsFloat maxAct = globaldom.getMaxActivity(rowIndex);
 
       return explainInfeasibilityGeq(
           inds, vals, len, localdom.mipsolver->rowLower(rowIndex), maxAct);
@@ -2218,10 +2218,10 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
       // retrieve the matrix values of the cut
       HighsInt len;
       const HighsInt* inds;
-      const double* vals;
+      const HighsFloat* vals;
       localdom.mipsolver->mipdata_->getRow(rowIndex, len, inds, vals);
 
-      double minAct = globaldom.getMinActivity(rowIndex);
+      HighsFloat minAct = globaldom.getMinActivity(rowIndex);
 
       return explainInfeasibilityLeq(
           inds, vals, len, localdom.mipsolver->rowUpper(rowIndex), minAct);
@@ -2240,11 +2240,11 @@ bool HighsDomain::ConflictSet::explainInfeasibility() {
         // retrieve the matrix values of the cut
         HighsInt len;
         const HighsInt* inds;
-        const double* vals;
+        const HighsFloat* vals;
         localdom.cutpoolpropagation[cutpoolIndex].cutpool->getCut(cutIndex, len,
                                                                   inds, vals);
 
-        double minAct = globaldom.getMinCutActivity(
+        HighsFloat minAct = globaldom.getMinCutActivity(
             *localdom.cutpoolpropagation[cutpoolIndex].cutpool, cutIndex);
 
         return explainInfeasibilityLeq(inds, vals, len,
@@ -2287,11 +2287,11 @@ bool HighsDomain::ConflictSet::explainInfeasibilityConflict(
 
     HighsInt pos;
     if (conflict[i].boundtype == HighsBoundType::kLower) {
-      double lb = localdom.getColLowerPos(conflict[i].column,
+      HighsFloat lb = localdom.getColLowerPos(conflict[i].column,
                                           localdom.infeasible_pos, pos);
       if (pos == -1 || lb < conflict[i].boundval) return false;
     } else {
-      double ub = localdom.getColUpperPos(conflict[i].column,
+      HighsFloat ub = localdom.getColUpperPos(conflict[i].column,
                                           localdom.infeasible_pos, pos);
       if (pos == -1 || ub > conflict[i].boundval) return false;
     }
@@ -2303,9 +2303,9 @@ bool HighsDomain::ConflictSet::explainInfeasibilityConflict(
 }
 
 bool HighsDomain::ConflictSet::explainInfeasibilityLeq(const HighsInt* inds,
-                                                       const double* vals,
-                                                       HighsInt len, double rhs,
-                                                       double minAct) {
+                                                       const HighsFloat* vals,
+                                                       HighsInt len, HighsFloat rhs,
+                                                       HighsFloat minAct) {
   if (minAct == -kHighsInf) return false;
 
   HighsInt infeasible_pos = kHighsIInf;
@@ -2317,16 +2317,16 @@ bool HighsDomain::ConflictSet::explainInfeasibilityLeq(const HighsInt* inds,
   for (HighsInt i = 0; i < len; ++i) {
     HighsInt col = inds[i];
 
-    double delta;
+    HighsFloat delta;
     HighsInt numNodes;
     HighsInt boundpos;
     if (vals[i] > 0) {
-      double lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
+      HighsFloat lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
       if (globaldom.col_lower_[col] >= lb) continue;
       delta = vals[i] * (lb - globaldom.col_lower_[col]);
       numNodes = nodequeue.numNodesUp(col);
     } else {
-      double ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
+      HighsFloat ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
       if (globaldom.col_upper_[col] <= ub) continue;
       delta = vals[i] * (ub - globaldom.col_upper_[col]);
       numNodes = nodequeue.numNodesDown(col);
@@ -2338,20 +2338,20 @@ bool HighsDomain::ConflictSet::explainInfeasibilityLeq(const HighsInt* inds,
   }
 
   pdqsort(resolveBuffer.begin(), resolveBuffer.end(),
-          [&](const std::tuple<double, HighsInt, HighsInt>& a,
-              const std::tuple<double, HighsInt, HighsInt>& b) {
-            double prioA = std::get<0>(a) * (std::get<1>(a) + 1);
-            double prioB = std::get<0>(b) * (std::get<1>(b) + 1);
+          [&](const std::tuple<HighsFloat, HighsInt, HighsInt>& a,
+              const std::tuple<HighsFloat, HighsInt, HighsInt>& b) {
+            HighsFloat prioA = std::get<0>(a) * (std::get<1>(a) + 1);
+            HighsFloat prioB = std::get<0>(b) * (std::get<1>(b) + 1);
             return prioA > prioB;
           });
 
   // compute the lower bound of M that is necessary
-  double Mlower = rhs + std::max(10.0, std::abs(rhs)) *
+  HighsFloat Mlower = rhs + std::max(10.0, std::abs(rhs)) *
                             localdom.mipsolver->mipdata_->feastol;
   // M is the global residual activity initially
-  double M = minAct;
+  HighsFloat M = minAct;
   resolvedDomainChanges.clear();
-  for (const std::tuple<double, HighsInt, HighsInt>& reasonDomchg :
+  for (const std::tuple<HighsFloat, HighsInt, HighsInt>& reasonDomchg :
        resolveBuffer) {
     M += std::get<0>(reasonDomchg);
     resolvedDomainChanges.push_back(std::get<2>(reasonDomchg));
@@ -2371,9 +2371,9 @@ bool HighsDomain::ConflictSet::explainInfeasibilityLeq(const HighsInt* inds,
 }
 
 bool HighsDomain::ConflictSet::explainInfeasibilityGeq(const HighsInt* inds,
-                                                       const double* vals,
-                                                       HighsInt len, double rhs,
-                                                       double maxAct) {
+                                                       const HighsFloat* vals,
+                                                       HighsInt len, HighsFloat rhs,
+                                                       HighsFloat maxAct) {
   if (maxAct == kHighsInf) return false;
 
   HighsInt infeasible_pos = kHighsIInf;
@@ -2385,16 +2385,16 @@ bool HighsDomain::ConflictSet::explainInfeasibilityGeq(const HighsInt* inds,
   for (HighsInt i = 0; i < len; ++i) {
     HighsInt col = inds[i];
 
-    double delta;
+    HighsFloat delta;
     HighsInt numNodes;
     HighsInt boundpos;
     if (vals[i] > 0) {
-      double ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
+      HighsFloat ub = localdom.getColUpperPos(col, infeasible_pos, boundpos);
       if (globaldom.col_upper_[col] <= ub) continue;
       delta = vals[i] * (ub - globaldom.col_upper_[col]);
       numNodes = nodequeue.numNodesDown(col);
     } else {
-      double lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
+      HighsFloat lb = localdom.getColLowerPos(col, infeasible_pos, boundpos);
       if (globaldom.col_lower_[col] >= lb) continue;
       delta = vals[i] * (lb - globaldom.col_lower_[col]);
       numNodes = nodequeue.numNodesUp(col);
@@ -2406,22 +2406,22 @@ bool HighsDomain::ConflictSet::explainInfeasibilityGeq(const HighsInt* inds,
   }
 
   pdqsort(resolveBuffer.begin(), resolveBuffer.end(),
-          [&](const std::tuple<double, HighsInt, HighsInt>& a,
-              const std::tuple<double, HighsInt, HighsInt>& b) {
-            double prioA = std::get<0>(a) * (std::get<1>(a) + 1);
-            double prioB = std::get<0>(b) * (std::get<1>(b) + 1);
+          [&](const std::tuple<HighsFloat, HighsInt, HighsInt>& a,
+              const std::tuple<HighsFloat, HighsInt, HighsInt>& b) {
+            HighsFloat prioA = std::get<0>(a) * (std::get<1>(a) + 1);
+            HighsFloat prioB = std::get<0>(b) * (std::get<1>(b) + 1);
             return prioA > prioB;
           });
 
   // compute the lower bound of M that is necessary
-  double Mupper = rhs - std::max(10.0, std::abs(rhs)) *
+  HighsFloat Mupper = rhs - std::max(10.0, std::abs(rhs)) *
                             localdom.mipsolver->mipdata_->feastol;
 
   // M is the global residual activity initially
-  double M = maxAct;
+  HighsFloat M = maxAct;
 
   resolvedDomainChanges.clear();
-  for (const std::tuple<double, HighsInt, HighsInt>& reasonDomchg :
+  for (const std::tuple<HighsFloat, HighsInt, HighsInt>& reasonDomchg :
        resolveBuffer) {
     M += std::get<0>(reasonDomchg);
     resolvedDomainChanges.push_back(std::get<2>(reasonDomchg));
@@ -2473,10 +2473,10 @@ bool HighsDomain::ConflictSet::explainBoundChange(HighsInt pos) {
       // retrieve the matrix values of the cut
       HighsInt len;
       const HighsInt* inds;
-      const double* vals;
+      const HighsFloat* vals;
       localdom.mipsolver->mipdata_->getRow(rowIndex, len, inds, vals);
 
-      double maxAct = globaldom.getMaxActivity(rowIndex);
+      HighsFloat maxAct = globaldom.getMaxActivity(rowIndex);
 
       return explainBoundChangeGeq(localdom.domchgstack_[pos], pos, inds, vals,
                                    len, localdom.mipsolver->rowLower(rowIndex),
@@ -2488,10 +2488,10 @@ bool HighsDomain::ConflictSet::explainBoundChange(HighsInt pos) {
       // retrieve the matrix values of the cut
       HighsInt len;
       const HighsInt* inds;
-      const double* vals;
+      const HighsFloat* vals;
       localdom.mipsolver->mipdata_->getRow(rowIndex, len, inds, vals);
 
-      double minAct = globaldom.getMinActivity(rowIndex);
+      HighsFloat minAct = globaldom.getMinActivity(rowIndex);
 
       return explainBoundChangeLeq(localdom.domchgstack_[pos], pos, inds, vals,
                                    len, localdom.mipsolver->rowUpper(rowIndex),
@@ -2510,10 +2510,10 @@ bool HighsDomain::ConflictSet::explainBoundChange(HighsInt pos) {
         // retrieve the matrix values of the cut
         HighsInt len;
         const HighsInt* inds;
-        const double* vals;
+        const HighsFloat* vals;
         localdom.cutpoolpropagation[cutpoolIndex].cutpool->getCut(cutIndex, len,
                                                                   inds, vals);
-        double minAct = globaldom.getMinCutActivity(
+        HighsFloat minAct = globaldom.getMinCutActivity(
             *localdom.cutpoolpropagation[cutpoolIndex].cutpool, cutIndex);
 
         return explainBoundChangeLeq(localdom.domchgstack_[pos], pos, inds,
@@ -2576,11 +2576,11 @@ bool HighsDomain::ConflictSet::explainBoundChangeConflict(
 
 bool HighsDomain::ConflictSet::explainBoundChangeLeq(
     const HighsDomainChange& domchg, HighsInt pos, const HighsInt* inds,
-    const double* vals, HighsInt len, double rhs, double minAct) {
+    const HighsFloat* vals, HighsInt len, HighsFloat rhs, HighsFloat minAct) {
   if (minAct == -kHighsInf) return false;
   // get the coefficient value of the column for which we want to explain
   // the bound change
-  double domchgVal = 0;
+  HighsFloat domchgVal = 0;
 
   resolveBuffer.reserve(len);
   resolveBuffer.clear();
@@ -2593,16 +2593,16 @@ bool HighsDomain::ConflictSet::explainBoundChangeLeq(
       continue;
     }
 
-    double delta;
+    HighsFloat delta;
     HighsInt numNodes;
     HighsInt boundpos;
     if (vals[i] > 0) {
-      double lb = localdom.getColLowerPos(col, pos, boundpos);
+      HighsFloat lb = localdom.getColLowerPos(col, pos, boundpos);
       if (globaldom.col_lower_[col] >= lb) continue;
       delta = vals[i] * (lb - globaldom.col_lower_[col]);
       numNodes = nodequeue.numNodesUp(col);
     } else {
-      double ub = localdom.getColUpperPos(col, pos, boundpos);
+      HighsFloat ub = localdom.getColUpperPos(col, pos, boundpos);
       if (globaldom.col_upper_[col] <= ub) continue;
       delta = vals[i] * (ub - globaldom.col_upper_[col]);
       numNodes = nodequeue.numNodesDown(col);
@@ -2616,10 +2616,10 @@ bool HighsDomain::ConflictSet::explainBoundChangeLeq(
   if (domchgVal == 0) return false;
 
   pdqsort(resolveBuffer.begin(), resolveBuffer.end(),
-          [&](const std::tuple<double, HighsInt, HighsInt>& a,
-              const std::tuple<double, HighsInt, HighsInt>& b) {
-            double prioA = std::get<0>(a) * (std::get<1>(a) + 1);
-            double prioB = std::get<0>(b) * (std::get<1>(b) + 1);
+          [&](const std::tuple<HighsFloat, HighsInt, HighsInt>& a,
+              const std::tuple<HighsFloat, HighsInt, HighsInt>& b) {
+            HighsFloat prioA = std::get<0>(a) * (std::get<1>(a) + 1);
+            HighsFloat prioB = std::get<0>(b) * (std::get<1>(b) + 1);
             return prioA > prioB;
           });
 
@@ -2633,7 +2633,7 @@ bool HighsDomain::ConflictSet::explainBoundChangeLeq(
   // sufficiently large the bound constraint is implied. Therefore we
   // increase M by updating it with the stronger local bounds until
   // M >= b - b0 holds.
-  double b0 = domchg.boundval;
+  HighsFloat b0 = domchg.boundval;
   if (localdom.mipsolver->variableType(domchg.column) !=
       HighsVarType::kContinuous) {
     // in case of an integral variable the bound was rounded and can be
@@ -2656,17 +2656,17 @@ bool HighsDomain::ConflictSet::explainBoundChangeLeq(
   b0 *= domchgVal;
 
   // compute the lower bound of M that is necessary
-  double Mlower = rhs - b0;
+  HighsFloat Mlower = rhs - b0;
 
   // M is the global residual activity initially
-  double M = minAct;
+  HighsFloat M = minAct;
   if (domchgVal < 0)
     M -= domchgVal * globaldom.col_upper_[domchg.column];
   else
     M -= domchgVal * globaldom.col_lower_[domchg.column];
 
   resolvedDomainChanges.clear();
-  for (const std::tuple<double, HighsInt, HighsInt>& reasonDomchg :
+  for (const std::tuple<HighsFloat, HighsInt, HighsInt>& reasonDomchg :
        resolveBuffer) {
     M += std::get<0>(reasonDomchg);
     resolvedDomainChanges.push_back(std::get<2>(reasonDomchg));
@@ -2844,8 +2844,8 @@ void HighsDomain::ConflictSet::conflictAnalysis(
 }
 
 void HighsDomain::ConflictSet::conflictAnalysis(
-    const HighsInt* proofinds, const double* proofvals, HighsInt prooflen,
-    double proofrhs, HighsConflictPool& conflictPool) {
+    const HighsInt* proofinds, const HighsFloat* proofvals, HighsInt prooflen,
+    HighsFloat proofrhs, HighsConflictPool& conflictPool) {
   resolvedDomainChanges.reserve(localdom.domchgstack_.size());
 
   HighsInt ninfmin;
@@ -2855,7 +2855,7 @@ void HighsDomain::ConflictSet::conflictAnalysis(
   if (ninfmin != 0) return;
 
   if (!explainInfeasibilityLeq(proofinds, proofvals, prooflen, proofrhs,
-                               double(activitymin)))
+                               HighsFloat(activitymin)))
     return;
 
   localdom.mipsolver->mipdata_->pseudocost.increaseConflictWeight();

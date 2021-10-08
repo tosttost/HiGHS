@@ -38,7 +38,7 @@ class HighsCliqueTable {
 
     HighsInt index() const { return 2 * col + val; }
 
-    double weight(const std::vector<double>& sol) const {
+    HighsFloat weight(const std::vector<HighsFloat>& sol) const {
       return val ? sol[col] : 1.0 - sol[col];
     }
 
@@ -117,14 +117,14 @@ class HighsCliqueTable {
   HighsInt runCliqueSubsumption(const HighsDomain& globaldom,
                                 std::vector<CliqueVar>& clique);
   struct BronKerboschData {
-    const std::vector<double>& sol;
+    const std::vector<HighsFloat>& sol;
     std::vector<CliqueVar> P;
     std::vector<CliqueVar> R;
     std::vector<CliqueVar> Z;
     std::vector<std::vector<CliqueVar>> cliques;
-    double wR = 0.0;
-    double minW = 1.05;
-    double feastol = 1e-6;
+    HighsFloat wR = 0.0;
+    HighsFloat minW = 1.05;
+    HighsFloat feastol = 1e-6;
     HighsInt ncalls = 0;
     HighsInt maxcalls = 10000;
     HighsInt maxcliques = 100;
@@ -135,17 +135,17 @@ class HighsCliqueTable {
              numNeighborhoodQueries > maxNeighborhoodQueries;
     }
 
-    BronKerboschData(const std::vector<double>& sol) : sol(sol) {}
+    BronKerboschData(const std::vector<HighsFloat>& sol) : sol(sol) {}
   };
 
   void bronKerboschRecurse(BronKerboschData& data, HighsInt Plen,
                            const CliqueVar* X, HighsInt Xlen);
 
   void extractCliques(const HighsMipSolver& mipsolver,
-                      std::vector<HighsInt>& inds, std::vector<double>& vals,
-                      std::vector<int8_t>& complementation, double rhs,
+                      std::vector<HighsInt>& inds, std::vector<HighsFloat>& vals,
+                      std::vector<int8_t>& complementation, HighsFloat rhs,
                       HighsInt nbin, std::vector<HighsInt>& perm,
-                      std::vector<CliqueVar>& clique, double feastol);
+                      std::vector<CliqueVar>& clique, HighsFloat feastol);
 
   void processInfeasibleVertices(HighsDomain& domain);
 
@@ -183,7 +183,7 @@ class HighsCliqueTable {
 
   void resolveSubstitution(CliqueVar& v) const;
 
-  void resolveSubstitution(HighsInt& col, double& val, double& rhs) const;
+  void resolveSubstitution(HighsInt& col, HighsFloat& val, HighsFloat& rhs) const;
 
   std::vector<HighsInt>& getDeletedRows() { return deletedrows; }
 
@@ -216,8 +216,8 @@ class HighsCliqueTable {
   void extractCliques(HighsMipSolver& mipsolver, bool transformRows = true);
 
   void extractCliquesFromCut(const HighsMipSolver& mipsolver,
-                             const HighsInt* inds, const double* vals,
-                             HighsInt len, double rhs);
+                             const HighsInt* inds, const HighsFloat* vals,
+                             HighsInt len, HighsFloat rhs);
 
   void extractObjCliques(HighsMipSolver& mipsolver);
 
@@ -241,12 +241,12 @@ class HighsCliqueTable {
   }
 
   void separateCliques(const HighsMipSolver& mipsolver,
-                       const std::vector<double>& sol, HighsCutPool& cutpool,
-                       double feastol);
+                       const std::vector<HighsFloat>& sol, HighsCutPool& cutpool,
+                       HighsFloat feastol);
 
   std::vector<std::vector<CliqueVar>> separateCliques(
-      const std::vector<double>& sol, const HighsDomain& globaldom,
-      double feastol);
+      const std::vector<HighsFloat>& sol, const HighsDomain& globaldom,
+      HighsFloat feastol);
 
   void cleanupFixed(HighsDomain& globaldom);
 

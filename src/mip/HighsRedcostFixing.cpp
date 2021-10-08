@@ -14,9 +14,9 @@
 
 #include "mip/HighsMipSolverData.h"
 
-std::vector<std::pair<double, HighsDomainChange>>
+std::vector<std::pair<HighsFloat, HighsDomainChange>>
 HighsRedcostFixing::getLurkingBounds(const HighsMipSolver& mipsolver) const {
-  std::vector<std::pair<double, HighsDomainChange>> domchgs;
+  std::vector<std::pair<HighsFloat, HighsDomainChange>> domchgs;
   if (lurkingColLower.empty()) return domchgs;
 
   for (HighsInt col : mipsolver.mipdata_->integral_cols) {
@@ -25,7 +25,7 @@ HighsRedcostFixing::getLurkingBounds(const HighsMipSolver& mipsolver) const {
       if (it->second > mipsolver.mipdata_->domain.col_lower_[col])
         domchgs.emplace_back(
             it->first,
-            HighsDomainChange{(double)it->second, col, HighsBoundType::kLower});
+            HighsDomainChange{(HighsFloat)it->second, col, HighsBoundType::kLower});
     }
 
     for (auto it = lurkingColUpper[col].begin();
@@ -33,7 +33,7 @@ HighsRedcostFixing::getLurkingBounds(const HighsMipSolver& mipsolver) const {
       if (it->second < mipsolver.mipdata_->domain.col_upper_[col])
         domchgs.emplace_back(
             it->first,
-            HighsDomainChange{(double)it->second, col, HighsBoundType::kUpper});
+            HighsDomainChange{(HighsFloat)it->second, col, HighsBoundType::kUpper});
     }
   }
 
@@ -56,7 +56,7 @@ void HighsRedcostFixing::propagateRootRedcost(const HighsMipSolver& mipsolver) {
          it != lurkingColLower[col].end(); ++it) {
       if (it->second > mipsolver.mipdata_->domain.col_lower_[col]) {
         mipsolver.mipdata_->domain.changeBound(
-            HighsBoundType::kLower, col, (double)it->second,
+            HighsBoundType::kLower, col, (HighsFloat)it->second,
             HighsDomain::Reason::unspecified());
         if (mipsolver.mipdata_->domain.infeasible()) return;
       }
@@ -67,7 +67,7 @@ void HighsRedcostFixing::propagateRootRedcost(const HighsMipSolver& mipsolver) {
          it != lurkingColUpper[col].end(); ++it) {
       if (it->second < mipsolver.mipdata_->domain.col_upper_[col]) {
         mipsolver.mipdata_->domain.changeBound(
-            HighsBoundType::kUpper, col, (double)it->second,
+            HighsBoundType::kUpper, col, (HighsFloat)it->second,
             HighsDomain::Reason::unspecified());
         if (mipsolver.mipdata_->domain.infeasible()) return;
       }
@@ -80,13 +80,13 @@ void HighsRedcostFixing::propagateRootRedcost(const HighsMipSolver& mipsolver) {
 void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
                                           HighsDomain& localdomain,
                                           const HighsLpRelaxation& lp) {
-  const std::vector<double>& lpredcost = lp.getSolution().col_dual;
-  double lpobjective = lp.getObjective();
+  const std::vector<HighsFloat>& lpredcost = lp.getSolution().col_dual;
+  HighsFloat lpobjective = lp.getObjective();
   HighsCD0uble gap =
       HighsCD0uble(mipsolver.mipdata_->upper_limit) - lpobjective;
 
-  double tolerance = std::max(10 * mipsolver.mipdata_->feastol,
-                              mipsolver.mipdata_->epsilon * double(gap));
+  HighsFloat tolerance = std::max(10 * mipsolver.mipdata_->feastol,
+                              mipsolver.mipdata_->epsilon * HighsFloat(gap));
 
   assert(!localdomain.infeasible());
   std::vector<HighsDomainChange> boundChanges;
@@ -103,7 +103,7 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
     //   redcost >= / <=  gap * (ub - lb)
     if (localdomain.col_upper_[col] == localdomain.col_lower_[col]) continue;
 
-    double threshold = double((HighsCD0uble(localdomain.col_upper_[col]) -
+    HighsFloat threshold = HighsFloat((HighsCD0uble(localdomain.col_upper_[col]) -
                                localdomain.col_lower_[col]) *
                                   gap +
                               tolerance);
@@ -113,8 +113,8 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
         lpredcost[col] > threshold) {
       assert(localdomain.col_lower_[col] != -kHighsInf);
       assert(lpredcost[col] > tolerance);
-      double newub =
-          double(floor(gap / lpredcost[col] + localdomain.col_lower_[col] +
+      HighsFloat newub =
+          HighsFloat(floor(gap / lpredcost[col] + localdomain.col_lower_[col] +
                        mipsolver.mipdata_->feastol));
       if (newub >= localdomain.col_upper_[col]) continue;
       assert(newub < localdomain.col_upper_[col]);
@@ -132,8 +132,8 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
                lpredcost[col] < -threshold) {
       assert(localdomain.col_upper_[col] != kHighsInf);
       assert(lpredcost[col] < -tolerance);
-      double newlb =
-          double(ceil(gap / lpredcost[col] + localdomain.col_upper_[col] -
+      HighsFloat newlb =
+          HighsFloat(ceil(gap / lpredcost[col] + localdomain.col_upper_[col] -
                       mipsolver.mipdata_->feastol));
 
       if (newlb <= localdomain.col_lower_[col]) continue;
@@ -152,8 +152,8 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
 
   if (!boundChanges.empty()) {
     std::vector<HighsInt> inds;
-    std::vector<double> vals;
-    double rhs;
+    std::vector<HighsFloat> vals;
+    HighsFloat rhs;
 
     if (boundChanges.size() <= 100 &&
         lp.computeDualProof(mipsolver.mipdata_->domain,
@@ -205,8 +205,8 @@ void HighsRedcostFixing::propagateRedCost(const HighsMipSolver& mipsolver,
 }
 
 void HighsRedcostFixing::addRootRedcost(const HighsMipSolver& mipsolver,
-                                        const std::vector<double>& lpredcost,
-                                        double lpobjective) {
+                                        const std::vector<HighsFloat>& lpredcost,
+                                        HighsFloat lpobjective) {
   lurkingColLower.resize(mipsolver.numCol());
   lurkingColUpper.resize(mipsolver.numCol());
 
@@ -229,8 +229,8 @@ void HighsRedcostFixing::addRootRedcost(const HighsMipSolver& mipsolver,
       if (maxub - lb > 1024) step = (maxub - lb + 1023) >> 10;
 
       for (HighsInt lurkub = lb; lurkub <= maxub; lurkub += step) {
-        double fracbound = (lurkub - lb + 1) - 10 * mipsolver.mipdata_->feastol;
-        double requiredcutoffbound = fracbound * lpredcost[col] + lpobjective;
+        HighsFloat fracbound = (lurkub - lb + 1) - 10 * mipsolver.mipdata_->feastol;
+        HighsFloat requiredcutoffbound = fracbound * lpredcost[col] + lpobjective;
         bool useful = true;
 
         // check if we already have a better lurking bound stored
@@ -277,8 +277,8 @@ void HighsRedcostFixing::addRootRedcost(const HighsMipSolver& mipsolver,
       if (ub - minlb > 1024) step = (ub - minlb + 1023) >> 10;
 
       for (HighsInt lurklb = minlb; lurklb <= ub; lurklb += step) {
-        double fracbound = (lurklb - ub - 1) + 10 * mipsolver.mipdata_->feastol;
-        double requiredcutoffbound = fracbound * lpredcost[col] + lpobjective -
+        HighsFloat fracbound = (lurklb - ub - 1) + 10 * mipsolver.mipdata_->feastol;
+        HighsFloat requiredcutoffbound = fracbound * lpredcost[col] + lpobjective -
                                      mipsolver.mipdata_->feastol;
         bool useful = true;
 

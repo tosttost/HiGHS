@@ -36,7 +36,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   lpRelaxation.getLpSolver().getBasicVariables(basisinds.data());
 
   std::vector<HighsInt> nonzeroWeights;
-  std::vector<double> rowWeights;
+  std::vector<HighsFloat> rowWeights;
   nonzeroWeights.resize(numrow);
   rowWeights.resize(numrow);
   HighsInt numNonzeroWeights;
@@ -44,7 +44,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   HighsCutGeneration cutGen(lpRelaxation, cutpool);
 
   std::vector<HighsInt> baseRowInds;
-  std::vector<double> baseRowVals;
+  std::vector<HighsFloat> baseRowVals;
 
   const HighsSolution& lpSolution = lpRelaxation.getSolution();
 #if 0
@@ -55,7 +55,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
           lpRelaxation.getObjective()) > 1000 * mip.mipdata_->feastol) {
     HighsInt numRows = 0;
     for (int j = 0; j != numrow; ++j) {
-      double weight = mip.mipdata_->objintscale * lpSolution.row_dual[j];
+      HighsFloat weight = mip.mipdata_->objintscale * lpSolution.row_dual[j];
       if (std::abs(weight) <= 10 * mip.mipdata_->epsilon ||
           std::abs(weight) * lpRelaxation.getMaxAbsRowVal(j) <=
               mip.mipdata_->feastol) {
@@ -68,7 +68,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
     lpAggregator.getCurrentAggregation(baseRowInds, baseRowVals, false);
 
     if (baseRowInds.size() - numRows <= 1000 + 0.1 * mip.numCol()) {
-      double rhs = 0;
+      HighsFloat rhs = 0;
       cutGen.generateCut(transLp, baseRowInds, baseRowVals, rhs);
 
       lpAggregator.getCurrentAggregation(baseRowInds, baseRowVals, true);
@@ -79,24 +79,24 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
     lpAggregator.clear();
   }
 #endif
-  std::vector<std::pair<double, HighsInt>> fractionalBasisvars;
+  std::vector<std::pair<HighsFloat, HighsInt>> fractionalBasisvars;
   fractionalBasisvars.reserve(basisinds.size());
   for (HighsInt i = 0; i != HighsInt(basisinds.size()); ++i) {
     if (cutpool.getNumCuts() > mip.options_mip_->mip_pool_soft_limit) break;
-    double fractionality;
+    HighsFloat fractionality;
     if (basisinds[i] < 0) {
       HighsInt row = -basisinds[i] - 1;
 
       if (!lpRelaxation.isRowIntegral(row)) continue;
 
-      double solval = lpSolution.row_value[row];
+      HighsFloat solval = lpSolution.row_value[row];
       fractionality = std::abs(std::round(solval) - solval);
       fractionality -= lpRelaxation.getRowLen(row) * mip.mipdata_->feastol;
     } else {
       HighsInt col = basisinds[i];
       if (mip.variableType(col) == HighsVarType::kContinuous) continue;
 
-      double solval = lpSolution.col_value[col];
+      HighsFloat solval = lpSolution.col_value[col];
       fractionality = std::abs(std::round(solval) - solval);
     }
 
@@ -106,8 +106,8 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   }
 
   pdqsort(fractionalBasisvars.begin(), fractionalBasisvars.end(),
-          [&](const std::pair<double, HighsInt>& a,
-              const std::pair<double, HighsInt>& b) {
+          [&](const std::pair<HighsFloat, HighsInt>& a,
+              const std::pair<HighsFloat, HighsInt>& b) {
             return std::make_tuple(a.first,
                                    HighsHashHelpers::hash(
                                        std::make_pair(a.second, getNumCalls())),
@@ -129,7 +129,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
     // already handled by other separator
     if (numNonzeroWeights == 1) continue;
 
-    double maxAbsRowWeight = 0.0;
+    HighsFloat maxAbsRowWeight = 0.0;
     for (int j = 0; j != numNonzeroWeights; ++j) {
       int row = nonzeroWeights[j];
       maxAbsRowWeight = std::max(std::abs(rowWeights[row]), maxAbsRowWeight);
@@ -161,7 +161,7 @@ void HighsTableauSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
     if (baseRowInds.size() - numRows > 1000 + 0.1 * mip.numCol()) continue;
 
-    double rhs = 0;
+    HighsFloat rhs = 0;
     cutGen.generateCut(transLp, baseRowInds, baseRowVals, rhs);
     if (mip.mipdata_->domain.infeasible()) break;
 

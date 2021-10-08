@@ -18,14 +18,14 @@
 #include "simplex/HEkk.h"
 
 void HEkk::appendColsToVectors(const HighsInt num_new_col,
-                               const vector<double>& colCost,
-                               const vector<double>& colLower,
-                               const vector<double>& colUpper) {
+                               const vector<HighsFloat>& colCost,
+                               const vector<HighsFloat>& colLower,
+                               const vector<HighsFloat>& colUpper) {
   appendColsToLpVectors(lp_, num_new_col, colCost, colLower, colUpper);
 }
 
 void HEkk::appendRowsToVectors(const HighsInt num_new_row,
-                               const vector<double>& rowLower,
-                               const vector<double>& rowUpper) {
+                               const vector<HighsFloat>& rowLower,
+                               const vector<HighsFloat>& rowUpper) {
   appendRowsToLpVectors(lp_, num_new_row, rowLower, rowUpper);
 }

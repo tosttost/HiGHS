@@ -76,9 +76,9 @@ class FactorTimer {
           factor_timer_clock_pointer->clock_[factor_clock]);
   };
 
-  double read(const HighsInt factor_clock,
+  HighsFloat read(const HighsInt factor_clock,
               HighsTimerClock* factor_timer_clock_pointer) {
-    double argument = 0;
+    HighsFloat argument = 0;
     if (factor_timer_clock_pointer != NULL)
       argument = factor_timer_clock_pointer->timer_pointer_->read(
           factor_timer_clock_pointer->clock_[factor_clock]);
@@ -164,7 +164,7 @@ class FactorTimer {
     for (HighsInt en = 0; en < factor_clock_list_size; en++) {
       clockList[en] = clock[factor_clock_list[en]];
     }
-    double ideal_sum_time = 0;
+    HighsFloat ideal_sum_time = 0;
     ideal_sum_time += timer_pointer->read(clock[FactorInvert]);
     ideal_sum_time += timer_pointer->read(clock[FactorFtran]);
     ideal_sum_time += timer_pointer->read(clock[FactorBtran]);

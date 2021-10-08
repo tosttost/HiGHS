@@ -29,16 +29,16 @@ class HighsLp {
   HighsInt num_col_;
   HighsInt num_row_;
 
-  std::vector<double> col_cost_;
-  std::vector<double> col_lower_;
-  std::vector<double> col_upper_;
-  std::vector<double> row_lower_;
-  std::vector<double> row_upper_;
+  std::vector<HighsFloat> col_cost_;
+  std::vector<HighsFloat> col_lower_;
+  std::vector<HighsFloat> col_upper_;
+  std::vector<HighsFloat> row_lower_;
+  std::vector<HighsFloat> row_upper_;
 
   HighsSparseMatrix a_matrix_;
 
   ObjSense sense_;
-  double offset_;
+  HighsFloat offset_;
 
   std::string model_name_;
 
@@ -54,7 +54,7 @@ class HighsLp {
   bool operator==(const HighsLp& lp);
   bool equalButForNames(const HighsLp& lp) const;
   bool isMip() const;
-  double objectiveValue(const std::vector<double>& solution) const;
+  HighsFloat objectiveValue(const std::vector<HighsFloat>& solution) const;
   void setMatrixDimensions();
   bool dimensionsOk(std::string message) const;
   void setFormat(const MatrixFormat format);

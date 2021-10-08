@@ -54,11 +54,11 @@ struct PresolveComponentInfo : public HighsComponentInfo {
   HighsInt n_cols_removed = 0;
   HighsInt n_nnz_removed = 0;
 
-  double init_time = 0;
-  double presolve_time = 0;
-  double solve_time = 0;
-  double postsolve_time = 0;
-  double cleanup_time = 0;
+  HighsFloat init_time = 0;
+  HighsFloat presolve_time = 0;
+  HighsFloat solve_time = 0;
+  HighsFloat postsolve_time = 0;
+  HighsFloat cleanup_time = 0;
 
   virtual ~PresolveComponentInfo() = default;
 };
@@ -73,7 +73,7 @@ struct PresolveComponentOptions : public HighsComponentOptions {
   std::string iteration_strategy = "smart";
   HighsInt max_iterations = 0;
 
-  double time_limit = -1;
+  HighsFloat time_limit = -1;
   bool dev = false;
 
   virtual ~PresolveComponentOptions() = default;

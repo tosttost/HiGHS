@@ -28,12 +28,12 @@ struct ProductFormUpdate {
   HighsInt num_row_;
   HighsInt update_count_;
   vector<HighsInt> pivot_index_;
-  vector<double> pivot_value_;
+  vector<HighsFloat> pivot_value_;
   vector<HighsInt> start_;
   vector<HighsInt> index_;
-  vector<double> value_;
+  vector<HighsFloat> value_;
   void clear();
-  void setup(const HighsInt num_row, const double expected_density);
+  void setup(const HighsInt num_row, const HighsFloat expected_density);
   HighsInt update(HVector* aq, HighsInt* iRow);
   void btran(HVector& rhs) const;
   void ftran(HVector& rhs) const;
@@ -54,7 +54,7 @@ class HSimplexNla {
              const HighsOptions* options, HighsTimer* timer,
              HighsSimplexAnalysis* analysis,
              const HighsSparseMatrix* factor_a_matrix,
-             const double factor_pivot_threshold);
+             const HighsFloat factor_pivot_threshold);
 
   void setLpAndScalePointers(const HighsLp* lp);
   void setBasicIndexPointers(HighsInt* basic_index);
@@ -65,9 +65,9 @@ class HSimplexNla {
                    HighsSimplexAnalysis* analysis = NULL);
   void clear();
   HighsInt invert();
-  void btran(HVector& rhs, const double expected_density,
+  void btran(HVector& rhs, const HighsFloat expected_density,
              HighsTimerClock* factor_timer_clock_pointer = NULL) const;
-  void ftran(HVector& rhs, const double expected_density,
+  void ftran(HVector& rhs, const HighsFloat expected_density,
              HighsTimerClock* factor_timer_clock_pointer = NULL) const;
   void frozenBtran(HVector& rhs) const;
   void frozenFtran(HVector& rhs) const;
@@ -78,13 +78,13 @@ class HSimplexNla {
   bool frozenBasisAllDataClear();
   bool frozenBasisIdValid(const HighsInt frozen_basis_id) const;
   bool frozenBasisHasInvert(const HighsInt frozen_basis_id) const;
-  HighsInt freeze(const SimplexBasis& basis, const double col_aq_density);
+  HighsInt freeze(const SimplexBasis& basis, const HighsFloat col_aq_density);
   void unfreeze(const HighsInt unfreeze_basis_id, SimplexBasis& basis);
 
   void transformForUpdate(HVector* column, HVector* row_ep,
                           const HighsInt variable_in, const HighsInt row_out);
 
-  void setPivotThreshold(const double new_pivot_threshold);
+  void setPivotThreshold(const HighsFloat new_pivot_threshold);
 
   void passLpPointer(const HighsLp* lp);
   void passScalePointer(const HighsScale* scale);
@@ -105,7 +105,7 @@ class HSimplexNla {
   HighsDebugStatus debugCheckData(const std::string message = "") const;
   HighsDebugStatus debugCheckInvert(const std::string message,
                                     const HighsInt alt_debug_level = -1) const;
-  double debugInvertResidualError(const bool transposed,
+  HighsFloat debugInvertResidualError(const bool transposed,
                                   const HVector& solution,
                                   HVector& residual) const;
   HighsDebugStatus debugReportInvertSolutionError(const bool transposed,
@@ -115,7 +115,7 @@ class HSimplexNla {
                                                   const bool force) const;
   HighsDebugStatus debugReportInvertSolutionError(
       const std::string source, const bool transposed,
-      const double solve_error_norm, const double residual_error_norm,
+      const HighsFloat solve_error_norm, const HighsFloat residual_error_norm,
       const bool force) const;
 
   // References:
@@ -133,7 +133,7 @@ class HSimplexNla {
   HFactor factor_;
 
   bool report_;
-  double build_synthetic_tick_;
+  HighsFloat build_synthetic_tick_;
 
   // Frozen basis data
   HighsInt first_frozen_basis_id_ = kNoLink;

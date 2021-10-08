@@ -13,11 +13,11 @@ TEST_CASE("LP-orientation", "[lp_orientation]") {
   const HighsInt avgas_num_row = 10;
   HighsInt num_row = 0;
   HighsInt num_row_nz = 0;
-  vector<double> rowLower;
-  vector<double> rowUpper;
+  vector<HighsFloat> rowLower;
+  vector<HighsFloat> rowUpper;
   vector<HighsInt> ARstart;
   vector<HighsInt> ARindex;
-  vector<double> ARvalue;
+  vector<HighsFloat> ARvalue;
 
   for (HighsInt row = 0; row < avgas_num_row; row++)
     avgas.row(row, num_row, num_row_nz, rowLower, rowUpper, ARstart, ARindex,
@@ -28,12 +28,12 @@ TEST_CASE("LP-orientation", "[lp_orientation]") {
 
   HighsInt num_col = 0;
   HighsInt num_col_nz = 0;
-  vector<double> colCost;
-  vector<double> colLower;
-  vector<double> colUpper;
+  vector<HighsFloat> colCost;
+  vector<HighsFloat> colLower;
+  vector<HighsFloat> colUpper;
   vector<HighsInt> Astart;
   vector<HighsInt> Aindex;
-  vector<double> Avalue;
+  vector<HighsFloat> Avalue;
   for (HighsInt col = 0; col < avgas_num_col; col++)
     avgas.col(col, num_col, num_col_nz, colCost, colLower, colUpper, Astart,
               Aindex, Avalue);
@@ -41,7 +41,7 @@ TEST_CASE("LP-orientation", "[lp_orientation]") {
   Astart[num_col] = num_col_nz;
   assert(num_col_nz == num_row_nz);
 
-  double optimal_objective_function_value = -7.75;
+  HighsFloat optimal_objective_function_value = -7.75;
   Highs highs;
   if (!dev_run) {
     highs.setOptionValue("output_flag", false);
@@ -100,11 +100,11 @@ TEST_CASE("LP-orientation", "[lp_orientation]") {
   highs.clearModel();
   highs.addCols(num_col, &colCost[0], &colLower[0], &colUpper[0], 0, NULL, NULL,
                 NULL);
-  vector<double> one_row_Lower;
-  vector<double> one_row_Upper;
+  vector<HighsFloat> one_row_Lower;
+  vector<HighsFloat> one_row_Upper;
   vector<HighsInt> one_row_start;
   vector<HighsInt> one_row_index;
-  vector<double> one_row_value;
+  vector<HighsFloat> one_row_value;
   for (HighsInt row = 0; row < avgas_num_row; row++) {
     HighsInt one_row_numnz = 0;
     HighsInt one_row_numrow = 0;

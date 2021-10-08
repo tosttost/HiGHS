@@ -76,7 +76,7 @@ TEST_CASE("HighsHessian", "[highs_hessian]") {
   REQUIRE(assessHessian(negative_diagonal_hessian, options,
                         ObjSense::kMaximize) == HighsStatus::kOk);
 
-  // Square Hessian with only triangular entries - doubled strictly triangular
+  // Square Hessian with only triangular entries - HighsFloatd strictly triangular
   // entries.
   HighsHessian hessian0;
   hessian0.dim_ = 5;

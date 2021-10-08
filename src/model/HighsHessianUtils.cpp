@@ -111,14 +111,14 @@ HighsStatus assessHessian(HighsHessian& hessian, const HighsOptions& options,
 
 bool okHessianDiagonal(const HighsOptions& options, HighsHessian& hessian,
                        const ObjSense sense) {
-  const double kSmallHessianDiagonalValue = options.small_matrix_value;
-  double min_illegal_diagonal_value = kHighsInf;
-  double max_illegal_diagonal_value = -kHighsInf;
+  const HighsFloat kSmallHessianDiagonalValue = options.small_matrix_value;
+  HighsFloat min_illegal_diagonal_value = kHighsInf;
+  HighsFloat max_illegal_diagonal_value = -kHighsInf;
   const HighsInt dim = hessian.dim_;
   const HighsInt sense_sign = (HighsInt)sense;
   HighsInt num_small_diagonal_value = 0;
   for (HighsInt iCol = 0; iCol < dim; iCol++) {
-    double diagonal_value = 0;
+    HighsFloat diagonal_value = 0;
     // Assumes that the diagonal entry is always first, unless it's
     // zero so doesn't appear
     HighsInt iEl = hessian.start_[iCol];
@@ -159,7 +159,7 @@ HighsStatus extractTriangularHessian(const HighsOptions& options,
   const HighsInt dim = hessian.dim_;
   HighsInt nnz = 0;
   for (HighsInt iCol = 0; iCol < dim; iCol++) {
-    double diagonal_value = 0;
+    HighsFloat diagonal_value = 0;
     const HighsInt nnz0 = nnz;
     for (HighsInt iEl = hessian.start_[iCol]; iEl < hessian.start_[iCol + 1];
          iEl++) {
@@ -194,7 +194,7 @@ HighsStatus extractTriangularHessian(const HighsOptions& options,
 
 void triangularToSquareHessian(const HighsHessian& hessian,
                                vector<HighsInt>& start, vector<HighsInt>& index,
-                               vector<double>& value) {
+                               vector<HighsFloat>& value) {
   const HighsInt dim = hessian.dim_;
   if (dim <= 0) {
     start.assign(1, 0);
@@ -256,7 +256,7 @@ HighsStatus normaliseHessian(const HighsOptions& options,
   // symmetric.
   //
   // So someone preferring to supply only the upper triangle would
-  // have to double its values..
+  // have to HighsFloat its values..
   HighsStatus return_status = HighsStatus::kOk;
   const HighsInt dim = hessian.dim_;
   const HighsInt hessian_num_nz = hessian.start_[dim];
@@ -299,14 +299,14 @@ HighsStatus normaliseHessian(const HighsOptions& options,
   normalised.start_.resize(dim + 1);
   normalised.index_.resize(normalised_size);
   normalised.value_.resize(normalised_size);
-  vector<double> column_value;
+  vector<HighsFloat> column_value;
   vector<HighsInt> column_index;
   column_index.resize(dim);
   column_value.assign(dim, 0.0);
-  const double small_matrix_value = 0;
+  const HighsFloat small_matrix_value = 0;
   HighsInt num_small_values = 0;
-  double max_small_value = 0;
-  double min_small_value = kHighsInf;
+  HighsFloat max_small_value = 0;
+  HighsFloat min_small_value = kHighsInf;
   normalised.start_[0] = 0;
   for (HighsInt iCol = 0; iCol < dim; iCol++) {
     HighsInt column_num_nz = 0;
@@ -337,8 +337,8 @@ HighsStatus normaliseHessian(const HighsOptions& options,
     // Halve the values, zeroing and accounting for any small ones
     for (HighsInt ix = 0; ix < column_num_nz; ix++) {
       HighsInt iRow = column_index[ix];
-      double value = 0.5 * column_value[iRow];
-      double abs_value = std::fabs(value);
+      HighsFloat value = 0.5 * column_value[iRow];
+      HighsFloat abs_value = std::fabs(value);
       bool ok_value = abs_value > small_matrix_value;
       if (!ok_value) {
         value = 0;
@@ -351,8 +351,8 @@ HighsStatus normaliseHessian(const HighsOptions& options,
     // Decide whether to exploit sparsity in extracting the indices
     // and values of nonzeros
     const HighsInt kDimTolerance = 10;
-    const double kDensityTolerance = 0.1;
-    const double density = (1.0 * column_num_nz) / (1.0 * dim);
+    const HighsFloat kDensityTolerance = 0.1;
+    const HighsFloat density = (1.0 * column_num_nz) / (1.0 * dim);
     HighsInt to_ix = dim;
     const bool exploit_sparsity =
         dim > kDimTolerance && density < kDensityTolerance;
@@ -370,7 +370,7 @@ HighsStatus normaliseHessian(const HighsOptions& options,
       } else {
         iRow = ix;
       }
-      double value = column_value[iRow];
+      HighsFloat value = column_value[iRow];
       if (value) {
         normalised.index_[normalised_num_nz] = iRow;
         normalised.value_[normalised_num_nz] = value;
@@ -402,7 +402,7 @@ HighsStatus normaliseHessian(const HighsOptions& options,
 
 void reportHessian(const HighsLogOptions& log_options, const HighsInt dim,
                    const HighsInt num_nz, const HighsInt* start,
-                   const HighsInt* index, const double* value) {
+                   const HighsInt* index, const HighsFloat* value) {
   if (dim <= 0) return;
   highsLogUser(log_options, HighsLogType::kInfo,
                "Hessian Index              Value\n");

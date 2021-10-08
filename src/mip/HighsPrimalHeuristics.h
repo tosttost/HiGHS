@@ -26,9 +26,9 @@ class HighsPrimalHeuristics {
   HighsMipSolver& mipsolver;
   size_t lp_iterations;
 
-  double successObservations;
+  HighsFloat successObservations;
   HighsInt numSuccessObservations;
-  double infeasObservations;
+  HighsFloat infeasObservations;
   HighsInt numInfeasObservations;
 
   HighsRandom randgen;
@@ -41,17 +41,17 @@ class HighsPrimalHeuristics {
   void setupIntCols();
 
   bool solveSubMip(const HighsLp& lp, const HighsBasis& basis,
-                   double fixingRate, std::vector<double> colLower,
-                   std::vector<double> colUpper, HighsInt maxleaves,
+                   HighsFloat fixingRate, std::vector<HighsFloat> colLower,
+                   std::vector<HighsFloat> colUpper, HighsInt maxleaves,
                    HighsInt maxnodes, HighsInt stallnodes);
 
-  double determineTargetFixingRate();
+  HighsFloat determineTargetFixingRate();
 
   void rootReducedCost();
 
-  void RENS(const std::vector<double>& relaxationsol);
+  void RENS(const std::vector<HighsFloat>& relaxationsol);
 
-  void RINS(const std::vector<double>& relaxationsol);
+  void RINS(const std::vector<HighsFloat>& relaxationsol);
 
   void feasibilityPump();
 
@@ -59,12 +59,12 @@ class HighsPrimalHeuristics {
 
   void flushStatistics();
 
-  bool tryRoundedPoint(const std::vector<double>& point, char source);
+  bool tryRoundedPoint(const std::vector<HighsFloat>& point, char source);
 
-  bool linesearchRounding(const std::vector<double>& point1,
-                          const std::vector<double>& point2, char source);
+  bool linesearchRounding(const std::vector<HighsFloat>& point1,
+                          const std::vector<HighsFloat>& point2, char source);
 
-  void randomizedRounding(const std::vector<double>& relaxationsol);
+  void randomizedRounding(const std::vector<HighsFloat>& relaxationsol);
 };
 
 #endif

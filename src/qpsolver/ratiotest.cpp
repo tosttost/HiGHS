@@ -1,19 +1,19 @@
 #include "ratiotest.hpp"
 
-double step(double x, double p, double l, double u, double t) {
-  if (p < -t && l > -std::numeric_limits<double>::infinity()) {
+HighsFloat step(HighsFloat x, HighsFloat p, HighsFloat l, HighsFloat u, HighsFloat t) {
+  if (p < -t && l > -std::numeric_limits<HighsFloat>::infinity()) {
     return (l - x) / p;
-  } else if (p > t && u < std::numeric_limits<double>::infinity()) {
+  } else if (p > t && u < std::numeric_limits<HighsFloat>::infinity()) {
     return (u - x) / p;
   } else {
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<HighsFloat>::infinity();
   }
 }
 
 RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p,
                                    const Vector& rowact, const Vector& rowmove,
-                                   Instance& instance, const double alphastart,
-                                   const double t) {
+                                   Instance& instance, const HighsFloat alphastart,
+                                   const HighsFloat t) {
   RatiotestResult result;
   result.limitingconstraint = -1;
   result.alpha = alphastart;
@@ -21,7 +21,7 @@ RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p,
   // check ratio towards variable bounds
   for (HighsInt j = 0; j < p.num_nz; j++) {
     HighsInt i = p.index[j];
-    double alpha_i =
+    HighsFloat alpha_i =
         step(x.value[i], p.value[i], instance.var_lo[i], instance.var_up[i], t);
     if (alpha_i < result.alpha) {
       result.alpha = alpha_i;
@@ -33,7 +33,7 @@ RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p,
   // check ratio towards constraint bounds
   for (HighsInt j = 0; j < rowmove.num_nz; j++) {
     HighsInt i = rowmove.index[j];
-    double alpha_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i],
+    HighsFloat alpha_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i],
                           instance.con_up[i], t);
     if (alpha_i < result.alpha) {
       result.alpha = alpha_i;
@@ -48,7 +48,7 @@ RatiotestResult ratiotest_textbook(const Vector& x, const Vector& p,
 RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p,
                                   const Vector& rowact, const Vector& rowmove,
                                   Instance& instance, Instance& relaxed,
-                                  const double alphastart, const double t) {
+                                  const HighsFloat alphastart, const HighsFloat t) {
   RatiotestResult res1 =
       ratiotest_textbook(x, p, rowact, rowmove, relaxed, alphastart, t);
 
@@ -58,7 +58,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p,
 
   RatiotestResult result = res1;
 
-  double max_pivot = 0;
+  HighsFloat max_pivot = 0;
   if (res1.limitingconstraint != -1) {
     if ((int)result.limitingconstraint < instance.num_con) {
       max_pivot = rowmove.value[result.limitingconstraint];
@@ -68,7 +68,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p,
   }
 
   for (HighsInt i = 0; i < instance.num_con; i++) {
-    double step_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i],
+    HighsFloat step_i = step(rowact.value[i], rowmove.value[i], instance.con_lo[i],
                          instance.con_up[i], t);
     if (fabs(rowmove.value[i]) >= fabs(max_pivot) && step_i <= res1.alpha) {
       max_pivot = rowmove.value[i];
@@ -79,7 +79,7 @@ RatiotestResult ratiotest_twopass(const Vector& x, const Vector& p,
   }
 
   for (HighsInt i = 0; i < instance.num_var; i++) {
-    double step_i =
+    HighsFloat step_i =
         step(x.value[i], p.value[i], instance.var_lo[i], instance.var_up[i], t);
     if (fabs(p.value[i]) >= fabs(max_pivot) && step_i <= res1.alpha) {
       max_pivot = p.value[i];

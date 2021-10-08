@@ -76,10 +76,10 @@ class HighsSimplexAnalysis {
   void userInvertReport(const bool force);
   void userInvertReport(const bool header, const bool force);
   bool predictEndDensity(const HighsInt tran_stage_id,
-                         const double start_density, double& end_density);
-  void afterTranStage(const HighsInt tran_stage_id, const double start_density,
-                      const double end_density, const double historical_density,
-                      const double predicted_end_density,
+                         const HighsFloat start_density, HighsFloat& end_density);
+  void afterTranStage(const HighsInt tran_stage_id, const HighsFloat start_density,
+                      const HighsFloat end_density, const HighsFloat historical_density,
+                      const HighsFloat predicted_end_density,
                       const bool use_solve_sparse_original_HFactor_logic,
                       const bool use_solve_sparse_new_HFactor_logic);
 
@@ -91,7 +91,7 @@ class HighsSimplexAnalysis {
                            const HighsInt thread_id = 0);
   HighsInt simplexTimerNumCall(const HighsInt simplex_clock,
                                const HighsInt thread_id = 0);
-  double simplexTimerRead(const HighsInt simplex_clock,
+  HighsFloat simplexTimerRead(const HighsInt simplex_clock,
                           const HighsInt thread_id = 0);
 
   HighsTimerClock* getThreadFactorTimerClockPointer();
@@ -116,10 +116,10 @@ class HighsSimplexAnalysis {
   void iterationRecordMajor();
   void operationRecordBefore(const HighsInt operation_type,
                              const HVector& vector,
-                             const double historical_density);
+                             const HighsFloat historical_density);
   void operationRecordBefore(const HighsInt operation_type,
                              const HighsInt current_count,
-                             const double historical_density);
+                             const HighsFloat historical_density);
   void operationRecordAfter(const HighsInt operation_type,
                             const HVector& vector);
   void operationRecordAfter(const HighsInt operation_type,
@@ -132,8 +132,8 @@ class HighsSimplexAnalysis {
   void reportInvertFormData();
 
   // Control methods to be moved to HEkkControl
-  void dualSteepestEdgeWeightError(const double computed_edge_weight,
-                                   const double updated_edge_weight);
+  void dualSteepestEdgeWeightError(const HighsFloat computed_edge_weight,
+                                   const HighsFloat updated_edge_weight);
   //  bool switchToDevex();
 
   std::vector<HighsTimerClock> thread_simplex_clocks;
@@ -161,7 +161,7 @@ class HighsSimplexAnalysis {
 
   // Control parameters moving to info
   //  bool allow_dual_steepest_edge_to_devex_switch;
-  //  double dual_steepest_edge_weight_log_error_threshold;
+  //  HighsFloat dual_steepest_edge_weight_log_error_threshold;
 
   // Local copies of simplex data for reporting
   HighsInt simplex_strategy = 0;
@@ -174,38 +174,38 @@ class HighsSimplexAnalysis {
   HighsInt entering_variable = 0;
   HighsInt rebuild_reason = 0;
   std::string rebuild_reason_string = "";
-  double reduced_rhs_value = 0;
-  double reduced_cost_value = 0;
-  double edge_weight = 0;
-  double primal_delta = 0;
-  double primal_step = 0;
-  double dual_step = 0;
-  double pivot_value_from_column = 0;
-  double pivot_value_from_row = 0;
-  double factor_pivot_threshold = 0;
-  double numerical_trouble = 0;
-  double objective_value = 0;
+  HighsFloat reduced_rhs_value = 0;
+  HighsFloat reduced_cost_value = 0;
+  HighsFloat edge_weight = 0;
+  HighsFloat primal_delta = 0;
+  HighsFloat primal_step = 0;
+  HighsFloat dual_step = 0;
+  HighsFloat pivot_value_from_column = 0;
+  HighsFloat pivot_value_from_row = 0;
+  HighsFloat factor_pivot_threshold = 0;
+  HighsFloat numerical_trouble = 0;
+  HighsFloat objective_value = 0;
   HighsInt num_primal_infeasibility = 0;
   HighsInt num_dual_infeasibility = 0;
-  double sum_primal_infeasibility = 0;
-  double sum_dual_infeasibility = 0;
+  HighsFloat sum_primal_infeasibility = 0;
+  HighsFloat sum_dual_infeasibility = 0;
   // This triple is an original infeasiblility record, so it includes max,
   // but it's only used for reporting
   HighsInt num_dual_phase_1_lp_dual_infeasibility = 0;
-  double max_dual_phase_1_lp_dual_infeasibility = 0;
-  double sum_dual_phase_1_lp_dual_infeasibility = 0;
+  HighsFloat max_dual_phase_1_lp_dual_infeasibility = 0;
+  HighsFloat sum_dual_phase_1_lp_dual_infeasibility = 0;
   HighsInt num_devex_framework = 0;
-  double col_aq_density;
-  double row_ep_density;
-  double row_ap_density;
-  double row_DSE_density;
-  double col_basic_feasibility_change_density;
-  double row_basic_feasibility_change_density;
-  double col_BFRT_density;
-  double primal_col_density;
-  double dual_col_density;
+  HighsFloat col_aq_density;
+  HighsFloat row_ep_density;
+  HighsFloat row_ap_density;
+  HighsFloat row_DSE_density;
+  HighsFloat col_basic_feasibility_change_density;
+  HighsFloat row_basic_feasibility_change_density;
+  HighsFloat col_BFRT_density;
+  HighsFloat primal_col_density;
+  HighsFloat dual_col_density;
   HighsInt num_costly_DSE_iteration;
-  double costly_DSE_measure;
+  HighsFloat costly_DSE_measure;
 
   // Local copies of parallel simplex data for reporting
   HighsInt multi_iteration_count = 0;
@@ -217,7 +217,7 @@ class HighsSimplexAnalysis {
 
   // Unused
   //  HighsInt multi_num = 0; // Useless
-  //  double basis_condition = 0; // Maybe useful
+  //  HighsFloat basis_condition = 0; // Maybe useful
 
   // Records of how pivotal row PRICE was done
   HighsInt num_col_price = 0;
@@ -240,26 +240,26 @@ class HighsSimplexAnalysis {
 
   HighsInt num_quad_chuzc = 0;
   HighsInt num_heap_chuzc = 0;
-  double sum_heap_chuzc_size = 0;
+  HighsFloat sum_heap_chuzc_size = 0;
   HighsInt max_heap_chuzc_size = 0;
 
   HighsInt num_correct_dual_primal_flip = 0;
-  double min_correct_dual_primal_flip_dual_infeasibility = kHighsInf;
-  double max_correct_dual_primal_flip = 0;
+  HighsFloat min_correct_dual_primal_flip_dual_infeasibility = kHighsInf;
+  HighsFloat max_correct_dual_primal_flip = 0;
   HighsInt num_correct_dual_cost_shift = 0;
-  double max_correct_dual_cost_shift_dual_infeasibility = 0;
-  double max_correct_dual_cost_shift = 0;
+  HighsFloat max_correct_dual_cost_shift_dual_infeasibility = 0;
+  HighsFloat max_correct_dual_cost_shift = 0;
   HighsInt net_num_single_cost_shift = 0;
   HighsInt num_single_cost_shift = 0;
-  double max_single_cost_shift = 0;
-  double sum_single_cost_shift = 0;
+  HighsFloat max_single_cost_shift = 0;
+  HighsFloat sum_single_cost_shift = 0;
 
   // Tolerances for analysis of TRAN stages - could be needed for
   // control if this is ever used again!
-  vector<double> original_start_density_tolerance;
-  vector<double> new_start_density_tolerance;
-  vector<double> historical_density_tolerance;
-  vector<double> predicted_density_tolerance;
+  vector<HighsFloat> original_start_density_tolerance;
+  vector<HighsFloat> new_start_density_tolerance;
+  vector<HighsFloat> historical_density_tolerance;
+  vector<HighsFloat> predicted_density_tolerance;
   vector<TranStageAnalysis> tran_stage;
 
   std::unique_ptr<std::stringstream> analysis_log;
@@ -271,42 +271,42 @@ class HighsSimplexAnalysis {
   void reportInfeasibility(const bool header);
   void reportThreads(const bool header);
   void reportMulti(const bool header);
-  void reportOneDensity(const double density);
-  void printOneDensity(const double density);
+  void reportOneDensity(const HighsFloat density);
+  void printOneDensity(const HighsFloat density);
   void reportDensity(const bool header);
   void reportInvert(const bool header);
   //  void reportCondition(const bool header);
   void reportIterationData(const bool header);
-  void reportRunTime(const bool header, const double run_time);
+  void reportRunTime(const bool header, const HighsFloat run_time);
   void reportFreeListSize(const bool header);
-  HighsInt intLog10(const double v);
+  HighsInt intLog10(const HighsFloat v);
   bool dualAlgorithm();
 
-  //  double AnIterCostlyDseFq;  //!< Frequency of iterations when DSE is costly
-  //  double AnIterCostlyDseMeasure;
+  //  HighsFloat AnIterCostlyDseFq;  //!< Frequency of iterations when DSE is costly
+  //  HighsFloat AnIterCostlyDseMeasure;
 
   HighsInt num_dual_steepest_edge_weight_check = 0;
   HighsInt num_dual_steepest_edge_weight_reject = 0;
   HighsInt num_wrong_low_dual_steepest_edge_weight = 0;
   HighsInt num_wrong_high_dual_steepest_edge_weight = 0;
-  double average_frequency_low_dual_steepest_edge_weight = 0;
-  double average_frequency_high_dual_steepest_edge_weight = 0;
-  double average_log_low_dual_steepest_edge_weight_error = 0;
-  double average_log_high_dual_steepest_edge_weight_error = 0;
-  double max_average_frequency_low_dual_steepest_edge_weight = 0;
-  double max_average_frequency_high_dual_steepest_edge_weight = 0;
-  double max_sum_average_frequency_extreme_dual_steepest_edge_weight = 0;
-  double max_average_log_low_dual_steepest_edge_weight_error = 0;
-  double max_average_log_high_dual_steepest_edge_weight_error = 0;
-  double max_sum_average_log_extreme_dual_steepest_edge_weight_error = 0;
+  HighsFloat average_frequency_low_dual_steepest_edge_weight = 0;
+  HighsFloat average_frequency_high_dual_steepest_edge_weight = 0;
+  HighsFloat average_log_low_dual_steepest_edge_weight_error = 0;
+  HighsFloat average_log_high_dual_steepest_edge_weight_error = 0;
+  HighsFloat max_average_frequency_low_dual_steepest_edge_weight = 0;
+  HighsFloat max_average_frequency_high_dual_steepest_edge_weight = 0;
+  HighsFloat max_sum_average_frequency_extreme_dual_steepest_edge_weight = 0;
+  HighsFloat max_average_log_low_dual_steepest_edge_weight_error = 0;
+  HighsFloat max_average_log_high_dual_steepest_edge_weight_error = 0;
+  HighsFloat max_sum_average_log_extreme_dual_steepest_edge_weight_error = 0;
 
   HighsInt num_invert_report_since_last_header = -1;
   HighsInt num_iteration_report_since_last_header = -1;
-  double last_user_log_time = -kHighsInf;
-  double delta_user_log_time = 1e0;
+  HighsFloat last_user_log_time = -kHighsInf;
+  HighsFloat delta_user_log_time = 1e0;
 
-  double average_num_threads;
-  double average_fraction_of_possible_minor_iterations_performed;
+  HighsFloat average_num_threads;
+  HighsFloat average_fraction_of_possible_minor_iterations_performed;
   HighsInt sum_multi_chosen = 0;
   HighsInt sum_multi_finished = 0;
 
@@ -314,28 +314,28 @@ class HighsSimplexAnalysis {
   HighsInt num_invert = 0;
   HighsInt num_kernel = 0;
   HighsInt num_major_kernel = 0;
-  double max_kernel_dim = 0;
-  double sum_kernel_dim = 0;
-  double running_average_kernel_dim = 0;
-  double sum_invert_fill_factor = 0;
-  double sum_kernel_fill_factor = 0;
-  double sum_major_kernel_fill_factor = 0;
-  double running_average_invert_fill_factor = 1;
-  double running_average_kernel_fill_factor = 1;
-  double running_average_major_kernel_fill_factor = 1;
+  HighsFloat max_kernel_dim = 0;
+  HighsFloat sum_kernel_dim = 0;
+  HighsFloat running_average_kernel_dim = 0;
+  HighsFloat sum_invert_fill_factor = 0;
+  HighsFloat sum_kernel_fill_factor = 0;
+  HighsFloat sum_major_kernel_fill_factor = 0;
+  HighsFloat running_average_invert_fill_factor = 1;
+  HighsFloat running_average_kernel_fill_factor = 1;
+  HighsFloat running_average_major_kernel_fill_factor = 1;
 
   HighsInt AnIterIt0 = 0;
   HighsInt AnIterPrevIt;
 
   // Major operation analysis struct
   struct AnIterOpRec {
-    double AnIterOpHyperCANCEL;
-    double AnIterOpHyperTRAN;
+    HighsFloat AnIterOpHyperCANCEL;
+    HighsFloat AnIterOpHyperTRAN;
     HighsInt AnIterOpRsDim;
     HighsInt AnIterOpNumCa;
     HighsInt AnIterOpNumHyperOp;
     HighsInt AnIterOpNumHyperRs;
-    double AnIterOpSumLog10RsDensity;
+    HighsFloat AnIterOpSumLog10RsDensity;
     HighsInt AnIterOpRsMxNNZ;
     std::string AnIterOpName;
     HighsValueDistribution AnIterOp_density;
@@ -343,10 +343,10 @@ class HighsSimplexAnalysis {
   AnIterOpRec AnIterOp[kNumSimplexNlaOperation];
 
   struct AnIterTraceRec {
-    double AnIterTraceTime;
-    double AnIterTraceMulti;
-    double AnIterTraceDensity[kNumSimplexNlaOperation];
-    double AnIterTraceCostlyDse;
+    HighsFloat AnIterTraceTime;
+    HighsFloat AnIterTraceMulti;
+    HighsFloat AnIterTraceDensity[kNumSimplexNlaOperation];
+    HighsFloat AnIterTraceCostlyDse;
     HighsInt AnIterTraceIter;
     HighsInt AnIterTrace_dual_edge_weight_mode;
   };

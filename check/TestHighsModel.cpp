@@ -40,7 +40,7 @@ TEST_CASE("HighsModel", "[highs_model]") {
 
   SpecialLps special_lps;
   HighsModelStatus require_model_status;
-  double optimal_objective;
+  HighsFloat optimal_objective;
   special_lps.distillationLp(model.lp_, require_model_status,
                              optimal_objective);
   dim = model.lp_.num_col_;
@@ -58,8 +58,8 @@ TEST_CASE("HighsModel", "[highs_model]") {
   // first is eliminated when normalising the Hessian - due to being
   // too small - and the second when checking the diagonal entries -
   // for being less than small_matrix_value.
-  const double illegal_small_hessian_diagonal_entry = 1e-12;
-  const double illegal_negative_hessian_diagonal_entry = -1;
+  const HighsFloat illegal_small_hessian_diagonal_entry = 1e-12;
+  const HighsFloat illegal_negative_hessian_diagonal_entry = -1;
   assert(dim == 2);
   hessian.start_[1] = 1;
   hessian.start_[2] = 2;

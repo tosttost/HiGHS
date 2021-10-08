@@ -47,13 +47,13 @@ class HighsLpRelaxation {
     HighsInt age;
 
     void get(const HighsMipSolver& mipsolver, HighsInt& len,
-             const HighsInt*& inds, const double*& vals) const;
+             const HighsInt*& inds, const HighsFloat*& vals) const;
 
     HighsInt getRowLen(const HighsMipSolver& mipsolver) const;
 
     bool isIntegral(const HighsMipSolver& mipsolver) const;
 
-    double getMaxAbsVal(const HighsMipSolver& mipsolver) const;
+    HighsFloat getMaxAbsVal(const HighsMipSolver& mipsolver) const;
 
     static LpRow cut(HighsInt index) { return LpRow{kCutPool, index, 0}; }
     static LpRow model(HighsInt index) { return LpRow{kModel, index, 0}; }
@@ -64,18 +64,18 @@ class HighsLpRelaxation {
 
   std::vector<LpRow> lprows;
 
-  std::vector<std::pair<HighsInt, double>> fractionalints;
-  std::vector<double> dualproofvals;
+  std::vector<std::pair<HighsInt, HighsFloat>> fractionalints;
+  std::vector<HighsFloat> dualproofvals;
   std::vector<HighsInt> dualproofinds;
-  std::vector<double> dualproofbuffer;
+  std::vector<HighsFloat> dualproofbuffer;
   std::vector<HighsInt> mask;
-  double dualproofrhs;
+  HighsFloat dualproofrhs;
   bool hasdualproof;
-  double objective;
+  HighsFloat objective;
   std::shared_ptr<const HighsBasis> basischeckpoint;
   bool currentbasisstored;
   int64_t numlpiters;
-  double avgSolveIters;
+  HighsFloat avgSolveIters;
   int64_t numSolved;
   size_t epochs;
   HighsInt maxNumFractional;
@@ -95,7 +95,7 @@ class HighsLpRelaxation {
   void loadModel();
 
   void getRow(HighsInt row, HighsInt& len, const HighsInt*& inds,
-              const double*& vals) const {
+              const HighsFloat*& vals) const {
     if (row < mipsolver.numRow())
       assert(lprows[row].origin == LpRow::Origin::kModel);
     else
@@ -108,13 +108,13 @@ class HighsLpRelaxation {
     return lprows[row].isIntegral(mipsolver);
   }
 
-  double getAvgSolveIters() { return avgSolveIters; }
+  HighsFloat getAvgSolveIters() { return avgSolveIters; }
 
   HighsInt getRowLen(HighsInt row) const {
     return lprows[row].getRowLen(mipsolver);
   }
 
-  double getMaxAbsRowVal(HighsInt row) const {
+  HighsFloat getMaxAbsRowVal(HighsInt row) const {
     return lprows[row].getMaxAbsVal(mipsolver);
   }
 
@@ -122,25 +122,25 @@ class HighsLpRelaxation {
 
   const HighsSolution& getSolution() const { return lpsolver.getSolution(); }
 
-  double slackUpper(HighsInt row) const;
+  HighsFloat slackUpper(HighsInt row) const;
 
-  double slackLower(HighsInt row) const;
+  HighsFloat slackLower(HighsInt row) const;
 
-  double rowLower(HighsInt row) const {
+  HighsFloat rowLower(HighsInt row) const {
     return lpsolver.getLp().row_lower_[row];
   }
 
-  double rowUpper(HighsInt row) const {
+  HighsFloat rowUpper(HighsInt row) const {
     return lpsolver.getLp().row_upper_[row];
   }
 
-  double colLower(HighsInt col) const {
+  HighsFloat colLower(HighsInt col) const {
     return col < lpsolver.getLp().num_col_
                ? lpsolver.getLp().col_lower_[col]
                : slackLower(col - lpsolver.getLp().num_col_);
   }
 
-  double colUpper(HighsInt col) const {
+  HighsFloat colUpper(HighsInt col) const {
     return col < lpsolver.getLp().num_col_
                ? lpsolver.getLp().col_upper_[col]
                : slackUpper(col - lpsolver.getLp().num_col_);
@@ -152,7 +152,7 @@ class HighsLpRelaxation {
                : isRowIntegral(col - lpsolver.getLp().num_col_);
   }
 
-  double solutionValue(HighsInt col) const {
+  HighsFloat solutionValue(HighsInt col) const {
     return col < lpsolver.getLp().num_col_
                ? getSolution().col_value[col]
                : getSolution().row_value[col - lpsolver.getLp().num_col_];
@@ -171,9 +171,9 @@ class HighsLpRelaxation {
     return false;
   }
 
-  double computeBestEstimate(const HighsPseudocost& ps) const;
+  HighsFloat computeBestEstimate(const HighsPseudocost& ps) const;
 
-  double computeLPDegneracy(const HighsDomain& localdomain) const;
+  HighsFloat computeLPDegneracy(const HighsDomain& localdomain) const;
 
   static bool scaledOptimal(Status status) {
     switch (status) {
@@ -209,7 +209,7 @@ class HighsLpRelaxation {
 
   void recoverBasis();
 
-  void setObjectiveLimit(double objlim = kHighsInf);
+  void setObjectiveLimit(HighsFloat objlim = kHighsInf);
 
   void storeBasis() {
     if (!currentbasisstored && lpsolver.getBasis().valid) {
@@ -251,7 +251,7 @@ class HighsLpRelaxation {
 
   void flushDomain(HighsDomain& domain, bool continuous = false);
 
-  void getDualProof(const HighsInt*& inds, const double*& vals, double& rhs,
+  void getDualProof(const HighsInt*& inds, const HighsFloat*& vals, HighsFloat& rhs,
                     HighsInt& len) {
     inds = dualproofinds.data();
     vals = dualproofvals.data();
@@ -259,13 +259,13 @@ class HighsLpRelaxation {
     len = dualproofinds.size();
   }
 
-  bool computeDualProof(const HighsDomain& globaldomain, double upperbound,
-                        std::vector<HighsInt>& inds, std::vector<double>& vals,
-                        double& rhs, bool extractCliques = true) const;
+  bool computeDualProof(const HighsDomain& globaldomain, HighsFloat upperbound,
+                        std::vector<HighsInt>& inds, std::vector<HighsFloat>& vals,
+                        HighsFloat& rhs, bool extractCliques = true) const;
 
   bool computeDualInfProof(const HighsDomain& globaldomain,
                            std::vector<HighsInt>& inds,
-                           std::vector<double>& vals, double& rhs);
+                           std::vector<HighsFloat>& vals, HighsFloat& rhs);
 
   Status resolveLp(HighsDomain* domain = nullptr);
 
@@ -274,16 +274,16 @@ class HighsLpRelaxation {
   Highs& getLpSolver() { return lpsolver; }
   const Highs& getLpSolver() const { return lpsolver; }
 
-  const std::vector<std::pair<HighsInt, double>>& getFractionalIntegers()
+  const std::vector<std::pair<HighsInt, HighsFloat>>& getFractionalIntegers()
       const {
     return fractionalints;
   }
 
-  std::vector<std::pair<HighsInt, double>>& getFractionalIntegers() {
+  std::vector<std::pair<HighsInt, HighsFloat>>& getFractionalIntegers() {
     return fractionalints;
   }
 
-  double getObjective() const { return objective; }
+  HighsFloat getObjective() const { return objective; }
 
   void setIterationLimit(HighsInt limit = kHighsIInf) {
     lpsolver.setOptionValue("simplex_iteration_limit", limit);

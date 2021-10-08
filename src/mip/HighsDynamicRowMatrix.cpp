@@ -24,7 +24,7 @@ HighsDynamicRowMatrix::HighsDynamicRowMatrix(HighsInt ncols) {
   Asize_.resize(ncols);
 }
 /// adds a row to the matrix with the given values and returns its index
-HighsInt HighsDynamicRowMatrix::addRow(HighsInt* Rindex, double* Rvalue,
+HighsInt HighsDynamicRowMatrix::addRow(HighsInt* Rindex, HighsFloat* Rvalue,
                                        HighsInt Rlen, bool linkCols) {
   HighsInt rowindex;
   HighsInt start;

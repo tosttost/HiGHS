@@ -19,8 +19,8 @@
 
 using std::vector;
 
-void addToDecreasingHeap(HighsInt& n, HighsInt mx_n, vector<double>& heap_v,
-                         vector<HighsInt>& heap_ix, const double v,
+void addToDecreasingHeap(HighsInt& n, HighsInt mx_n, vector<HighsFloat>& heap_v,
+                         vector<HighsInt>& heap_ix, const HighsFloat v,
                          const HighsInt ix) {
   HighsInt cd_p, pa_p;
   if (n < mx_n) {
@@ -71,12 +71,12 @@ void addToDecreasingHeap(HighsInt& n, HighsInt mx_n, vector<double>& heap_v,
   return;
 }
 
-void sortDecreasingHeap(const HighsInt n, vector<double>& heap_v,
+void sortDecreasingHeap(const HighsInt n, vector<HighsFloat>& heap_v,
                         vector<HighsInt>& heap_ix) {
   HighsInt fo_p, srt_p;
   HighsInt cd_p, pa_p;
   HighsInt ix;
-  double v;
+  HighsFloat v;
   if (n <= 1) return;
   if (heap_ix[0] != 1) {
     // The data are assumed to be completely unordered. A heap will be formed
@@ -138,7 +138,7 @@ void maxheapsort(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   maxHeapsort(heap_v, heap_i, n);
 }
 
-void maxheapsort(double* heap_v, HighsInt* heap_i, HighsInt n) {
+void maxheapsort(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
   buildMaxheap(heap_v, heap_i, n);
   maxHeapsort(heap_v, heap_i, n);
 }
@@ -157,7 +157,7 @@ void buildMaxheap(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   }
 }
 
-void buildMaxheap(double* heap_v, HighsInt* heap_i, HighsInt n) {
+void buildMaxheap(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
   HighsInt i;
   for (i = n / 2; i >= 1; i--) {
     maxHeapify(heap_v, heap_i, i, n);
@@ -189,8 +189,8 @@ void maxHeapsort(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   }
 }
 
-void maxHeapsort(double* heap_v, HighsInt* heap_i, HighsInt n) {
-  double temp_v;
+void maxHeapsort(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
+  HighsFloat temp_v;
   HighsInt i, temp_i;
   for (i = n; i >= 2; i--) {
     temp_v = heap_v[i];
@@ -242,8 +242,8 @@ void maxHeapify(HighsInt* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
   return;
 }
 
-void maxHeapify(double* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
-  double temp_v;
+void maxHeapify(HighsFloat* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
+  HighsFloat temp_v;
   HighsInt j, temp_i;
   temp_v = heap_v[i];
   temp_i = heap_i[i];
@@ -291,11 +291,11 @@ bool increasingSetOk(const vector<HighsInt>& set,
   return true;
 }
 
-bool increasingSetOk(const vector<double>& set, const double set_entry_lower,
-                     const double set_entry_upper, bool strict) {
+bool increasingSetOk(const vector<HighsFloat>& set, const HighsFloat set_entry_lower,
+                     const HighsFloat set_entry_upper, bool strict) {
   HighsInt set_num_entries = set.size();
   bool check_bounds = set_entry_lower <= set_entry_upper;
-  double previous_entry;
+  HighsFloat previous_entry;
   if (check_bounds) {
     if (strict) {
       if (set_entry_lower < 0) {
@@ -312,7 +312,7 @@ bool increasingSetOk(const vector<double>& set, const double set_entry_lower,
     previous_entry = -kHighsInf;
   }
   for (HighsInt k = 0; k < set_num_entries; k++) {
-    double entry = set[k];
+    HighsFloat entry = set[k];
     if (strict) {
       if (entry <= previous_entry) return false;
     } else {
@@ -325,9 +325,9 @@ bool increasingSetOk(const vector<double>& set, const double set_entry_lower,
 }
 
 void sortSetData(const HighsInt num_entries, vector<HighsInt>& set,
-                 const double* data0, const double* data1, const double* data2,
-                 double* sorted_data0, double* sorted_data1,
-                 double* sorted_data2) {
+                 const HighsFloat* data0, const HighsFloat* data1, const HighsFloat* data2,
+                 HighsFloat* sorted_data0, HighsFloat* sorted_data1,
+                 HighsFloat* sorted_data2) {
   if (num_entries <= 0) return;
   vector<HighsInt> sort_set_vec(1 + num_entries);
   vector<HighsInt> perm_vec(1 + num_entries);

@@ -20,12 +20,12 @@
 #include "util/HighsMatrixUtils.h"
 #include "util/HighsSort.h"
 
-HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
-                                    const double* XcolLower,
-                                    const double* XcolUpper, HighsInt XnumNewNZ,
+HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const HighsFloat* XcolCost,
+                                    const HighsFloat* XcolLower,
+                                    const HighsFloat* XcolUpper, HighsInt XnumNewNZ,
                                     const HighsInt* XAstart,
                                     const HighsInt* XAindex,
-                                    const double* XAvalue) {
+                                    const HighsFloat* XAvalue) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsOptions& options = options_;
   if (XnumNewCol < 0) return HighsStatus::kError;
@@ -58,9 +58,9 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
   index_collection.to_ = XnumNewCol - 1;
 
   // Take a copy of the cost and bounds that can be normalised
-  std::vector<double> local_colCost{XcolCost, XcolCost + XnumNewCol};
-  std::vector<double> local_colLower{XcolLower, XcolLower + XnumNewCol};
-  std::vector<double> local_colUpper{XcolUpper, XcolUpper + XnumNewCol};
+  std::vector<HighsFloat> local_colCost{XcolCost, XcolCost + XnumNewCol};
+  std::vector<HighsFloat> local_colLower{XcolLower, XcolLower + XnumNewCol};
+  std::vector<HighsFloat> local_colUpper{XcolUpper, XcolUpper + XnumNewCol};
 
   return_status =
       interpretCallStatus(options_.log_options,
@@ -136,11 +136,11 @@ HighsStatus Highs::addColsInterface(HighsInt XnumNewCol, const double* XcolCost,
 }
 
 HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
-                                    const double* XrowLower,
-                                    const double* XrowUpper, HighsInt XnumNewNZ,
+                                    const HighsFloat* XrowLower,
+                                    const HighsFloat* XrowUpper, HighsInt XnumNewNZ,
                                     const HighsInt* XARstart,
                                     const HighsInt* XARindex,
-                                    const double* XARvalue) {
+                                    const HighsFloat* XARvalue) {
   // addRows is fundamentally different from addCols, since the new
   // matrix data are held row-wise, so we have to insert data into the
   // column-wise matrix of the LP.
@@ -180,8 +180,8 @@ HighsStatus Highs::addRowsInterface(HighsInt XnumNewRow,
   index_collection.from_ = 0;
   index_collection.to_ = XnumNewRow - 1;
   // Take a copy of the bounds that can be normalised
-  std::vector<double> local_rowLower{XrowLower, XrowLower + XnumNewRow};
-  std::vector<double> local_rowUpper{XrowUpper, XrowUpper + XnumNewRow};
+  std::vector<HighsFloat> local_rowLower{XrowLower, XrowLower + XnumNewRow};
+  std::vector<HighsFloat> local_rowUpper{XrowUpper, XrowUpper + XnumNewRow};
 
   return_status = interpretCallStatus(
       options_.log_options,
@@ -338,11 +338,11 @@ void Highs::deleteRowsInterface(HighsIndexCollection& index_collection) {
 }
 
 void Highs::getColsInterface(const HighsIndexCollection& index_collection,
-                             HighsInt& get_num_col, double* col_cost,
-                             double* col_lower, double* col_upper,
+                             HighsInt& get_num_col, HighsFloat* col_cost,
+                             HighsFloat* col_lower, HighsFloat* col_upper,
                              HighsInt& get_num_nz, HighsInt* col_matrix_start,
                              HighsInt* col_matrix_index,
-                             double* col_matrix_value) {
+                             HighsFloat* col_matrix_value) {
   HighsLp& lp = model_.lp_;
   // Ensure that the LP is column-wise
   lp.ensureColwise();
@@ -388,11 +388,11 @@ void Highs::getColsInterface(const HighsIndexCollection& index_collection,
 }
 
 void Highs::getRowsInterface(const HighsIndexCollection& index_collection,
-                             HighsInt& get_num_row, double* row_lower,
-                             double* row_upper, HighsInt& get_num_nz,
+                             HighsInt& get_num_row, HighsFloat* row_lower,
+                             HighsFloat* row_upper, HighsInt& get_num_nz,
                              HighsInt* row_matrix_start,
                              HighsInt* row_matrix_index,
-                             double* row_matrix_value) {
+                             HighsFloat* row_matrix_value) {
   HighsLp& lp = model_.lp_;
   // Ensure that the LP is column-wise
   lp.ensureColwise();
@@ -511,7 +511,7 @@ void Highs::getRowsInterface(const HighsIndexCollection& index_collection,
 }
 
 void Highs::getCoefficientInterface(const HighsInt Xrow, const HighsInt Xcol,
-                                    double& value) {
+                                    HighsFloat& value) {
   HighsLp& lp = model_.lp_;
   assert(0 <= Xrow && Xrow < lp.num_row_);
   assert(0 <= Xcol && Xcol < lp.num_col_);
@@ -553,15 +553,15 @@ HighsStatus Highs::changeIntegralityInterface(
 }
 
 HighsStatus Highs::changeCostsInterface(HighsIndexCollection& index_collection,
-                                        const double* cost) {
+                                        const HighsFloat* cost) {
   HighsInt num_cost = dataSize(index_collection);
   // If a non-positive number of costs (may) need changing nothing needs to be
   // done
   if (num_cost <= 0) return HighsStatus::kOk;
-  if (doubleUserDataNotNull(options_.log_options, cost, "column costs"))
+  if (HighsFloatUserDataNotNull(options_.log_options, cost, "column costs"))
     return HighsStatus::kError;
   // Take a copy of the cost that can be normalised
-  std::vector<double> local_colCost{cost, cost + num_cost};
+  std::vector<HighsFloat> local_colCost{cost, cost + num_cost};
   HighsStatus return_status = HighsStatus::kOk;
   return_status =
       interpretCallStatus(options_.log_options,
@@ -578,23 +578,23 @@ HighsStatus Highs::changeCostsInterface(HighsIndexCollection& index_collection,
 }
 
 HighsStatus Highs::changeColBoundsInterface(
-    HighsIndexCollection& index_collection, const double* col_lower,
-    const double* col_upper) {
+    HighsIndexCollection& index_collection, const HighsFloat* col_lower,
+    const HighsFloat* col_upper) {
   HighsInt num_col_bounds = dataSize(index_collection);
   // If a non-positive number of costs (may) need changing nothing needs to be
   // done
   if (num_col_bounds <= 0) return HighsStatus::kOk;
   bool null_data = false;
-  null_data = doubleUserDataNotNull(options_.log_options, col_lower,
+  null_data = HighsFloatUserDataNotNull(options_.log_options, col_lower,
                                     "column lower bounds") ||
               null_data;
-  null_data = doubleUserDataNotNull(options_.log_options, col_upper,
+  null_data = HighsFloatUserDataNotNull(options_.log_options, col_upper,
                                     "column upper bounds") ||
               null_data;
   if (null_data) return HighsStatus::kError;
   // Take a copy of the cost that can be normalised
-  std::vector<double> local_colLower{col_lower, col_lower + num_col_bounds};
-  std::vector<double> local_colUpper{col_upper, col_upper + num_col_bounds};
+  std::vector<HighsFloat> local_colLower{col_lower, col_lower + num_col_bounds};
+  std::vector<HighsFloat> local_colUpper{col_upper, col_upper + num_col_bounds};
   // If changing the bounds for a set of columns, ensure that the
   // set and data are in ascending order
   if (index_collection.is_set_)
@@ -623,23 +623,23 @@ HighsStatus Highs::changeColBoundsInterface(
 }
 
 HighsStatus Highs::changeRowBoundsInterface(
-    HighsIndexCollection& index_collection, const double* lower,
-    const double* upper) {
+    HighsIndexCollection& index_collection, const HighsFloat* lower,
+    const HighsFloat* upper) {
   HighsInt num_row_bounds = dataSize(index_collection);
   // If a non-positive number of costs (may) need changing nothing needs to be
   // done
   if (num_row_bounds <= 0) return HighsStatus::kOk;
   bool null_data = false;
   null_data =
-      doubleUserDataNotNull(options_.log_options, lower, "row lower bounds") ||
+      HighsFloatUserDataNotNull(options_.log_options, lower, "row lower bounds") ||
       null_data;
   null_data =
-      doubleUserDataNotNull(options_.log_options, upper, "row upper bounds") ||
+      HighsFloatUserDataNotNull(options_.log_options, upper, "row upper bounds") ||
       null_data;
   if (null_data) return HighsStatus::kError;
   // Take a copy of the cost that can be normalised
-  std::vector<double> local_rowLower{lower, lower + num_row_bounds};
-  std::vector<double> local_rowUpper{upper, upper + num_row_bounds};
+  std::vector<HighsFloat> local_rowLower{lower, lower + num_row_bounds};
+  std::vector<HighsFloat> local_rowUpper{upper, upper + num_row_bounds};
   // If changing the bounds for a set of rows, ensure that the
   // set and data are in ascending order
   if (index_collection.is_set_)
@@ -668,7 +668,7 @@ HighsStatus Highs::changeRowBoundsInterface(
 
 // Change a single coefficient in the matrix
 void Highs::changeCoefficientInterface(const HighsInt Xrow, const HighsInt Xcol,
-                                       const double XnewValue) {
+                                       const HighsFloat XnewValue) {
   HighsLp& lp = model_.lp_;
   // Ensure that the LP is column-wise
   lp.ensureColwise();
@@ -686,7 +686,7 @@ void Highs::changeCoefficientInterface(const HighsInt Xrow, const HighsInt Xcol,
 }
 
 HighsStatus Highs::scaleColInterface(const HighsInt col,
-                                     const double scaleval) {
+                                     const HighsFloat scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   HighsBasis& basis = basis_;
@@ -731,7 +731,7 @@ HighsStatus Highs::scaleColInterface(const HighsInt col,
 }
 
 HighsStatus Highs::scaleRowInterface(const HighsInt row,
-                                     const double scaleval) {
+                                     const HighsFloat scaleval) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   HighsBasis& basis = basis_;
@@ -812,8 +812,8 @@ void Highs::setNonbasicStatusInterface(
       for (HighsInt iCol = set_from_ix; iCol <= set_to_ix; iCol++) {
         if (highs_basis.col_status[iCol] == HighsBasisStatus::kBasic) continue;
         // Nonbasic column
-        double lower = lp.col_lower_[iCol];
-        double upper = lp.col_upper_[iCol];
+        HighsFloat lower = lp.col_lower_[iCol];
+        HighsFloat upper = lp.col_upper_[iCol];
         HighsBasisStatus status = HighsBasisStatus::kNonbasic;
         HighsInt move = kIllegalMoveValue;
         if (lower == upper) {
@@ -856,8 +856,8 @@ void Highs::setNonbasicStatusInterface(
       for (HighsInt iRow = set_from_ix; iRow <= set_to_ix; iRow++) {
         if (highs_basis.row_status[iRow] == HighsBasisStatus::kBasic) continue;
         // Nonbasic column
-        double lower = lp.row_lower_[iRow];
-        double upper = lp.row_upper_[iRow];
+        HighsFloat lower = lp.row_lower_[iRow];
+        HighsFloat upper = lp.row_upper_[iRow];
         HighsBasisStatus status = HighsBasisStatus::kNonbasic;
         HighsInt move = kIllegalMoveValue;
         if (lower == upper) {
@@ -932,8 +932,8 @@ void Highs::appendNonbasicColsToBasisInterface(const HighsInt XnumNewCol) {
   }
   // Make any new columns nonbasic
   for (HighsInt iCol = lp.num_col_; iCol < newNumCol; iCol++) {
-    double lower = lp.col_lower_[iCol];
-    double upper = lp.col_upper_[iCol];
+    HighsFloat lower = lp.col_lower_[iCol];
+    HighsFloat upper = lp.col_upper_[iCol];
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     HighsInt move = kIllegalMoveValue;
     if (lower == upper) {
@@ -1061,8 +1061,8 @@ HighsStatus Highs::getBasicVariablesInterface(HighsInt* basic_variables) {
 
 // Solve (transposed) system involving the basis matrix
 
-HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
-                                       double* solution_vector,
+HighsStatus Highs::basisSolveInterface(const vector<HighsFloat>& rhs,
+                                       HighsFloat* solution_vector,
                                        HighsInt* solution_num_nz,
                                        HighsInt* solution_indices,
                                        bool transpose) {
@@ -1098,7 +1098,7 @@ HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
   // as setting solve_vector.count = num_row+1) to not do this.
   //
   // Get expected_density from analysis during simplex solve.
-  const double expected_density = 1;
+  const HighsFloat expected_density = 1;
   if (transpose) {
     ekk_instance_.btran(solve_vector, expected_density);
   } else {
@@ -1208,8 +1208,8 @@ HighsStatus Highs::setHotStartInterface(const HotStart& hot_start) {
   // for nonbasic variables
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
     if (nonbasicFlag[iCol] == kNonbasicFlagFalse) continue;
-    const double lower = lp.col_lower_[iCol];
-    const double upper = lp.col_upper_[iCol];
+    const HighsFloat lower = lp.col_lower_[iCol];
+    const HighsFloat upper = lp.col_upper_[iCol];
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     HighsInt move = kIllegalMoveValue;
     if (lower == upper) {
@@ -1250,8 +1250,8 @@ HighsStatus Highs::setHotStartInterface(const HotStart& hot_start) {
   // for nonbasic variables
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     if (nonbasicFlag[num_col + iRow] == kNonbasicFlagFalse) continue;
-    const double lower = lp.row_lower_[iRow];
-    const double upper = lp.row_upper_[iRow];
+    const HighsFloat lower = lp.row_lower_[iRow];
+    const HighsFloat upper = lp.row_upper_[iRow];
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     HighsInt move = kIllegalMoveValue;
     if (lower == upper) {
@@ -1303,7 +1303,7 @@ void Highs::zeroIterationCounts() {
 }
 
 HighsStatus Highs::getDualRayInterface(bool& has_dual_ray,
-                                       double* dual_ray_value) {
+                                       HighsFloat* dual_ray_value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   HighsInt num_row = lp.num_row_;
@@ -1313,7 +1313,7 @@ HighsStatus Highs::getDualRayInterface(bool& has_dual_ray,
   assert(!lp.is_moved_);
   has_dual_ray = ekk_instance_.status_.has_dual_ray;
   if (has_dual_ray && dual_ray_value != NULL) {
-    vector<double> rhs;
+    vector<HighsFloat> rhs;
     HighsInt iRow = ekk_instance_.info_.dual_ray_row_;
     rhs.assign(num_row, 0);
     rhs[iRow] = ekk_instance_.info_.dual_ray_sign_;
@@ -1324,7 +1324,7 @@ HighsStatus Highs::getDualRayInterface(bool& has_dual_ray,
 }
 
 HighsStatus Highs::getPrimalRayInterface(bool& has_primal_ray,
-                                         double* primal_ray_value) {
+                                         HighsFloat* primal_ray_value) {
   HighsStatus return_status = HighsStatus::kOk;
   HighsLp& lp = model_.lp_;
   HighsInt num_row = lp.num_row_;
@@ -1338,8 +1338,8 @@ HighsStatus Highs::getPrimalRayInterface(bool& has_primal_ray,
     HighsInt col = ekk_instance_.info_.primal_ray_col_;
     assert(ekk_instance_.basis_.nonbasicFlag_[col] == kNonbasicFlagTrue);
     // Get this pivotal column
-    vector<double> rhs;
-    vector<double> column;
+    vector<HighsFloat> rhs;
+    vector<HighsFloat> column;
     column.assign(num_row, 0);
     rhs.assign(num_row, 0);
     lp.ensureColwise();

@@ -31,24 +31,24 @@ HighsInt Highs_lpCall(
     const HighsInt numnz,     //!< number of entries in the constraint matrix
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt*
         astart,  //!< array of length [numcol+1] with column start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with row indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue,        //!< array of length [numnz] with value of matrix entries
-    double* colvalue,  //!< array of length [numcol], filled with column values
-    double* coldual,   //!< array of length [numcol], filled with column duals
-    double* rowvalue,  //!< array of length [numrow], filled with row values
-    double* rowdual,   //!< array of length [numrow], filled with row duals
+    HighsFloat* colvalue,  //!< array of length [numcol], filled with column values
+    HighsFloat* coldual,   //!< array of length [numcol], filled with column duals
+    HighsFloat* rowvalue,  //!< array of length [numrow], filled with row values
+    HighsFloat* rowdual,   //!< array of length [numrow], filled with row duals
     HighsInt* colbasisstatus,  //!< array of length [numcol], filled with column
                                //!< basis status
     HighsInt* rowbasisstatus,  //!< array of length [numrow], filled with row
@@ -65,25 +65,25 @@ HighsInt Highs_mipCall(
     const HighsInt numnz,     //!< number of entries in the constraint matrix
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt*
         astart,  //!< array of length [numcol+1] with column start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with row indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue,  //!< array of length [numnz] with value of matrix entries
     const HighsInt*
         integrality,   //!< array of length [numcol] indicating whether
                        //!< variables are continuous (0) or integer (1)
-    double* colvalue,  //!< array of length [numcol], filled with column values
-    double* rowvalue,  //!< array of length [numrow], filled with row values
+    HighsFloat* colvalue,  //!< array of length [numcol], filled with column values
+    HighsFloat* rowvalue,  //!< array of length [numrow], filled with row values
     HighsInt* modelstatus  //!< status of the model will be saved here
 );
 
@@ -98,30 +98,30 @@ HighsInt Highs_qpCall(
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt q_format,  //!< format of the Hessian matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt*
         astart,  //!< array of length [numcol+1] with column start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with row indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue,  //!< array of length [numnz] with value of matrix entries
     const HighsInt* qstart,  //!< array of length [numcol+1] with Hessian column
                              //!< start indices
     const HighsInt* qindex,  //!< array of length [numnz] with row indices of
                              //!< Hessian matrix entries
-    const double* qvalue,    //!< array of length [numnz] with value of Hessian
+    const HighsFloat* qvalue,    //!< array of length [numnz] with value of Hessian
                              //!< matrix entries
-    double* colvalue,  //!< array of length [numcol], filled with column values
-    double* coldual,   //!< array of length [numcol], filled with column duals
-    double* rowvalue,  //!< array of length [numrow], filled with row values
-    double* rowdual,   //!< array of length [numrow], filled with row duals
+    HighsFloat* colvalue,  //!< array of length [numcol], filled with column values
+    HighsFloat* coldual,   //!< array of length [numcol], filled with column duals
+    HighsFloat* rowvalue,  //!< array of length [numrow], filled with row values
+    HighsFloat* rowdual,   //!< array of length [numrow], filled with row duals
     HighsInt* colbasisstatus,  //!< array of length [numcol], filled with column
                                //!< basis status
     HighsInt* rowbasisstatus,  //!< array of length [numrow], filled with row
@@ -148,16 +148,16 @@ HighsInt Highs_lpDataMpsRead(
     const HighsInt numcol,  //!< number of columns
     const HighsInt numrow,  //!< number of rows
     HighsInt* sense,        //!< sense of the optimization
-    double* offset,         //!< objective constant
-    double* colcost,        //!< array of length [numcol] with column costs
-    double* collower,  //!< array of length [numcol] with lower column bounds
-    double* colupper,  //!< array of length [numcol] with upper column bounds
-    double* rowlower,  //!< array of length [numrow] with lower row bounds
-    double* rowupper,  //!< array of length [numrow] with upper row bounds
+    HighsFloat* offset,         //!< objective constant
+    HighsFloat* colcost,        //!< array of length [numcol] with column costs
+    HighsFloat* collower,  //!< array of length [numcol] with lower column bounds
+    HighsFloat* colupper,  //!< array of length [numcol] with upper column bounds
+    HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     HighsInt* astart,  //!< array of length [numcol+1] with column start indices
     HighsInt*
         aindex,  //!< array of length [numnz] with row indices of matrix entries
-    double* avalue  //!< array of length [numnz] with value of matrix entries
+    HighsFloat* avalue  //!< array of length [numnz] with value of matrix entries
 );
 
 /*
@@ -218,19 +218,19 @@ HighsInt Highs_passLp(
     const HighsInt numnz,     //!< number of entries in the constraint matrix
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt* astart,  //!< array of length [numcol or numrow if(rowwise)]
                              //!< with start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue  //!< array of length [numnz] with value of matrix entries
 );
 
@@ -244,19 +244,19 @@ HighsInt Highs_passMip(
     const HighsInt numnz,     //!< number of entries in the constraint matrix
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt* astart,  //!< array of length [numcol or numrow if(rowwise)]
                              //!< with start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue,  //!< array of length [numnz] with value of matrix entries
     const HighsInt*
         integrality  //!< array of length [numcol] indicating whether
@@ -275,25 +275,25 @@ HighsInt Highs_passModel(
     const HighsInt a_format,  //!< format of the constraint matrix
     const HighsInt q_format,  //!< format of the Hessian matrix
     const HighsInt sense,     //!< sense of the optimization
-    const double offset,      //!< objective constant
-    const double* colcost,    //!< array of length [numcol] with column costs
-    const double*
+    const HighsFloat offset,      //!< objective constant
+    const HighsFloat* colcost,    //!< array of length [numcol] with column costs
+    const HighsFloat*
         collower,  //!< array of length [numcol] with lower column bounds
-    const double*
+    const HighsFloat*
         colupper,  //!< array of length [numcol] with upper column bounds
-    const double* rowlower,  //!< array of length [numrow] with lower row bounds
-    const double* rowupper,  //!< array of length [numrow] with upper row bounds
+    const HighsFloat* rowlower,  //!< array of length [numrow] with lower row bounds
+    const HighsFloat* rowupper,  //!< array of length [numrow] with upper row bounds
     const HighsInt* astart,  //!< array of length [numcol or numrow if(rowwise)]
                              //!< with start indices
     const HighsInt*
         aindex,  //!< array of length [numnz] with indices of matrix entries
-    const double*
+    const HighsFloat*
         avalue,  //!< array of length [numnz] with value of matrix entries
     const HighsInt* qstart,  //!< array of length [numcol] with Hessian start
                              //!< indices - or NULL if model is linear
     const HighsInt* qindex,  //!< array of length [q_num_nz] with indices of
                              //!< Hessian entries - or NULL if model is linear
-    const double* qvalue,    //!< array of length [q_num_nz] with values of
+    const HighsFloat* qvalue,    //!< array of length [q_num_nz] with values of
                              //!< Hessian entries - or NULL if model is linear
     const HighsInt*
         integrality  //!< array of length [numcol] indicating whether
@@ -307,7 +307,7 @@ HighsInt Highs_passModel(
 HighsInt Highs_passHessian(void* highs, const HighsInt dim,
                            const HighsInt num_nz, const HighsInt format,
                            const HighsInt* start, const HighsInt* index,
-                           const double* value);
+                           const HighsFloat* value);
 
 HighsInt Highs_setBoolOptionValue(void* highs,
                                   const char* option,   //!< name of the option
@@ -321,7 +321,7 @@ HighsInt Highs_setIntOptionValue(void* highs,
 
 HighsInt Highs_setD0ubleOptionValue(void* highs,
                                     const char* option,  //!< name of the option
-                                    const double value  //!< new value of option
+                                    const HighsFloat value  //!< new value of option
 );
 
 HighsInt Highs_setStringOptionValue(void* highs,
@@ -346,7 +346,7 @@ HighsInt Highs_getIntOptionValue(void* highs,
 
 HighsInt Highs_getD0ubleOptionValue(void* highs,
                                     const char* option,  //!< name of the option
-                                    double* value        //!< value of option
+                                    HighsFloat* value        //!< value of option
 );
 
 HighsInt Highs_getStringOptionValue(
@@ -385,17 +385,17 @@ HighsInt Highs_getIntInfoValue(void* highs,
  */
 HighsInt Highs_getD0ubleInfoValue(void* highs,
                                   const char* info,  //!< The info name
-                                  double* value      //!< The info value
+                                  HighsFloat* value      //!< The info value
 );
 /*
  * @brief
  */
 HighsInt Highs_getSolution(
     void* highs,
-    double* colvalue,  //!< array of length [numcol], filled with column values
-    double* coldual,   //!< array of length [numcol], filled with column duals
-    double* rowvalue,  //!< array of length [numrow], filled with row values
-    double* rowdual    //!< array of length [numrow], filled with row duals
+    HighsFloat* colvalue,  //!< array of length [numcol], filled with column values
+    HighsFloat* coldual,   //!< array of length [numcol], filled with column duals
+    HighsFloat* rowvalue,  //!< array of length [numrow], filled with row values
+    HighsFloat* rowdual    //!< array of length [numrow], filled with row duals
 );
 
 /*
@@ -426,7 +426,7 @@ HighsInt Highs_getScaledModelStatus(void* highs);
 HighsInt Highs_getDualRay(
     void* highs,
     HighsInt* has_dual_ray,  //!< TRUE if the dual ray exists
-    double* dual_ray_value   //!< array of length [numrow],
+    HighsFloat* dual_ray_value   //!< array of length [numrow],
                              //!< filled with an unbounded ray
 );
 
@@ -437,14 +437,14 @@ HighsInt Highs_getDualRay(
 HighsInt Highs_getPrimalRay(
     void* highs,
     HighsInt* has_primal_ray,  //!< TRUE if the primal ray exists
-    double* primal_ray_value   //!< array of length [numcol], filled with an
+    HighsFloat* primal_ray_value   //!< array of length [numcol], filled with an
                                //!< unbounded ray
 );
 
 /**
  * @brief Returns the objective function value (if known)
  */
-double Highs_getObjectiveValue(void* highs);
+HighsFloat Highs_getObjectiveValue(void* highs);
 
 /**
  * @brief Gets the basic variables in the order corresponding to
@@ -463,7 +463,7 @@ HighsInt Highs_getBasicVariables(void* highs,
 HighsInt Highs_getBasisInverseRow(
     void* highs,
     const HighsInt row,    //!< Index of row required
-    double* row_vector,    //!< Row required
+    HighsFloat* row_vector,    //!< Row required
     HighsInt* row_num_nz,  //!< Number of nonzeros
     HighsInt* row_indices  //!< Indices of nonzeros
 );
@@ -474,7 +474,7 @@ HighsInt Highs_getBasisInverseRow(
 HighsInt Highs_getBasisInverseCol(
     void* highs,
     const HighsInt col,    //!< Index of column required
-    double* col_vector,    //!< Column required
+    HighsFloat* col_vector,    //!< Column required
     HighsInt* col_num_nz,  //!< Number of nonzeros
     HighsInt* col_indices  //!< Indices of nonzeros
 );
@@ -485,8 +485,8 @@ HighsInt Highs_getBasisInverseCol(
  */
 HighsInt Highs_getBasisSolve(
     void* highs,
-    const double* rhs,          //!< RHS \f$\mathbf{b}\f$
-    double* solution_vector,    //!< Solution \f$\mathbf{x}\f$
+    const HighsFloat* rhs,          //!< RHS \f$\mathbf{b}\f$
+    HighsFloat* solution_vector,    //!< Solution \f$\mathbf{x}\f$
     HighsInt* solution_num_nz,  //!< Number of nonzeros
     HighsInt* solution_indices  //!< Indices of nonzeros
 );
@@ -497,8 +497,8 @@ HighsInt Highs_getBasisSolve(
  */
 HighsInt Highs_getBasisTransposeSolve(
     void* highs,
-    const double* rhs,          //!< RHS \f$\mathbf{b}\f$
-    double* solution_vector,    //!< Solution  \f$\mathbf{x}\f$
+    const HighsFloat* rhs,          //!< RHS \f$\mathbf{b}\f$
+    HighsFloat* solution_vector,    //!< Solution  \f$\mathbf{x}\f$
     HighsInt* solution_nz,      //!< Number of nonzeros
     HighsInt* solution_indices  //!< Indices of nonzeros
 );
@@ -508,7 +508,7 @@ HighsInt Highs_getBasisTransposeSolve(
  */
 HighsInt Highs_getReducedRow(void* highs,
                              const HighsInt row,    //!< Index of row required
-                             double* row_vector,    //!< Row required
+                             HighsFloat* row_vector,    //!< Row required
                              HighsInt* row_num_nz,  //!< Number of nonzeros
                              HighsInt* row_indices  //!< Indices of nonzeros
 );
@@ -519,7 +519,7 @@ HighsInt Highs_getReducedRow(void* highs,
 HighsInt Highs_getReducedColumn(
     void* highs,
     const HighsInt col,    //!< Index of column required
-    double* col_vector,    //!< Column required
+    HighsFloat* col_vector,    //!< Column required
     HighsInt* col_num_nz,  //!< Number of nonzeros
     HighsInt* col_indices  //!< Indices of nonzeros
 );
@@ -540,18 +540,18 @@ HighsInt Highs_setLogicalBasis(void* highs);
 /**
  * @brief Returns the cumulative wall-clock time spent in Highs_run();
  */
-double Highs_getRunTime(void* highs);
+HighsFloat Highs_getRunTime(void* highs);
 
 /**
  * @brief Adds a row to the model
  */
 HighsInt Highs_addRow(
     void* highs,
-    const double lower,         //!< Lower bound of the row
-    const double upper,         //!< Upper bound of the row
+    const HighsFloat lower,         //!< Lower bound of the row
+    const HighsFloat upper,         //!< Upper bound of the row
     const HighsInt num_new_nz,  //!< Number of nonzeros in the row
     const HighsInt* indices,  //!< Array of size num_new_nz with column indices
-    const double* values      //!< Array of size num_new_nz with column values
+    const HighsFloat* values      //!< Array of size num_new_nz with column values
 );
 
 /**
@@ -560,14 +560,14 @@ HighsInt Highs_addRow(
 HighsInt Highs_addRows(
     void* highs,
     const HighsInt num_new_row,  //!< Number of new rows
-    const double* lower,        //!< Array of size num_new_row with lower bounds
-    const double* upper,        //!< Array of size num_new_row with upper bounds
+    const HighsFloat* lower,        //!< Array of size num_new_row with lower bounds
+    const HighsFloat* upper,        //!< Array of size num_new_row with upper bounds
     const HighsInt num_new_nz,  //!< Number of new nonzeros
     const HighsInt*
         starts,  //!< Array of size num_new_row with start indices of the rows
     const HighsInt*
         indices,  //!< Array of size num_new_nz with column indices for all rows
-    const double*
+    const HighsFloat*
         values  //!< Array of size num_new_nz with column values for all rows
 );
 
@@ -576,12 +576,12 @@ HighsInt Highs_addRows(
  */
 HighsInt Highs_addCol(
     void* highs,
-    const double cost,          //!< Cost of the column
-    const double lower,         //!< Lower bound of the column
-    const double upper,         //!< Upper bound of the column
+    const HighsFloat cost,          //!< Cost of the column
+    const HighsFloat lower,         //!< Lower bound of the column
+    const HighsFloat upper,         //!< Upper bound of the column
     const HighsInt num_new_nz,  //!< Number of nonzeros in the column
     const HighsInt* indices,    //!< Array of size num_new_nz with row indices
-    const double* values        //!< Array of size num_new_nz with row values
+    const HighsFloat* values        //!< Array of size num_new_nz with row values
 );
 
 /**
@@ -590,15 +590,15 @@ HighsInt Highs_addCol(
 HighsInt Highs_addCols(
     void* highs,
     const HighsInt num_new_col,  //!< Number of new columns
-    const double* costs,         //!< Array of size num_new_col with costs
-    const double* lower,        //!< Array of size num_new_col with lower bounds
-    const double* upper,        //!< Array of size num_new_col with upper bounds
+    const HighsFloat* costs,         //!< Array of size num_new_col with costs
+    const HighsFloat* lower,        //!< Array of size num_new_col with lower bounds
+    const HighsFloat* upper,        //!< Array of size num_new_col with upper bounds
     const HighsInt num_new_nz,  //!< Number of new nonzeros
     const HighsInt* starts,   //!< Array of size num_new_row with start indices
                               //!< of the columns
     const HighsInt* indices,  //!< Array of size num_new_nz with row indices for
                               //!< all columns
-    const double*
+    const HighsFloat*
         values  //!< Array of size num_new_nz with row values for all columns
 );
 
@@ -615,7 +615,7 @@ HighsInt Highs_changeObjectiveSense(
  */
 HighsInt Highs_changeObjectiveOffset(
     void* highs,
-    const double offset  //!< New objective offset
+    const HighsFloat offset  //!< New objective offset
 );
 
 /**
@@ -668,7 +668,7 @@ HighsInt Highs_changeColsIntegralityByMask(
 HighsInt Highs_changeColCost(
     void* highs,
     const HighsInt col,  //!< The index of the column whose cost is to change
-    const double cost    //!< The new cost
+    const HighsFloat cost    //!< The new cost
 );
 
 /**
@@ -680,7 +680,7 @@ HighsInt Highs_changeColsCostByRange(
         from_col,  //!< The index of the first column whose cost changes
     const HighsInt to_col,  //!< One more than the index of the last column
                             //!< whose cost changes
-    const double* cost      //!< Array of size num_set_entries with new costs
+    const HighsFloat* cost      //!< Array of size num_set_entries with new costs
 );
 
 /**
@@ -691,7 +691,7 @@ HighsInt Highs_changeColsCostBySet(
     const HighsInt num_set_entries,  //!< The number of indides in the set
     const HighsInt* set,  //!< Array of size num_set_entries with indices of
                           //!< columns whose costs change
-    const double* cost    //!< Array of size num_set_entries with new costs
+    const HighsFloat* cost    //!< Array of size num_set_entries with new costs
 );
 
 /**
@@ -700,7 +700,7 @@ HighsInt Highs_changeColsCostBySet(
 HighsInt Highs_changeColsCostByMask(
     void* highs,
     const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-    const double* cost     //!< Full length array of new costs
+    const HighsFloat* cost     //!< Full length array of new costs
 );
 
 /**
@@ -709,8 +709,8 @@ HighsInt Highs_changeColsCostByMask(
 HighsInt Highs_changeColBounds(
     void* highs,
     const HighsInt col,  //!< The index of the column whose bounds are to change
-    const double lower,  //!< The new lower bound
-    const double upper   //!< The new upper bound
+    const HighsFloat lower,  //!< The new lower bound
+    const HighsFloat upper   //!< The new upper bound
 );
 
 /**
@@ -722,9 +722,9 @@ HighsInt Highs_changeColsBoundsByRange(
         from_col,  //!< The index of the first column whose bounds change
     const HighsInt to_col,  //!< One more than the index of the last column
                             //!< whose bounds change
-    const double*
+    const HighsFloat*
         lower,  //!< Array of size to_col-from_col with new lower bounds
-    const double*
+    const HighsFloat*
         upper  //!< Array of size to_col-from_col with new upper bounds
 );
 
@@ -736,9 +736,9 @@ HighsInt Highs_changeColsBoundsBySet(
     const HighsInt num_set_entries,  //!< The number of indides in the set
     const HighsInt* set,  //!< Array of size num_set_entries with indices of
                           //!< columns whose bounds change
-    const double*
+    const HighsFloat*
         lower,  //!< Array of size num_set_entries with new lower bounds
-    const double*
+    const HighsFloat*
         upper  //!< Array of size num_set_entries with new upper bounds
 );
 
@@ -748,8 +748,8 @@ HighsInt Highs_changeColsBoundsBySet(
 HighsInt Highs_changeColsBoundsByMask(
     void* highs,
     const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-    const double* lower,   //!< Full length array of new lower bounds
-    const double* upper    //!< Full length array of new upper bounds
+    const HighsFloat* lower,   //!< Full length array of new lower bounds
+    const HighsFloat* upper    //!< Full length array of new upper bounds
 );
 
 /**
@@ -758,8 +758,8 @@ HighsInt Highs_changeColsBoundsByMask(
 HighsInt Highs_changeRowBounds(
     void* highs,
     const HighsInt row,  //!< The index of the row whose bounds are to change
-    const double lower,  //!< The new lower bound
-    const double upper   //!< The new upper bound
+    const HighsFloat lower,  //!< The new lower bound
+    const HighsFloat upper   //!< The new upper bound
 );
 
 /**
@@ -770,9 +770,9 @@ HighsInt Highs_changeRowsBoundsBySet(
     const HighsInt num_set_entries,  //!< The number of indides in the set
     const HighsInt* set,  //!< Array of size num_set_entries with indices of
                           //!< rows whose bounds change
-    const double*
+    const HighsFloat*
         lower,  //!< Array of size num_set_entries with new lower bounds
-    const double*
+    const HighsFloat*
         upper  //!< Array of size num_set_entries with new upper bounds
 );
 
@@ -782,8 +782,8 @@ HighsInt Highs_changeRowsBoundsBySet(
 HighsInt Highs_changeRowsBoundsByMask(
     void* highs,
     const HighsInt* mask,  //!< Full length array with 1 => change; 0 => not
-    const double* lower,   //!< Full length array of new lower bounds
-    const double* upper    //!< Full length array of new upper bounds
+    const HighsFloat* lower,   //!< Full length array of new lower bounds
+    const HighsFloat* upper    //!< Full length array of new upper bounds
 );
 
 /**
@@ -793,7 +793,7 @@ HighsInt Highs_changeCoeff(
     void* highs,
     const HighsInt row,  //!< The index of the row to change
     const HighsInt col,  //!< The index of the column to change
-    const double value   //!< The new coefficient
+    const HighsFloat value   //!< The new coefficient
 );
 
 /**
@@ -804,7 +804,7 @@ HighsInt Highs_getObjectiveSense(void* highs, HighsInt* sense);
 /**
  * @brief Get the objective offset
  */
-HighsInt Highs_getObjectiveOffset(void* highs, double* offset);
+HighsInt Highs_getObjectiveOffset(void* highs, HighsFloat* offset);
 
 /**
  * @brief Get multiple columns from the model given by an interval
@@ -816,15 +816,15 @@ HighsInt Highs_getColsByRange(
     const HighsInt to_col,    //!< One more than the last column to get
                               //!< from the model
     HighsInt* num_col,        //!< Number of columns got from the model
-    double* costs,            //!< Array of size num_col with costs
-    double* lower,            //!< Array of size num_col with lower bounds
-    double* upper,            //!< Array of size num_col with upper bounds
+    HighsFloat* costs,            //!< Array of size num_col with costs
+    HighsFloat* lower,            //!< Array of size num_col with lower bounds
+    HighsFloat* upper,            //!< Array of size num_col with upper bounds
     HighsInt* num_nz,         //!< Number of nonzeros got from the model
     HighsInt* matrix_start,   //!< Array of size num_col with start
                               //!< indices of the columns
     HighsInt* matrix_index,   //!< Array of size num_nz with row
                               //!< indices for the columns
-    double* matrix_value      //!< Array of size num_nz with row
+    HighsFloat* matrix_value      //!< Array of size num_nz with row
                               //!< values for the columns
 );
 
@@ -837,15 +837,15 @@ HighsInt Highs_getColsBySet(
     const HighsInt* set,     //!< Array of size num_set_entries with indices
                              //!< of columns to get
     HighsInt* num_col,       //!< Number of columns got from the model
-    double* costs,           //!< Array of size num_col with costs
-    double* lower,           //!< Array of size num_col with lower bounds
-    double* upper,           //!< Array of size num_col with upper bounds
+    HighsFloat* costs,           //!< Array of size num_col with costs
+    HighsFloat* lower,           //!< Array of size num_col with lower bounds
+    HighsFloat* upper,           //!< Array of size num_col with upper bounds
     HighsInt* num_nz,        //!< Number of nonzeros got from the model
     HighsInt* matrix_start,  //!< Array of size num_col with start indices
                              //!< of the columns
     HighsInt* matrix_index,  //!< Array of size num_nz with row indices
                              //!< for the columns
-    double* matrix_value     //!< Array of size num_nz with row values
+    HighsFloat* matrix_value     //!< Array of size num_nz with row values
                              //!< for the columns
 );
 
@@ -856,15 +856,15 @@ HighsInt Highs_getColsByMask(
     void* highs,
     const HighsInt* mask,    //!< Full length array with 1 => get; 0 => not
     HighsInt* num_col,       //!< Number of columns got from the model
-    double* costs,           //!< Array of size num_col with costs
-    double* lower,           //!< Array of size num_col with lower bounds
-    double* upper,           //!< Array of size num_col with upper bounds
+    HighsFloat* costs,           //!< Array of size num_col with costs
+    HighsFloat* lower,           //!< Array of size num_col with lower bounds
+    HighsFloat* upper,           //!< Array of size num_col with upper bounds
     HighsInt* num_nz,        //!< Number of nonzeros got from the model
     HighsInt* matrix_start,  //!<  Array of size num_col with start
                              //!<  indices of the columns
     HighsInt* matrix_index,  //!<  Array of size num_nz with row indices
                              //!<  for the columns
-    double* matrix_value     //!<  Array of size num_nz with row values
+    HighsFloat* matrix_value     //!<  Array of size num_nz with row values
                              //!<  for the columns
 );
 
@@ -877,14 +877,14 @@ HighsInt Highs_getRowsByRange(
         from_row,  //!< The index of the first row to get from the model
     const HighsInt to_row,   //!< One more than the last row get from the model
     HighsInt* num_row,       //!< Number of rows got from the model
-    double* lower,           //!< Array of size num_row with lower bounds
-    double* upper,           //!< Array of size num_row with upper bounds
+    HighsFloat* lower,           //!< Array of size num_row with lower bounds
+    HighsFloat* upper,           //!< Array of size num_row with upper bounds
     HighsInt* num_nz,        //!< Number of nonzeros got from the model
     HighsInt* matrix_start,  //!< Array of size num_row with start indices of
                              //!< the rows
     HighsInt* matrix_index,  //!< Array of size num_nz with column indices for
                              //!< the rows
-    double* matrix_value  //!< Array of size num_nz with column values for the
+    HighsFloat* matrix_value  //!< Array of size num_nz with column values for the
                           //!< rows
 );
 
@@ -897,14 +897,14 @@ HighsInt Highs_getRowsBySet(
     const HighsInt* set,     //!< Array of size num_set_entries with indices
                              //!< of rows to get
     HighsInt* num_row,       //!< Number of rows got from the model
-    double* lower,           //!< Array of size num_row with lower bounds
-    double* upper,           //!< Array of size num_row with upper bounds
+    HighsFloat* lower,           //!< Array of size num_row with lower bounds
+    HighsFloat* upper,           //!< Array of size num_row with upper bounds
     HighsInt* num_nz,        //!< Number of nonzeros got from the model
     HighsInt* matrix_start,  //!< Array of size num_row with start indices
                              //!< of the rows
     HighsInt* matrix_index,  //!< Array of size num_nz with column indices
                              //!< for the rows
-    double* matrix_value     //!< Array of size num_nz with column
+    HighsFloat* matrix_value     //!< Array of size num_nz with column
                              //!< values for the rows
 );
 
@@ -915,14 +915,14 @@ HighsInt Highs_getRowsByMask(
     void* highs,
     const HighsInt* mask,    //!< Full length array with 1 => get; 0 => not
     HighsInt* num_row,       //!< Number of rows got from the model
-    double* lower,           //!< Array of size num_row with lower bounds
-    double* upper,           //!< Array of size num_row with upper bounds
+    HighsFloat* lower,           //!< Array of size num_row with lower bounds
+    HighsFloat* upper,           //!< Array of size num_row with upper bounds
     HighsInt* num_nz,        //!< Number of nonzeros got from the model
     HighsInt* matrix_start,  //!< Array of size num_row with start indices
                              //!< of the rows
     HighsInt* matrix_index,  //!< Array of size num_nz with column indices
                              //!< for the rows
-    double* matrix_value     //!< Array of size num_nz with column
+    HighsFloat* matrix_value     //!< Array of size num_nz with column
                              //!< values for the rows
 );
 
@@ -989,7 +989,7 @@ HighsInt Highs_deleteRowsByMask(
  */
 HighsInt Highs_scaleCol(void* highs,
                         const HighsInt col,    //!< Column to scale
-                        const double scaleval  //!< Value to scale by
+                        const HighsFloat scaleval  //!< Value to scale by
 );
 
 /**
@@ -998,13 +998,13 @@ HighsInt Highs_scaleCol(void* highs,
  */
 HighsInt Highs_scaleRow(void* highs,
                         const HighsInt row,    //!< Row to scale
-                        const double scaleval  //!< Value to scale by
+                        const HighsFloat scaleval  //!< Value to scale by
 );
 
 /**
  * @brief Returns the value of infinity used by HiGHS
  */
-double Highs_getInfinity(void* highs);
+HighsFloat Highs_getInfinity(void* highs);
 
 /**
  * @brief Returns the number of columns of the current model
@@ -1030,10 +1030,10 @@ HighsInt Highs_getModel(void* highs, const HighsInt a_format,
                         const HighsInt q_format, HighsInt* numcol,
                         HighsInt* numrow, HighsInt* numnz,
                         HighsInt* hessian_num_nz, HighsInt* sense,
-                        double* offset, double* colcost, double* collower,
-                        double* colupper, double* rowlower, double* rowupper,
-                        HighsInt* astart, HighsInt* aindex, double* avalue,
-                        HighsInt* qstart, HighsInt* qindex, double* qvalue,
+                        HighsFloat* offset, HighsFloat* colcost, HighsFloat* collower,
+                        HighsFloat* colupper, HighsFloat* rowlower, HighsFloat* rowupper,
+                        HighsInt* astart, HighsInt* aindex, HighsFloat* avalue,
+                        HighsInt* qstart, HighsInt* qindex, HighsFloat* qvalue,
                         HighsInt* integrality);
 
 // Fails on Windows and MacOS since string_model_status is destroyed
@@ -1066,20 +1066,20 @@ HighsInt Highs_crossover(void* highs  //!< HiGHS object reference
 );
 
 HighsInt Highs_crossover_set(void* highs, const int n, const int m,
-                             double* col_value, double* col_dual,
-                             double* row_dual);
+                             HighsFloat* col_value, HighsFloat* col_dual,
+                             HighsFloat* row_dual);
 
 // *********************
 // * Deprecated methods*
 // *********************
 
 HighsInt Highs_call(const HighsInt numcol, const HighsInt numrow,
-                    const HighsInt numnz, const double* colcost,
-                    const double* collower, const double* colupper,
-                    const double* rowlower, const double* rowupper,
+                    const HighsInt numnz, const HighsFloat* colcost,
+                    const HighsFloat* collower, const HighsFloat* colupper,
+                    const HighsFloat* rowlower, const HighsFloat* rowupper,
                     const HighsInt* astart, const HighsInt* aindex,
-                    const double* avalue, double* colvalue, double* coldual,
-                    double* rowvalue, double* rowdual, HighsInt* colbasisstatus,
+                    const HighsFloat* avalue, HighsFloat* colvalue, HighsFloat* coldual,
+                    HighsFloat* rowvalue, HighsFloat* rowdual, HighsInt* colbasisstatus,
                     HighsInt* rowbasisstatus, HighsInt* modelstatus);
 
 HighsInt Highs_runQuiet(void* highs);
@@ -1111,16 +1111,16 @@ HighsInt Highs_setHighsBoolOptionValue(
 //     int* numcol,        //!< number of columns
 //     int* numrow,        //!< number of rows
 //     int* numnz,         //!< number of entries in the constraint matrix
-//     double *colcost,   //!< array of length [numcol] with column costs
-//     double *collower,  //!< array of length [numcol] with lower column bounds
-//     double *colupper,  //!< array of length [numcol] with upper column bounds
-//     double *rowlower,  //!< array of length [numrow] with lower row bounds
-//     double *rowupper,  //!< array of length [numrow] with upper row bounds
+//     HighsFloat *colcost,   //!< array of length [numcol] with column costs
+//     HighsFloat *collower,  //!< array of length [numcol] with lower column bounds
+//     HighsFloat *colupper,  //!< array of length [numcol] with upper column bounds
+//     HighsFloat *rowlower,  //!< array of length [numrow] with lower row bounds
+//     HighsFloat *rowupper,  //!< array of length [numrow] with upper row bounds
 //     int *astart,       //!< array of length [numcol+1] with column start
 //     indices int *
 //         aindex,  //!< array of length [numnz] with row indices of matrix
 //         entries
-//     double *avalue  //!< array of length [numnz] with value of matrix entries
+//     HighsFloat *avalue  //!< array of length [numnz] with value of matrix entries
 // );
 HighsInt Highs_setHighsIntOptionValue(
     void* highs,
@@ -1131,7 +1131,7 @@ HighsInt Highs_setHighsIntOptionValue(
 HighsInt Highs_setHighsD0ubleOptionValue(
     void* highs,
     const char* option,  //!< name of the option
-    const double value   //!< new value of option
+    const HighsFloat value   //!< new value of option
 );
 
 HighsInt Highs_setHighsStringOptionValue(
@@ -1160,7 +1160,7 @@ HighsInt Highs_getHighsIntOptionValue(
 HighsInt Highs_getHighsD0ubleOptionValue(
     void* highs,
     const char* option,  //!< name of the option
-    double* value        //!< value of option
+    HighsFloat* value        //!< value of option
 );
 
 HighsInt Highs_getHighsStringOptionValue(
@@ -1178,15 +1178,15 @@ HighsInt Highs_getHighsIntInfoValue(void* highs, const char* info,
                                     HighsInt* value);
 
 HighsInt Highs_getHighsD0ubleInfoValue(void* highs, const char* info,
-                                       double* value);
+                                       HighsFloat* value);
 
 HighsInt Highs_getNumCols(void* highs);
 
 HighsInt Highs_getNumRows(void* highs);
 
-double Highs_getHighsInfinity(void* highs);
+HighsFloat Highs_getHighsInfinity(void* highs);
 
-double Highs_getHighsRunTime(void* highs);
+HighsFloat Highs_getHighsRunTime(void* highs);
 
 // const char* Highs_highsModelStatusToChar(void* highs,
 //                                          HighsInt int_model_status);

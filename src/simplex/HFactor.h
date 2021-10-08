@@ -82,8 +82,8 @@ class HFactor {
    * count-link-list, L factor and U factor
    */
   void setup(const HighsSparseMatrix* a_matrix, HighsInt* baseIndex,
-             const double pivot_threshold = kDefaultPivotThreshold,
-             const double pivot_tolerance = kDefaultPivotTolerance,
+             const HighsFloat pivot_threshold = kDefaultPivotThreshold,
+             const HighsFloat pivot_tolerance = kDefaultPivotTolerance,
              const HighsInt highs_debug_level = kHighsDebugLevelMin,
              const bool output_flag = false, FILE* log_file_stream_ = NULL,
              const bool log_to_console = true,
@@ -93,11 +93,11 @@ class HFactor {
              const HighsInt numRow,   //!< Number of rows
              const HighsInt* Astart,  //!< Column starts of constraint matrix
              const HighsInt* Aindex,  //!< Row indices of constraint matrix
-             const double* Avalue,    //!< Row values of constraint matrix
+             const HighsFloat* Avalue,    //!< Row values of constraint matrix
              HighsInt* baseIndex,     //!< Indices of basic variables
-             const double pivot_threshold =
+             const HighsFloat pivot_threshold =
                  kDefaultPivotThreshold,  //!< Pivoting threshold
-             const double pivot_tolerance =
+             const HighsFloat pivot_tolerance =
                  kDefaultPivotTolerance,  //!< Min absolute pivot
              const HighsInt highs_debug_level = kHighsDebugLevelMin,
              const bool output_flag = false, FILE* logfile = NULL,
@@ -108,7 +108,7 @@ class HFactor {
   void setupMatrix(
       const HighsInt* Astart,  //!< Column starts of constraint matrix
       const HighsInt* Aindex,  //!< Row indices of constraint matrix
-      const double* Avalue);   //!< Row values of constraint matrix
+      const HighsFloat* Avalue);   //!< Row values of constraint matrix
   void setupMatrix(const HighsSparseMatrix* a_matrix);
   /**
    * @brief Form \f$PBQ=LU\f$ for basis matrix \f$B\f$ or report degree of rank
@@ -124,7 +124,7 @@ class HFactor {
    */
   void ftranCall(
       HVector& vector,                //!< RHS vector \f$\mathbf{b}\f$
-      const double expected_density,  //!< Expected density of the result
+      const HighsFloat expected_density,  //!< Expected density of the result
       HighsTimerClock* factor_timer_clock_pointer = NULL) const;
 
   /**
@@ -132,7 +132,7 @@ class HFactor {
    */
   void btranCall(
       HVector& vector,                //!< RHS vector \f$\mathbf{b}\f$
-      const double expected_density,  //!< Expected density of the result
+      const HighsFloat expected_density,  //!< Expected density of the result
       HighsTimerClock* factor_timer_clock_pointer = NULL) const;
 
   /**
@@ -149,12 +149,12 @@ class HFactor {
    * @brief Sets pivoting threshold
    */
   bool setPivotThreshold(
-      const double new_pivot_threshold = kDefaultPivotThreshold);
+      const HighsFloat new_pivot_threshold = kDefaultPivotThreshold);
   /**
    * @brief Sets minimum absolute pivot
    */
   bool setMinAbsPivot(
-      const double new_pivot_tolerance = kDefaultPivotTolerance);
+      const HighsFloat new_pivot_tolerance = kDefaultPivotTolerance);
 
   /**
    * @brief Updates instance with respect to new columns in the
@@ -177,12 +177,12 @@ class HFactor {
   /**
    * @brief Wall clock time for INVERT
    */
-  double build_realTick;
+  HighsFloat build_realTick;
 
   /**
    * @brief The synthetic clock for INVERT
    */
-  double build_synthetic_tick;
+  HighsFloat build_synthetic_tick;
 
   // Rank deficiency information
 
@@ -219,7 +219,7 @@ class HFactor {
   /**
    * @brief Gets Avalue since it is private
    */
-  const double* getAvalue() const { return Avalue; }
+  const HighsFloat* getAvalue() const { return Avalue; }
 
   void reportLu(const HighsInt l_u_or_both = kReportLuBoth,
                 const bool full = true) const;
@@ -247,10 +247,10 @@ class HFactor {
   bool a_matrix_valid;
   const HighsInt* Astart;
   const HighsInt* Aindex;
-  const double* Avalue;
+  const HighsFloat* Avalue;
   HighsInt* baseIndex;
-  double pivot_threshold;
-  double pivot_tolerance;
+  HighsFloat pivot_threshold;
+  HighsFloat pivot_tolerance;
   HighsInt highs_debug_level;
 
   std::unique_ptr<std::tuple<bool, bool, HighsInt>> log_data;
@@ -262,13 +262,13 @@ class HFactor {
   // Working buffer
   HighsInt nwork;
   vector<HighsInt> iwork;
-  vector<double> dwork;
+  vector<HighsFloat> dwork;
 
   // Basis matrix
   vector<HighsInt> Bvar;  // Temp
   vector<HighsInt> Bstart;
   vector<HighsInt> Bindex;
-  vector<double> Bvalue;
+  vector<HighsFloat> Bvalue;
 
   // Permutation
   vector<HighsInt> permute;
@@ -280,8 +280,8 @@ class HFactor {
   vector<HighsInt> MCcountN;
   vector<HighsInt> MCspace;
   vector<HighsInt> MCindex;
-  vector<double> MCvalue;
-  vector<double> MCminpivot;
+  vector<HighsFloat> MCvalue;
+  vector<HighsFloat> MCminpivot;
 
   // Row wise kernel matrix
   vector<HighsInt> MRstart;
@@ -293,7 +293,7 @@ class HFactor {
   // Kernel column buffer
   vector<HighsInt> mwz_column_index;
   vector<char> mwz_column_mark;
-  vector<double> mwz_column_array;
+  vector<HighsFloat> mwz_column_array;
 
   // Count link list
   vector<HighsInt> clinkFirst;
@@ -310,34 +310,34 @@ class HFactor {
 
   vector<HighsInt> Lstart;
   vector<HighsInt> Lindex;
-  vector<double> Lvalue;
+  vector<HighsFloat> Lvalue;
   vector<HighsInt> LRstart;
   vector<HighsInt> LRindex;
-  vector<double> LRvalue;
+  vector<HighsFloat> LRvalue;
 
   // Factor U
   vector<HighsInt> UpivotLookup;
   vector<HighsInt> UpivotIndex;
-  vector<double> UpivotValue;
+  vector<HighsFloat> UpivotValue;
 
   HighsInt UmeritX;
   HighsInt UtotalX;
   vector<HighsInt> Ustart;
   vector<HighsInt> Ulastp;
   vector<HighsInt> Uindex;
-  vector<double> Uvalue;
+  vector<HighsFloat> Uvalue;
   vector<HighsInt> URstart;
   vector<HighsInt> URlastp;
   vector<HighsInt> URspace;
   vector<HighsInt> URindex;
-  vector<double> URvalue;
+  vector<HighsFloat> URvalue;
 
   // Update buffer
-  vector<double> PFpivotValue;
+  vector<HighsFloat> PFpivotValue;
   vector<HighsInt> PFpivotIndex;
   vector<HighsInt> PFstart;
   vector<HighsInt> PFindex;
-  vector<double> PFvalue;
+  vector<HighsFloat> PFvalue;
 
   // Implementation
   void buildSimple();
@@ -358,15 +358,15 @@ class HFactor {
   void reportIntVector(const std::string name,
                        const vector<HighsInt> entry) const;
   void reportD0ubleVector(const std::string name,
-                          const vector<double> entry) const;
+                          const vector<HighsFloat> entry) const;
 
-  void ftranL(HVector& vector, const double expected_density,
+  void ftranL(HVector& vector, const HighsFloat expected_density,
               HighsTimerClock* factor_timer_clock_pointer = NULL) const;
-  void btranL(HVector& vector, const double expected_density,
+  void btranL(HVector& vector, const HighsFloat expected_density,
               HighsTimerClock* factor_timer_clock_pointer = NULL) const;
-  void ftranU(HVector& vector, const double expected_density,
+  void ftranU(HVector& vector, const HighsFloat expected_density,
               HighsTimerClock* factor_timer_clock_pointer = NULL) const;
-  void btranU(HVector& vector, const double expected_density,
+  void btranU(HVector& vector, const HighsFloat expected_density,
               HighsTimerClock* factor_timer_clock_pointer = NULL) const;
 
   void ftranFT(HVector& vector) const;
@@ -387,28 +387,28 @@ class HFactor {
   /**
    * Local in-line functions
    */
-  void colInsert(const HighsInt iCol, const HighsInt iRow, const double value) {
+  void colInsert(const HighsInt iCol, const HighsInt iRow, const HighsFloat value) {
     const HighsInt iput = MCstart[iCol] + MCcountA[iCol]++;
     MCindex[iput] = iRow;
     MCvalue[iput] = value;
   }
-  void colStoreN(const HighsInt iCol, const HighsInt iRow, const double value) {
+  void colStoreN(const HighsInt iCol, const HighsInt iRow, const HighsFloat value) {
     const HighsInt iput = MCstart[iCol] + MCspace[iCol] - (++MCcountN[iCol]);
     MCindex[iput] = iRow;
     MCvalue[iput] = value;
   }
   void colFixMax(const HighsInt iCol) {
-    double maxValue = 0;
+    HighsFloat maxValue = 0;
     for (HighsInt k = MCstart[iCol]; k < MCstart[iCol] + MCcountA[iCol]; k++)
       maxValue = max(maxValue, fabs(MCvalue[k]));
     MCminpivot[iCol] = maxValue * pivot_threshold;
   }
 
-  double colDelete(const HighsInt iCol, const HighsInt iRow) {
+  HighsFloat colDelete(const HighsInt iCol, const HighsInt iRow) {
     HighsInt idel = MCstart[iCol];
     HighsInt imov = idel + (--MCcountA[iCol]);
     while (MCindex[idel] != iRow) idel++;
-    double pivotX = MCvalue[idel];
+    HighsFloat pivotX = MCvalue[idel];
     MCindex[idel] = MCindex[imov];
     MCvalue[idel] = MCvalue[imov];
     return pivotX;

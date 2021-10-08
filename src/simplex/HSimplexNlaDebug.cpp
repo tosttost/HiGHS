@@ -19,14 +19,14 @@
 
 //#include <stdio.h>
 
-const double kResidualLargeError = 1e-8;
-const double kResidualExcessiveError = sqrt(kResidualLargeError);
+const HighsFloat kResidualLargeError = 1e-8;
+const HighsFloat kResidualExcessiveError = sqrt(kResidualLargeError);
 
-const double kSolveLargeError = 1e-8;
-const double kSolveExcessiveError = sqrt(kSolveLargeError);
+const HighsFloat kSolveLargeError = 1e-8;
+const HighsFloat kSolveExcessiveError = sqrt(kSolveLargeError);
 
-const double kInverseLargeError = 1e-8;
-const double kInverseExcessiveError = sqrt(kInverseLargeError);
+const HighsFloat kInverseLargeError = 1e-8;
+const HighsFloat kInverseExcessiveError = sqrt(kInverseLargeError);
 
 HighsDebugStatus HSimplexNla::debugCheckInvert(
     const std::string message, const HighsInt alt_debug_level) const {
@@ -52,7 +52,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
   const HighsInt num_col = this->lp_->num_col_;
   const vector<HighsInt>& a_matrix_start = this->lp_->a_matrix_.start_;
   const vector<HighsInt>& a_matrix_index = this->lp_->a_matrix_.index_;
-  const vector<double>& a_matrix_value = this->lp_->a_matrix_.value_;
+  const vector<HighsFloat>& a_matrix_value = this->lp_->a_matrix_.value_;
   const HighsInt* base_index = this->base_index_;
   const HighsOptions* options = this->options_;
   // Make sure that this isn't called between the matrix and LP resizing
@@ -68,7 +68,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
   column.setup(num_row);
   rhs.setup(num_row);
   HVector residual;
-  double expected_density = 1;
+  HighsFloat expected_density = 1;
 
   const bool random_ftran_test = true;
   const bool report_basis = options->log_dev_level > 1 && num_row < 20;
@@ -83,7 +83,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
       highsLogDev(options_->log_options, HighsLogType::kInfo, "Basis:");
     for (HighsInt iRow = 0; iRow < num_row; iRow++) {
       rhs.index[rhs.count++] = iRow;
-      double value = random.fraction();
+      HighsFloat value = random.fraction();
       column.array[iRow] = value;
       HighsInt iCol = base_index[iRow];
       if (report_basis)
@@ -143,8 +143,8 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
   std::string value_adjective;
   HighsLogType report_level;
   expected_density = 0;
-  double inverse_error_norm = 0;
-  double residual_error_norm = 0;
+  HighsFloat inverse_error_norm = 0;
+  HighsFloat residual_error_norm = 0;
   const bool test_inverse_ftran = true;
   if (test_inverse_ftran) {
     // Solve BX=B
@@ -173,10 +173,10 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
       HVector residual = column;
       this->ftran(column, expected_density);
       if (report_col) reportArray("Check col after  FTRAN", &column, true);
-      double inverse_col_error_norm = 0;
+      HighsFloat inverse_col_error_norm = 0;
       for (HighsInt lc_iRow = 0; lc_iRow < num_row; lc_iRow++) {
-        double ckValue = lc_iRow == iRow ? 1 : 0;
-        double inverse_error = fabs(column.array[lc_iRow] - ckValue);
+        HighsFloat ckValue = lc_iRow == iRow ? 1 : 0;
+        HighsFloat inverse_error = fabs(column.array[lc_iRow] - ckValue);
         inverse_col_error_norm =
             std::max(inverse_error, inverse_col_error_norm);
       }
@@ -187,7 +187,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
             "CheckINVERT: Basic column %2d = %2d has inverse error %11.4g\n",
             (int)iRow, int(iCol), inverse_col_error_norm);
       inverse_error_norm = std::max(inverse_col_error_norm, inverse_error_norm);
-      double residual_col_error_norm =
+      HighsFloat residual_col_error_norm =
           debugInvertResidualError(false, column, residual);
       residual_error_norm =
           std::max(residual_col_error_norm, residual_error_norm);
@@ -230,11 +230,11 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
       HVector residual = column;
       this->btran(column, expected_density);
       if (report_row) reportArray("Check col after  BTRAN", &column, true);
-      double inverse_col_error_norm = 0;
+      HighsFloat inverse_col_error_norm = 0;
       for (HighsInt lc_iRow = 0; lc_iRow < num_row; lc_iRow++) {
-        double value = column.array[lc_iRow];
-        double ckValue = lc_iRow == iRow ? 1 : 0;
-        double inverse_error = fabs(value - ckValue);
+        HighsFloat value = column.array[lc_iRow];
+        HighsFloat ckValue = lc_iRow == iRow ? 1 : 0;
+        HighsFloat inverse_error = fabs(value - ckValue);
         inverse_col_error_norm =
             std::max(inverse_error, inverse_col_error_norm);
       }
@@ -245,7 +245,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
             "CheckINVERT: Basis matrix row %2d has inverse error %11.4g\n",
             (int)iRow, inverse_col_error_norm);
       inverse_error_norm = std::max(inverse_col_error_norm, inverse_error_norm);
-      double residual_col_error_norm =
+      HighsFloat residual_col_error_norm =
           debugInvertResidualError(true, column, residual);
       residual_error_norm =
           std::max(residual_col_error_norm, residual_error_norm);
@@ -257,14 +257,14 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
   return return_status;
 }
 
-double HSimplexNla::debugInvertResidualError(const bool transposed,
+HighsFloat HSimplexNla::debugInvertResidualError(const bool transposed,
                                              const HVector& solution,
                                              HVector& residual) const {
   const HighsInt num_row = this->lp_->num_row_;
   const HighsInt num_col = this->lp_->num_col_;
   const vector<HighsInt>& a_matrix_start = this->lp_->a_matrix_.start_;
   const vector<HighsInt>& a_matrix_index = this->lp_->a_matrix_.index_;
-  const vector<double>& a_matrix_value = this->lp_->a_matrix_.value_;
+  const vector<HighsFloat>& a_matrix_value = this->lp_->a_matrix_.value_;
   const HighsInt* base_index = this->base_index_;
 
   if (transposed) {
@@ -274,18 +274,18 @@ double HSimplexNla::debugInvertResidualError(const bool transposed,
         for (HighsInt iEl = a_matrix_start[iCol];
              iEl < a_matrix_start[iCol + 1]; iEl++) {
           HighsInt index = a_matrix_index[iEl];
-          double value = solution.array[index];
+          HighsFloat value = solution.array[index];
           residual.array[iRow] -= value * a_matrix_value[iEl];
         }
       } else {
         HighsInt index = iCol - num_col;
-        double value = solution.array[index];
+        HighsFloat value = solution.array[index];
         residual.array[iRow] -= value;
       }
     }
   } else {
     for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-      double value = solution.array[iRow];
+      HighsFloat value = solution.array[iRow];
       HighsInt iCol = base_index[iRow];
       if (iCol < num_col) {
         for (HighsInt iEl = a_matrix_start[iCol];
@@ -300,9 +300,9 @@ double HSimplexNla::debugInvertResidualError(const bool transposed,
     }
   }
 
-  double residual_error_norm = 0;
+  HighsFloat residual_error_norm = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-    double residual_error = fabs(residual.array[iRow]);
+    HighsFloat residual_error = fabs(residual.array[iRow]);
     residual_error_norm = std::max(residual_error, residual_error_norm);
   }
   return residual_error_norm;
@@ -313,12 +313,12 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
     const HVector& solution, HVector& residual, const bool force) const {
   const HighsInt num_row = this->lp_->num_row_;
   const HighsOptions* options = this->options_;
-  double solve_error_norm = 0;
+  HighsFloat solve_error_norm = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-    double solve_error = fabs(solution.array[iRow] - true_solution.array[iRow]);
+    HighsFloat solve_error = fabs(solution.array[iRow] - true_solution.array[iRow]);
     solve_error_norm = std::max(solve_error, solve_error_norm);
   }
-  double residual_error_norm =
+  HighsFloat residual_error_norm =
       debugInvertResidualError(transposed, solution, residual);
 
   return debugReportInvertSolutionError("random solution", transposed,
@@ -328,7 +328,7 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
 
 HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
     const std::string source, const bool transposed,
-    const double solve_error_norm, const double residual_error_norm,
+    const HighsFloat solve_error_norm, const HighsFloat residual_error_norm,
     const bool force) const {
   const HighsOptions* options = this->options_;
   std::string value_adjective;

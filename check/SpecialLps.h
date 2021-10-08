@@ -18,12 +18,12 @@
 #include "lp_data/HConst.h"
 #include "lp_data/HighsLp.h"
 
-const double inf = kHighsInf;
+const HighsFloat inf = kHighsInf;
 
 class SpecialLps {
  public:
   void issue272Lp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "issue272";
     lp.num_col_ = 2;
     lp.num_row_ = 2;
@@ -43,7 +43,7 @@ class SpecialLps {
   }
 
   void issue280Lp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "issue280";
     lp.num_col_ = 2;
     lp.num_row_ = 2;
@@ -63,7 +63,7 @@ class SpecialLps {
   }
 
   void issue282Lp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "issue282";
     lp.num_col_ = 2;
     lp.num_row_ = 3;
@@ -101,7 +101,7 @@ class SpecialLps {
   }
 
   void issue295Lp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "issue295";
     lp.num_col_ = 5;
     lp.num_row_ = 2;
@@ -121,7 +121,7 @@ class SpecialLps {
   }
 
   void issue306Lp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "issue30";
     lp.num_col_ = 10;
     lp.num_row_ = 6;
@@ -237,7 +237,7 @@ class SpecialLps {
   }
 
   void distillationLp(HighsLp& lp, HighsModelStatus& require_model_status,
-                      double& optimal_objective) {
+                      HighsFloat& optimal_objective) {
     lp.model_name_ = "distillation";
     lp.num_col_ = 2;
     lp.num_row_ = 3;
@@ -257,7 +257,7 @@ class SpecialLps {
   }
 
   void blendingLp(HighsLp& lp, HighsModelStatus& require_model_status,
-                  double& optimal_objective) {
+                  HighsFloat& optimal_objective) {
     lp.model_name_ = "blending";
     lp.num_col_ = 2;
     lp.num_row_ = 2;
@@ -277,7 +277,7 @@ class SpecialLps {
   }
 
   void blendingMaxLp(HighsLp& lp, HighsModelStatus& require_model_status,
-                     double& optimal_objective) {
+                     HighsFloat& optimal_objective) {
     blendingLp(lp, require_model_status, optimal_objective);
     lp.model_name_ = "blendingMax";
     for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++)
@@ -304,10 +304,10 @@ class SpecialLps {
     }
   }
 
-  bool objectiveOk(const double optimal_objective,
-                   const double require_optimal_objective,
+  bool objectiveOk(const HighsFloat optimal_objective,
+                   const HighsFloat require_optimal_objective,
                    const bool dev_run = false) {
-    double error = std::fabs(optimal_objective - require_optimal_objective) /
+    HighsFloat error = std::fabs(optimal_objective - require_optimal_objective) /
                    std::max(1.0, std::fabs(require_optimal_objective));
     bool error_ok = error < 1e-10;
     if (!error_ok && dev_run)

@@ -23,13 +23,13 @@
 class Avgas {
  public:
   void row(HighsInt row, HighsInt& num_row, HighsInt& num_row_nz,
-           std::vector<double>& rowLower, std::vector<double>& rowUpper,
+           std::vector<HighsFloat>& rowLower, std::vector<HighsFloat>& rowUpper,
            std::vector<HighsInt>& ARstart, std::vector<HighsInt>& ARindex,
-           std::vector<double>& ARvalue);
+           std::vector<HighsFloat>& ARvalue);
 
   void col(HighsInt col, HighsInt& num_col, HighsInt& num_col_nz,
-           std::vector<double>& colCost, std::vector<double>& colLower,
-           std::vector<double>& colUpper, std::vector<HighsInt>& Astart,
-           std::vector<HighsInt>& Aindex, std::vector<double>& Avalue);
+           std::vector<HighsFloat>& colCost, std::vector<HighsFloat>& colLower,
+           std::vector<HighsFloat>& colUpper, std::vector<HighsInt>& Astart,
+           std::vector<HighsInt>& Aindex, std::vector<HighsFloat>& Avalue);
 };
 #endif /* SIMPLEX_AVGAS_H_ */
