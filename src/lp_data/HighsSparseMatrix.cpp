@@ -1196,7 +1196,7 @@ double HighsSparseMatrix::computeDot(const HVector& column,
 }
 
 void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
-                                  const double multiplier) const {
+                                  const HighsFloat multiplier) const {
   assert(this->isColwise());
   if (use_col < this->num_col_) {
     for (HighsInt iEl = this->start_[use_col]; iEl < this->start_[use_col + 1];

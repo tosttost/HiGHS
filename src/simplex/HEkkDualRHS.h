@@ -93,7 +93,7 @@ class HEkkDualRHS {
       HVector* column,             //!< Pivotal column
       const double row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
       double Kai,                  //!< -2/alpha
-      double* dse                  //!< DSE std::vector
+      HighsFloat* dse                  //!< DSE std::vector
   );
   /**
    * @brief Update the Devex weights
@@ -139,10 +139,10 @@ class HEkkDualRHS {
                                //!< greatest primal infeasibilities
   std::vector<HighsInt>
       workIndex;  //!< List of rows with greatest primal infeasibilities
-  std::vector<double>
+  std::vector<HighsFloat>
       work_infeasibility;            //!< Vector of all primal infeasiblities
-  std::vector<double> workEdWt;      //!< DSE or Dvx weight
-  std::vector<double> workEdWtFull;  //!< Full-length std::vector where weights
+  std::vector<HighsFloat> workEdWt;      //!< DSE or Dvx weight
+  std::vector<HighsFloat> workEdWtFull;  //!< Full-length std::vector where weights
                                      //!< are scattered during INVERT
 
   HighsInt partNum;

@@ -94,7 +94,7 @@ class HighsSparseMatrix {
               const HighsSparseMatrix& matrix);
   double computeDot(const HVector& column, const HighsInt use_col) const;
   void collectAj(HVector& column, const HighsInt use_col,
-                 const double multiplier) const;
+                 const HighsFloat multiplier) const;
 
  private:
   void priceByRowDenseResult(HVector& result, const HVector& column,

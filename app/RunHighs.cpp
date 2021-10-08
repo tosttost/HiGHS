@@ -22,11 +22,6 @@ void reportModelStatsOrError(const HighsLogOptions& log_options,
                              const HighsModel& model);
 
 int main(int argc, char** argv) {
-  const double quad = sqrt(2.0);
-  printf("double quad = %g\n", (double)quad);
-  
-
-
   // Load user options.
   HighsOptions options;
   std::string model_file;
