@@ -64,14 +64,14 @@ HighsStatus getRangingData(HighsRanging& ranging,
   const SimplexBasis& simplex_basis = ekk_instance.basis_;
   const vector<double>& col_scale = use_lp.scale_.col;
   const vector<double>& row_scale = use_lp.scale_.row;
-  const vector<double>& value_ = simplex_info.workValue_;
-  const vector<double>& dual_ = simplex_info.workDual_;
-  const vector<double>& cost_ = simplex_info.workCost_;
-  const vector<double>& lower_ = simplex_info.workLower_;
-  const vector<double>& upper_ = simplex_info.workUpper_;
-  const vector<double>& Bvalue_ = simplex_info.baseValue_;
-  const vector<double>& Blower_ = simplex_info.baseLower_;
-  const vector<double>& Bupper_ = simplex_info.baseUpper_;
+  const vector<HighsFloat>& value_ = simplex_info.workValue_;
+  const vector<HighsFloat>& dual_ = simplex_info.workDual_;
+  const vector<HighsFloat>& cost_ = simplex_info.workCost_;
+  const vector<HighsFloat>& lower_ = simplex_info.workLower_;
+  const vector<HighsFloat>& upper_ = simplex_info.workUpper_;
+  const vector<HighsFloat>& Bvalue_ = simplex_info.baseValue_;
+  const vector<HighsFloat>& Blower_ = simplex_info.baseLower_;
+  const vector<HighsFloat>& Bupper_ = simplex_info.baseUpper_;
   const vector<int8_t>& Nflag_ = simplex_basis.nonbasicFlag_;
   const vector<int8_t>& Nmove_ = simplex_basis.nonbasicMove_;
   const vector<HighsInt>& Bindex_ = simplex_basis.basicIndex_;
@@ -100,12 +100,12 @@ HighsStatus getRangingData(HighsRanging& ranging,
   HVector column;
   column.setup(numRow);
 
-  vector<double> xi = Bvalue_;
+  vector<double> xi; for (HighsInt i = 0; i < numRow; i++) xi.push_back((double)Bvalue_[i]);
   for (HighsInt i = 0; i < numRow; i++) {
-    xi[i] = max(xi[i], Blower_[i]);
-    xi[i] = min(xi[i], Bupper_[i]);
+    xi[i] = max(xi[i], (double)Blower_[i]);
+    xi[i] = min(xi[i], (double)Bupper_[i]);
   }
-  vector<double> dj = dual_;
+  vector<double> dj; for (HighsInt j = 0; j < numTotal; j++) xi.push_back((double)dual_[j]);
   for (HighsInt j = 0; j < numTotal; j++) {
     if (Nflag_[j] && (lower_[j] != upper_[j])) {
       if (value_[j] == lower_[j]) dj[j] = max(dj[j], 0.0);
@@ -119,8 +119,8 @@ HighsStatus getRangingData(HighsRanging& ranging,
   vector<double> dxi_inc(numRow);
   vector<double> dxi_dec(numRow);
   for (HighsInt i = 0; i < numRow; i++) {
-    dxi_inc[i] = Bupper_[i] - xi[i];
-    dxi_dec[i] = Blower_[i] - xi[i];
+    dxi_inc[i] = (double)(Bupper_[i] - xi[i]);
+    dxi_dec[i] = (double)(Blower_[i] - xi[i]);
   }
 
   vector<double> ddj_inc(numTotal);
@@ -172,7 +172,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
     HighsInt nWork = 0;
     for (HighsInt k = 0; k < column.count; k++) {
       HighsInt iRow = column.index[k];
-      double alpha = column.array[iRow];
+      double alpha = (double)column.array[iRow];
       if (fabs(alpha) > tol_a) {
         iWork_[nWork] = iRow;
         dWork_[nWork] = alpha;
@@ -232,7 +232,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
     if (Nflag_[j]) {
       // J-out for x_j = l_j
       if (Nmove_[j] == +1) {
-        double value = value_[j] + txj_inc[j];
+        double value = (double)value_[j] + txj_inc[j];
         if (ixj_inc[j] != -1 && value <= upper_[j]) {
           jxj_inc[j] = Bindex_[ixj_inc[j]];
         } else if (value > upper_[j]) {
@@ -241,7 +241,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
       }
       // J-out for x_j = u_j
       if (Nmove_[j] == -1) {
-        double value = value_[j] + txj_dec[j];
+        double value = (double)value_[j] + txj_dec[j];
         if (ixj_dec[j] != -1 && value >= lower_[j]) {
           jxj_dec[j] = Bindex_[ixj_dec[j]];
         } else if (value < lower_[j]) {
@@ -271,12 +271,12 @@ HighsStatus getRangingData(HighsRanging& ranging,
   for (HighsInt j = 0; j < numCol; j++) {
     if (Nflag_[j]) {
       // Primal value and its sign
-      double value = value_[j];
+      double value = (double)value_[j];
       double vsign = (value > 0) ? 1 : (value < 0 ? -1 : 0);
 
       // Increase c_j
       if (ddj_inc[j] != H_INF) {
-        c_up_c[j] = cost_[j] + ddj_inc[j];
+        c_up_c[j] = (double)cost_[j] + ddj_inc[j];
         c_up_f[j] =
             objective +
             sense * possInfProduct(ddj_inc[j], value);  // value * ddj_inc[j];
@@ -291,7 +291,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
 
       // Decrease c_j
       if (ddj_dec[j] != H_INF) {
-        c_dn_c[j] = cost_[j] + ddj_dec[j];
+        c_dn_c[j] = (double)cost_[j] + ddj_dec[j];
         c_dn_f[j] =
             objective +
             sense * possInfProduct(ddj_dec[j], value);  // value * ddj_dec[j];
@@ -319,7 +319,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
 
       // Increase c_i
       if (jci_inc[i] != -1) {
-        c_up_c[j] = cost_[j] + tci_inc[i];
+        c_up_c[j] = (double)cost_[j] + tci_inc[i];
         c_up_f[j] =
             objective +
             sense * possInfProduct(tci_inc[i], value);  // value * tci_inc[i];
@@ -334,7 +334,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
 
       // Decrease c_i
       if (jci_dec[i] != -1) {
-        c_dn_c[j] = cost_[j] + tci_dec[i];
+        c_dn_c[j] = (double)cost_[j] + tci_dec[i];
         c_dn_f[j] =
             objective +
             sense * possInfProduct(tci_dec[i], value);  // value * tci_dec[i];
@@ -382,7 +382,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
       // Increase x_j
       if (ixj_inc[j] != -1) {
         HighsInt i = ixj_inc[j];
-        b_up_b[j] = value_[j] + txj_inc[j];
+        b_up_b[j] = (double)value_[j] + txj_inc[j];
         b_up_f[j] =
             objective +
             sense * possInfProduct(txj_inc[j], dualv);  // txj_inc[j] * dualv;
@@ -396,10 +396,10 @@ HighsStatus getRangingData(HighsRanging& ranging,
       }
 
       // Check if b_up_b > upper
-      if (value_[j] != upper_[j] && b_up_b[j] > upper_[j]) {
-        b_up_b[j] = upper_[j];
+      if ((double)value_[j] != (double)upper_[j] && b_up_b[j] > (double)upper_[j]) {
+        b_up_b[j] = (double)upper_[j];
         assert(lower_[j] > -kHighsInf);
-        b_up_f[j] = objective + sense * (upper_[j] - lower_[j]) * dualv;
+        b_up_f[j] = objective + sense * (double)(upper_[j] - lower_[j]) * dualv;
         b_up_e[j] = j;
         b_up_l[j] = j;
       }
@@ -407,7 +407,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
       // Decrease x_j
       if (ixj_dec[j] != -1) {
         HighsInt i = ixj_dec[j];
-        b_dn_b[j] = value_[j] + txj_dec[j];
+        b_dn_b[j] = (double)value_[j] + txj_dec[j];
         b_dn_f[j] =
             objective +
             sense * possInfProduct(txj_dec[j], dualv);  // txj_dec[j] * dualv;
@@ -421,10 +421,10 @@ HighsStatus getRangingData(HighsRanging& ranging,
       }
 
       // Check if b_dn_b < lower
-      if (value_[j] != lower_[j] && b_dn_b[j] < lower_[j]) {
-        b_dn_b[j] = lower_[j];
+      if ((double)value_[j] != (double)lower_[j] && b_dn_b[j] < (double)lower_[j]) {
+        b_dn_b[j] = (double)lower_[j];
         assert(upper_[j] < kHighsInf);
-        b_dn_f[j] = objective + sense * (lower_[j] - upper_[j]) * dualv;
+        b_dn_f[j] = objective + sense * (double)(lower_[j] - upper_[j]) * dualv;
         b_dn_e[j] = j;
         b_dn_l[j] = j;
       }
@@ -452,9 +452,9 @@ HighsStatus getRangingData(HighsRanging& ranging,
         double tt = jmove > 0 ? txj_inc[j_in] : txj_dec[j_in];
         if (j_out == j_in) {
           // Bound flip
-          double delta = jmove * (upper_[j_in] - lower_[j_in]);
+          double delta = jmove * (double)(upper_[j_in] - lower_[j_in]);
           newx = xi[i] - delta * a_in;
-          newf = objective + sense * delta * dual_[j_in];
+          newf = objective + sense * delta * (double)dual_[j_in];
           j_enter = j_in;
           j_leave = j_out;
         } else if (j_out != -1) {
@@ -462,7 +462,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
           double delta = w_out > 0 ? dxi_inc[i_out] : dxi_dec[i_out];
           double a_out = jmove > 0 ? axj_inc[j_in] : axj_dec[j_in];
           newx = xi[i] + delta * a_in / a_out;
-          newf = objective + sense * tt * dual_[j_in];
+          newf = objective + sense * tt * (double)dual_[j_in];
           j_enter = j_in;
           j_leave = j_out;
         } else {
@@ -471,7 +471,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
           // While still limited by its own bounds
           //
           // Its own bounds could just be inf
-          newx = dir == -1 ? lower_[j] : upper_[j];
+          newx = dir == -1 ? (double)lower_[j] : (double)upper_[j];
           newf = objective;
           j_enter = -1;
           j_leave = -1;

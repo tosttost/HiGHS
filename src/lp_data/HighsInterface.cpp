@@ -1110,14 +1110,14 @@ HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
     if (solve_vector.count > num_row) {
       // Solution nonzeros not known
       for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-        solution_vector[iRow] = solve_vector.array[iRow];
+        solution_vector[iRow] = (double)solve_vector.array[iRow];
       }
     } else {
       // Solution nonzeros are known
       for (HighsInt iRow = 0; iRow < num_row; iRow++) solution_vector[iRow] = 0;
       for (HighsInt iX = 0; iX < solve_vector.count; iX++) {
         HighsInt iRow = solve_vector.index[iX];
-        solution_vector[iRow] = solve_vector.array[iRow];
+        solution_vector[iRow] = (double)solve_vector.array[iRow];
       }
     }
   } else {
@@ -1127,8 +1127,8 @@ HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
       solution_num_nz = 0;
       for (HighsInt iRow = 0; iRow < num_row; iRow++) {
         solution_vector[iRow] = 0;
-        if (solve_vector.array[iRow]) {
-          solution_vector[iRow] = solve_vector.array[iRow];
+        if ((double)solve_vector.array[iRow]) {
+          solution_vector[iRow] = (double)solve_vector.array[iRow];
           solution_indices[*solution_num_nz++] = iRow;
         }
       }
@@ -1137,7 +1137,7 @@ HighsStatus Highs::basisSolveInterface(const vector<double>& rhs,
       for (HighsInt iRow = 0; iRow < num_row; iRow++) solution_vector[iRow] = 0;
       for (HighsInt iX = 0; iX < solve_vector.count; iX++) {
         HighsInt iRow = solve_vector.index[iX];
-        solution_vector[iRow] = solve_vector.array[iRow];
+        solution_vector[iRow] = (double)solve_vector.array[iRow];
         solution_indices[iX] = iRow;
       }
       *solution_num_nz = solve_vector.count;

@@ -45,7 +45,7 @@ class HVector {
   HighsInt size;           //!< Dimension of the vector
   HighsInt count;          //!< Number of nonzeros
   vector<HighsInt> index;  //!< Packed indices of nonzeros
-  vector<double> array;    //!< Full-length array of values
+  vector<HighsFloat> array;    //!< Full-length array of values
 
   double synthetic_tick;  //!< Synthetic clock for operations with this vector
 
@@ -68,7 +68,7 @@ class HVector {
   bool packFlag;               //!< Flag to indicate whether to pack or not
   HighsInt packCount;          //!< Number of nonzeros packed
   vector<HighsInt> packIndex;  //!< Packed indices
-  vector<double> packValue;    //!< Packed values
+  vector<HighsFloat> packValue;    //!< Packed values
 
   /**
    * @brief Copy from another HVector structure to this instance

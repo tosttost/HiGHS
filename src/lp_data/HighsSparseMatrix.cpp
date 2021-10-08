@@ -1076,12 +1076,12 @@ void HighsSparseMatrix::priceByColumn(HVector& result,
   assert(this->isColwise());
   result.count = 0;
   for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
-    double value = 0;
+    HighsFloat value = 0;
     for (HighsInt iEl = this->start_[iCol]; iEl < this->start_[iCol + 1];
          iEl++) {
       value += column.array[this->index_[iEl]] * this->value_[iEl];
     }
-    if (fabs(value) > kHighsTiny) {
+    if (fabs((double)value) > kHighsTiny) {
       result.array[iCol] = value;
       result.index[result.count++] = iCol;
     }
@@ -1128,13 +1128,13 @@ void HighsSparseMatrix::priceByRowWithSwitch(
       bool switch_to_dense = result.count + row_num_nz >= this->num_col_ ||
                              local_density > switch_density;
       if (switch_to_dense) break;
-      double multiplier = column.array[iRow];
+      HighsFloat multiplier = column.array[iRow];
       for (HighsInt iEl = this->start_[iRow]; iEl < to_iEl; iEl++) {
         HighsInt iCol = this->index_[iEl];
-        double value0 = result.array[iCol];
-        double value1 = value0 + multiplier * this->value_[iEl];
+        HighsFloat value0 = result.array[iCol];
+        HighsFloat value1 = value0 + multiplier * this->value_[iEl];
         if (value0 == 0) result.index[result.count++] = iCol;
-        result.array[iCol] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
+        result.array[iCol] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
       }
       next_index = ix + 1;
     }
@@ -1184,7 +1184,7 @@ void HighsSparseMatrix::update(const HighsInt var_in, const HighsInt var_out,
 double HighsSparseMatrix::computeDot(const HVector& column,
                                      const HighsInt use_col) const {
   assert(this->isColwise());
-  double result = 0;
+  HighsFloat result = 0;
   if (use_col < this->num_col_) {
     for (HighsInt iEl = this->start_[use_col]; iEl < this->start_[use_col + 1];
          iEl++)
@@ -1192,7 +1192,7 @@ double HighsSparseMatrix::computeDot(const HVector& column,
   } else {
     result = column.array[use_col - this->num_col_];
   }
-  return result;
+  return (double)result;
 }
 
 void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
@@ -1202,17 +1202,17 @@ void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
     for (HighsInt iEl = this->start_[use_col]; iEl < this->start_[use_col + 1];
          iEl++) {
       HighsInt iRow = this->index_[iEl];
-      double value0 = column.array[iRow];
-      double value1 = value0 + multiplier * this->value_[iEl];
+      HighsFloat value0 = column.array[iRow];
+      HighsFloat value1 = value0 + (HighsFloat)multiplier * this->value_[iEl];
       if (value0 == 0) column.index[column.count++] = iRow;
-      column.array[iRow] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
+      column.array[iRow] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
     }
   } else {
     HighsInt iRow = use_col - this->num_col_;
-    double value0 = column.array[iRow];
-    double value1 = value0 + multiplier;
+    HighsFloat value0 = column.array[iRow];
+    HighsFloat value1 = value0 + (HighsFloat)multiplier;
     if (value0 == 0) column.index[column.count++] = iRow;
-    column.array[iRow] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
+    column.array[iRow] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
   }
 }
 
@@ -1222,7 +1222,7 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
   assert(this->isRowwise());
   for (HighsInt ix = from_index; ix < column.count; ix++) {
     HighsInt iRow = column.index[ix];
-    double multiplier = column.array[iRow];
+    HighsFloat multiplier = column.array[iRow];
     // Determine whether p_end_ or the next start_ should be used to end the
     // loop
     HighsInt to_iEl;
@@ -1233,15 +1233,15 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
     }
     for (HighsInt iEl = this->start_[iRow]; iEl < to_iEl; iEl++) {
       HighsInt iCol = this->index_[iEl];
-      double value0 = result.array[iCol];
-      double value1 = value0 + multiplier * this->value_[iEl];
-      result.array[iCol] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
+      HighsFloat value0 = result.array[iCol];
+      HighsFloat value1 = value0 + multiplier * this->value_[iEl];
+      result.array[iCol] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
     }
   }
   // Determine indices of nonzeros in result
   result.count = 0;
   for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
-    double value1 = result.array[iCol];
+    double value1 = (double)result.array[iCol];
     if (fabs(value1) < kHighsTiny) {
       result.array[iCol] = 0;
     } else {

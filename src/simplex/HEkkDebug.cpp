@@ -122,10 +122,10 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     if (basis.nonbasicFlag_[iVar] == kNonbasicFlagFalse) continue;
     // For nonbasic variables, check that they are on a bound (or free
     // at 0 with correct nonbasic move. Determine dual infeasibilities
-    double dual = info.workDual_[iVar];
+    HighsFloat dual = info.workDual_[iVar];
     double lower = info.workLower_[iVar];
     double upper = info.workUpper_[iVar];
-    double value = info.workValue_[iVar];
+    HighsFloat value = info.workValue_[iVar];
     double primal_error = 0;
     double dual_infeasibility = 0;
     HighsInt move;
@@ -215,10 +215,10 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     double workLower = info.workLower_[iVar];
     double workUpper = info.workUpper_[iVar];
     double cost = info.workCost_[iVar];
-    double dual = info.workDual_[iVar];
+    HighsFloat dual = info.workDual_[iVar];
     double lower = info.baseLower_[iRow];
     double upper = info.baseUpper_[iRow];
-    double value = info.baseValue_[iRow];
+    HighsFloat value = info.baseValue_[iRow];
     bool baseBound_error = workLower != lower || workUpper != upper;
     if (baseBound_error) {
       highsLogDev(options.log_options, HighsLogType::kError,

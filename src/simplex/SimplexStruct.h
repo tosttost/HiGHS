@@ -77,9 +77,9 @@ struct HighsSimplexInfo {
   // workShift: Values added to workCost in order that workDual
   // remains feasible, thereby remaining dual feasible in phase 2
   //
-  std::vector<double> workCost_;
-  std::vector<double> workDual_;
-  std::vector<double> workShift_;
+  std::vector<HighsFloat> workCost_;
+  std::vector<HighsFloat> workDual_;
+  std::vector<HighsFloat> workShift_;
 
   // workLower/workUpper: Originally just lower (upper) bounds from
   // the model but, in solve(), may be perturbed or set to
@@ -90,20 +90,20 @@ struct HighsSimplexInfo {
   // workValue: Values of the nonbasic variables corresponding to
   // workLower/workUpper and the basis. Always known.
   //
-  std::vector<double> workLower_;
-  std::vector<double> workUpper_;
-  std::vector<double> workRange_;
-  std::vector<double> workValue_;
-  std::vector<double> workLowerShift_;
-  std::vector<double> workUpperShift_;
+  std::vector<HighsFloat> workLower_;
+  std::vector<HighsFloat> workUpper_;
+  std::vector<HighsFloat> workRange_;
+  std::vector<HighsFloat> workValue_;
+  std::vector<HighsFloat> workLowerShift_;
+  std::vector<HighsFloat> workUpperShift_;
   //
   // baseLower/baseUpper/baseValue: Lower and upper bounds on the
   // basic variables and their values. Latter not known until solve()
   // is called since B^{-1} is required to compute them.
   //
-  std::vector<double> baseLower_;
-  std::vector<double> baseUpper_;
-  std::vector<double> baseValue_;
+  std::vector<HighsFloat> baseLower_;
+  std::vector<HighsFloat> baseUpper_;
+  std::vector<HighsFloat> baseValue_;
   //
   // Vectors of random reals for column cost perturbation, a random
   // permutation of all indices for CHUZR and a random permutation of
@@ -128,10 +128,10 @@ struct HighsSimplexInfo {
   HighsInt backtracking_basis_costs_shifted_;
   HighsInt backtracking_basis_costs_perturbed_;
   HighsInt backtracking_basis_bounds_perturbed_;
-  std::vector<double> backtracking_basis_workShift_;
-  std::vector<double> backtracking_basis_workLowerShift_;
-  std::vector<double> backtracking_basis_workUpperShift_;
-  std::vector<double> backtracking_basis_edge_weights_;
+  std::vector<HighsFloat> backtracking_basis_workShift_;
+  std::vector<HighsFloat> backtracking_basis_workLowerShift_;
+  std::vector<HighsFloat> backtracking_basis_workUpperShift_;
+  std::vector<HighsFloat> backtracking_basis_edge_weights_;
 
   // Dual and primal ray vectors
   HighsInt dual_ray_row_;
