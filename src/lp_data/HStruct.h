@@ -30,10 +30,10 @@ struct HighsIterationCounts {
 struct HighsSolution {
   bool value_valid = false;
   bool dual_valid = false;
-  std::vector<HighsFloat> col_value;
-  std::vector<HighsFloat> col_dual;
-  std::vector<HighsFloat> row_value;
-  std::vector<HighsFloat> row_dual;
+  std::vector<double> col_value;
+  std::vector<double> col_dual;
+  std::vector<double> row_value;
+  std::vector<double> row_dual;
 };
 
 struct RefactorInfo {
@@ -41,7 +41,7 @@ struct RefactorInfo {
   std::vector<HighsInt> pivot_row;
   std::vector<HighsInt> pivot_var;
   std::vector<int8_t> pivot_type;
-  HighsFloat build_synthetic_tick;
+  double build_synthetic_tick;
   void clear();
 };
 
@@ -63,9 +63,9 @@ struct HighsScale {
   bool has_scaling;
   HighsInt num_col;
   HighsInt num_row;
-  HighsFloat cost;
-  std::vector<HighsFloat> col;
-  std::vector<HighsFloat> row;
+  double cost;
+  std::vector<double> col;
+  std::vector<double> row;
 };
 
 #endif /* LP_DATA_HSTRUCT_H_ */

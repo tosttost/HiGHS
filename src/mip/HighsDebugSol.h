@@ -32,8 +32,8 @@ class HighsMipSolver;
 
 struct HighsDebugSol {
   const HighsMipSolver* mipsolver;
-  HighsFloat debugSolObjective;
-  std::vector<HighsFloat> debugSolution;
+  double debugSolObjective;
+  std::vector<double> debugSolution;
   bool debugSolActive;
   std::unordered_map<const HighsDomain*, std::multiset<HighsDomainChange>>
       conflictingBounds;
@@ -59,19 +59,19 @@ struct HighsDebugSol {
 
   void nodePruned(const HighsDomain& localdomain);
 
-  void checkCut(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt Rlen,
-                HighsFloat rhs);
+  void checkCut(const HighsInt* Rindex, const double* Rvalue, HighsInt Rlen,
+                double rhs);
 
-  void checkRow(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt Rlen,
-                HighsFloat Rlower, HighsFloat Rupper);
+  void checkRow(const HighsInt* Rindex, const double* Rvalue, HighsInt Rlen,
+                double Rlower, double Rupper);
 
   void checkClique(const HighsCliqueTable::CliqueVar* clq, HighsInt clqlen);
 
-  void checkVub(HighsInt col, HighsInt vubcol, HighsFloat vubcoef,
-                HighsFloat vubconstant) const;
+  void checkVub(HighsInt col, HighsInt vubcol, double vubcoef,
+                double vubconstant) const;
 
-  void checkVlb(HighsInt col, HighsInt vlbcol, HighsFloat vlbcoef,
-                HighsFloat vlbconstant) const;
+  void checkVlb(HighsInt col, HighsInt vlbcol, double vlbcoef,
+                double vlbconstant) const;
 
   void checkConflictReasonFrontier(
       const std::set<HighsInt>& reasonSideFrontier,
@@ -105,20 +105,20 @@ struct HighsDebugSol {
 
   void nodePruned(const HighsDomain& localdomain) const {}
 
-  void checkCut(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt Rlen,
-                HighsFloat rhs) const {}
+  void checkCut(const HighsInt* Rindex, const double* Rvalue, HighsInt Rlen,
+                double rhs) const {}
 
-  void checkRow(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt Rlen,
-                HighsFloat Rlower, HighsFloat Rupper) const {}
+  void checkRow(const HighsInt* Rindex, const double* Rvalue, HighsInt Rlen,
+                double Rlower, double Rupper) const {}
 
   void checkClique(const HighsCliqueTable::CliqueVar* clq,
                    HighsInt clqlen) const {}
 
-  void checkVub(HighsInt col, HighsInt vubcol, HighsFloat vubcoef,
-                HighsFloat vubconstant) const {}
+  void checkVub(HighsInt col, HighsInt vubcol, double vubcoef,
+                double vubconstant) const {}
 
-  void checkVlb(HighsInt col, HighsInt vlbcol, HighsFloat vlbcoef,
-                HighsFloat vlbconstant) const {}
+  void checkVlb(HighsInt col, HighsInt vlbcol, double vlbcoef,
+                double vlbconstant) const {}
 
   void checkConflictReasonFrontier(
       const std::set<HighsInt>& reasonSideFrontier,

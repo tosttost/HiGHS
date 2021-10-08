@@ -77,7 +77,7 @@ void HVector::tight() {
   HighsInt totalCount = 0;
   for (HighsInt i = 0; i < count; i++) {
     const HighsInt my_index = index[i];
-    const HighsFloat value = array[my_index];
+    const double value = array[my_index];
     if (fabs(value) >= kHighsTiny) {
       index[totalCount++] = my_index;
     } else {
@@ -112,48 +112,48 @@ void HVector::copy(const HVector* from) {
   synthetic_tick = from->synthetic_tick;
   const HighsInt fromCount = count = from->count;
   const HighsInt* fromIndex = &from->index[0];
-  const HighsFloat* fromArray = &from->array[0];
+  const double* fromArray = &from->array[0];
   for (HighsInt i = 0; i < fromCount; i++) {
     const HighsInt iFrom = fromIndex[i];
-    const HighsFloat xFrom = fromArray[iFrom];
+    const double xFrom = fromArray[iFrom];
     index[i] = iFrom;
     array[iFrom] = xFrom;
   }
 }
 
-HighsFloat HVector::norm2() {
+double HVector::norm2() {
   /*
    * Compute the squared 2-norm of the vector
    */
   const HighsInt workCount = count;
   const HighsInt* workIndex = &index[0];
-  const HighsFloat* workArray = &array[0];
+  const double* workArray = &array[0];
 
-  HighsFloat result = 0;
+  double result = 0;
   for (HighsInt i = 0; i < workCount; i++) {
-    HighsFloat value = workArray[workIndex[i]];
+    double value = workArray[workIndex[i]];
     result += value * value;
   }
   return result;
 }
 
-void HVector::saxpy(const HighsFloat pivotX, const HVector* pivot) {
+void HVector::saxpy(const double pivotX, const HVector* pivot) {
   /*
    * Add a multiple pivotX of *pivot into this vector, maintaining
    * indices of nonzeros but not tracking cancellation
    */
   HighsInt workCount = count;
   HighsInt* workIndex = &index[0];
-  HighsFloat* workArray = &array[0];
+  double* workArray = &array[0];
 
   const HighsInt pivotCount = pivot->count;
   const HighsInt* pivotIndex = &pivot->index[0];
-  const HighsFloat* pivotArray = &pivot->array[0];
+  const double* pivotArray = &pivot->array[0];
 
   for (HighsInt k = 0; k < pivotCount; k++) {
     const HighsInt iRow = pivotIndex[k];
-    const HighsFloat x0 = workArray[iRow];
-    const HighsFloat x1 = x0 + pivotX * pivotArray[iRow];
+    const double x0 = workArray[iRow];
+    const double x1 = x0 + pivotX * pivotArray[iRow];
     if (x0 == 0) workIndex[workCount++] = iRow;
     workArray[iRow] = (fabs(x1) < kHighsTiny) ? kHighsZero : x1;
   }

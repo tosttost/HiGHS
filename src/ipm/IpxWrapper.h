@@ -25,10 +25,10 @@
 #include "lp_data/HighsSolution.h"
 
 void fillInIpxData(const HighsLp& lp, ipx::Int& num_col, ipx::Int& num_row,
-                   std::vector<HighsFloat>& obj, std::vector<HighsFloat>& col_lb,
-                   std::vector<HighsFloat>& col_ub, std::vector<ipx::Int>& Ap,
-                   std::vector<ipx::Int>& Ai, std::vector<HighsFloat>& Ax,
-                   std::vector<HighsFloat>& rhs,
+                   std::vector<double>& obj, std::vector<double>& col_lb,
+                   std::vector<double>& col_ub, std::vector<ipx::Int>& Ap,
+                   std::vector<ipx::Int>& Ai, std::vector<double>& Ax,
+                   std::vector<double>& rhs,
                    std::vector<char>& constraint_type);
 
 HighsStatus reportIpxSolveStatus(const HighsOptions& options,
@@ -57,7 +57,7 @@ void reportIpmNoProgress(const HighsOptions& options,
 void getHighsNonVertexSolution(const HighsLogOptions& log_options,
                                const HighsLp& lp, const ipx::Int num_col,
                                const ipx::Int num_row,
-                               const std::vector<HighsFloat>& rhs,
+                               const std::vector<double>& rhs,
                                const std::vector<char>& constraint_type,
                                const ipx::LpSolver& lps,
                                HighsSolution& highs_solution);

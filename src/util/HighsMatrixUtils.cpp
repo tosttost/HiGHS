@@ -24,9 +24,9 @@ HighsStatus assessMatrix(const HighsLogOptions& log_options,
                          const std::string matrix_name, const HighsInt vec_dim,
                          const HighsInt num_vec, vector<HighsInt>& matrix_start,
                          vector<HighsInt>& matrix_index,
-                         vector<HighsFloat>& matrix_value,
-                         const HighsFloat small_matrix_value,
-                         const HighsFloat large_matrix_value) {
+                         vector<double>& matrix_value,
+                         const double small_matrix_value,
+                         const double large_matrix_value) {
   vector<HighsInt> matrix_p_end;
   const bool partitioned = false;
   return assessMatrix(log_options, matrix_name, vec_dim, num_vec, partitioned,
@@ -39,9 +39,9 @@ HighsStatus assessMatrix(const HighsLogOptions& log_options,
                          const HighsInt num_vec, vector<HighsInt>& matrix_start,
                          vector<HighsInt>& matrix_p_end,
                          vector<HighsInt>& matrix_index,
-                         vector<HighsFloat>& matrix_value,
-                         const HighsFloat small_matrix_value,
-                         const HighsFloat large_matrix_value) {
+                         vector<double>& matrix_value,
+                         const double small_matrix_value,
+                         const double large_matrix_value) {
   const bool partitioned = false;
   return assessMatrix(log_options, matrix_name, vec_dim, num_vec, partitioned,
                       matrix_start, matrix_p_end, matrix_index, matrix_value,
@@ -52,8 +52,8 @@ HighsStatus assessMatrix(
     const HighsLogOptions& log_options, const std::string matrix_name,
     const HighsInt vec_dim, const HighsInt num_vec, const bool partitioned,
     vector<HighsInt>& matrix_start, vector<HighsInt>& matrix_p_end,
-    vector<HighsInt>& matrix_index, vector<HighsFloat>& matrix_value,
-    const HighsFloat small_matrix_value, const HighsFloat large_matrix_value) {
+    vector<HighsInt>& matrix_index, vector<double>& matrix_value,
+    const double small_matrix_value, const double large_matrix_value) {
   if (assessMatrixDimensions(num_vec, partitioned, matrix_start, matrix_p_end,
                              matrix_index,
                              matrix_value) == HighsStatus::kError) {
@@ -138,11 +138,11 @@ HighsStatus assessMatrix(
   // Count the number of acceptable indices/values
   HighsInt num_new_nz = 0;
   HighsInt num_small_values = 0;
-  HighsFloat max_small_value = 0;
-  HighsFloat min_small_value = kHighsInf;
+  double max_small_value = 0;
+  double min_small_value = kHighsInf;
   HighsInt num_large_values = 0;
-  HighsFloat max_large_value = 0;
-  HighsFloat min_large_value = kHighsInf;
+  double max_large_value = 0;
+  double min_large_value = kHighsInf;
   // Set up a zeroed vector to detect duplicate indices
   vector<HighsInt> check_vector;
   if (vec_dim > 0) check_vector.assign(vec_dim, 0);
@@ -189,7 +189,7 @@ HighsStatus assessMatrix(
       // Indicate that the index has occurred
       check_vector[component] = 1;
       // Check the value
-      HighsFloat abs_value = fabs(matrix_value[el]);
+      double abs_value = fabs(matrix_value[el]);
       /*
       // Check that the value is not zero
       bool zero_value = abs_value == 0;
@@ -284,7 +284,7 @@ HighsStatus assessMatrixDimensions(const HighsInt num_vec,
                                    const vector<HighsInt>& matrix_start,
                                    const vector<HighsInt>& matrix_p_end,
                                    const vector<HighsInt>& matrix_index,
-                                   const vector<HighsFloat>& matrix_value) {
+                                   const vector<double>& matrix_value) {
   bool ok = true;
   // Assess main dimensions
   ok = num_vec >= 0 && ok;

@@ -28,7 +28,7 @@ namespace presolve {
 
 using std::min;
 
-constexpr HighsFloat inf = std::numeric_limits<HighsFloat>::infinity();
+constexpr double inf = std::numeric_limits<double>::infinity();
 
 enum PresolveRule {
   // Presolve rules.
@@ -100,18 +100,18 @@ struct PresolveRuleInfo {
   HighsInt cols_removed = 0;
 
   HighsInt clock_id = 0;
-  HighsFloat total_time = 0;
+  double total_time = 0;
 };
 
 struct numericsRecord {
   std::string name;
-  HighsFloat tolerance;
+  double tolerance;
   HighsInt num_test;
   HighsInt num_zero_true;
   HighsInt num_tol_true;
   HighsInt num_10tol_true;
   HighsInt num_clear_true;
-  HighsFloat min_positive_true;
+  double min_positive_true;
 };
 
 void initializePresolveRuleInfo(std::vector<PresolveRuleInfo>& rules);
@@ -169,7 +169,7 @@ class PresolveTimer {
       clocks.push_back(rules_[id].clock_id);
     }
     HighsInt ideal_time_rule;
-    HighsFloat ideal_time;
+    double ideal_time;
     ideal_time_rule = kTotalPresolveTime;
     ideal_time = getRuleTime(ideal_time_rule);
     std::cout << std::endl;
@@ -221,7 +221,7 @@ class PresolveTimer {
   }
 
   void initialiseNumericsRecord(HighsInt record, std::string name,
-                                const HighsFloat tolerance) {
+                                const double tolerance) {
     // Make sure that the tolerance has been set to a positive value
     assert(tolerance > 0);
     numericsRecord& numerics_record = presolve_numerics[record];
@@ -235,9 +235,9 @@ class PresolveTimer {
     numerics_record.min_positive_true = kHighsInf;
   }
 
-  void updateNumericsRecord(HighsInt record, const HighsFloat value) {
+  void updateNumericsRecord(HighsInt record, const double value) {
     numericsRecord& numerics_record = presolve_numerics[record];
-    HighsFloat tolerance = numerics_record.tolerance;
+    double tolerance = numerics_record.tolerance;
     numerics_record.num_test++;
     if (value < 0) return;
     if (value == 0) {
@@ -287,15 +287,15 @@ class PresolveTimer {
   }
 
   void updateInfo();
-  HighsFloat getTotalTime() { return total_time_; }
+  double getTotalTime() { return total_time_; }
 
   HighsTimer& timer_;
 
-  HighsFloat getRuleTime(const HighsInt rule_id) {
+  double getRuleTime(const HighsInt rule_id) {
     return timer_.read(rules_[rule_id].clock_id);
   }
 
-  inline HighsFloat getTime() { return timer_.readRunHighsClock(); }
+  inline double getTime() { return timer_.readRunHighsClock(); }
 
   inline bool reachLimit() {
     if (time_limit == inf || time_limit <= 0) return false;
@@ -303,14 +303,14 @@ class PresolveTimer {
     return true;
   }
 
-  HighsFloat start_time = 0.0;
-  HighsFloat time_limit = 0.0;
+  double start_time = 0.0;
+  double time_limit = 0.0;
   std::string model_name;
 
  private:
   std::vector<PresolveRuleInfo> rules_;
 
-  HighsFloat total_time_ = 0.0;
+  double total_time_ = 0.0;
 };
 
 }  // namespace presolve

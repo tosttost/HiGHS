@@ -89,14 +89,14 @@ class OptionRecordInt : public OptionRecord {
 
 class OptionRecordD0uble : public OptionRecord {
  public:
-  HighsFloat* value;
-  HighsFloat lower_bound;
-  HighsFloat upper_bound;
-  HighsFloat default_value;
+  double* value;
+  double lower_bound;
+  double upper_bound;
+  double default_value;
   OptionRecordD0uble(std::string Xname, std::string Xdescription,
-                     bool Xadvanced, HighsFloat* Xvalue_pointer,
-                     HighsFloat Xlower_bound, HighsFloat Xdefault_value,
-                     HighsFloat Xupper_bound)
+                     bool Xadvanced, double* Xvalue_pointer,
+                     double Xlower_bound, double Xdefault_value,
+                     double Xupper_bound)
       : OptionRecord(HighsOptionType::kD0uble, Xname, Xdescription, Xadvanced) {
     value = Xvalue_pointer;
     lower_bound = Xlower_bound;
@@ -105,7 +105,7 @@ class OptionRecordD0uble : public OptionRecord {
     *value = default_value;
   }
 
-  void assignvalue(HighsFloat Xvalue) { *value = Xvalue; }
+  void assignvalue(double Xvalue) { *value = Xvalue; }
 
   virtual ~OptionRecordD0uble() {}
 };
@@ -152,7 +152,7 @@ OptionStatus checkOptionValue(const HighsLogOptions& log_options,
                               const HighsInt value);
 OptionStatus checkOptionValue(const HighsLogOptions& log_options,
                               std::vector<OptionRecord*>& option_records,
-                              const HighsFloat value);
+                              const double value);
 OptionStatus checkOptionValue(const HighsLogOptions& log_options,
                               std::vector<OptionRecord*>& option_records,
                               const std::string value);
@@ -177,7 +177,7 @@ inline OptionStatus setLocalOptionValue(
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  const std::string& name,
                                  std::vector<OptionRecord*>& option_records,
-                                 const HighsFloat value);
+                                 const double value);
 OptionStatus setLocalOptionValue(HighsLogOptions& log_options,
                                  const std::string& name,
                                  std::vector<OptionRecord*>& option_records,
@@ -192,7 +192,7 @@ OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordInt& option, const HighsInt value);
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordD0uble& option,
-                                 const HighsFloat value);
+                                 const double value);
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordString& option,
                                  std::string const value);
@@ -209,7 +209,7 @@ OptionStatus getLocalOptionValue(
     const std::vector<OptionRecord*>& option_records, HighsInt& value);
 OptionStatus getLocalOptionValue(
     const HighsLogOptions& log_options, const std::string& name,
-    const std::vector<OptionRecord*>& option_records, HighsFloat& value);
+    const std::vector<OptionRecord*>& option_records, double& value);
 OptionStatus getLocalOptionValue(
     const HighsLogOptions& log_options, const std::string& name,
     const std::vector<OptionRecord*>& option_records, std::string& value);
@@ -261,18 +261,18 @@ struct HighsOptionsStruct {
   std::string presolve;
   std::string solver;
   std::string parallel;
-  HighsFloat time_limit;
+  double time_limit;
 
   // Options read from the file
-  HighsFloat infinite_cost;
-  HighsFloat infinite_bound;
-  HighsFloat small_matrix_value;
-  HighsFloat large_matrix_value;
-  HighsFloat primal_feasibility_tolerance;
-  HighsFloat dual_feasibility_tolerance;
-  HighsFloat ipm_optimality_tolerance;
-  HighsFloat objective_bound;
-  HighsFloat objective_target;
+  double infinite_cost;
+  double infinite_bound;
+  double small_matrix_value;
+  double large_matrix_value;
+  double primal_feasibility_tolerance;
+  double dual_feasibility_tolerance;
+  double ipm_optimality_tolerance;
+  double objective_bound;
+  double objective_target;
   HighsInt random_seed;
   HighsInt highs_debug_level;
   HighsInt highs_analysis_level;
@@ -314,15 +314,15 @@ struct HighsOptionsStruct {
   HighsInt presolve_substitution_maxfillin;
   bool simplex_initial_condition_check;
   bool no_unnecessary_rebuild_refactor;
-  HighsFloat simplex_initial_condition_tolerance;
-  HighsFloat rebuild_refactor_solution_error_tolerance;
-  HighsFloat dual_steepest_edge_weight_log_error_threshold;
-  HighsFloat dual_simplex_cost_perturbation_multiplier;
-  HighsFloat primal_simplex_bound_perturbation_multiplier;
-  HighsFloat presolve_pivot_threshold;
-  HighsFloat factor_pivot_threshold;
-  HighsFloat factor_pivot_tolerance;
-  HighsFloat start_crossover_tolerance;
+  double simplex_initial_condition_tolerance;
+  double rebuild_refactor_solution_error_tolerance;
+  double dual_steepest_edge_weight_log_error_threshold;
+  double dual_simplex_cost_perturbation_multiplier;
+  double primal_simplex_bound_perturbation_multiplier;
+  double presolve_pivot_threshold;
+  double factor_pivot_threshold;
+  double factor_pivot_tolerance;
+  double start_crossover_tolerance;
   bool less_infeasible_DSE_check;
   bool less_infeasible_DSE_choose_row;
   bool use_original_HFactor_logic;
@@ -337,8 +337,8 @@ struct HighsOptionsStruct {
   HighsInt mip_pool_soft_limit;
   HighsInt mip_pscost_minreliable;
   HighsInt mip_report_level;
-  HighsFloat mip_feasibility_tolerance;
-  HighsFloat mip_heuristic_effort;
+  double mip_feasibility_tolerance;
+  double mip_heuristic_effort;
 #ifdef HIGHS_DEBUGSOL
   std::string mip_debug_solution_file;
 #endif

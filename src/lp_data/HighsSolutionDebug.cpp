@@ -23,12 +23,12 @@
 #include "lp_data/HighsModelUtils.h"
 #include "util/HighsUtils.h"
 
-const HighsFloat large_relative_solution_param_error = 1e-12;
-const HighsFloat excessive_relative_solution_param_error =
+const double large_relative_solution_param_error = 1e-12;
+const double excessive_relative_solution_param_error =
     sqrt(large_relative_solution_param_error);
 
-const HighsFloat large_residual_error = 1e-12;
-const HighsFloat excessive_residual_error = sqrt(large_residual_error);
+const double large_residual_error = 1e-12;
+const double excessive_residual_error = sqrt(large_residual_error);
 
 // Called from HighsSolve - solveLp
 HighsDebugStatus debugHighsLpSolution(
@@ -107,7 +107,7 @@ HighsDebugStatus debugHighsSolution(
   // checking - or if it's not known
   HighsInfo local_highs_info;
   if (check_model_status_and_highs_info) {
-    HighsFloat local_objective_function_value = 0;
+    double local_objective_function_value = 0;
     if (solution.value_valid)
       local_objective_function_value =
           lp.objectiveValue(solution.col_value) +
@@ -121,7 +121,7 @@ HighsDebugStatus debugHighsSolution(
   const bool get_residuals =
       true;  // options.highs_debug_level >= kHighsDebugLevelCostly;
 
-  vector<HighsFloat> gradient;
+  vector<double> gradient;
   if (hessian.dim_ > 0) {
     hessian.product(solution.col_value, gradient);
   } else {
@@ -451,9 +451,9 @@ HighsDebugStatus debugCompareHighsInfoInfeasibility(
 
 HighsDebugStatus debugCompareHighsInfoD0uble(const string name,
                                              const HighsOptions& options,
-                                             const HighsFloat v0, const HighsFloat v1) {
+                                             const double v0, const double v1) {
   if (v0 == v1) return HighsDebugStatus::kOk;
-  HighsFloat delta = highsRelativeDifference(v0, v1);
+  double delta = highsRelativeDifference(v0, v1);
   std::string value_adjective;
   HighsLogType report_level;
   HighsDebugStatus return_status = HighsDebugStatus::kOk;

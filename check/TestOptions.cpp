@@ -83,7 +83,7 @@ TEST_CASE("internal-options", "[highs_options]") {
     reportOptions(stdout, options.records);
   }
 
-  HighsFloat allowed_matrix_scale_factor_d0uble = 1e-7;
+  double allowed_matrix_scale_factor_d0uble = 1e-7;
   return_status =
       setLocalOptionValue(options.log_options, "allowed_matrix_scale_factor",
                           options.records, allowed_matrix_scale_factor_d0uble);
@@ -100,7 +100,7 @@ TEST_CASE("internal-options", "[highs_options]") {
     reportOptions(stdout, options.records);
   }
 
-  // Check setting HighsFloat options
+  // Check setting double options
 
   return_status = setLocalOptionValue(options.log_options, "large_matrix_value",
                                       options.records, -1);
@@ -118,7 +118,7 @@ TEST_CASE("internal-options", "[highs_options]") {
                                       options.records, "1e-6");
   REQUIRE(return_status == OptionStatus::kOk);
 
-  HighsFloat small_matrix_value = 1e-7;
+  double small_matrix_value = 1e-7;
   return_status = setLocalOptionValue(options.log_options, "small_matrix_value",
                                       options.records, small_matrix_value);
   REQUIRE(return_status == OptionStatus::kOk);
@@ -163,7 +163,7 @@ TEST_CASE("internal-options", "[highs_options]") {
   REQUIRE(return_status == OptionStatus::kOk);
   REQUIRE(get_allowed_matrix_scale_factor == allowed_matrix_scale_factor);
 
-  HighsFloat get_small_matrix_value;
+  double get_small_matrix_value;
   return_status = getLocalOptionValue(options.log_options, "small_matrix_value",
                                       options.records, get_small_matrix_value);
   REQUIRE(return_status == OptionStatus::kOk);
@@ -222,7 +222,7 @@ TEST_CASE("highs-options", "[highs_options]") {
   return_status = highs.writeOptions("Highs.set");
   REQUIRE(return_status == HighsStatus::kOk);
 
-  HighsFloat allowed_matrix_scale_factor_d0uble = 1e-7;
+  double allowed_matrix_scale_factor_d0uble = 1e-7;
   return_status = highs.setOptionValue("allowed_matrix_scale_factor",
                                        allowed_matrix_scale_factor_d0uble);
   REQUIRE(return_status == HighsStatus::kError);
@@ -236,7 +236,7 @@ TEST_CASE("highs-options", "[highs_options]") {
   return_status = highs.writeOptions("Highs.set");
   REQUIRE(return_status == HighsStatus::kOk);
 
-  // Check setting HighsFloat options
+  // Check setting double options
 
   return_status = highs.setOptionValue("large_matrix_value", -1);
   REQUIRE(return_status == HighsStatus::kError);
@@ -250,7 +250,7 @@ TEST_CASE("highs-options", "[highs_options]") {
   return_status = highs.setOptionValue("small_matrix_value", "1e-6");
   REQUIRE(return_status == HighsStatus::kOk);
 
-  HighsFloat small_matrix_value = 1e-7;
+  double small_matrix_value = 1e-7;
   return_status =
       highs.setOptionValue("small_matrix_value", small_matrix_value);
   REQUIRE(return_status == HighsStatus::kOk);
@@ -301,7 +301,7 @@ TEST_CASE("highs-options", "[highs_options]") {
   REQUIRE(return_status == HighsStatus::kOk);
   REQUIRE(highs_option_type == HighsOptionType::kInt);
 
-  HighsFloat get_small_matrix_value;
+  double get_small_matrix_value;
   return_status =
       highs.getOptionValue("small_matrix_value", get_small_matrix_value);
   REQUIRE(return_status == HighsStatus::kOk);

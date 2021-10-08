@@ -8,20 +8,20 @@
 #include <math.h>
 
 const HighsInt dev_run = 0;
-const HighsFloat d0uble_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 HighsInt intArraysEqual(const HighsInt dim, const HighsInt* array0, const HighsInt* array1) {
   for (HighsInt ix = 0; ix < dim; ix++) if (array0[ix] != array1[ix]) return 0;
   return 1;
 }
 
-HighsInt HighsFloatArraysEqual(const HighsFloat dim, const HighsFloat* array0, const HighsFloat* array1) {
+HighsInt doubleArraysEqual(const double dim, const double* array0, const double* array1) {
   for (HighsInt ix = 0; ix < dim; ix++) if (array0[ix] != array1[ix]) return 0;
   return 1;
 }
 
-void assertD0ubleValuesEqual(const char* name, const HighsFloat is, const HighsFloat should_be) {
-  const HighsFloat dl = fabs(is-should_be);
+void assertD0ubleValuesEqual(const char* name, const double is, const double should_be) {
+  const double dl = fabs(is-should_be);
   if (dl > d0uble_equal_tolerance) {
     printf("Value %s = %g differs from %g by %g but should be equal\n", name, is, should_be, dl);
     assert(1==0);
@@ -41,22 +41,22 @@ void minimal_api() {
   HighsInt nnz = 4;
   HighsInt a_format = 2;
   HighsInt sense = 1;
-  HighsFloat offset = 0;
+  double offset = 0;
   HighsInt i;
 
-  HighsFloat cc[2] = {1.0, -2.0};
-  HighsFloat cl[2] = {0.0, 0.0};
-  HighsFloat cu[2] = {10.0, 10.0};
-  HighsFloat rl[2] = {0.0, 0.0};
-  HighsFloat ru[2] = {2.0, 1.0};
+  double cc[2] = {1.0, -2.0};
+  double cl[2] = {0.0, 0.0};
+  double cu[2] = {10.0, 10.0};
+  double rl[2] = {0.0, 0.0};
+  double ru[2] = {2.0, 1.0};
   HighsInt astart[3] = {0, 2, 4};
   HighsInt aindex[4] = {0, 1, 0, 1};
-  HighsFloat avalue[4] = {1.0, 2.0, 1.0, 3.0};
+  double avalue[4] = {1.0, 2.0, 1.0, 3.0};
 
-  HighsFloat* cv = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* cd = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* rv = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
-  HighsFloat* rd = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
+  double* cv = (double*)malloc(sizeof(double) * numcol);
+  double* cd = (double*)malloc(sizeof(double) * numcol);
+  double* rv = (double*)malloc(sizeof(double) * numrow);
+  double* rd = (double*)malloc(sizeof(double) * numrow);
 
   HighsInt* cbs = (HighsInt*)malloc(sizeof(HighsInt) * numcol);
   HighsInt* rbs = (HighsInt*)malloc(sizeof(HighsInt) * numrow);
@@ -141,24 +141,24 @@ void minimal_api_lp() {
   const HighsInt numnz = 5;
   HighsInt a_format = 1;
   HighsInt sense = 1;
-  HighsFloat offset = 0;
+  double offset = 0;
 
   // Define the column costs, lower bounds and upper bounds
-  HighsFloat colcost[2] = {2.0, 3.0};
-  HighsFloat collower[2] = {0.0, 1.0};
-  HighsFloat colupper[2] = {3.0, 1.0e30};
+  double colcost[2] = {2.0, 3.0};
+  double collower[2] = {0.0, 1.0};
+  double colupper[2] = {3.0, 1.0e30};
   // Define the row lower bounds and upper bounds
-  HighsFloat rowlower[3] = {-1.0e30, 10.0, 8.0};
-  HighsFloat rowupper[3] = {6.0, 14.0, 1.0e30};
+  double rowlower[3] = {-1.0e30, 10.0, 8.0};
+  double rowupper[3] = {6.0, 14.0, 1.0e30};
   // Define the constraint matrix column-wise
   HighsInt astart[2] = {0, 2};
   HighsInt aindex[5] = {1, 2, 0, 1, 2};
-  HighsFloat avalue[5] = {1.0, 2.0, 1.0, 2.0, 1.0};
+  double avalue[5] = {1.0, 2.0, 1.0, 2.0, 1.0};
 
-  HighsFloat* colvalue = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* coldual = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* rowvalue = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
-  HighsFloat* rowdual = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
+  double* colvalue = (double*)malloc(sizeof(double) * numcol);
+  double* coldual = (double*)malloc(sizeof(double) * numcol);
+  double* rowvalue = (double*)malloc(sizeof(double) * numrow);
+  double* rowdual = (double*)malloc(sizeof(double) * numrow);
 
   HighsInt* colbasisstatus = (HighsInt*)malloc(sizeof(HighsInt) * numcol);
   HighsInt* rowbasisstatus = (HighsInt*)malloc(sizeof(HighsInt) * numrow);
@@ -179,7 +179,7 @@ void minimal_api_lp() {
     
     HighsInt i;
     if (modelstatus == 7) {
-      HighsFloat objective_value = 0;
+      double objective_value = 0;
       // Report the column primal and dual values, and basis status
       for (i = 0; i < numcol; i++) {
 	printf("Col%"HIGHSINT_FORMAT" = %lf; dual = %lf; status = %"HIGHSINT_FORMAT"; \n",
@@ -209,7 +209,7 @@ void minimal_api_qp() {
   // minimize -x_2 - 3x_3 + (1/2)(2x_1^2 - 2x_1x_3 + 0.2x_2^2 + 2x_3^2)
   //
   // subject to x_1 + x_3 <= 2; x>=0
-  const HighsFloat inf = 1e30;
+  const double inf = 1e30;
   HighsInt num_col = 3;
   HighsInt num_row = 1;
   HighsInt num_nz = 2;
@@ -217,27 +217,27 @@ void minimal_api_qp() {
   HighsInt a_format = 1; // Row-wise
   HighsInt q_format = 1; // Triangular
   HighsInt sense = 1;
-  HighsFloat offset = 0;
-  HighsFloat col_cost[3] = {0.0, -1.0, -3.0};
-  HighsFloat col_lower[3] = {-inf, -inf, -inf};
-  HighsFloat col_upper[3] = {inf, inf, inf};
-  HighsFloat row_lower[1] = {-inf};
-  HighsFloat row_upper[1] = {2};
+  double offset = 0;
+  double col_cost[3] = {0.0, -1.0, -3.0};
+  double col_lower[3] = {-inf, -inf, -inf};
+  double col_upper[3] = {inf, inf, inf};
+  double row_lower[1] = {-inf};
+  double row_upper[1] = {2};
   HighsInt a_start[3] = {0, 1, 1};
   HighsInt a_index[2] = {0, 0};
-  HighsFloat a_value[2] = {1.0, 1.0};
+  double a_value[2] = {1.0, 1.0};
   HighsInt q_start[3] = {0, 2, 3};
   HighsInt q_index[4] = {0, 2, 1, 2};
-  HighsFloat q_value[4] = {2.0, -1.0, 0.2, 2.0};
+  double q_value[4] = {2.0, -1.0, 0.2, 2.0};
   
-  HighsFloat* col_value = (HighsFloat*)malloc(sizeof(HighsFloat) * num_col);
+  double* col_value = (double*)malloc(sizeof(double) * num_col);
   HighsInt model_status;
   HighsInt return_status = Highs_qpCall(num_col, num_row, num_nz, q_numnz, a_format, q_format, sense, offset,
 					col_cost, col_lower, col_upper, row_lower, row_upper,
 					a_start, a_index, a_value, q_start, q_index, q_value,
 					col_value, NULL, NULL, NULL, NULL, NULL, &model_status);
   assertIntValuesEqual("Model status for QP qph", model_status, 7);
-  HighsFloat required_x[3] = {0.5, 5.0, 1.5};
+  double required_x[3] = {0.5, 5.0, 1.5};
   if (dev_run) {
     for (HighsInt iCol = 0; iCol < num_col; iCol++) {
       printf("x%d1 = %g\n", (int)iCol, col_value[iCol]);
@@ -256,15 +256,15 @@ void full_api() {
   HighsInt numnz = 4;
   HighsInt a_format = 2; //Row-wise
   HighsInt sense = 1;
-  HighsFloat offset = 0;
-  HighsFloat cc[2] = {1.0, -2.0};
-  HighsFloat cl[2] = {0.0, 0.0};
-  HighsFloat cu[2] = {10.0, 10.0};
-  HighsFloat rl[2] = {0.0, 0.0};
-  HighsFloat ru[2] = {2.0, 1.0};
+  double offset = 0;
+  double cc[2] = {1.0, -2.0};
+  double cl[2] = {0.0, 0.0};
+  double cu[2] = {10.0, 10.0};
+  double rl[2] = {0.0, 0.0};
+  double ru[2] = {2.0, 1.0};
   HighsInt astart[3] = {0, 2, 4};
   HighsInt aindex[4] = {0, 1, 0, 1};
-  HighsFloat avalue[4] = {1.0, 2.0, 1.0, 3.0};
+  double avalue[4] = {1.0, 2.0, 1.0, 3.0};
 
   assert( Highs_addCols(highs, 2, cc, cl, cu, 0, NULL, NULL, NULL) == 0);
   assert( Highs_addRows(highs, 2, rl, ru,  4, astart, aindex, avalue) == 0);
@@ -280,15 +280,15 @@ void full_api() {
   HighsInt ck_hessian_num_nz;
   HighsInt ck_rowwise;
   HighsInt ck_sense;
-  HighsFloat ck_offset;
-  HighsFloat ck_cc[2];
-  HighsFloat ck_cl[2];
-  HighsFloat ck_cu[2];
-  HighsFloat ck_rl[2];
-  HighsFloat ck_ru[2];
+  double ck_offset;
+  double ck_cc[2];
+  double ck_cl[2];
+  double ck_cu[2];
+  double ck_rl[2];
+  double ck_ru[2];
   HighsInt ck_astart[3];
   HighsInt ck_aindex[4];
-  HighsFloat ck_avalue[4];
+  double ck_avalue[4];
 
   Highs_getModel(highs, a_format, 0,
 		 &ck_numcol, &ck_numrow, &ck_numnz, NULL,
@@ -301,14 +301,14 @@ void full_api() {
   assert(ck_numnz == numnz);
   assert(ck_sense == sense);
   assert(ck_offset == offset);
-  assert(HighsFloatArraysEqual(numcol, ck_cc, cc));
-  assert(HighsFloatArraysEqual(numcol, ck_cl, cl));
-  assert(HighsFloatArraysEqual(numcol, ck_cu, cu));
-  assert(HighsFloatArraysEqual(numrow, ck_rl, rl));
-  assert(HighsFloatArraysEqual(numrow, ck_ru, ru));
+  assert(doubleArraysEqual(numcol, ck_cc, cc));
+  assert(doubleArraysEqual(numcol, ck_cl, cl));
+  assert(doubleArraysEqual(numcol, ck_cu, cu));
+  assert(doubleArraysEqual(numrow, ck_rl, rl));
+  assert(doubleArraysEqual(numrow, ck_ru, ru));
   assert(intArraysEqual(numcol, ck_astart, astart));
   assert(intArraysEqual(numnz, ck_aindex, aindex));
-  assert(HighsFloatArraysEqual(numnz, ck_avalue, avalue));
+  assert(doubleArraysEqual(numnz, ck_avalue, avalue));
   Highs_run(highs);
 
   Highs_destroy(highs);
@@ -333,22 +333,22 @@ void full_api_lp() {
   HighsInt i;
 
   // Define the column costs, lower bounds and upper bounds
-  HighsFloat colcost[2] = {2.0, 3.0};
-  HighsFloat collower[2] = {0.0, 1.0};
-  HighsFloat colupper[2] = {3.0, 1.0e30};
+  double colcost[2] = {2.0, 3.0};
+  double collower[2] = {0.0, 1.0};
+  double colupper[2] = {3.0, 1.0e30};
   // Define the row lower bounds and upper bounds
-  HighsFloat rowlower[3] = {-1.0e30, 10.0, 8.0};
-  HighsFloat rowupper[3] = {6.0, 14.0, 1.0e30};
+  double rowlower[3] = {-1.0e30, 10.0, 8.0};
+  double rowupper[3] = {6.0, 14.0, 1.0e30};
   // Define the constraint matrix row-wise, as it is added to the LP
   // with the rows
   HighsInt arstart[3] = {0, 1, 3};
   HighsInt arindex[5] = {1, 0, 1, 0, 1};
-  HighsFloat arvalue[5] = {1.0, 1.0, 2.0, 2.0, 1.0};
+  double arvalue[5] = {1.0, 1.0, 2.0, 2.0, 1.0};
 
-  HighsFloat* colvalue = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* coldual = (HighsFloat*)malloc(sizeof(HighsFloat) * numcol);
-  HighsFloat* rowvalue = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
-  HighsFloat* rowdual = (HighsFloat*)malloc(sizeof(HighsFloat) * numrow);
+  double* colvalue = (double*)malloc(sizeof(double) * numcol);
+  double* coldual = (double*)malloc(sizeof(double) * numcol);
+  double* rowvalue = (double*)malloc(sizeof(double) * numrow);
+  double* rowdual = (double*)malloc(sizeof(double) * numrow);
 
   HighsInt* colbasisstatus = (HighsInt*)malloc(sizeof(HighsInt) * numcol);
   HighsInt* rowbasisstatus = (HighsInt*)malloc(sizeof(HighsInt) * numrow);
@@ -393,7 +393,7 @@ void full_api_lp() {
   ret = Highs_getOptionType(highs, "bad_option", &option_type);
   assert(ret != 0);
 
-  HighsFloat primal_feasibility_tolerance;
+  double primal_feasibility_tolerance;
   Highs_getD0ubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
   if (dev_run)
     printf("primal_feasibility_tolerance = %g: setting it to 1e-6\n", primal_feasibility_tolerance);
@@ -415,7 +415,7 @@ void full_api_lp() {
     printf("Run status = %"HIGHSINT_FORMAT"; Model status = %"HIGHSINT_FORMAT"\n", runstatus, modelstatus);
   //  printf("Run status = %"HIGHSINT_FORMAT"; Model status = %"HIGHSINT_FORMAT" = %s\n", runstatus, modelstatus, Highs_modelStatusToChar(highs, modelstatus));
 
-  HighsFloat objective_function_value;
+  double objective_function_value;
   Highs_getD0ubleInfoValue(highs, "objective_function_value", &objective_function_value);
   HighsInt simplex_iteration_count = 0;
   Highs_getIntInfoValue(highs, "simplex_iteration_count", &simplex_iteration_count);
@@ -455,10 +455,10 @@ void full_api_lp() {
   // Define the constraint matrix col-wise to pass to the LP
   HighsInt a_format = 1;
   sense = 1;
-  HighsFloat offset = 0;
+  double offset = 0;
   HighsInt astart[2] = {0, 2};
   HighsInt aindex[5] = {1, 2, 0, 1, 2};
-  HighsFloat avalue[5] = {1.0, 2.0, 1.0, 2.0, 1.0};
+  double avalue[5] = {1.0, 2.0, 1.0, 2.0, 1.0};
   highs = Highs_create();
   if (!dev_run) Highs_setBoolOptionValue(highs, "output_flag", 0);
   runstatus = Highs_passLp(highs, numcol, numrow, numnz, a_format, sense, offset,
@@ -475,14 +475,14 @@ void full_api_lp() {
 }
 
 void full_api_qp() {
-  HighsFloat required_objective_function_value;
-  HighsFloat required_x0;
-  HighsFloat required_x1;
-  HighsFloat objective_function_value;
+  double required_objective_function_value;
+  double required_x0;
+  double required_x1;
+  double objective_function_value;
   HighsInt model_status;
   HighsInt return_status;
   void* highs = Highs_create();
-  const HighsFloat inf = Highs_getInfinity(highs);
+  const double inf = Highs_getInfinity(highs);
   if (!dev_run) Highs_setBoolOptionValue(highs, "output_flag", 0);
 
   // Oscar's edge case
@@ -493,7 +493,7 @@ void full_api_qp() {
   Highs_addCol(highs, 1.0, -inf, inf, 0, NULL, NULL);
   num_col++;
 
-  HighsFloat offset = 0.25;
+  double offset = 0.25;
   Highs_changeObjectiveOffset(highs, offset);
 
   HighsInt q_dim = 1;
@@ -501,7 +501,7 @@ void full_api_qp() {
   HighsInt q_format = 1;
   HighsInt* q_start = (HighsInt*)malloc(sizeof(HighsInt) * q_dim);
   HighsInt* q_index = (HighsInt*)malloc(sizeof(HighsInt) * q_num_nz);
-  HighsFloat* q_value = (HighsFloat*)malloc(sizeof(HighsFloat) * q_num_nz);
+  double* q_value = (double*)malloc(sizeof(double) * q_num_nz);
   q_start[0] = 0;
   q_index[0] = 0;
   q_value[0] = 2.0;
@@ -516,7 +516,7 @@ void full_api_qp() {
   objective_function_value = Highs_getObjectiveValue(highs);
   assertD0ubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
 
-  HighsFloat* col_solution = (HighsFloat*)malloc(sizeof(HighsFloat) * num_col);
+  double* col_solution = (double*)malloc(sizeof(double) * num_col);
 
   Highs_getSolution(highs, col_solution, NULL, NULL, NULL);
   assertD0ubleValuesEqual("x0", col_solution[0], required_x0);
@@ -540,7 +540,7 @@ void full_api_qp() {
   q_start = (HighsInt*)malloc(sizeof(HighsInt) * q_dim);
   q_start = (HighsInt*)malloc(sizeof(HighsInt) * q_dim);
   q_index = (HighsInt*)malloc(sizeof(HighsInt) * q_num_nz);
-  q_value = (HighsFloat*)malloc(sizeof(HighsFloat) * q_num_nz);
+  q_value = (double*)malloc(sizeof(double) * q_num_nz);
   q_start[0] = 0;
   q_index[0] = 0;
   q_value[0] = 2.0;
@@ -560,7 +560,7 @@ void full_api_qp() {
   objective_function_value = Highs_getObjectiveValue(highs);
   assertD0ubleValuesEqual("Objective", objective_function_value, required_objective_function_value);
 
-  col_solution = (HighsFloat*)malloc(sizeof(HighsFloat) * num_col);
+  col_solution = (double*)malloc(sizeof(double) * num_col);
 
   Highs_getSolution(highs, col_solution, NULL, NULL, NULL);
   assertD0ubleValuesEqual("x0", col_solution[0], required_x0);
@@ -570,11 +570,11 @@ void full_api_qp() {
   // the current offset, shifting it by the current objective and
   // checking that the objective value is changed accordingly
 
-  HighsFloat check_offset;
+  double check_offset;
   return_status = Highs_getObjectiveOffset(highs, &check_offset);
   assertD0ubleValuesEqual("Offset", check_offset, offset);
 
-  HighsFloat dl_offset = -objective_function_value;
+  double dl_offset = -objective_function_value;
   offset += dl_offset;
 
   return_status = Highs_changeObjectiveOffset(highs, offset);
@@ -584,7 +584,7 @@ void full_api_qp() {
 
   // Add the constraint 0.5 <= x0 + x1
   HighsInt a_index[2] = {0, 1};
-  HighsFloat a_value[2] = {1, 1};
+  double a_value[2] = {1, 1};
   Highs_addRow(highs, 0.5, inf, 2, a_index, a_value);
   if (dev_run) Highs_writeModel(highs, "");
 
@@ -627,7 +627,7 @@ void options() {
   Highs_getIntOptionValue(highs, "simplex_scale_strategy", &simplex_scale_strategy);
   assert( simplex_scale_strategy == 0 );
 
-  HighsFloat primal_feasibility_tolerance;
+  double primal_feasibility_tolerance;
   Highs_setD0ubleOptionValue(highs, "primal_feasibility_tolerance", 2.0);
   Highs_getD0ubleOptionValue(highs, "primal_feasibility_tolerance", &primal_feasibility_tolerance);
   assert( primal_feasibility_tolerance == 2.0 );
@@ -641,7 +641,7 @@ void test_getColsByRange() {
   Highs_addCol(highs, -1.0, 0.0, 1.0, 0, NULL, NULL);
   Highs_addCol(highs, -1.0, 0.0, 1.0, 0, NULL, NULL);
   HighsInt aindex[2] = {0, 1};
-  HighsFloat avalue[2] = {1.0, -1.0};
+  double avalue[2] = {1.0, -1.0};
   Highs_addRow(highs, 0.0, 0.0, 2, aindex, avalue);
   HighsInt num_cols;
   HighsInt num_nz;
@@ -653,7 +653,7 @@ void test_getColsByRange() {
   assert( matrix_start[0] == 0 );
   assert( matrix_start[1] == 1 );
   HighsInt matrix_indices[2] = {-1, -1};
-  HighsFloat matrix_values[2] = {0.0, 0.0};
+  double matrix_values[2] = {0.0, 0.0};
   Highs_getColsByRange(highs, 0, 1, &num_cols, NULL, NULL, NULL, &num_nz,
 		       matrix_start, matrix_indices, matrix_values);
   assert( matrix_indices[0] == 0 );

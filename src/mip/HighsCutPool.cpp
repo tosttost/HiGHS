@@ -23,11 +23,11 @@
 #include "util/HighsCD0uble.h"
 #include "util/HighsHash.h"
 
-static uint64_t compute_cut_hash(const HighsInt* Rindex, const HighsFloat* Rvalue,
-                                 HighsFloat maxabscoef, const HighsInt Rlen) {
+static uint64_t compute_cut_hash(const HighsInt* Rindex, const double* Rvalue,
+                                 double maxabscoef, const HighsInt Rlen) {
   std::vector<uint32_t> valueHashCodes(Rlen);
 
-  HighsFloat scale = 1.0 / maxabscoef;
+  double scale = 1.0 / maxabscoef;
   for (HighsInt i = 0; i < Rlen; ++i)
     valueHashCodes[i] = HighsHashHelpers::d0uble_hash_code(scale * Rvalue[i]);
 
@@ -36,8 +36,8 @@ static uint64_t compute_cut_hash(const HighsInt* Rindex, const HighsFloat* Rvalu
 }
 
 #if 0
-static void printCut(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt Rlen,
-                     HighsFloat rhs) {
+static void printCut(const HighsInt* Rindex, const double* Rvalue, HighsInt Rlen,
+                     double rhs) {
   for (HighsInt i = 0; i != Rlen; ++i) {
     if (Rvalue[i] > 0)
       printf("+%g<x%" HIGHSINT_FORMAT "> ", Rvalue[i], Rindex[i]);
@@ -49,11 +49,11 @@ static void printCut(const HighsInt* Rindex, const HighsFloat* Rvalue, HighsInt 
 }
 #endif
 
-bool HighsCutPool::isDuplicate(size_t hash, HighsFloat norm, const HighsInt* Rindex,
-                               const HighsFloat* Rvalue, HighsInt Rlen,
-                               HighsFloat rhs) {
+bool HighsCutPool::isDuplicate(size_t hash, double norm, const HighsInt* Rindex,
+                               const double* Rvalue, HighsInt Rlen,
+                               double rhs) {
   auto range = hashToCutMap.equal_range(hash);
-  const HighsFloat* ARvalue = matrix_.getARvalue();
+  const double* ARvalue = matrix_.getARvalue();
   const HighsInt* ARindex = matrix_.getARindex();
 
   for (auto it = range.first; it != range.second; ++it) {
@@ -63,12 +63,12 @@ bool HighsCutPool::isDuplicate(size_t hash, HighsFloat norm, const HighsInt* Rin
 
     if (end - start != Rlen) continue;
     if (std::equal(Rindex, Rindex + Rlen, &ARindex[start])) {
-      HighsFloat dotprod = 0.0;
+      double dotprod = 0.0;
 
       for (HighsInt i = 0; i != Rlen; ++i)
         dotprod += Rvalue[i] * ARvalue[start + i];
 
-      HighsFloat parallelism = HighsFloat(dotprod) * rownormalization_[rowindex] * norm;
+      double parallelism = double(dotprod) * rownormalization_[rowindex] * norm;
 
       // printf("\n\ncuts with same support and parallelism %g:\n",
       // parallelism); printf("CUT1: "); printCut(Rindex, Rvalue, Rlen, rhs);
@@ -91,7 +91,7 @@ bool HighsCutPool::isDuplicate(size_t hash, HighsFloat norm, const HighsInt* Rin
   return false;
 }
 
-HighsFloat HighsCutPool::getParallelism(HighsInt row1, HighsInt row2) const {
+double HighsCutPool::getParallelism(HighsInt row1, HighsInt row2) const {
   HighsInt i1 = matrix_.getRowStart(row1);
   const HighsInt end1 = matrix_.getRowEnd(row1);
 
@@ -99,9 +99,9 @@ HighsFloat HighsCutPool::getParallelism(HighsInt row1, HighsInt row2) const {
   const HighsInt end2 = matrix_.getRowEnd(row2);
 
   const HighsInt* ARindex = matrix_.getARindex();
-  const HighsFloat* ARvalue = matrix_.getARvalue();
+  const double* ARvalue = matrix_.getARvalue();
 
-  HighsFloat dotprod = 0.0;
+  double dotprod = 0.0;
   while (i1 != end1 && i2 != end2) {
     HighsInt col1 = ARindex[i1];
     HighsInt col2 = ARindex[i2];
@@ -170,15 +170,15 @@ void HighsCutPool::performAging() {
   assert(propRows.size() == numPropRows);
 }
 
-void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& domain,
-                            HighsCutSet& cutset, HighsFloat feastol) {
+void HighsCutPool::separate(const std::vector<double>& sol, HighsDomain& domain,
+                            HighsCutSet& cutset, double feastol) {
   HighsInt nrows = matrix_.getNumRows();
   const HighsInt* ARindex = matrix_.getARindex();
-  const HighsFloat* ARvalue = matrix_.getARvalue();
+  const double* ARvalue = matrix_.getARvalue();
 
   assert(cutset.empty());
 
-  std::vector<std::pair<HighsFloat, HighsInt>> efficacious_cuts;
+  std::vector<std::pair<double, HighsInt>> efficacious_cuts;
 
   HighsInt agelim = agelim_;
 
@@ -195,11 +195,11 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
     HighsInt start = matrix_.getRowStart(i);
     HighsInt end = matrix_.getRowEnd(i);
 
-    HighsFloat viol(-rhs_[i]);
+    double viol(-rhs_[i]);
 
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      HighsFloat solval = sol[col];
+      double solval = sol[col];
 
       viol += ARvalue[j] * solval;
     }
@@ -209,7 +209,7 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
     ageDistribution[ages_[i]] -= 1;
     bool isPropagated = matrix_.columnsLinked(i);
     if (isPropagated) propRows.erase(std::make_pair(ages_[i], i));
-    if (HighsFloat(viol) <= feastol) {
+    if (double(viol) <= feastol) {
       ++ages_[i];
       if (ages_[i] >= agelim) {
         uint64_t h = compute_cut_hash(&ARindex[start], &ARvalue[start],
@@ -253,7 +253,7 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
     HighsInt numActiveNzs = 0;
     for (HighsInt j = start; j != end; ++j) {
       HighsInt col = ARindex[j];
-      HighsFloat solval = sol[col];
+      double solval = sol[col];
       if (ARvalue[j] > 0) {
         if (solval > domain.col_lower_[col] + feastol) {
           rownorm += ARvalue[j] * ARvalue[j];
@@ -270,7 +270,7 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
     ages_[i] = 0;
     ++ageDistribution[0];
     if (isPropagated) propRows.emplace(ages_[i], i);
-    HighsFloat score = viol / (numActiveNzs * sqrt(HighsFloat(rownorm)));
+    double score = viol / (numActiveNzs * sqrt(double(rownorm)));
 
     efficacious_cuts.emplace_back(score, i);
   }
@@ -278,8 +278,8 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
   if (efficacious_cuts.empty()) return;
 
   pdqsort(efficacious_cuts.begin(), efficacious_cuts.end(),
-          [&efficacious_cuts](const std::pair<HighsFloat, HighsInt>& a,
-                              const std::pair<HighsFloat, HighsInt>& b) {
+          [&efficacious_cuts](const std::pair<double, HighsInt>& a,
+                              const std::pair<double, HighsInt>& b) {
             if (a.first > b.first) return true;
             if (a.first < b.first) return false;
             return std::make_pair(
@@ -293,12 +293,12 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
           });
 
   bestObservedScore = std::max(efficacious_cuts[0].first, bestObservedScore);
-  HighsFloat minScore = minScoreFactor * bestObservedScore;
+  double minScore = minScoreFactor * bestObservedScore;
 
   HighsInt numefficacious =
       std::upper_bound(efficacious_cuts.begin(), efficacious_cuts.end(),
                        minScore,
-                       [](HighsFloat mscore, std::pair<HighsFloat, HighsInt> const& c) {
+                       [](double mscore, std::pair<double, HighsInt> const& c) {
                          return mscore > c.first;
                        }) -
       efficacious_cuts.begin();
@@ -320,9 +320,9 @@ void HighsCutPool::separate(const std::vector<HighsFloat>& sol, HighsDomain& dom
 
   assert(cutset.empty());
 
-  for (const std::pair<HighsFloat, HighsInt>& p : efficacious_cuts) {
+  for (const std::pair<double, HighsInt>& p : efficacious_cuts) {
     bool discard = false;
-    HighsFloat maxpar = 0.1;
+    double maxpar = 0.1;
     for (HighsInt k : cutset.cutindices) {
       if (getParallelism(k, p.second) > maxpar) {
         discard = true;
@@ -379,7 +379,7 @@ void HighsCutPool::separateLpCutsAfterRestart(HighsCutSet& cutset) {
 
   HighsInt offset = 0;
   const HighsInt* ARindex = matrix_.getARindex();
-  const HighsFloat* ARvalue = matrix_.getARvalue();
+  const double* ARvalue = matrix_.getARvalue();
   for (HighsInt i = 0; i != cutset.numCuts(); ++i) {
     --ageDistribution[ages_[i]];
     ++numLpCuts;
@@ -408,7 +408,7 @@ void HighsCutPool::separateLpCutsAfterRestart(HighsCutSet& cutset) {
 }
 
 HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
-                              HighsFloat* Rvalue, HighsInt Rlen, HighsFloat rhs,
+                              double* Rvalue, HighsInt Rlen, double rhs,
                               bool integral, bool propagate,
                               bool extractCliques, bool isConflict) {
   mipsolver.mipdata_->debugSolution.checkCut(Rindex, Rvalue, Rlen, rhs);
@@ -417,8 +417,8 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
 
   // compute 1/||a|| for the cut
   // as it is only computed once
-  HighsFloat norm = 0.0;
-  HighsFloat maxabscoef = 0.0;
+  double norm = 0.0;
+  double maxabscoef = 0.0;
   for (HighsInt i = 0; i != Rlen; ++i) {
     norm += Rvalue[i] * Rvalue[i];
     maxabscoef = std::max(maxabscoef, std::abs(Rvalue[i]));
@@ -427,14 +427,14 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
   }
   pdqsort_branchless(
       sortBuffer.begin(), sortBuffer.end(),
-      [](const std::pair<HighsInt, HighsFloat>& a,
-         const std::pair<HighsInt, HighsFloat>& b) { return a.first < b.first; });
+      [](const std::pair<HighsInt, double>& a,
+         const std::pair<HighsInt, double>& b) { return a.first < b.first; });
   for (HighsInt i = 0; i != Rlen; ++i) {
     Rindex[i] = sortBuffer[i].first;
     Rvalue[i] = sortBuffer[i].second;
   }
   uint64_t h = compute_cut_hash(Rindex, Rvalue, maxabscoef, Rlen);
-  HighsFloat normalization = 1.0 / HighsFloat(sqrt(norm));
+  double normalization = 1.0 / double(sqrt(norm));
 
   if (isDuplicate(h, normalization, Rindex, Rvalue, Rlen, rhs)) return -1;
 
@@ -443,11 +443,11 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
   if (propagate) {
     HighsInt newPropNzs = numPropNzs + Rlen;
 
-    HighsFloat avgModelNzs = mipsolver.numNonzero() / (HighsFloat)mipsolver.numRow();
+    double avgModelNzs = mipsolver.numNonzero() / (double)mipsolver.numRow();
 
-    HighsFloat newAvgPropNzs = newPropNzs / (HighsFloat)(numPropRows + 1);
+    double newAvgPropNzs = newPropNzs / (double)(numPropRows + 1);
 
-    constexpr HighsFloat alpha = 2.0;
+    constexpr double alpha = 2.0;
     if (isConflict) {
       // for conflicts we allow an increased average propagation density
       if (newAvgPropNzs > std::max(alpha * avgModelNzs, minDensityLim)) {
@@ -516,7 +516,7 @@ HighsInt HighsCutPool::addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
   rownormalization_[rowindex] = normalization;
   maxabscoef_[rowindex] = maxabscoef;
 
-  // printf("density: %.2f%%\n", 100.0 * Rlen / (HighsFloat)matrix_.numCols());
+  // printf("density: %.2f%%\n", 100.0 * Rlen / (double)matrix_.numCols());
   for (HighsDomain::CutpoolPropagation* propagationdomain : propagationDomains)
     propagationdomain->cutAdded(rowindex, propagate);
 

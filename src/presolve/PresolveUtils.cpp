@@ -26,9 +26,9 @@ using std::setw;
 void printRowOneLine(
     const HighsInt row, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& rowLower, const std::vector<HighsFloat>& rowUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue) {
+    const std::vector<double>& rowLower, const std::vector<double>& rowUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue) {
   assert(row >= 0 && row < numRow);
 
   // go over row and sum
@@ -36,7 +36,7 @@ void printRowOneLine(
   // if flagCol[]
   // a_ij * value_j
 
-  HighsFloat sum = 0.0;
+  double sum = 0.0;
   for (HighsInt k = ARstart[row]; k < ARstart[row + 1]; k++) {
     const HighsInt col = ARindex[k];
     assert(col >= 0 && col <= numCol);
@@ -50,9 +50,9 @@ void printRowOneLine(
 void printRow(
     const HighsInt row, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& rowLower, const std::vector<HighsFloat>& rowUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue) {
+    const std::vector<double>& rowLower, const std::vector<double>& rowUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue) {
   assert(row >= 0 && row < numRow);
 
   std::cout << "row " << row << ": " << flagRow[row] << "   " << rowLower[row]
@@ -91,10 +91,10 @@ void printRow(
 void printCol(
     const HighsInt col, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& colLower, const std::vector<HighsFloat>& colUpper,
-    const std::vector<HighsFloat>& row_values, const std::vector<HighsInt>& Astart,
+    const std::vector<double>& colLower, const std::vector<double>& colUpper,
+    const std::vector<double>& row_values, const std::vector<HighsInt>& Astart,
     const std::vector<HighsInt>& Aend, const std::vector<HighsInt>& Aindex,
-    const std::vector<HighsFloat>& Avalue) {
+    const std::vector<double>& Avalue) {
   assert(col >= 0 && col < numCol);
 
   std::cout << "col" << col << ": " << flagCol[col] << "   " << colLower[col]
@@ -121,10 +121,10 @@ void printCol(
 
 void printRowwise(
     const HighsInt numRow, const HighsInt numCol,
-    const std::vector<HighsFloat>& colCost, const std::vector<HighsFloat>& colLower,
-    const std::vector<HighsFloat>& colUpper, const std::vector<HighsFloat>& rowLower,
-    const std::vector<HighsFloat>& rowUpper, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue) {
+    const std::vector<double>& colCost, const std::vector<double>& colLower,
+    const std::vector<double>& colUpper, const std::vector<double>& rowLower,
+    const std::vector<double>& rowUpper, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue) {
   const HighsInt rows = numRow;
   const HighsInt cols = numCol;
 
@@ -166,13 +166,13 @@ void printRowwise(
 }
 
 void printA(const HighsInt numRow, const HighsInt numCol,
-            const std::vector<HighsFloat>& colCost,
-            const std::vector<HighsFloat>& rowLower,
-            const std::vector<HighsFloat>& rowUpper,
-            const std::vector<HighsFloat>& colLower,
-            const std::vector<HighsFloat>& colUpper,
+            const std::vector<double>& colCost,
+            const std::vector<double>& rowLower,
+            const std::vector<double>& rowUpper,
+            const std::vector<double>& colLower,
+            const std::vector<double>& colUpper,
             const std::vector<HighsInt>& Astart,
-            const std::vector<HighsInt>& Aindex, std::vector<HighsFloat>& Avalue) {
+            const std::vector<HighsInt>& Aindex, std::vector<double>& Avalue) {
   char buff[7];
   std::cout << "\n-----cost-----\n";
 
@@ -213,12 +213,12 @@ void printA(const HighsInt numRow, const HighsInt numCol,
 }
 
 void printAR(const HighsInt numRow, const HighsInt numCol,
-             const std::vector<HighsFloat>& colCost,
-             const std::vector<HighsFloat>& rowLower,
-             const std::vector<HighsFloat>& rowUpper,
+             const std::vector<double>& colCost,
+             const std::vector<double>& rowLower,
+             const std::vector<double>& rowUpper,
              const std::vector<HighsInt>& ARstart,
              const std::vector<HighsInt>& ARindex,
-             std::vector<HighsFloat>& ARvalue) {
+             std::vector<double>& ARvalue) {
   std::cout << "\n-----cost-----\n";
 
   for (HighsInt i = 0; i < numCol; i++) {

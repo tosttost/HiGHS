@@ -77,9 +77,9 @@ struct HighsSimplexInfo {
   // workShift: Values added to workCost in order that workDual
   // remains feasible, thereby remaining dual feasible in phase 2
   //
-  std::vector<HighsFloat> workCost_;
-  std::vector<HighsFloat> workDual_;
-  std::vector<HighsFloat> workShift_;
+  std::vector<double> workCost_;
+  std::vector<double> workDual_;
+  std::vector<double> workShift_;
 
   // workLower/workUpper: Originally just lower (upper) bounds from
   // the model but, in solve(), may be perturbed or set to
@@ -90,25 +90,25 @@ struct HighsSimplexInfo {
   // workValue: Values of the nonbasic variables corresponding to
   // workLower/workUpper and the basis. Always known.
   //
-  std::vector<HighsFloat> workLower_;
-  std::vector<HighsFloat> workUpper_;
-  std::vector<HighsFloat> workRange_;
-  std::vector<HighsFloat> workValue_;
-  std::vector<HighsFloat> workLowerShift_;
-  std::vector<HighsFloat> workUpperShift_;
+  std::vector<double> workLower_;
+  std::vector<double> workUpper_;
+  std::vector<double> workRange_;
+  std::vector<double> workValue_;
+  std::vector<double> workLowerShift_;
+  std::vector<double> workUpperShift_;
   //
   // baseLower/baseUpper/baseValue: Lower and upper bounds on the
   // basic variables and their values. Latter not known until solve()
   // is called since B^{-1} is required to compute them.
   //
-  std::vector<HighsFloat> baseLower_;
-  std::vector<HighsFloat> baseUpper_;
-  std::vector<HighsFloat> baseValue_;
+  std::vector<double> baseLower_;
+  std::vector<double> baseUpper_;
+  std::vector<double> baseValue_;
   //
   // Vectors of random reals for column cost perturbation, a random
   // permutation of all indices for CHUZR and a random permutation of
   // column indices for permuting the columns
-  std::vector<HighsFloat> numTotRandomValue_;
+  std::vector<double> numTotRandomValue_;
   std::vector<HighsInt> numTotPermutation_;
   std::vector<HighsInt> numColPermutation_;
 
@@ -117,7 +117,7 @@ struct HighsSimplexInfo {
   // Records of the row chosen by dual simplex or column chosen by
   // primal simplex, plus the pivot values - since last revinversion
   std::vector<HighsInt> index_chosen_;
-  std::vector<HighsFloat> pivot_;
+  std::vector<double> pivot_;
 
   // Data for backtracking in the event of a singular basis
   HighsInt phase1_backtracking_test_done = false;
@@ -128,10 +128,10 @@ struct HighsSimplexInfo {
   HighsInt backtracking_basis_costs_shifted_;
   HighsInt backtracking_basis_costs_perturbed_;
   HighsInt backtracking_basis_bounds_perturbed_;
-  std::vector<HighsFloat> backtracking_basis_workShift_;
-  std::vector<HighsFloat> backtracking_basis_workLowerShift_;
-  std::vector<HighsFloat> backtracking_basis_workUpperShift_;
-  std::vector<HighsFloat> backtracking_basis_edge_weights_;
+  std::vector<double> backtracking_basis_workShift_;
+  std::vector<double> backtracking_basis_workLowerShift_;
+  std::vector<double> backtracking_basis_workUpperShift_;
+  std::vector<double> backtracking_basis_edge_weights_;
 
   // Dual and primal ray vectors
   HighsInt dual_ray_row_;
@@ -145,32 +145,32 @@ struct HighsSimplexInfo {
   HighsInt primal_edge_weight_strategy;
   HighsInt price_strategy;
 
-  HighsFloat dual_simplex_cost_perturbation_multiplier;
-  HighsFloat primal_simplex_phase1_cost_perturbation_multiplier = 1;
-  HighsFloat primal_simplex_bound_perturbation_multiplier;
-  HighsFloat factor_pivot_threshold;
+  double dual_simplex_cost_perturbation_multiplier;
+  double primal_simplex_phase1_cost_perturbation_multiplier = 1;
+  double primal_simplex_bound_perturbation_multiplier;
+  double factor_pivot_threshold;
   HighsInt update_limit;
 
   // Simplex control parameters from HSA
   HighsInt control_iteration_count0;
-  HighsFloat col_aq_density;
-  HighsFloat row_ep_density;
-  HighsFloat row_ap_density;
-  HighsFloat row_DSE_density;
-  HighsFloat col_basic_feasibility_change_density;
-  HighsFloat row_basic_feasibility_change_density;
-  HighsFloat col_BFRT_density;
-  HighsFloat primal_col_density;
-  HighsFloat dual_col_density;
+  double col_aq_density;
+  double row_ep_density;
+  double row_ap_density;
+  double row_DSE_density;
+  double col_basic_feasibility_change_density;
+  double row_basic_feasibility_change_density;
+  double col_BFRT_density;
+  double primal_col_density;
+  double dual_col_density;
   // For control of switch from DSE to Devex in dual simplex
   bool allow_dual_steepest_edge_to_devex_switch;
-  HighsFloat dual_steepest_edge_weight_log_error_threshold;
-  HighsFloat costly_DSE_frequency;
+  double dual_steepest_edge_weight_log_error_threshold;
+  double costly_DSE_frequency;
   HighsInt num_costly_DSE_iteration;
-  HighsFloat costly_DSE_measure;
+  double costly_DSE_measure;
 
-  HighsFloat average_log_low_DSE_weight_error;
-  HighsFloat average_log_high_DSE_weight_error;
+  double average_log_low_DSE_weight_error;
+  double average_log_high_DSE_weight_error;
   // Needed globally??
 
   // Internal options - can't be changed externally
@@ -201,11 +201,11 @@ struct HighsSimplexInfo {
   bool bounds_perturbed = false;
 
   HighsInt num_primal_infeasibilities = -1;
-  HighsFloat max_primal_infeasibility;
-  HighsFloat sum_primal_infeasibilities;
+  double max_primal_infeasibility;
+  double sum_primal_infeasibilities;
   HighsInt num_dual_infeasibilities = -1;
-  HighsFloat max_dual_infeasibility;
-  HighsFloat sum_dual_infeasibilities;
+  double max_dual_infeasibility;
+  double sum_dual_infeasibilities;
 
   // Records of cumulative iteration counts - updated at the end of a phase
   HighsInt dual_phase1_iteration_count = 0;
@@ -226,15 +226,15 @@ struct HighsSimplexInfo {
   HighsInt update_count;
   // Value of dual objective - only set when computed from scratch in dual
   // rebuild()
-  HighsFloat dual_objective_value;
+  double dual_objective_value;
   // Value of primal objective - only set when computed from scratch in primal
   // rebuild()
-  HighsFloat primal_objective_value;
+  double primal_objective_value;
 
   // Value of dual objective that is updated in dual simplex solver
-  HighsFloat updated_dual_objective_value;
+  double updated_dual_objective_value;
   // Value of primal objective that is updated in primal simplex solver
-  HighsFloat updated_primal_objective_value;
+  double updated_primal_objective_value;
   // Number of logical variables in the basis
   HighsInt num_basic_logicals;
 };

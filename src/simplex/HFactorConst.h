@@ -25,40 +25,40 @@ enum UPDATE_METHOD {
 /**
  * Limits and default value of pivoting threshold
  */
-const HighsFloat kMinPivotThreshold = 8e-4;
-const HighsFloat kDefaultPivotThreshold = 0.1;
-const HighsFloat kPivotThresholdChangeFactor = 5.0;
-const HighsFloat kMaxPivotThreshold = 0.5;
+const double kMinPivotThreshold = 8e-4;
+const double kDefaultPivotThreshold = 0.1;
+const double kPivotThresholdChangeFactor = 5.0;
+const double kMaxPivotThreshold = 0.5;
 /**
  * Limits and default value of minimum absolute pivot
  */
-const HighsFloat kMinPivotTolerance = 0;
-const HighsFloat kDefaultPivotTolerance = 1e-10;
-const HighsFloat kMaxPivotTolerance = 1.0;
+const double kMinPivotTolerance = 0;
+const double kDefaultPivotTolerance = 1e-10;
+const double kMaxPivotTolerance = 1.0;
 /**
  * Necessary thresholds for expected density to trigger
  * hyper-sparse TRANs,
  */
-const HighsFloat kHyperFtranL = 0.15;
-const HighsFloat kHyperFtranU = 0.10;
-const HighsFloat kHyperBtranL = 0.10;
-const HighsFloat kHyperBtranU = 0.15;
+const double kHyperFtranL = 0.15;
+const double kHyperFtranU = 0.10;
+const double kHyperBtranL = 0.10;
+const double kHyperBtranU = 0.15;
 /**
  * Necessary threshold for RHS density to trigger hyper-sparse TRANs,
  */
-const HighsFloat kHyperCancel = 0.05;
+const double kHyperCancel = 0.05;
 /**
  * Threshold for result density for it to be considered as
  * hyper-sparse - only for reporting
  */
-const HighsFloat kHyperResult = 0.10;
+const double kHyperResult = 0.10;
 
 /**
  * Parameters for reinversion on synthetic clock
  */
-const HighsFloat kMultiBuildSyntheticTickMu = 1.0;
-const HighsFloat kNumericalTroubleTolerance = 1e-7;
-const HighsFloat kMultiNumericalTroubleTolerance = 1e-7;
+const double kMultiBuildSyntheticTickMu = 1.0;
+const double kNumericalTroubleTolerance = 1e-7;
+const double kMultiNumericalTroubleTolerance = 1e-7;
 
 const HighsInt kSyntheticTickReinversionMinUpdateCount = 50;
 const HighsInt kMultiSyntheticTickReinversionMinUpdateCount =

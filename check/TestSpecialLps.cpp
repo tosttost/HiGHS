@@ -7,8 +7,8 @@ const bool dev_run = false;
 
 void solve(Highs& highs, std::string presolve, std::string solver,
            const HighsModelStatus require_model_status,
-           const HighsFloat require_optimal_objective = 0,
-           const HighsFloat require_iteration_count = -1) {
+           const double require_optimal_objective = 0,
+           const double require_iteration_count = -1) {
   SpecialLps special_lps;
   if (!dev_run) highs.setOptionValue("output_flag", false);
   const HighsInfo& info = highs.getInfo();
@@ -49,7 +49,7 @@ void distillation(Highs& highs) {
   // This LP is not primal feasible at the origin
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.distillationLp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   // Presolve doesn't reduce the LP
@@ -65,7 +65,7 @@ void issue272(Highs& highs) {
   // This is the FuOR MIP that presolve failed to handle as a maximization
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.issue272Lp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   // Presolve reduces to empty, so no need to test presolve+IPX
@@ -83,7 +83,7 @@ void issue280(Highs& highs) {
   // This is an easy problem from mckib2 that IPX STILL FAILS to handle
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.issue280Lp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   // Presolve reduces to empty, so no need to test presolve+IPX
@@ -101,7 +101,7 @@ void issue282(Highs& highs) {
   // failed to give the correct objective
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.issue282Lp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   // Presolve reduces to empty, so no real need to test presolve+IPX
@@ -144,7 +144,7 @@ void issue295(Highs& highs) {
   // was added
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.issue295Lp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   solve(highs, "on", "simplex", require_model_status, optimal_objective);
@@ -164,7 +164,7 @@ void issue306(Highs& highs) {
   // Resulted in the introduction of cleanBounds after presolve
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.issue306Lp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   solve(highs, "on", "simplex", require_model_status, optimal_objective);
@@ -183,8 +183,8 @@ void issue316(Highs& highs) {
   // Resulted in fixes being added to unconstrained LP solver
   bool bool_status;
   const HighsModelStatus require_model_status = HighsModelStatus::kOptimal;
-  const HighsFloat min_optimal_objective = -6;
-  const HighsFloat max_optimal_objective = 12;
+  const double min_optimal_objective = -6;
+  const double max_optimal_objective = 12;
   REQUIRE(highs.clearModel() == HighsStatus::kOk);
 
   bool_status = highs.addCol(2, -3, 6, 0, NULL, NULL) == HighsStatus::kOk;
@@ -323,8 +323,8 @@ void almostNotUnbounded(Highs& highs) {
   const HighsModelStatus require_model_status0 = HighsModelStatus::kUnbounded;
   const HighsModelStatus require_model_status1 = HighsModelStatus::kOptimal;
   const HighsModelStatus require_model_status2 = HighsModelStatus::kOptimal;
-  const HighsFloat optimal_objective1 = -1;
-  const HighsFloat optimal_objective2 = -3;
+  const double optimal_objective1 = -1;
+  const double optimal_objective2 = -3;
 
   // With epsilon = 1e-7 hsol declares optimality as the primal
   // infeasibility in phase 2 that would lead to unboundedness is
@@ -336,7 +336,7 @@ void almostNotUnbounded(Highs& highs) {
   //
   // With epsilon = 1e-5 hsol identifies unboundedness in phase 1
   // because the problem with perturbed costs is not dual feasible.
-  HighsFloat epsilon = 1e-6;
+  double epsilon = 1e-6;
   lp.num_col_ = 2;
   lp.num_row_ = 3;
   lp.col_cost_ = {-1, 1 - epsilon};
@@ -392,7 +392,7 @@ void singularStartingBasis(Highs& highs) {
   // basis
   HighsLp lp;
   const HighsModelStatus require_model_status = HighsModelStatus::kOptimal;
-  const HighsFloat optimal_objective = -3;
+  const double optimal_objective = -3;
 
   lp.num_col_ = 3;
   lp.num_row_ = 2;

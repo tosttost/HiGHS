@@ -73,9 +73,9 @@ void testBasisRestart(Highs& highs, const bool from_file) {
   }
   assert(iCol < lp.num_col_);
   const HighsInt changeCol = iCol;
-  const HighsFloat old_lower_bound = lp.col_lower_[changeCol];
-  const HighsFloat old_upper_bound = lp.col_upper_[changeCol];
-  const HighsFloat new_lower_bound = solution.col_value[changeCol] + 0.1;
+  const double old_lower_bound = lp.col_lower_[changeCol];
+  const double old_upper_bound = lp.col_upper_[changeCol];
+  const double new_lower_bound = solution.col_value[changeCol] + 0.1;
   highs.changeColBounds(changeCol, new_lower_bound, old_upper_bound);
 
   return_status = highs.run();

@@ -37,7 +37,7 @@ TEST_CASE("highs-info", "[highs_info]") {
   }
 
   // Info not valid before run()
-  HighsFloat objective_function_value;
+  double objective_function_value;
   return_status =
       highs.getInfoValue("objective_function_value", objective_function_value);
   REQUIRE(return_status == HighsStatus::kWarning);

@@ -44,9 +44,9 @@ class HVector {
   HighsInt size;           //!< Dimension of the vector
   HighsInt count;          //!< Number of nonzeros
   vector<HighsInt> index;  //!< Packed indices of nonzeros
-  vector<HighsFloat> array;    //!< Full-length array of values
+  vector<double> array;    //!< Full-length array of values
 
-  HighsFloat synthetic_tick;  //!< Synthetic clock for operations with this vector
+  double synthetic_tick;  //!< Synthetic clock for operations with this vector
 
   // For update
   vector<char> cwork;      //!< char working buffer for UPDATE
@@ -67,7 +67,7 @@ class HVector {
   bool packFlag;               //!< Flag to indicate whether to pack or not
   HighsInt packCount;          //!< Number of nonzeros packed
   vector<HighsInt> packIndex;  //!< Packed indices
-  vector<HighsFloat> packValue;    //!< Packed values
+  vector<double> packValue;    //!< Packed values
 
   /**
    * @brief Copy from another HVector structure to this instance
@@ -78,13 +78,13 @@ class HVector {
   /**
    * @brief Compute the squared 2-norm of the vector
    */
-  HighsFloat norm2();
+  double norm2();
 
   /**
    * @brief Add a multiple pivotX of *pivot into this vector,
    * maintaining indices of nonzeros but not tracking cancellation
    */
-  void saxpy(const HighsFloat pivotX,  //!< The multiple of *pivot to be added
+  void saxpy(const double pivotX,  //!< The multiple of *pivot to be added
              const HVector* pivot  //!< The vector whose multiple is to be added
   );
   bool isEqual(HVector& v0);

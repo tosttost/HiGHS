@@ -64,10 +64,10 @@ void create(HighsIndexCollection& index_collection, const HighsInt* mask,
 void highsSparseTranspose(HighsInt numRow, HighsInt numCol,
                           const std::vector<HighsInt>& Astart,
                           const std::vector<HighsInt>& Aindex,
-                          const std::vector<HighsFloat>& Avalue,
+                          const std::vector<double>& Avalue,
                           std::vector<HighsInt>& ARstart,
                           std::vector<HighsInt>& ARindex,
-                          std::vector<HighsFloat>& ARvalue) {
+                          std::vector<double>& ARvalue) {
   // Make a AR copy
   std::vector<HighsInt> iwork(numRow, 0);
   ARstart.resize(numRow + 1, 0);
@@ -278,8 +278,8 @@ bool intUserDataNotNull(const HighsLogOptions& log_options,
   return null_data;
 }
 
-bool HighsFloatUserDataNotNull(const HighsLogOptions& log_options,
-                           const HighsFloat* user_data, const std::string name) {
+bool doubleUserDataNotNull(const HighsLogOptions& log_options,
+                           const double* user_data, const std::string name) {
   bool null_data = false;
   if (user_data == NULL) {
     highsLogUser(log_options, HighsLogType::kError,
@@ -290,28 +290,28 @@ bool HighsFloatUserDataNotNull(const HighsLogOptions& log_options,
   return null_data;
 }
 
-HighsFloat getNorm2(const std::vector<HighsFloat> values) {
-  HighsFloat sum = 0;
+double getNorm2(const std::vector<double> values) {
+  double sum = 0;
   HighsInt values_size = values.size();
   for (HighsInt i = 0; i < values_size; i++) sum += values[i] * values[i];
   return sum;
 }
 
-bool highs_isInfinity(HighsFloat val) {
+bool highs_isInfinity(double val) {
   if (val >= kHighsInf) return true;
   return false;
 }
 
-HighsFloat highsRelativeDifference(const HighsFloat v0, const HighsFloat v1) {
+double highsRelativeDifference(const double v0, const double v1) {
   return fabs(v0 - v1) / std::max(v0, std::max(v1, 1.0));
 }
 
 void analyseVectorValues(const HighsLogOptions& log_options,
                          const char* message, HighsInt vecDim,
-                         const std::vector<HighsFloat>& vec, bool analyseValueList,
+                         const std::vector<double>& vec, bool analyseValueList,
                          std::string model_name) {
   if (vecDim == 0) return;
-  HighsFloat log10 = log(10.0);
+  double log10 = log(10.0);
   const HighsInt nVK = 20;
   HighsInt nNz = 0;
   HighsInt nPosInfV = 0;
@@ -323,7 +323,7 @@ void analyseVectorValues(const HighsLogOptions& log_options,
 
   const HighsInt VLsMxZ = 10;
   std::vector<HighsInt> VLsK;
-  std::vector<HighsFloat> VLsV;
+  std::vector<double> VLsV;
   VLsK.resize(VLsMxZ, 0);
   VLsV.resize(VLsMxZ, 0);
   // Ensure that 1.0 and -1.0 are counted
@@ -335,8 +335,8 @@ void analyseVectorValues(const HighsLogOptions& log_options,
   VLsV[MinusOneIx] = -1.0;
 
   for (HighsInt ix = 0; ix < vecDim; ix++) {
-    HighsFloat v = vec[ix];
-    HighsFloat absV = std::fabs(v);
+    double v = vec[ix];
+    double absV = std::fabs(v);
     HighsInt log10V;
     if (absV > 0) {
       // Nonzero value
@@ -526,7 +526,7 @@ void analyseMatrixSparsity(const HighsLogOptions& log_options,
   if (colCatK[cat]) lastRpCat = cat;
   HighsInt sumK = 0;
   HighsInt pct;
-  HighsFloat v;
+  double v;
   HighsInt sumPct = 0;
   for (HighsInt cat = 0; cat < lastRpCat; cat++) {
     sumK += colCatK[cat];
@@ -611,9 +611,9 @@ void analyseMatrixSparsity(const HighsLogOptions& log_options,
 
 bool initialiseValueDistribution(const std::string distribution_name,
                                  const std::string value_name,
-                                 const HighsFloat min_value_limit,
-                                 const HighsFloat max_value_limit,
-                                 const HighsFloat base_value_limit,
+                                 const double min_value_limit,
+                                 const double max_value_limit,
+                                 const double base_value_limit,
                                  HighsValueDistribution& value_distribution) {
   assert(min_value_limit > 0);
   assert(max_value_limit > 0);
@@ -628,8 +628,8 @@ bool initialiseValueDistribution(const std::string distribution_name,
     num_count = 1;
   } else {
     if (base_value_limit <= 0) return false;
-    const HighsFloat log_ratio = log(max_value_limit / min_value_limit);
-    const HighsFloat log_base_value_limit = log(base_value_limit);
+    const double log_ratio = log(max_value_limit / min_value_limit);
+    const double log_base_value_limit = log(base_value_limit);
     //    printf("initialiseValueDistribution: log_ratio = %g;
     //    log_base_value_limit = %g; log_ratio/log_base_value_limit = %g\n",
     //	   log_ratio, log_base_value_limit, log_ratio/log_base_value_limit);
@@ -659,11 +659,11 @@ bool initialiseValueDistribution(const std::string distribution_name,
   return true;
 }
 
-bool updateValueDistribution(const HighsFloat value,
+bool updateValueDistribution(const double value,
                              HighsValueDistribution& value_distribution) {
   if (value_distribution.num_count_ < 0) return false;
   value_distribution.sum_count_++;
-  const HighsFloat abs_value = fabs(value);
+  const double abs_value = fabs(value);
   value_distribution.min_value_ =
       std::min(abs_value, value_distribution.min_value_);
   value_distribution.max_value_ =
@@ -686,12 +686,12 @@ bool updateValueDistribution(const HighsFloat value,
   return true;
 }
 
-HighsFloat HighsFloatPercentage(const HighsInt of, const HighsInt in) {
+double doublePercentage(const HighsInt of, const HighsInt in) {
   return ((100.0 * of) / in);
 }
 
 HighsInt integerPercentage(const HighsInt of, const HighsInt in) {
-  const HighsFloat d0uble_percentage = ((100.0 * of) / in) + 0.4999;
+  const double d0uble_percentage = ((100.0 * of) / in) + 0.4999;
   return (HighsInt)d0uble_percentage;
 }
 
@@ -708,8 +708,8 @@ bool logValueDistribution(const HighsLogOptions& log_options,
   bool not_reported_ones = true;
   HighsInt sum_count =
       value_distribution.num_zero_ + value_distribution.num_one_;
-  HighsFloat sum_percentage = 0;
-  const HighsFloat min_value = value_distribution.min_value_;
+  double sum_percentage = 0;
+  const double min_value = value_distribution.min_value_;
   for (HighsInt i = 0; i < num_count + 1; i++)
     sum_count += value_distribution.count_[i];
   if (!sum_count) return false;
@@ -736,11 +736,11 @@ bool logValueDistribution(const HighsLogOptions& log_options,
     highsLogDev(log_options, HighsLogType::kInfo, "\n");
   }
   HighsInt sum_report_count = 0;
-  HighsFloat percentage;
+  double percentage;
   HighsInt int_percentage;
   HighsInt count = value_distribution.num_zero_;
   if (count) {
-    percentage = HighsFloatPercentage(count, sum_count);
+    percentage = doublePercentage(count, sum_count);
     sum_percentage += percentage;
     int_percentage = percentage;
     highsLogDev(log_options, HighsLogType::kInfo,
@@ -751,7 +751,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
   }
   count = value_distribution.count_[0];
   if (count) {
-    percentage = HighsFloatPercentage(count, sum_count);
+    percentage = doublePercentage(count, sum_count);
     sum_percentage += percentage;
     int_percentage = percentage;
     highsLogDev(log_options, HighsLogType::kInfo,
@@ -773,7 +773,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
     if (not_reported_ones && value_distribution.limit_[i - 1] >= 1.0) {
       count = value_distribution.num_one_;
       if (count) {
-        percentage = HighsFloatPercentage(count, sum_count);
+        percentage = doublePercentage(count, sum_count);
         sum_percentage += percentage;
         int_percentage = percentage;
         highsLogDev(log_options, HighsLogType::kInfo,
@@ -792,7 +792,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
     }
     count = value_distribution.count_[i];
     if (count) {
-      percentage = HighsFloatPercentage(count, sum_count);
+      percentage = doublePercentage(count, sum_count);
       sum_percentage += percentage;
       int_percentage = percentage;
       highsLogDev(log_options, HighsLogType::kInfo,
@@ -816,7 +816,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
   if (not_reported_ones && value_distribution.limit_[num_count - 1] >= 1.0) {
     count = value_distribution.num_one_;
     if (count) {
-      percentage = HighsFloatPercentage(count, sum_count);
+      percentage = doublePercentage(count, sum_count);
       sum_percentage += percentage;
       int_percentage = percentage;
       highsLogDev(log_options, HighsLogType::kInfo,
@@ -835,7 +835,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
   }
   count = value_distribution.count_[num_count];
   if (count) {
-    percentage = HighsFloatPercentage(count, sum_count);
+    percentage = doublePercentage(count, sum_count);
     sum_percentage += percentage;
     int_percentage = percentage;
     highsLogDev(log_options, HighsLogType::kInfo,
@@ -855,7 +855,7 @@ bool logValueDistribution(const HighsLogOptions& log_options,
   if (not_reported_ones) {
     count = value_distribution.num_one_;
     if (count) {
-      percentage = HighsFloatPercentage(count, sum_count);
+      percentage = doublePercentage(count, sum_count);
       sum_percentage += percentage;
       int_percentage = percentage;
       highsLogDev(log_options, HighsLogType::kInfo,
@@ -903,7 +903,7 @@ bool initialiseScatterData(const HighsInt max_num_point,
   return true;
 }
 
-bool updateScatterData(const HighsFloat value0, const HighsFloat value1,
+bool updateScatterData(const double value0, const double value1,
                        HighsScatterData& scatter_data) {
   if (value0 <= 0 || value0 <= 0) return false;
   scatter_data.num_point_++;
@@ -917,18 +917,18 @@ bool updateScatterData(const HighsFloat value0, const HighsFloat value1,
 
 bool regressScatterData(HighsScatterData& scatter_data) {
   if (scatter_data.num_point_ < 5) return true;
-  HighsFloat log_x;
-  HighsFloat log_y;
-  HighsFloat sum_log_x = 0;
-  HighsFloat sum_log_y = 0;
-  HighsFloat sum_log_xlog_x = 0;
-  HighsFloat sum_log_xlog_y = 0;
-  HighsFloat x;
-  HighsFloat y;
-  HighsFloat sum_x = 0;
-  HighsFloat sum_y = 0;
-  HighsFloat sum_xx = 0;
-  HighsFloat sum_xy = 0;
+  double log_x;
+  double log_y;
+  double sum_log_x = 0;
+  double sum_log_y = 0;
+  double sum_log_xlog_x = 0;
+  double sum_log_xlog_y = 0;
+  double x;
+  double y;
+  double sum_x = 0;
+  double sum_y = 0;
+  double sum_xx = 0;
+  double sum_xy = 0;
   HighsInt point_num = 0;
   for (HighsInt pass = 0; pass < 2; pass++) {
     HighsInt from_point;
@@ -956,9 +956,9 @@ bool regressScatterData(HighsScatterData& scatter_data) {
       sum_log_xlog_y += log_x * log_y;
     }
   }
-  HighsFloat d0uble_num = 1.0 * point_num;
+  double d0uble_num = 1.0 * point_num;
   // Linear regression
-  HighsFloat det = d0uble_num * sum_xx - sum_x * sum_x;
+  double det = d0uble_num * sum_xx - sum_x * sum_x;
   if (fabs(det) < 1e-8) return true;
   scatter_data.linear_coeff0_ = (sum_xx * sum_y - sum_x * sum_xy) / det;
   scatter_data.linear_coeff1_ = (-sum_x * sum_y + d0uble_num * sum_xy) / det;
@@ -976,8 +976,8 @@ bool regressScatterData(HighsScatterData& scatter_data) {
 
   scatter_data.num_error_comparison_++;
   computeScatterDataRegressionError(scatter_data);
-  const HighsFloat linear_error = scatter_data.linear_regression_error_;
-  const HighsFloat log_error = scatter_data.log_regression_error_;
+  const double linear_error = scatter_data.linear_regression_error_;
+  const double log_error = scatter_data.log_regression_error_;
 
   const bool report_awful_error = false;
   if (linear_error > awful_regression_error ||
@@ -1010,7 +1010,7 @@ bool regressScatterData(HighsScatterData& scatter_data) {
 }
 
 bool predictFromScatterData(const HighsScatterData& scatter_data,
-                            const HighsFloat value0, HighsFloat& predicted_value1,
+                            const double value0, double& predicted_value1,
                             const bool log_regression) {
   if (!scatter_data.have_regression_coeff_) return false;
   if (log_regression) {
@@ -1028,16 +1028,16 @@ bool computeScatterDataRegressionError(HighsScatterData& scatter_data,
                                        const bool print) {
   if (!scatter_data.have_regression_coeff_) return false;
   if (scatter_data.num_point_ < scatter_data.max_num_point_) return false;
-  HighsFloat sum_log_error = 0;
+  double sum_log_error = 0;
   if (print)
     printf(
         "Log regression\nPoint     Value0     Value1 PredValue1      Error\n");
   for (HighsInt point = 0; point < scatter_data.max_num_point_; point++) {
-    HighsFloat value0 = scatter_data.value0_[point];
-    HighsFloat value1 = scatter_data.value1_[point];
-    HighsFloat predicted_value1;
+    double value0 = scatter_data.value0_[point];
+    double value1 = scatter_data.value1_[point];
+    double predicted_value1;
     if (predictFromScatterData(scatter_data, value0, predicted_value1, true)) {
-      HighsFloat error = fabs(predicted_value1 - value1);  // / fabs(value1);
+      double error = fabs(predicted_value1 - value1);  // / fabs(value1);
       if (
           //	10*error > awful_regression_error &&
           print)
@@ -1048,17 +1048,17 @@ bool computeScatterDataRegressionError(HighsScatterData& scatter_data,
   }
   if (print)
     printf("                                       %10.4g\n", sum_log_error);
-  HighsFloat sum_linear_error = 0;
+  double sum_linear_error = 0;
   if (print)
     printf(
         "Linear regression\nPoint     Value0     Value1 PredValue1      "
         "Error\n");
   for (HighsInt point = 0; point < scatter_data.max_num_point_; point++) {
-    HighsFloat value0 = scatter_data.value0_[point];
-    HighsFloat value1 = scatter_data.value1_[point];
-    HighsFloat predicted_value1;
+    double value0 = scatter_data.value0_[point];
+    double value1 = scatter_data.value1_[point];
+    double predicted_value1;
     if (predictFromScatterData(scatter_data, value0, predicted_value1)) {
-      HighsFloat error = fabs(predicted_value1 - value1);  //  / fabs(value1);
+      double error = fabs(predicted_value1 - value1);  //  / fabs(value1);
       if (
           //	10*error > awful_regression_error &&
           print)
@@ -1076,8 +1076,8 @@ bool computeScatterDataRegressionError(HighsScatterData& scatter_data,
 
 bool printScatterData(std::string name, const HighsScatterData& scatter_data) {
   if (!scatter_data.num_point_) return true;
-  HighsFloat x;
-  HighsFloat y;
+  double x;
+  double y;
   HighsInt point_num = 0;
   printf("%s scatter data\n", name.c_str());
   const HighsInt to_point =

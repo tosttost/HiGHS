@@ -31,11 +31,11 @@ namespace presolve {
 
 namespace dev_kkt_check {
 
-void KktChStep::setBoundsCostRHS(const vector<HighsFloat>& colUpper_,
-                                 const vector<HighsFloat>& colLower_,
-                                 const vector<HighsFloat>& cost,
-                                 const vector<HighsFloat>& rowLower_,
-                                 const vector<HighsFloat>& rowUpper_) {
+void KktChStep::setBoundsCostRHS(const vector<double>& colUpper_,
+                                 const vector<double>& colLower_,
+                                 const vector<double>& cost,
+                                 const vector<double>& rowLower_,
+                                 const vector<double>& rowUpper_) {
   RcolLower = colLower_;
   RcolUpper = colUpper_;
   RrowLower = rowLower_;
@@ -43,7 +43,7 @@ void KktChStep::setBoundsCostRHS(const vector<HighsFloat>& colUpper_,
   RcolCost = cost;
 }
 
-void KktChStep::addCost(HighsInt col, HighsFloat value) { RcolCost[col] = value; }
+void KktChStep::addCost(HighsInt col, double value) { RcolCost[col] = value; }
 
 /*
 1  SING_ROW
@@ -69,14 +69,14 @@ void KktChStep::addCost(HighsInt col, HighsFloat value) { RcolCost[col] = value;
 16 REDUNDANT_ROW
 
 */
-void KktChStep::addChange(int type, HighsInt row, HighsInt col, HighsFloat valC,
-                          HighsFloat dualC, HighsFloat dualR) {
+void KktChStep::addChange(int type, HighsInt row, HighsInt col, double valC,
+                          double dualC, double dualR) {
   // when updating fill new values for b, c, bounds in Rb RcolCost RcolUpper,
   // RcolLower
-  vector<pair<HighsInt, HighsFloat>> upd;
+  vector<pair<HighsInt, double>> upd;
 
   switch (type) {
-    case 171:  // new bounds from HighsFloatton equation, retrieve old ones
+    case 171:  // new bounds from doubleton equation, retrieve old ones
       upd = rLowers.top();
       rLowers.pop();
       for (size_t i = 0; i < upd.size(); i++) {
@@ -151,7 +151,7 @@ void KktChStep::addChange(int type, HighsInt row, HighsInt col, HighsFloat valC,
         RcolCost[ind] = get<1>(upd[i]);
       }
       break;
-    case 5:  // HighsFloatton eq with singleton col
+    case 5:  // doubleton eq with singleton col
       upd = cLowers.top();
       cLowers.pop();
       for (size_t i = 0; i < upd.size(); i++) {
@@ -171,7 +171,7 @@ void KktChStep::addChange(int type, HighsInt row, HighsInt col, HighsFloat valC,
         RcolCost[ind] = get<1>(upd[i]);
       }
       break;
-    case 17: {  // HighsFloatton equation
+    case 17: {  // doubleton equation
       upd = cLowers.top();
       cLowers.pop();
       for (size_t i = 0; i < upd.size(); i++) {
@@ -238,7 +238,7 @@ void KktChStep::addChange(int type, HighsInt row, HighsInt col, HighsFloat valC,
         RrowUpper[ind] = get<1>(upd[i]);
       }
       break;
-    case 12:  // HighsFloatton eq from dupliocate rows;
+    case 12:  // doubleton eq from dupliocate rows;
       upd = cLowers.top();
       cLowers.pop();
       for (size_t i = 0; i < upd.size(); i++) {
@@ -276,18 +276,18 @@ void KktChStep::addChange(int type, HighsInt row, HighsInt col, HighsFloat valC,
 dev_kkt_check::State KktChStep::initState(
     const HighsInt numCol_, const HighsInt numRow_,
     const std::vector<HighsInt>& Astart_, const std::vector<HighsInt>& Aend_,
-    const std::vector<HighsInt>& Aindex_, const std::vector<HighsFloat>& Avalue_,
+    const std::vector<HighsInt>& Aindex_, const std::vector<double>& Avalue_,
     const std::vector<HighsInt>& ARstart_,
-    const std::vector<HighsInt>& ARindex_, const std::vector<HighsFloat>& ARvalue_,
+    const std::vector<HighsInt>& ARindex_, const std::vector<double>& ARvalue_,
     const std::vector<HighsInt>& flagCol_,
-    const std::vector<HighsInt>& flagRow_, const std::vector<HighsFloat>& colValue_,
-    const std::vector<HighsFloat>& colDual_, const std::vector<HighsFloat>& rowValue_,
-    const std::vector<HighsFloat>& rowDual_,
+    const std::vector<HighsInt>& flagRow_, const std::vector<double>& colValue_,
+    const std::vector<double>& colDual_, const std::vector<double>& rowValue_,
+    const std::vector<double>& rowDual_,
     const std::vector<HighsBasisStatus>& col_status_,
     const std::vector<HighsBasisStatus>& row_status_) {
   // check row value
 
-  std::vector<HighsFloat> rowValue(numRow_, 0);
+  std::vector<double> rowValue(numRow_, 0);
   for (int row = 0; row < numRow_; row++) {
     if (flagRow_[row]) {
       for (int k = ARstart_[row]; k < ARstart_[row + 1]; k++) {

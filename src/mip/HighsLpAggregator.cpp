@@ -21,9 +21,9 @@ HighsLpAggregator::HighsLpAggregator(const HighsLpRelaxation& lprelaxation)
                          lprelaxation.getLp().num_col_);
 }
 
-void HighsLpAggregator::addRow(HighsInt row, HighsFloat weight) {
+void HighsLpAggregator::addRow(HighsInt row, double weight) {
   HighsInt len;
-  const HighsFloat* vals;
+  const double* vals;
   const HighsInt* inds;
   lprelaxation.getRow(row, len, inds, vals);
 
@@ -33,12 +33,12 @@ void HighsLpAggregator::addRow(HighsInt row, HighsFloat weight) {
 }
 
 void HighsLpAggregator::getCurrentAggregation(std::vector<HighsInt>& inds,
-                                              std::vector<HighsFloat>& vals,
+                                              std::vector<double>& vals,
                                               bool negate) {
-  const HighsFloat droptol =
+  const double droptol =
       lprelaxation.getMipSolver().options_mip_->small_matrix_value;
   vectorsum.cleanup(
-      [droptol](HighsInt col, HighsFloat val) { return std::abs(val) <= droptol; });
+      [droptol](HighsInt col, double val) { return std::abs(val) <= droptol; });
 
   inds = vectorsum.getNonzeros();
   HighsInt len = inds.size();

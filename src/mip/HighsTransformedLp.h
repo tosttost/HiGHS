@@ -39,11 +39,11 @@ class HighsTransformedLp {
       bestVub;
   std::vector<const std::pair<const HighsInt, HighsImplications::VarBound>*>
       bestVlb;
-  std::vector<HighsFloat> simpleLbDist;
-  std::vector<HighsFloat> simpleUbDist;
-  std::vector<HighsFloat> lbDist;
-  std::vector<HighsFloat> ubDist;
-  std::vector<HighsFloat> boundDist;
+  std::vector<double> simpleLbDist;
+  std::vector<double> simpleUbDist;
+  std::vector<double> lbDist;
+  std::vector<double> ubDist;
+  std::vector<double> boundDist;
   enum class BoundType : uint8_t {
     kSimpleUb,
     kSimpleLb,
@@ -57,14 +57,14 @@ class HighsTransformedLp {
   HighsTransformedLp(const HighsLpRelaxation& lprelaxation,
                      HighsImplications& implications);
 
-  HighsFloat boundDistance(HighsInt col) const { return boundDist[col]; }
+  double boundDistance(HighsInt col) const { return boundDist[col]; }
 
-  bool transform(std::vector<HighsFloat>& vals, std::vector<HighsFloat>& upper,
-                 std::vector<HighsFloat>& solval, std::vector<HighsInt>& inds,
-                 HighsFloat& rhs, bool& integralPositive, bool preferVbds = false);
+  bool transform(std::vector<double>& vals, std::vector<double>& upper,
+                 std::vector<double>& solval, std::vector<HighsInt>& inds,
+                 double& rhs, bool& integralPositive, bool preferVbds = false);
 
-  bool untransform(std::vector<HighsFloat>& vals, std::vector<HighsInt>& inds,
-                   HighsFloat& rhs, bool integral = false);
+  bool untransform(std::vector<double>& vals, std::vector<HighsInt>& inds,
+                   double& rhs, bool integral = false);
 };
 
 #endif

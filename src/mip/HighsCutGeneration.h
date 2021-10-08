@@ -41,23 +41,23 @@ class HighsCutGeneration {
   std::vector<HighsInt> cover;
   HighsCD0uble coverweight;
   HighsCD0uble lambda;
-  std::vector<HighsFloat> upper;
-  std::vector<HighsFloat> solval;
+  std::vector<double> upper;
+  std::vector<double> solval;
   std::vector<uint8_t> complementation;
   std::vector<uint8_t> isintegral;
-  const HighsFloat feastol;
-  const HighsFloat epsilon;
+  const double feastol;
+  const double epsilon;
 
-  HighsFloat* vals;
+  double* vals;
   HighsInt* inds;
   HighsCD0uble rhs;
   bool integralSupport;
   bool integralCoefficients;
   HighsInt rowlen;
-  HighsFloat initialScale;
+  double initialScale;
 
   std::vector<HighsInt> integerinds;
-  std::vector<HighsFloat> deltas;
+  std::vector<double> deltas;
 
   bool determineCover(bool lpSol = true);
 
@@ -67,7 +67,7 @@ class HighsCutGeneration {
 
   bool separateLiftedMixedIntegerCover();
 
-  bool cmirCutGenerationHeuristic(HighsFloat minEfficacy,
+  bool cmirCutGenerationHeuristic(double minEfficacy,
                                   bool onlyInitialCMIRScale = false);
 
   bool postprocessCut();
@@ -81,18 +81,18 @@ class HighsCutGeneration {
 
   /// separates the LP solution for the given single row relaxation
   bool generateCut(HighsTransformedLp& transLp, std::vector<HighsInt>& inds,
-                   std::vector<HighsFloat>& vals, HighsFloat& rhs,
+                   std::vector<double>& vals, double& rhs,
                    bool onlyInitialCMIRScale = false);
 
   /// generate a conflict from the given proof constraint which cuts of the
   /// given local domain
   bool generateConflict(HighsDomain& localdom, std::vector<HighsInt>& proofinds,
-                        std::vector<HighsFloat>& proofvals, HighsFloat& proofrhs);
+                        std::vector<double>& proofvals, double& proofrhs);
 
   /// applies postprocessing to an externally generated cut and adds it to the
   /// cutpool if it is violated enough
-  bool finalizeAndAddCut(std::vector<HighsInt>& inds, std::vector<HighsFloat>& vals,
-                         HighsFloat& rhs);
+  bool finalizeAndAddCut(std::vector<HighsInt>& inds, std::vector<double>& vals,
+                         double& rhs);
 };
 
 #endif

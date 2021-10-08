@@ -22,7 +22,7 @@
 #include "presolve/HPresolve.h"
 #include "util/HighsIntegers.h"
 
-bool HighsMipSolverData::checkSolution(const std::vector<HighsFloat>& solution) {
+bool HighsMipSolverData::checkSolution(const std::vector<double>& solution) {
   for (HighsInt i = 0; i != mipsolver.model_->num_col_; ++i) {
     if (solution[i] < mipsolver.model_->col_lower_[i] - feastol) return false;
     if (solution[i] > mipsolver.model_->col_upper_[i] + feastol) return false;
@@ -32,7 +32,7 @@ bool HighsMipSolverData::checkSolution(const std::vector<HighsFloat>& solution) 
   }
 
   for (HighsInt i = 0; i != mipsolver.model_->num_row_; ++i) {
-    HighsFloat rowactivity = 0.0;
+    double rowactivity = 0.0;
 
     HighsInt start = ARstart_[i];
     HighsInt end = ARstart_[i + 1];
@@ -47,7 +47,7 @@ bool HighsMipSolverData::checkSolution(const std::vector<HighsFloat>& solution) 
   return true;
 }
 
-bool HighsMipSolverData::trySolution(const std::vector<HighsFloat>& solution,
+bool HighsMipSolverData::trySolution(const std::vector<double>& solution,
                                      char source) {
   if (int(solution.size()) != mipsolver.model_->num_col_) return false;
 
@@ -64,7 +64,7 @@ bool HighsMipSolverData::trySolution(const std::vector<HighsFloat>& solution,
   }
 
   for (HighsInt i = 0; i != mipsolver.model_->num_row_; ++i) {
-    HighsFloat rowactivity = 0.0;
+    double rowactivity = 0.0;
 
     HighsInt start = ARstart_[i];
     HighsInt end = ARstart_[i + 1];
@@ -76,7 +76,7 @@ bool HighsMipSolverData::trySolution(const std::vector<HighsFloat>& solution,
     if (rowactivity < mipsolver.rowLower(i) - feastol) return false;
   }
 
-  return addIncumbent(solution, HighsFloat(obj), source);
+  return addIncumbent(solution, double(obj), source);
 }
 
 bool HighsMipSolverData::moreHeuristicsAllowed() {
@@ -114,10 +114,10 @@ bool HighsMipSolverData::moreHeuristicsAllowed() {
     // heuristics by assuming the node iterations of the current run will
     // grow proportional to the pruned weight of the current tree and the
     // iterations spent for anything else are just added as an offset
-    HighsFloat total_heuristic_effort_estim =
+    double total_heuristic_effort_estim =
         heuristic_lp_iterations /
         ((total_lp_iterations - node_iters_curr_run) +
-         node_iters_curr_run / std::max(1e-3, HighsFloat(pruned_treeweight)));
+         node_iters_curr_run / std::max(1e-3, double(pruned_treeweight)));
     // since heuristics help most in the beginning of the search, we want to
     // spent the time we have for heuristics in the first 80% of the tree
     // exploration. Additionally we want to spent the proportional effort
@@ -128,7 +128,7 @@ bool HighsMipSolverData::moreHeuristicsAllowed() {
     // possible, whereas after that we allow the part that is proportionally
     // adequate when we want to spent all available time in the first 80%.
     if (total_heuristic_effort_estim <
-        std::max(0.3 / 0.8, std::min(HighsFloat(pruned_treeweight), 0.8) / 0.8) *
+        std::max(0.3 / 0.8, std::min(double(pruned_treeweight), 0.8) / 0.8) *
             heuristic_effort) {
       // printf(
       //     "heuristic lp iterations: %ld, total_lp_iterations: %ld, "
@@ -238,7 +238,7 @@ void HighsMipSolverData::runSetup() {
   lower_bound -= mipsolver.model_->offset_;
   upper_bound -= mipsolver.model_->offset_;
 
-  if (mipsolver.numCol() == 0) addIncumbent(std::vector<HighsFloat>(), 0, 'P');
+  if (mipsolver.numCol() == 0) addIncumbent(std::vector<double>(), 0, 'P');
 
   redcostfixing = HighsRedcostFixing();
   pseudocost = HighsPseudocost(mipsolver);
@@ -284,7 +284,7 @@ void HighsMipSolverData::runSetup() {
   // compute the maximal absolute coefficients to filter propagation
   maxAbsRowCoef.resize(mipsolver.model_->num_row_);
   for (HighsInt i = 0; i != mipsolver.model_->num_row_; ++i) {
-    HighsFloat maxabsval = 0.0;
+    double maxabsval = 0.0;
 
     HighsInt start = ARstart_[i];
     HighsInt end = ARstart_[i + 1];
@@ -294,7 +294,7 @@ void HighsMipSolverData::runSetup() {
         if (mipsolver.variableType(ARindex_[j]) == HighsVarType::kContinuous)
           integral = false;
         else {
-          HighsFloat intval = std::floor(ARvalue_[j] + 0.5);
+          double intval = std::floor(ARvalue_[j] + 0.5);
           if (std::abs(ARvalue_[j] - intval) > epsilon) integral = false;
         }
       }
@@ -467,8 +467,8 @@ void HighsMipSolverData::runSetup() {
                  "\n");
 }
 
-HighsFloat HighsMipSolverData::transformNewIncumbent(
-    const std::vector<HighsFloat>& sol) {
+double HighsMipSolverData::transformNewIncumbent(
+    const std::vector<double>& sol) {
   HighsSolution solution;
   solution.col_value = sol;
   calculateRowValues(*mipsolver.model_, solution);
@@ -479,9 +479,9 @@ HighsFloat HighsMipSolverData::transformNewIncumbent(
 try_again:
 
   // compute the objective value in the original space
-  HighsFloat bound_violation_ = 0;
-  HighsFloat row_violation_ = 0;
-  HighsFloat integrality_violation_ = 0;
+  double bound_violation_ = 0;
+  double row_violation_ = 0;
+  double integrality_violation_ = 0;
 
   HighsCD0uble obj = mipsolver.orig_model_->offset_;
   assert((HighsInt)solution.col_value.size() ==
@@ -497,7 +497,7 @@ try_again:
                  solution.col_value[i] - mipsolver.orig_model_->col_upper_[i]);
 
     if (mipsolver.orig_model_->integrality_[i] == HighsVarType::kInteger) {
-      HighsFloat intval = std::floor(solution.col_value[i] + 0.5);
+      double intval = std::floor(solution.col_value[i] + 0.5);
       integrality_violation_ = std::max(
           std::abs(intval - solution.col_value[i]), integrality_violation_);
     }
@@ -528,7 +528,7 @@ try_again:
     fixedModel.integrality_.clear();
     for (HighsInt i = 0; i != mipsolver.orig_model_->num_col_; ++i) {
       if (mipsolver.orig_model_->integrality_[i] == HighsVarType::kInteger) {
-        HighsFloat solval = std::round(solution.col_value[i]);
+        double solval = std::round(solution.col_value[i]);
         fixedModel.col_lower_[i] = std::max(fixedModel.col_lower_[i], solval);
         fixedModel.col_upper_[i] = std::min(fixedModel.col_upper_[i], solval);
       }
@@ -552,13 +552,13 @@ try_again:
   // solution or if it is feasible
   if (feasible) {
     // if (!allow_try_again)
-    //   printf("repaired solution with value %g\n", HighsFloat(obj));
+    //   printf("repaired solution with value %g\n", double(obj));
     // store
     mipsolver.row_violation_ = row_violation_;
     mipsolver.bound_violation_ = bound_violation_;
     mipsolver.integrality_violation_ = integrality_violation_;
     mipsolver.solution_ = std::move(solution.col_value);
-    mipsolver.solution_objective_ = HighsFloat(obj);
+    mipsolver.solution_objective_ = double(obj);
   } else {
     bool currentFeasible =
         mipsolver.solution_objective_ != kHighsInf &&
@@ -572,7 +572,7 @@ try_again:
         mipsolver.options_mip_->log_options, HighsLogType::kWarning,
         "Untransformed solution with objective %g is violated by %.12g for the "
         "original model\n",
-        HighsFloat(obj),
+        double(obj),
         std::max({bound_violation_, integrality_violation_, row_violation_}));
     if (!currentFeasible) {
       // if the current incumbent is non existent or also not feasible we still
@@ -581,7 +581,7 @@ try_again:
       mipsolver.bound_violation_ = bound_violation_;
       mipsolver.integrality_violation_ = integrality_violation_;
       mipsolver.solution_ = std::move(solution.col_value);
-      mipsolver.solution_objective_ = HighsFloat(obj);
+      mipsolver.solution_objective_ = double(obj);
     }
 
     // return infinity so that it is not used for bounding
@@ -590,13 +590,13 @@ try_again:
 
   // return the objective value in the transformed space
   if (mipsolver.orig_model_->sense_ == ObjSense::kMaximize)
-    return -HighsFloat(obj + mipsolver.model_->offset_);
+    return -double(obj + mipsolver.model_->offset_);
 
-  return HighsFloat(obj - mipsolver.model_->offset_);
+  return double(obj - mipsolver.model_->offset_);
 }
 
-HighsFloat HighsMipSolverData::percentageInactiveIntegers() const {
-  return 100.0 * (1.0 - HighsFloat(integer_cols.size() -
+double HighsMipSolverData::percentageInactiveIntegers() const {
+  return 100.0 * (1.0 - double(integer_cols.size() -
                                cliquetable.getSubstitutions().size()) /
                             numintegercols);
 }
@@ -621,7 +621,7 @@ void HighsMipSolverData::performRestart() {
   HighsInt numCuts = numLpRows - numModelRows;
   if (numCuts > 0) postSolveStack.appendCutsToModel(numCuts);
   auto integrality = std::move(presolvedModel.integrality_);
-  HighsFloat offset = presolvedModel.offset_;
+  double offset = presolvedModel.offset_;
   presolvedModel = lp.getLp();
   presolvedModel.offset_ = offset;
   presolvedModel.integrality_ = std::move(integrality);
@@ -798,12 +798,12 @@ void HighsMipSolverData::basisTransfer() {
   }
 }
 
-const std::vector<HighsFloat>& HighsMipSolverData::getSolution() const {
+const std::vector<double>& HighsMipSolverData::getSolution() const {
   return incumbent;
 }
 
-bool HighsMipSolverData::addIncumbent(const std::vector<HighsFloat>& sol,
-                                      HighsFloat solobj, char source) {
+bool HighsMipSolverData::addIncumbent(const std::vector<double>& sol,
+                                      double solobj, char source) {
   if (solobj < upper_bound) {
     if (solobj <= upper_limit) {
       solobj = transformNewIncumbent(sol);
@@ -811,7 +811,7 @@ bool HighsMipSolverData::addIncumbent(const std::vector<HighsFloat>& sol,
     }
     upper_bound = solobj;
     incumbent = sol;
-    HighsFloat new_upper_limit;
+    double new_upper_limit;
     if (objintscale != 0.0) {
       new_upper_limit =
           (std::floor(objintscale * solobj - 0.5) / objintscale) + feastol;
@@ -844,7 +844,7 @@ bool HighsMipSolverData::addIncumbent(const std::vector<HighsFloat>& sol,
 }
 
 static std::array<char, 16> convertToPrintString(int64_t val) {
-  HighsFloat l = std::log10(std::max(1.0, HighsFloat(val)));
+  double l = std::log10(std::max(1.0, double(val)));
   std::array<char, 16> printString;
   switch (int(l)) {
     case 0:
@@ -867,9 +867,9 @@ static std::array<char, 16> convertToPrintString(int64_t val) {
   return printString;
 }
 
-static std::array<char, 32> convertToPrintString(HighsFloat val) {
+static std::array<char, 32> convertToPrintString(double val) {
   std::array<char, 32> printString;
-  HighsFloat l = std::abs(val) == kHighsInf
+  double l = std::abs(val) == kHighsInf
                  ? 0.0
                  : std::log10(std::max(1e-6, std::abs(val)));
   switch (int(l)) {
@@ -900,12 +900,12 @@ static std::array<char, 32> convertToPrintString(HighsFloat val) {
 }
 
 void HighsMipSolverData::printDisplayLine(char first) {
-  HighsFloat time = mipsolver.timer_.read(mipsolver.timer_.solve_clock);
+  double time = mipsolver.timer_.read(mipsolver.timer_.solve_clock);
   if (first == ' ' && time - last_disptime < 5.) return;
 
   last_disptime = time;
 
-  HighsFloat offset = mipsolver.model_->offset_;
+  double offset = mipsolver.model_->offset_;
   if (num_disp_lines % 20 == 0) {
     highsLogUser(
         mipsolver.options_mip_->log_options, HighsLogType::kInfo,
@@ -928,12 +928,12 @@ void HighsMipSolverData::printDisplayLine(char first) {
   std::array<char, 16> print_leaves =
       convertToPrintString(num_leaves - num_leaves_before_run);
 
-  HighsFloat explored = 100 * HighsFloat(pruned_treeweight);
+  double explored = 100 * double(pruned_treeweight);
 
-  HighsFloat lb = lower_bound + offset;
+  double lb = lower_bound + offset;
   if (std::abs(lb) <= epsilon) lb = 0;
-  HighsFloat ub = kHighsInf;
-  HighsFloat gap = kHighsInf;
+  double ub = kHighsInf;
+  double gap = kHighsInf;
 
   std::array<char, 16> print_lp_iters =
       convertToPrintString(total_lp_iterations);
@@ -983,7 +983,7 @@ bool HighsMipSolverData::rootSeparationRound(
   status = evaluateRootLp();
   if (status == HighsLpRelaxation::Status::kInfeasible) return true;
 
-  const std::vector<HighsFloat>& solvals = lp.getLpSolver().getSolution().col_value;
+  const std::vector<double>& solvals = lp.getLpSolver().getSolution().col_value;
 
   if (mipsolver.submip || incumbent.empty()) {
     heuristics.randomizedRounding(solvals);
@@ -1156,13 +1156,13 @@ restart:
   rootlpsolobj = firstlpsolobj;
 
   // begin separation
-  std::vector<HighsFloat> avgdirection;
-  std::vector<HighsFloat> curdirection;
+  std::vector<double> avgdirection;
+  std::vector<double> curdirection;
   avgdirection.resize(mipsolver.numCol());
   curdirection.resize(mipsolver.numCol());
 
   HighsInt stall = 0;
-  HighsFloat smoothprogress = 0.0;
+  double smoothprogress = 0.0;
   HighsInt nseparounds = 0;
   HighsSeparation sepa(mipsolver);
   sepa.setLpRelaxation(&lp);
@@ -1179,7 +1179,7 @@ restart:
 
     if (!mipsolver.submip &&
         mipsolver.options_mip_->presolve != kHighsOffString) {
-      HighsFloat fixingRate = percentageInactiveIntegers();
+      double fixingRate = percentageInactiveIntegers();
       if (fixingRate >= 10.0) {
         stall = -1;
         break;
@@ -1215,7 +1215,7 @@ restart:
       sqrnorm += curdirection[i] * curdirection[i];
     }
 #if 1
-    HighsFloat scale = HighsFloat(1.0 / sqrt(sqrnorm));
+    double scale = double(1.0 / sqrt(sqrnorm));
     sqrnorm = 0.0;
     HighsCD0uble dotproduct = 0.0;
     for (HighsInt i = 0; i != mipsolver.numCol(); ++i) {
@@ -1226,13 +1226,13 @@ restart:
     }
 #endif
 
-    HighsFloat progress = HighsFloat(dotproduct / sqrt(sqrnorm));
+    double progress = double(dotproduct / sqrt(sqrnorm));
 
     if (nseparounds == 1) {
       smoothprogress = progress;
     } else {
-      HighsFloat alpha = 1.0 / 3.0;
-      HighsFloat nextprogress = (1.0 - alpha) * smoothprogress + alpha * progress;
+      double alpha = 1.0 / 3.0;
+      double nextprogress = (1.0 - alpha) * smoothprogress + alpha * progress;
 
       if (nextprogress < smoothprogress * 1.01 &&
           (lp.getObjective() - firstlpsolobj) <=
@@ -1284,7 +1284,7 @@ restart:
     if (rootlpsol.empty()) break;
     if (upper_limit != kHighsInf && !moreHeuristicsAllowed()) break;
 
-    HighsFloat oldLimit = upper_limit;
+    double oldLimit = upper_limit;
     heuristics.rootReducedCost();
     heuristics.flushStatistics();
 
@@ -1365,7 +1365,7 @@ restart:
   if (lower_bound <= upper_limit) {
     if (!mipsolver.submip &&
         mipsolver.options_mip_->presolve != kHighsOffString) {
-      HighsFloat fixingRate = percentageInactiveIntegers();
+      double fixingRate = percentageInactiveIntegers();
       if (fixingRate >= 2.5 + 7.5 * mipsolver.submip ||
           (!mipsolver.submip && fixingRate > 0 && numRestarts == 0)) {
         highsLogUser(mipsolver.options_mip_->log_options, HighsLogType::kInfo,
@@ -1430,8 +1430,8 @@ void HighsMipSolverData::checkObjIntegrality() {
       break;
     }
 
-    HighsFloat cost = mipsolver.colCost(i);
-    HighsFloat intcost = std::floor(objintscale * cost + 0.5) / objintscale;
+    double cost = mipsolver.colCost(i);
+    double intcost = std::floor(objintscale * cost + 0.5) / objintscale;
     if (std::abs(cost - intcost) > epsilon) {
       objintscale = 0.0;
       break;
@@ -1471,7 +1471,7 @@ void HighsMipSolverData::setupDomainPropagation() {
   // compute the maximal absolute coefficients to filter propagation
   maxAbsRowCoef.resize(mipsolver.model_->num_row_);
   for (HighsInt i = 0; i != mipsolver.model_->num_row_; ++i) {
-    HighsFloat maxabsval = 0.0;
+    double maxabsval = 0.0;
 
     HighsInt start = ARstart_[i];
     HighsInt end = ARstart_[i + 1];

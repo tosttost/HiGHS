@@ -39,8 +39,8 @@ HighsStatus extractTriangularHessian(const HighsOptions& options,
                                      HighsHessian& hessian);
 void triangularToSquareHessian(const HighsHessian& hessian,
                                vector<HighsInt>& start, vector<HighsInt>& index,
-                               vector<HighsFloat>& value);
+                               vector<double>& value);
 void reportHessian(const HighsLogOptions& log_options, const HighsInt dim,
                    const HighsInt num_nz, const HighsInt* start,
-                   const HighsInt* index, const HighsFloat* value);
+                   const HighsInt* index, const double* value);
 #endif  // MODEL_HIGHSHESSIANUTILS_H_

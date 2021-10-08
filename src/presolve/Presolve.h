@@ -76,7 +76,7 @@ class Presolve : public HPreData {
                                  HighsBasis& recovered_basis);
 
   HighsPostsolveStatus primalPostsolve(
-      const std::vector<HighsFloat>& reduced_solution,
+      const std::vector<double>& reduced_solution,
       HighsSolution& recovered_solution);
 
   void setNumericalTolerances();
@@ -89,8 +89,8 @@ class Presolve : public HPreData {
 
   struct AggregatorCall {
     HAggregator::PostsolveStack postsolveStack;
-    std::vector<HighsFloat> colCostAtCall;
-    std::vector<HighsFloat> ARvalueAtCall;
+    std::vector<double> colCostAtCall;
+    std::vector<double> ARvalueAtCall;
     std::vector<HighsInt> ARindexAtCall;
     std::vector<HighsInt> ARstartAtCall;
   };
@@ -99,14 +99,14 @@ class Presolve : public HPreData {
 
   HighsInt max_iterations = 0;
 
-  void setTimeLimit(const HighsFloat limit) {
+  void setTimeLimit(const double limit) {
     assert(limit < inf && limit > 0);
     timer.time_limit = limit;
   }
 
   HighsInt iPrint = 0;
   HighsLogOptions log_options;
-  HighsFloat objShift;
+  double objShift;
 
  private:
   HighsInt iKKTcheck = 0;
@@ -123,8 +123,8 @@ class Presolve : public HPreData {
   void reportTimes();
 
   // new bounds on primal variables for implied free detection
-  vector<HighsFloat> implColLower;
-  vector<HighsFloat> implColUpper;
+  vector<double> implColLower;
+  vector<double> implColUpper;
   vector<HighsInt> implColLowerRowIndex;
   vector<HighsInt> implColUpperRowIndex;
 
@@ -132,13 +132,13 @@ class Presolve : public HPreData {
   vector<HighsInt> implRowDualUpperSingColRowIndex;
 
   // new bounds on row duals y_i
-  vector<HighsFloat> implRowDualLower;
-  vector<HighsFloat> implRowDualUpper;
+  vector<double> implRowDualLower;
+  vector<double> implRowDualUpper;
 
-  vector<HighsFloat> implColDualLower;
-  vector<HighsFloat> implColDualUpper;
-  vector<HighsFloat> implRowValueLower;
-  vector<HighsFloat> implRowValueUpper;
+  vector<double> implColDualLower;
+  vector<double> implColDualUpper;
+  vector<double> implRowValueLower;
+  vector<double> implRowValueUpper;
 
   PresolveTimer timer;  // holds enum for main presolve rules
 
@@ -161,16 +161,16 @@ class Presolve : public HPreData {
 
   // original data
  public:
-  vector<HighsFloat> colCostOriginal;
+  vector<double> colCostOriginal;
 
  private:
-  vector<HighsFloat> rowLowerOriginal;
-  vector<HighsFloat> rowUpperOriginal;
-  vector<HighsFloat> colLowerOriginal;
-  vector<HighsFloat> colUpperOriginal;
+  vector<double> rowLowerOriginal;
+  vector<double> rowUpperOriginal;
+  vector<double> colLowerOriginal;
+  vector<double> colUpperOriginal;
 
   // functions
-  void setPrimalValue(const HighsInt j, const HighsFloat value);
+  void setPrimalValue(const HighsInt j, const double value);
   void checkForChanges(HighsInt iteration);
   void resizeProblem();
   void resizeImpliedBounds();
@@ -191,26 +191,26 @@ class Presolve : public HPreData {
 
   // forcing constraints
   void removeForcingConstraints();
-  pair<HighsFloat, HighsFloat> getImpliedRowBounds(HighsInt row);
+  pair<double, double> getImpliedRowBounds(HighsInt row);
   void setVariablesToBoundForForcingRow(const HighsInt row, const bool isLower);
-  void dominatedConstraintProcedure(const HighsInt i, const HighsFloat g,
-                                    const HighsFloat h);
+  void dominatedConstraintProcedure(const HighsInt i, const double g,
+                                    const double h);
 
-  // HighsFloatton equations
+  // doubleton equations
   void removeD0ublet0nEquations();
   pair<HighsInt, HighsInt> getXYD0ublet0nEquations(const HighsInt row);
   void processRowD0ublet0nEquation(const HighsInt row, const HighsInt x,
-                                   const HighsInt y, const HighsFloat akx,
-                                   const HighsFloat aky, const HighsFloat b);
-  pair<HighsFloat, HighsFloat> getNewBoundsD0ublet0nConstraint(HighsInt row,
+                                   const HighsInt y, const double akx,
+                                   const double aky, const double b);
+  pair<double, double> getNewBoundsD0ublet0nConstraint(HighsInt row,
                                                        HighsInt col, HighsInt j,
-                                                       HighsFloat aik, HighsFloat aij);
+                                                       double aik, double aij);
   void UpdateMatrixCoeffD0ublet0nEquationXzero(
-      const HighsInt i, const HighsInt x, const HighsInt y, const HighsFloat aiy,
-      const HighsFloat akx, const HighsFloat aky);
+      const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
+      const double akx, const double aky);
   void UpdateMatrixCoeffD0ublet0nEquationXnonZero(
-      const HighsInt i, const HighsInt x, const HighsInt y, const HighsFloat aiy,
-      const HighsFloat akx, const HighsFloat aky);
+      const HighsInt i, const HighsInt x, const HighsInt y, const double aiy,
+      const double akx, const double aky);
 
   // column singletons
   void removeColumnSingletons();
@@ -224,7 +224,7 @@ class Presolve : public HPreData {
                                                   const HighsInt k);
   void removeSecondColumnSingletonInD0ublet0nRow(const HighsInt j,
                                                  const HighsInt i);
-  pair<HighsFloat, HighsFloat> getBoundsImpliedFree(HighsFloat lowInit, HighsFloat uppInit,
+  pair<double, double> getBoundsImpliedFree(double lowInit, double uppInit,
                                             const HighsInt col,
                                             const HighsInt i, const HighsInt k);
   void removeImpliedFreeColumn(const HighsInt col, const HighsInt i,
@@ -233,16 +233,16 @@ class Presolve : public HPreData {
   // dominated columns
   void removeDominatedColumns();
   void rowDualBoundsDominatedColumns();
-  pair<HighsFloat, HighsFloat> getImpliedColumnBounds(HighsInt j);
-  void removeIfWeaklyDominated(const HighsInt j, const HighsFloat d,
-                               const HighsFloat e);
+  pair<double, double> getImpliedColumnBounds(HighsInt j);
+  void removeIfWeaklyDominated(const HighsInt j, const double d,
+                               const double e);
 
   //    void findDuplicateRows();
   //    void findDuplicateColumns();
-  //    void removeDuplicateRows(HighsInt i, HighsInt k, HighsFloat v);
+  //    void removeDuplicateRows(HighsInt i, HighsInt k, double v);
   //    HighsInt makeCheckForDuplicateRows(HighsInt k, HighsInt i,
-  //    vector<HighsFloat>& coeff, vector<HighsInt>& colIndex, HighsFloat v, HighsInt
-  //    whichIsFirst); void removeDuplicateColumns(HighsInt j,HighsInt k, HighsFloat
+  //    vector<double>& coeff, vector<HighsInt>& colIndex, double v, HighsInt
+  //    whichIsFirst); void removeDuplicateColumns(HighsInt j,HighsInt k, double
   //    v); bool checkDuplicateRows(HighsInt i, HighsInt k) ;
   //	  bool checkDuplicateColumns(HighsInt i, HighsInt k) ;
 
@@ -254,18 +254,18 @@ class Presolve : public HPreData {
   void countRemovedRows(PresolveRule rule);
   void countRemovedCols(PresolveRule rule);
 
-  HighsFloat tol = 0.0000001;
-  const HighsFloat default_primal_feasiblility_tolerance = 1e-7;
-  const HighsFloat default_dual_feasiblility_tolerance = 1e-7;
-  const HighsFloat default_small_matrix_value = 1e-9;
-  HighsFloat inconsistent_bounds_tolerance;
-  HighsFloat fixed_column_tolerance;
-  HighsFloat HighsFloatton_equation_bound_tolerance;
-  HighsFloat HighsFloatton_inequality_bound_tolerance;
-  HighsFloat presolve_small_matrix_value;
-  HighsFloat empty_row_bound_tolerance;
-  HighsFloat dominated_column_tolerance;
-  HighsFloat weakly_dominated_column_tolerance;
+  double tol = 0.0000001;
+  const double default_primal_feasiblility_tolerance = 1e-7;
+  const double default_dual_feasiblility_tolerance = 1e-7;
+  const double default_small_matrix_value = 1e-9;
+  double inconsistent_bounds_tolerance;
+  double fixed_column_tolerance;
+  double doubleton_equation_bound_tolerance;
+  double doubleton_inequality_bound_tolerance;
+  double presolve_small_matrix_value;
+  double empty_row_bound_tolerance;
+  double dominated_column_tolerance;
+  double weakly_dominated_column_tolerance;
 
   // postsolve
   bool noPostSolve = false;
@@ -275,10 +275,10 @@ class Presolve : public HPreData {
   void fillStackRowBounds(const HighsInt col);
   void setKKTcheckerData();
 
-  void getBoundOnLByZj(const HighsInt row, const HighsInt j, HighsFloat* lo,
-                       HighsFloat* up, const HighsFloat colLow, const HighsFloat colUpp);
-  HighsFloat getRowDualPost(const HighsInt row, const HighsInt col);
-  HighsFloat getColumnDualPost(const HighsInt col);
+  void getBoundOnLByZj(const HighsInt row, const HighsInt j, double* lo,
+                       double* up, const double colLow, const double colUpp);
+  double getRowDualPost(const HighsInt row, const HighsInt col);
+  double getColumnDualPost(const HighsInt col);
   void roundIntegerBounds(HighsInt col);
   string getDualsForcingRow(const HighsInt row, vector<HighsInt>& fRjs);
   void getDualsSingletonRow(const HighsInt row, const HighsInt col);

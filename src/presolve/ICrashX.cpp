@@ -21,7 +21,7 @@ bool callCrossover(const HighsLp& lp, const HighsOptions& options,
 
   ipx::Int num_col, num_row;
   std::vector<ipx::Int> Ap, Ai;
-  std::vector<HighsFloat> objective, col_lb, col_ub, Av, rhs;
+  std::vector<double> objective, col_lb, col_ub, Av, rhs;
   std::vector<char> constraint_type;
 
   fillInIpxData(lp, num_col, num_row, objective, col_lb, col_ub, Ap, Ai, Av,
@@ -44,14 +44,14 @@ bool callCrossover(const HighsLp& lp, const HighsOptions& options,
   }
 
   // Set x values within bounds.
-  std::vector<HighsFloat> x(solution.col_value);
+  std::vector<double> x(solution.col_value);
   for (int i = 0; i < num_col; i++) {
     x[i] = std::max(x[i], col_lb[i]);
     x[i] = std::min(x[i], col_ub[i]);
   }
 
   // Build slack variables from rhs-A*x but subject to sign conditions.
-  std::vector<HighsFloat> slack(rhs);
+  std::vector<double> slack(rhs);
   for (int i = 0; i < num_col; i++) {
     for (int p = Ap[i]; p < Ap[i + 1]; ++p) slack[Ai[p]] -= Av[p] * x[i];
   }

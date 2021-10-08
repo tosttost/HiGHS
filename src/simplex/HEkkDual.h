@@ -180,13 +180,13 @@ class HEkkDual {
    * @brief Determine whether the updated_edge_weight is accurate enough to
    * be accepted, and update the analysis of weight errors
    */
-  bool acceptDualSteepestEdgeWeight(const HighsFloat updated_edge_weight);
+  bool acceptDualSteepestEdgeWeight(const double updated_edge_weight);
 
   /**
    * @brief Determine whether the updated_edge_weight error should trigger a new
    * Devex framework
    */
-  bool newDevexFramework(const HighsFloat updated_edge_weight);
+  bool newDevexFramework(const double updated_edge_weight);
 
   /**
    * @brief Compute pivot row (PRICE) and choose the index of a good column to
@@ -246,7 +246,7 @@ class HEkkDual {
    */
   void updatePivots();
 
-  void shiftCost(const HighsInt iCol, const HighsFloat amount);
+  void shiftCost(const HighsInt iCol, const double amount);
   void shiftBack(const HighsInt iCol);
 
   /**
@@ -263,7 +263,7 @@ class HEkkDual {
       const HighsInt simplex_dual_edge_weight_strategy);
 
   bool reachedExactObjectiveBound();
-  HighsFloat computeExactDualObjectiveValue();
+  double computeExactDualObjectiveValue();
 
   /**
    * @brief PAMI: Choose the indices of a good set of rows to leave the
@@ -365,8 +365,8 @@ class HEkkDual {
   bool bailoutOnDualObjective();
   HighsDebugStatus debugDualSimplex(const std::string message,
                                     const bool initialise = false);
-  HighsFloat* getWorkEdWt() { return &dualRHS.workEdWt[0]; };
-  HighsFloat* getWorkEdWtFull() { return &dualRHS.workEdWtFull[0]; };
+  double* getWorkEdWt() { return &dualRHS.workEdWt[0]; };
+  double* getWorkEdWtFull() { return &dualRHS.workEdWtFull[0]; };
 
   // Devex scalars
   HighsInt num_devex_iterations =
@@ -388,16 +388,16 @@ class HEkkDual {
   HighsSimplexAnalysis* analysis;
 
   const int8_t* jMove;
-  const HighsFloat* workRange;
-  const HighsFloat* baseLower;
-  const HighsFloat* baseUpper;
-  HighsFloat* baseValue;
-  HighsFloat* workDual;
-  HighsFloat* workValue;
-  HighsFloat* colLower;
-  HighsFloat* colUpper;
-  HighsFloat* rowLower;
-  HighsFloat* rowUpper;
+  const double* workRange;
+  const double* baseLower;
+  const double* baseUpper;
+  double* baseValue;
+  double* workDual;
+  double* workValue;
+  double* colLower;
+  double* colUpper;
+  double* rowLower;
+  double* rowUpper;
   int8_t* nonbasicFlag;
 
   // Options
@@ -405,14 +405,14 @@ class HEkkDual {
   bool initialise_dual_steepest_edge_weights;
   bool allow_dual_steepest_edge_to_devex_switch;
 
-  const HighsFloat min_dual_steepest_edge_weight = 1e-4;
+  const double min_dual_steepest_edge_weight = 1e-4;
 
-  HighsFloat Tp;  // Tolerance for primal
-  HighsFloat primal_feasibility_tolerance;
+  double Tp;  // Tolerance for primal
+  double primal_feasibility_tolerance;
 
-  HighsFloat Td;  // Tolerance for dual
-  HighsFloat dual_feasibility_tolerance;
-  HighsFloat objective_bound;
+  double Td;  // Tolerance for dual
+  double dual_feasibility_tolerance;
+  double objective_bound;
 
   HighsInt solve_phase;
   HighsInt rebuild_reason;
@@ -435,14 +435,14 @@ class HEkkDual {
   HighsInt variable_out;
   HighsInt move_out;  // -1 from small to lower, +1 to upper
   HighsInt variable_in;
-  HighsFloat delta_primal;
-  HighsFloat theta_dual;
-  HighsFloat theta_primal;
-  HighsFloat alpha_col;
-  HighsFloat alpha_row;
-  HighsFloat numericalTrouble;
+  double delta_primal;
+  double theta_dual;
+  double theta_primal;
+  double alpha_col;
+  double alpha_row;
+  double numericalTrouble;
   // (Local) value of computed weight
-  HighsFloat computed_edge_weight;
+  double computed_edge_weight;
 
   bool check_invert_condition = false;
 
@@ -460,12 +460,12 @@ class HEkkDual {
    */
   struct MChoice {
     HighsInt row_out;
-    HighsFloat baseValue;
-    HighsFloat baseLower;
-    HighsFloat baseUpper;
-    HighsFloat infeasValue;
-    HighsFloat infeasEdWt;
-    HighsFloat infeasLimit;
+    double baseValue;
+    double baseLower;
+    double baseUpper;
+    double infeasValue;
+    double infeasEdWt;
+    double infeasLimit;
     HVector row_ep;
     HVector col_aq;
     HVector col_BFRT;
@@ -476,17 +476,17 @@ class HEkkDual {
    */
   struct MFinish {
     HighsInt move_in;
-    HighsFloat shiftOut;
+    double shiftOut;
     std::vector<HighsInt> flipList;
 
     HighsInt row_out;
     HighsInt variable_out;
     HighsInt variable_in;
-    HighsFloat alpha_row;
-    HighsFloat theta_primal;
-    HighsFloat basicBound;
-    HighsFloat basicValue;
-    HighsFloat EdWt;
+    double alpha_row;
+    double theta_primal;
+    double basicBound;
+    double basicValue;
+    double EdWt;
     HVector_ptr row_ep;
     HVector_ptr col_aq;
     HVector_ptr col_BFRT;
@@ -501,8 +501,8 @@ class HEkkDual {
   MChoice multi_choice[kHighsThreadLimit];
   MFinish multi_finish[kHighsThreadLimit];
 
-  //  HighsFloat build_synthetic_tick;
-  //  HighsFloat total_synthetic_tick;
+  //  double build_synthetic_tick;
+  //  double total_synthetic_tick;
 };
 
 #endif /* SIMPLEX_HEKKDUAL_H_ */

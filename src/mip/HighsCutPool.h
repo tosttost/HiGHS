@@ -27,9 +27,9 @@ struct HighsCutSet {
   std::vector<HighsInt> cutindices;
   std::vector<HighsInt> ARstart_;
   std::vector<HighsInt> ARindex_;
-  std::vector<HighsFloat> ARvalue_;
-  std::vector<HighsFloat> lower_;
-  std::vector<HighsFloat> upper_;
+  std::vector<double> ARvalue_;
+  std::vector<double> lower_;
+  std::vector<double> upper_;
 
   HighsInt numCuts() const { return cutindices.size(); }
 
@@ -56,18 +56,18 @@ struct HighsCutSet {
 class HighsCutPool {
  private:
   HighsDynamicRowMatrix matrix_;
-  std::vector<HighsFloat> rhs_;
+  std::vector<double> rhs_;
   std::vector<int16_t> ages_;
-  std::vector<HighsFloat> rownormalization_;
-  std::vector<HighsFloat> maxabscoef_;
+  std::vector<double> rownormalization_;
+  std::vector<double> maxabscoef_;
   std::vector<uint8_t> rowintegral;
   std::unordered_multimap<uint64_t, HighsInt> hashToCutMap;
   std::vector<HighsDomain::CutpoolPropagation*> propagationDomains;
   std::set<std::pair<HighsInt, HighsInt>> propRows;
 
-  HighsFloat bestObservedScore;
-  HighsFloat minScoreFactor;
-  HighsFloat minDensityLim;
+  double bestObservedScore;
+  double minScoreFactor;
+  double minDensityLim;
 
   HighsInt agelim_;
   HighsInt softlimit_;
@@ -75,10 +75,10 @@ class HighsCutPool {
   HighsInt numPropNzs;
   HighsInt numPropRows;
   std::vector<HighsInt> ageDistribution;
-  std::vector<std::pair<HighsInt, HighsFloat>> sortBuffer;
+  std::vector<std::pair<HighsInt, double>> sortBuffer;
 
-  bool isDuplicate(size_t hash, HighsFloat norm, const HighsInt* Rindex,
-                   const HighsFloat* Rvalue, HighsInt Rlen, HighsFloat rhs);
+  bool isDuplicate(size_t hash, double norm, const HighsInt* Rindex,
+                   const double* Rvalue, HighsInt Rlen, double rhs);
 
  public:
   HighsCutPool(HighsInt ncols, HighsInt agelim, HighsInt softlimit)
@@ -95,7 +95,7 @@ class HighsCutPool {
   }
   const HighsDynamicRowMatrix& getMatrix() const { return matrix_; }
 
-  const std::vector<HighsFloat>& getRhs() const { return rhs_; }
+  const std::vector<double>& getRhs() const { return rhs_; }
 
   void resetAge(HighsInt cut) {
     if (ages_[cut] > 0) {
@@ -109,7 +109,7 @@ class HighsCutPool {
     }
   }
 
-  HighsFloat getParallelism(HighsInt row1, HighsInt row2) const;
+  double getParallelism(HighsInt row1, HighsInt row2) const;
 
   void performAging();
 
@@ -133,8 +133,8 @@ class HighsCutPool {
     ageDistribution.resize(agelim_ + 1);
   }
 
-  void separate(const std::vector<HighsFloat>& sol, HighsDomain& domprop,
-                HighsCutSet& cutset, HighsFloat feastol);
+  void separate(const std::vector<double>& sol, HighsDomain& domprop,
+                HighsCutSet& cutset, double feastol);
 
   void separateLpCutsAfterRestart(HighsCutSet& cutset);
 
@@ -144,10 +144,10 @@ class HighsCutPool {
     return matrix_.getNumRows() - matrix_.getNumDelRows();
   }
 
-  HighsFloat getMaxAbsCutCoef(HighsInt cut) const { return maxabscoef_[cut]; }
+  double getMaxAbsCutCoef(HighsInt cut) const { return maxabscoef_[cut]; }
 
   HighsInt addCut(const HighsMipSolver& mipsolver, HighsInt* Rindex,
-                  HighsFloat* Rvalue, HighsInt Rlen, HighsFloat rhs,
+                  double* Rvalue, HighsInt Rlen, double rhs,
                   bool integral = false, bool propagate = true,
                   bool extractCliques = true, bool isConflict = false);
 
@@ -156,7 +156,7 @@ class HighsCutPool {
   }
 
   void getCut(HighsInt cut, HighsInt& cutlen, const HighsInt*& cutinds,
-              const HighsFloat*& cutvals) const {
+              const double*& cutvals) const {
     HighsInt start = matrix_.getRowStart(cut);
     cutlen = matrix_.getRowEnd(cut) - start;
     cutinds = matrix_.getARindex() + start;

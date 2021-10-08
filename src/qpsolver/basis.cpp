@@ -57,7 +57,7 @@ void Basis::build() {
     Atran.value.resize(1);
   }
   basisfactor.setup(Atran.num_col, Atran.num_row, (HighsInt*)&Atran.start[0],
-                    (HighsInt*)&Atran.index[0], (const HighsFloat*)&Atran.value[0],
+                    (HighsInt*)&Atran.index[0], (const double*)&Atran.value[0],
                     baseindex);
   basisfactor.build();
 

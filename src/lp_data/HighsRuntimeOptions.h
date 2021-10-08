@@ -42,8 +42,8 @@ bool loadOptions(int argc, char** argv, HighsOptions& options,
         "Parallel solve: \"choose\" by default - \"on\"/\"off\" are alternatives.",
         cxxopts::value<std::string>(parallel))
         (kTimeLimitString,
-        "Run time limit (HighsFloat).",
-        cxxopts::value<HighsFloat>())
+        "Run time limit (double).",
+        cxxopts::value<double>())
         (kOptionsFileString,
         "File containing HiGHS options.",
         cxxopts::value<std::vector<std::string>>())
@@ -105,7 +105,7 @@ bool loadOptions(int argc, char** argv, HighsOptions& options,
     }
 
     if (result.count(kTimeLimitString)) {
-      HighsFloat value = result[kTimeLimitString].as<HighsFloat>();
+      double value = result[kTimeLimitString].as<double>();
       if (setLocalOptionValue(options.log_options, kTimeLimitString,
                               options.records, value) != OptionStatus::kOk)
         return false;

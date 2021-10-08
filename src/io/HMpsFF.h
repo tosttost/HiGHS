@@ -38,7 +38,7 @@
 //#include "util/HighsInt.h"
 #include "util/stringutil.h"
 
-using Triplet = std::tuple<HighsInt, HighsInt, HighsFloat>;
+using Triplet = std::tuple<HighsInt, HighsInt, double>;
 
 enum class FreeFormatParserReturnCode {
   kSuccess,
@@ -54,7 +54,7 @@ namespace free_format_parser {
 using wall_clock = std::chrono::high_resolution_clock;
 using time_point = wall_clock::time_point;
 
-HighsFloat getWallTime();
+double getWallTime();
 
 class HMpsFF {
  public:
@@ -63,10 +63,10 @@ class HMpsFF {
                                          const std::string filename,
                                          HighsModel& model);
 
-  HighsFloat time_limit = kHighsInf;
+  double time_limit = kHighsInf;
 
  private:
-  HighsFloat start_time;
+  double start_time;
 
   HighsInt numRow;
   HighsInt numCol;
@@ -74,16 +74,16 @@ class HMpsFF {
   std::string mpsName;
 
   ObjSense objSense = ObjSense::kMinimize;  // Minimization by default
-  HighsFloat objOffset = 0;
+  double objOffset = 0;
 
   std::vector<HighsInt> Astart;
   std::vector<HighsInt> Aindex;
-  std::vector<HighsFloat> Avalue;
-  std::vector<HighsFloat> colCost;
-  std::vector<HighsFloat> colLower;
-  std::vector<HighsFloat> colUpper;
-  std::vector<HighsFloat> rowLower;
-  std::vector<HighsFloat> rowUpper;
+  std::vector<double> Avalue;
+  std::vector<double> colCost;
+  std::vector<double> colLower;
+  std::vector<double> colUpper;
+  std::vector<double> rowLower;
+  std::vector<double> rowUpper;
 
   std::vector<std::string> rowNames;
   std::vector<std::string> colNames;
@@ -93,7 +93,7 @@ class HMpsFF {
   HighsInt q_dim;
   std::vector<HighsInt> q_start;
   std::vector<HighsInt> q_index;
-  std::vector<HighsFloat> q_value;
+  std::vector<double> q_value;
 
   // Keep track of columns that are binary by default, being columns
   // that are defined as integer by markers in the column section, or
@@ -147,7 +147,7 @@ class HMpsFF {
 
   std::vector<Triplet> entries;
   std::vector<Triplet> q_entries;
-  std::vector<std::pair<HighsInt, HighsFloat>> coeffobj;
+  std::vector<std::pair<HighsInt, double>> coeffobj;
 
   std::unordered_map<std::string, int> rowname2idx;
   std::unordered_map<std::string, int> colname2idx;

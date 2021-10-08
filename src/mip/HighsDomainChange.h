@@ -19,7 +19,7 @@
 enum class HighsBoundType { kLower, kUpper };
 
 struct HighsDomainChange {
-  HighsFloat boundval;
+  double boundval;
   HighsInt column;
   HighsBoundType boundtype;
 
@@ -46,8 +46,8 @@ struct HighsDomainChange {
 struct HighsSubstitution {
   HighsInt substcol;
   HighsInt staycol;
-  HighsFloat scale;
-  HighsFloat offset;
+  double scale;
+  double offset;
 };
 
 #endif

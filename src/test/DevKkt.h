@@ -28,18 +28,18 @@ struct State {
   State(
       const HighsInt numCol_, const HighsInt numRow_,
       const std::vector<HighsInt>& Astart_, const std::vector<HighsInt>& Aend_,
-      const std::vector<HighsInt>& Aindex_, const std::vector<HighsFloat>& Avalue_,
+      const std::vector<HighsInt>& Aindex_, const std::vector<double>& Avalue_,
       const std::vector<HighsInt>& ARstart_,
       const std::vector<HighsInt>& ARindex_,
-      const std::vector<HighsFloat>& ARvalue_, const std::vector<HighsFloat>& colCost_,
-      const std::vector<HighsFloat>& colLower_,
-      const std::vector<HighsFloat>& colUpper_,
-      const std::vector<HighsFloat>& rowLower_,
-      const std::vector<HighsFloat>& rowUpper_,
+      const std::vector<double>& ARvalue_, const std::vector<double>& colCost_,
+      const std::vector<double>& colLower_,
+      const std::vector<double>& colUpper_,
+      const std::vector<double>& rowLower_,
+      const std::vector<double>& rowUpper_,
       const std::vector<HighsInt>& flagCol_,
       const std::vector<HighsInt>& flagRow_,
-      const std::vector<HighsFloat>& colValue_, const std::vector<HighsFloat>& colDual_,
-      const std::vector<HighsFloat>& rowValue_, const std::vector<HighsFloat>& rowDual_,
+      const std::vector<double>& colValue_, const std::vector<double>& colDual_,
+      const std::vector<double>& rowValue_, const std::vector<double>& rowDual_,
       const std::vector<HighsBasisStatus>& col_status_,
       const std::vector<HighsBasisStatus>& row_status_)
       : numCol(numCol_),
@@ -71,26 +71,26 @@ struct State {
   const std::vector<HighsInt>& Astart;
   const std::vector<HighsInt>& Aend;
   const std::vector<HighsInt>& Aindex;
-  const std::vector<HighsFloat>& Avalue;
+  const std::vector<double>& Avalue;
 
   const std::vector<HighsInt>& ARstart;
   const std::vector<HighsInt>& ARindex;
-  const std::vector<HighsFloat>& ARvalue;
+  const std::vector<double>& ARvalue;
 
-  const std::vector<HighsFloat>& colCost;
-  const std::vector<HighsFloat>& colLower;
-  const std::vector<HighsFloat>& colUpper;
-  const std::vector<HighsFloat>& rowLower;
-  const std::vector<HighsFloat>& rowUpper;
+  const std::vector<double>& colCost;
+  const std::vector<double>& colLower;
+  const std::vector<double>& colUpper;
+  const std::vector<double>& rowLower;
+  const std::vector<double>& rowUpper;
 
   const std::vector<HighsInt>& flagCol;
   const std::vector<HighsInt>& flagRow;
 
   // solution
-  const std::vector<HighsFloat>& colValue;
-  const std::vector<HighsFloat>& colDual;
-  const std::vector<HighsFloat>& rowValue;
-  const std::vector<HighsFloat>& rowDual;
+  const std::vector<double>& colValue;
+  const std::vector<double>& colDual;
+  const std::vector<double>& rowValue;
+  const std::vector<double>& rowDual;
 
   // basis
   const std::vector<HighsBasisStatus>& col_status;
@@ -112,8 +112,8 @@ struct KktConditionDetails {
   KktConditionDetails(KktCondition type_) : type(type_) {}
 
   KktCondition type = KktCondition::kUnset;
-  HighsFloat max_violation = 0.0;
-  HighsFloat sum_violation_2 = 0.0;
+  double max_violation = 0.0;
+  double sum_violation_2 = 0.0;
   HighsInt checked = 0;
   HighsInt violated = 0;
 };

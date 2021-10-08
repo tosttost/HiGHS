@@ -19,10 +19,10 @@
 #include "lp_data/HighsSolution.h"
 
 void fillInIpxData(const HighsLp& lp, ipx::Int& num_col, ipx::Int& num_row,
-                   std::vector<HighsFloat>& obj, std::vector<HighsFloat>& col_lb,
-                   std::vector<HighsFloat>& col_ub, std::vector<ipx::Int>& Ap,
-                   std::vector<ipx::Int>& Ai, std::vector<HighsFloat>& Ax,
-                   std::vector<HighsFloat>& rhs,
+                   std::vector<double>& obj, std::vector<double>& col_lb,
+                   std::vector<double>& col_ub, std::vector<ipx::Int>& Ap,
+                   std::vector<ipx::Int>& Ai, std::vector<double>& Ax,
+                   std::vector<double>& rhs,
                    std::vector<char>& constraint_type) {
   num_col = lp.num_col_;
   num_row = lp.num_row_;
@@ -491,7 +491,7 @@ void reportIpmNoProgress(const HighsOptions& options,
 void getHighsNonVertexSolution(const HighsLogOptions& log_options,
                                const HighsLp& lp, const ipx::Int num_col,
                                const ipx::Int num_row,
-                               const std::vector<HighsFloat>& rhs,
+                               const std::vector<double>& rhs,
                                const std::vector<char>& constraint_type,
                                const ipx::LpSolver& lps,
                                HighsSolution& highs_solution) {
@@ -499,13 +499,13 @@ void getHighsNonVertexSolution(const HighsLogOptions& log_options,
   // GetInteriorSolution() returns the final IPM iterate, regardless if the
   // IPM terminated successfully or not. (Only in case of out-of-memory no
   // solution exists.)
-  std::vector<HighsFloat> x(num_col);
-  std::vector<HighsFloat> xl(num_col);
-  std::vector<HighsFloat> xu(num_col);
-  std::vector<HighsFloat> zl(num_col);
-  std::vector<HighsFloat> zu(num_col);
-  std::vector<HighsFloat> slack(num_row);
-  std::vector<HighsFloat> y(num_row);
+  std::vector<double> x(num_col);
+  std::vector<double> xl(num_col);
+  std::vector<double> xu(num_col);
+  std::vector<double> zl(num_col);
+  std::vector<double> zu(num_col);
+  std::vector<double> slack(num_row);
+  std::vector<double> y(num_row);
 
   lps.GetInteriorSolution(&x[0], &xl[0], &xu[0], &slack[0], &y[0], &zl[0],
                           &zu[0]);
@@ -598,7 +598,7 @@ HighsStatus solveLpIpx(const HighsOptions& options, HighsTimer& timer,
 
   ipx::Int num_col, num_row;
   std::vector<ipx::Int> Ap, Ai;
-  std::vector<HighsFloat> objective, col_lb, col_ub, Av, rhs;
+  std::vector<double> objective, col_lb, col_ub, Av, rhs;
   std::vector<char> constraint_type;
   fillInIpxData(lp, num_col, num_row, objective, col_lb, col_ub, Ap, Ai, Av,
                 rhs, constraint_type);

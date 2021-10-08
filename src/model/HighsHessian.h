@@ -29,11 +29,11 @@ class HighsHessian {
   HessianFormat format_;
   std::vector<HighsInt> start_;
   std::vector<HighsInt> index_;
-  std::vector<HighsFloat> value_;
+  std::vector<double> value_;
   bool operator==(const HighsHessian& hessian);
-  void product(const std::vector<HighsFloat>& solution,
-               std::vector<HighsFloat>& product) const;
-  HighsFloat objectiveValue(const std::vector<HighsFloat>& solution) const;
+  void product(const std::vector<double>& solution,
+               std::vector<double>& product) const;
+  double objectiveValue(const std::vector<double>& solution) const;
   void clear();
   bool formatOk() const {
     return (this->format_ == HessianFormat::kTriangular ||

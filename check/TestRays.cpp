@@ -4,10 +4,10 @@
 #include "lp_data/HConst.h"
 
 const bool dev_run = false;
-const HighsFloat zero_ray_value_tolerance = 1e-8;
+const double zero_ray_value_tolerance = 1e-8;
 
-void checkRayDirection(const HighsInt dim, const vector<HighsFloat>& ray_value,
-                       const vector<HighsFloat>& expected_ray_value) {
+void checkRayDirection(const HighsInt dim, const vector<double>& ray_value,
+                       const vector<double>& expected_ray_value) {
   bool ray_error = false;
   HighsInt from_ix = -1;
   for (HighsInt ix = 0; ix < dim; ix++) {
@@ -26,9 +26,9 @@ void checkRayDirection(const HighsInt dim, const vector<HighsFloat>& ray_value,
   }
   REQUIRE(!ray_error);
   if (from_ix < 0) return;
-  HighsFloat scale = ray_value[from_ix] / expected_ray_value[from_ix];
+  double scale = ray_value[from_ix] / expected_ray_value[from_ix];
   for (HighsInt ix = from_ix + 1; ix < dim; ix++) {
-    HighsFloat scaled_expected_ray_value = expected_ray_value[ix] * scale;
+    double scaled_expected_ray_value = expected_ray_value[ix] * scale;
     if (fabs(ray_value[ix] - scaled_expected_ray_value) >
         zero_ray_value_tolerance) {
       ray_error = true;
@@ -38,18 +38,18 @@ void checkRayDirection(const HighsInt dim, const vector<HighsFloat>& ray_value,
   REQUIRE(!ray_error);
 }
 
-void checkDualRayValue(Highs& highs, const vector<HighsFloat>& dual_ray_value) {
+void checkDualRayValue(Highs& highs, const vector<double>& dual_ray_value) {
   const HighsLp& lp = highs.getLp();
   HighsInt numCol = lp.num_col_;
   HighsInt numRow = lp.num_row_;
-  HighsFloat ray_error_norm = 0;
-  const vector<HighsFloat>& colLower = lp.col_lower_;
-  const vector<HighsFloat>& colUpper = lp.col_upper_;
-  const vector<HighsFloat>& rowLower = lp.row_lower_;
-  const vector<HighsFloat>& rowUpper = lp.row_upper_;
+  double ray_error_norm = 0;
+  const vector<double>& colLower = lp.col_lower_;
+  const vector<double>& colUpper = lp.col_upper_;
+  const vector<double>& rowLower = lp.row_lower_;
+  const vector<double>& rowUpper = lp.row_upper_;
   const vector<HighsBasisStatus>& col_status = highs.getBasis().col_status;
   const vector<HighsBasisStatus>& row_status = highs.getBasis().row_status;
-  vector<HighsFloat> tableau_row;
+  vector<double> tableau_row;
   tableau_row.assign(numCol, 0.0);
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
     if (col_status[iCol] == HighsBasisStatus::kBasic) continue;
@@ -138,19 +138,19 @@ void checkDualRayValue(Highs& highs, const vector<HighsFloat>& dual_ray_value) {
   REQUIRE(ray_error_norm < 1e-6);
 }
 
-void checkPrimalRayValue(Highs& highs, const vector<HighsFloat>& primal_ray_value) {
+void checkPrimalRayValue(Highs& highs, const vector<double>& primal_ray_value) {
   const HighsLp& lp = highs.getLp();
   HighsInt numCol = lp.num_col_;
   HighsInt numRow = lp.num_row_;
-  HighsFloat ray_error_norm = 0;
-  const vector<HighsFloat>& colLower = lp.col_lower_;
-  const vector<HighsFloat>& colUpper = lp.col_upper_;
-  const vector<HighsFloat>& rowLower = lp.row_lower_;
-  const vector<HighsFloat>& rowUpper = lp.row_upper_;
-  HighsFloat dual_feasibility_tolerance;
+  double ray_error_norm = 0;
+  const vector<double>& colLower = lp.col_lower_;
+  const vector<double>& colUpper = lp.col_upper_;
+  const vector<double>& rowLower = lp.row_lower_;
+  const vector<double>& rowUpper = lp.row_upper_;
+  double dual_feasibility_tolerance;
   highs.getOptionValue("dual_feasibility_tolerance",
                        dual_feasibility_tolerance);
-  vector<HighsFloat> row_ray_value;
+  vector<double> row_ray_value;
   row_ray_value.assign(numRow, 0.0);
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
     for (HighsInt iEl = lp.a_matrix_.start_[iCol];
@@ -213,8 +213,8 @@ void testInfeasibleMps(const std::string model) {
   HighsModelStatus require_model_status;
   bool has_dual_ray;
   bool has_primal_ray;
-  vector<HighsFloat> dual_ray_value;
-  vector<HighsFloat> primal_ray_value;
+  vector<double> dual_ray_value;
+  vector<double> primal_ray_value;
 
   Highs highs;
   if (!dev_run) highs.setOptionValue("output_flag", false);
@@ -253,8 +253,8 @@ void testUnboundedMps(const std::string model,
   HighsModelStatus require_model_status;
   bool has_dual_ray;
   bool has_primal_ray;
-  vector<HighsFloat> dual_ray_value;
-  vector<HighsFloat> primal_ray_value;
+  vector<double> dual_ray_value;
+  vector<double> primal_ray_value;
   REQUIRE(highs.setOptionValue("presolve", "off") == HighsStatus::kOk);
 
   // Test dual ray for unbounded LP
@@ -289,12 +289,12 @@ TEST_CASE("Rays", "[highs_test_rays]") {
   std::string model_file;
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   SpecialLps special_lps;
   bool has_dual_ray;
   bool has_primal_ray;
-  vector<HighsFloat> dual_ray_value;
-  vector<HighsFloat> primal_ray_value;
+  vector<double> dual_ray_value;
+  vector<double> primal_ray_value;
 
   //  special_lps.issue285Lp(lp, require_model_status);
   REQUIRE(highs.setOptionValue("presolve", "off") == HighsStatus::kOk);
@@ -318,7 +318,7 @@ TEST_CASE("Rays", "[highs_test_rays]") {
   // Get the dual ray
   REQUIRE(highs.getDualRay(has_dual_ray, &dual_ray_value[0]) ==
           HighsStatus::kOk);
-  vector<HighsFloat> expected_dual_ray = {0.5, -1};  // From SCIP
+  vector<double> expected_dual_ray = {0.5, -1};  // From SCIP
   if (dev_run) {
     printf("Dual ray:\nRow    computed    expected\n");
     for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++)
@@ -365,7 +365,7 @@ TEST_CASE("Rays", "[highs_test_rays]") {
   REQUIRE(has_primal_ray == true);
   REQUIRE(highs.getPrimalRay(has_primal_ray, &primal_ray_value[0]) ==
           HighsStatus::kOk);
-  vector<HighsFloat> expected_primal_ray = {0.5, -1};
+  vector<double> expected_primal_ray = {0.5, -1};
   if (dev_run) {
     printf("Primal ray:\nRow    computed    expected\n");
     for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++)
@@ -426,11 +426,11 @@ TEST_CASE("Rays-464a", "[highs_test_rays]") {
   // which has a primal ray: [d, d], for all d > 0.
   Highs highs;
   if (!dev_run) highs.setOptionValue("output_flag", false);
-  HighsFloat inf = highs.getInfinity();
+  double inf = highs.getInfinity();
   highs.addCol(-1.0, -inf, inf, 0, NULL, NULL);
   highs.addCol(-1.0, -inf, inf, 0, NULL, NULL);
   HighsInt aindex[2] = {0, 1};
-  HighsFloat avalue[2] = {1.0, -1.0};
+  double avalue[2] = {1.0, -1.0};
   highs.addRow(0.0, 0.0, 2, aindex, avalue);
   highs.setOptionValue("presolve", "off");
   highs.run();
@@ -441,7 +441,7 @@ TEST_CASE("Rays-464a", "[highs_test_rays]") {
   bool has_ray = false;
   REQUIRE(highs.getPrimalRay(has_ray) == HighsStatus::kOk);
   REQUIRE(has_ray == true);
-  vector<HighsFloat> ray_value;
+  vector<double> ray_value;
   ray_value.assign(2, NAN);
   highs.getPrimalRay(has_ray, &ray_value[0]);
   checkPrimalRayValue(highs, ray_value);
@@ -459,11 +459,11 @@ TEST_CASE("Rays-464b", "[highs_test_rays]") {
   // which has a primal ray: [d, d], for all d > 0.
   Highs highs;
   if (!dev_run) highs.setOptionValue("output_flag", false);
-  HighsFloat inf = highs.getInfinity();
+  double inf = highs.getInfinity();
   highs.addCol(-1.0, 0.0, inf, 0, NULL, NULL);
   highs.addCol(-1.0, 0.0, inf, 0, NULL, NULL);
   HighsInt aindex[2] = {0, 1};
-  HighsFloat avalue[2] = {1.0, -1.0};
+  double avalue[2] = {1.0, -1.0};
   highs.addRow(0.0, 0.0, 2, aindex, avalue);
   //  highs.setOptionValue("presolve", "off");
   highs.run();
@@ -474,7 +474,7 @@ TEST_CASE("Rays-464b", "[highs_test_rays]") {
   bool has_ray = false;
   REQUIRE(highs.getPrimalRay(has_ray) == HighsStatus::kOk);
   REQUIRE(has_ray == true);
-  vector<HighsFloat> ray_value;
+  vector<double> ray_value;
   ray_value.assign(2, NAN);
   highs.getPrimalRay(has_ray, &ray_value[0]);
   checkPrimalRayValue(highs, ray_value);

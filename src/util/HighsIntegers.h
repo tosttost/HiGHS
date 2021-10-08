@@ -30,7 +30,7 @@ class HighsIntegers {
     return r + (r < 0) * m;
   }
 
-  static HighsFloat mod(HighsFloat a, HighsFloat m) {
+  static double mod(double a, double m) {
     int64_t r = std::fmod(a, m);
     return r + (a < 0) * m;
   }
@@ -82,18 +82,18 @@ class HighsIntegers {
   }
 
   // computes a rational approximation with given maximal denominator
-  static int64_t denominator(HighsFloat x, HighsFloat eps, int64_t maxdenom) {
+  static int64_t denominator(double x, double eps, int64_t maxdenom) {
     int64_t ai = (int64_t)x;
     int64_t m[] = {ai, 1, 1, 0};
 
     HighsCD0uble xi = x;
-    HighsCD0uble fraction = xi - HighsFloat(ai);
+    HighsCD0uble fraction = xi - double(ai);
 
     while (fraction > eps) {
       xi = 1.0 / fraction;
-      if (HighsFloat(xi) > HighsFloat(int64_t{1} << 53)) break;
+      if (double(xi) > double(int64_t{1} << 53)) break;
 
-      ai = (int64_t)(HighsFloat)xi;
+      ai = (int64_t)(double)xi;
       int64_t t = m[2] * ai + m[3];
       if (t > maxdenom) break;
 
@@ -111,23 +111,23 @@ class HighsIntegers {
     m[1] += m[0] * ai;
     m[3] += m[2] * ai;
 
-    HighsFloat x0 = m[0] / (HighsFloat)m[2];
-    HighsFloat x1 = m[1] / (HighsFloat)m[3];
+    double x0 = m[0] / (double)m[2];
+    double x1 = m[1] / (double)m[3];
     x = std::abs(x);
-    HighsFloat err0 = std::abs(x - x0);
-    HighsFloat err1 = std::abs(x - x1);
+    double err0 = std::abs(x - x0);
+    double err1 = std::abs(x - x1);
 
     if (err0 < err1) return m[2];
     return m[3];
   }
 
-  static HighsFloat integralScale(const HighsFloat* vals, HighsInt numVals,
-                              HighsFloat deltadown, HighsFloat deltaup) {
+  static double integralScale(const double* vals, HighsInt numVals,
+                              double deltadown, double deltaup) {
     if (numVals == 0) return 0.0;
 
-    HighsFloat minval = *std::min_element(
+    double minval = *std::min_element(
         vals, vals + numVals,
-        [](HighsFloat a, HighsFloat b) { return std::abs(a) < std::abs(b); });
+        [](double a, double b) { return std::abs(a) < std::abs(b); });
 
     int expshift = 0;
 
@@ -148,7 +148,7 @@ class HighsIntegers {
     if (fraction > deltadown) {
       // use a continued fraction algorithm to compute small missing
       // denominators for the remaining fraction
-      denom *= denominator(HighsFloat(fraction), deltaup, 1000);
+      denom *= denominator(double(fraction), deltaup, 1000);
       val = denom * vals[0];
       downval = floor(val + deltaup);
       fraction = val - downval;
@@ -157,7 +157,7 @@ class HighsIntegers {
       if (fraction > deltadown) return 0.0;
     }
 
-    uint64_t currgcd = (uint64_t)std::abs(HighsFloat(downval));
+    uint64_t currgcd = (uint64_t)std::abs(double(downval));
 
     for (HighsInt i = 1; i != numVals; ++i) {
       val = denom * HighsCD0uble(vals[i]);
@@ -167,7 +167,7 @@ class HighsIntegers {
       if (fraction > deltadown) {
         val = startdenom * vals[i];
         fraction = val - floor(val);
-        denom *= denominator(HighsFloat(fraction), deltaup, 1000);
+        denom *= denominator(double(fraction), deltaup, 1000);
         val = denom * vals[i];
         downval = floor(val + deltaup);
         fraction = val - downval;
@@ -176,7 +176,7 @@ class HighsIntegers {
       }
 
       if (currgcd != 1) {
-        currgcd = gcd(currgcd, (int64_t) HighsFloat(downval));
+        currgcd = gcd(currgcd, (int64_t) double(downval));
 
         // if the denominator is large, divide by the current gcd to prevent
         // unecessary overflows
@@ -187,11 +187,11 @@ class HighsIntegers {
       }
     }
 
-    return denom / (HighsFloat)currgcd;
+    return denom / (double)currgcd;
   }
 
-  static HighsFloat integralScale(const std::vector<HighsFloat>& vals, HighsFloat deltadown,
-                              HighsFloat deltaup) {
+  static double integralScale(const std::vector<double>& vals, double deltadown,
+                              double deltaup) {
     return integralScale(vals.data(), vals.size(), deltadown, deltaup);
   }
 };

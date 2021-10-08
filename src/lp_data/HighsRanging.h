@@ -21,8 +21,8 @@
 #include "lp_data/HighsLpSolverObject.h"
 
 struct HighsRangingRecord {
-  std::vector<HighsFloat> value_;
-  std::vector<HighsFloat> objective_;
+  std::vector<double> value_;
+  std::vector<double> objective_;
   std::vector<HighsInt> in_var_;
   std::vector<HighsInt> ou_var_;
 };

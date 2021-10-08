@@ -91,7 +91,7 @@ void HFactor::reportIntVector(const std::string name,
   printf("\n");
 }
 void HFactor::reportD0ubleVector(const std::string name,
-                                 const vector<HighsFloat> entry) const {
+                                 const vector<double> entry) const {
   const HighsInt num_en = entry.size();
   printf("%-12s: siz %4d; cap %4d: ", name.c_str(), (int)num_en,
          (int)entry.capacity());

@@ -63,7 +63,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
   HighsCutGeneration cutGen(lpRelaxation, cutpool);
 
-  std::vector<std::pair<HighsInt, HighsFloat>> integralScales;
+  std::vector<std::pair<HighsInt, double>> integralScales;
   std::vector<int64_t> intSystemValue;
   std::vector<HighsInt> intSystemIndex;
   std::vector<HighsInt> intSystemStart;
@@ -73,12 +73,12 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   intSystemStart.reserve(lp.num_row_ + 1);
   intSystemStart.push_back(0);
   std::vector<HighsInt> inds;
-  std::vector<HighsFloat> vals;
-  std::vector<HighsFloat> scaleVals;
+  std::vector<double> vals;
+  std::vector<double> scaleVals;
 
-  std::vector<HighsFloat> upper;
-  std::vector<HighsFloat> solval;
-  HighsFloat rhs;
+  std::vector<double> upper;
+  std::vector<double> solval;
+  double rhs;
 
   const HighsSolution& lpSolution = lpRelaxation.getSolution();
   HighsInt numNonzeroRhs = 0;
@@ -99,7 +99,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
     HighsInt rowlen;
     const HighsInt* rowinds;
-    const HighsFloat* rowvals;
+    const double* rowvals;
 
     lpRelaxation.getRow(row, rowlen, rowinds, rowvals);
 
@@ -115,7 +115,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       inds.assign(rowinds, rowinds + rowlen);
       vals.resize(rowlen);
       std::transform(rowvals, rowvals + rowlen, vals.begin(),
-                     [](HighsFloat x) { return -x; });
+                     [](double x) { return -x; });
     }
 
     bool integralPositive = false;
@@ -125,7 +125,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
     rowlen = inds.size();
 
-    HighsFloat intscale;
+    double intscale;
     int64_t intrhs;
 
     if (!lpRelaxation.isRowIntegral(row)) {
@@ -182,7 +182,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   if (integralScales.empty() || numNonzeroRhs == 0) return;
 
   std::vector<HighsInt> tmpinds;
-  std::vector<HighsFloat> tmpvals;
+  std::vector<double> tmpvals;
 
   HighsHashTable<std::vector<HighsGFkSolve::SolutionEntry>> usedWeights;
   // std::unordered_set<std::vector<HighsGFkSolve::SolutionEntry>,
@@ -199,7 +199,7 @@ void HighsModkSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
     for (const auto& w : weights) {
       HighsInt row = integralScales[w.index].first;
-      HighsFloat weight = (integralScales[w.index].second * w.weight) / k;
+      double weight = (integralScales[w.index].second * w.weight) / k;
       lpAggregator.addRow(row, weight);
     }
 

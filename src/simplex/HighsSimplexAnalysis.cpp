@@ -376,7 +376,7 @@ void HighsSimplexAnalysis::userInvertReport(const bool force) {
 
 void HighsSimplexAnalysis::userInvertReport(const bool header,
                                             const bool force) {
-  const HighsFloat highs_run_time = timer_->readRunHighsClock();
+  const double highs_run_time = timer_->readRunHighsClock();
   if (!force && highs_run_time < last_user_log_time + delta_user_log_time)
     return;
   analysis_log = std::unique_ptr<std::stringstream>(new std::stringstream());
@@ -390,13 +390,13 @@ void HighsSimplexAnalysis::userInvertReport(const bool header,
 }
 
 void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
-    const HighsFloat computed_edge_weight, const HighsFloat updated_edge_weight) {
-  const HighsFloat kWeightErrorThreshold = 4.0;
+    const double computed_edge_weight, const double updated_edge_weight) {
+  const double kWeightErrorThreshold = 4.0;
   const bool accept_weight =
       updated_edge_weight >= kAcceptDseWeightThreshold * computed_edge_weight;
   HighsInt low_weight_error = 0;
   HighsInt high_weight_error = 0;
-  HighsFloat weight_error;
+  double weight_error;
   string error_type = "  OK";
   num_dual_steepest_edge_weight_check++;
   if (!accept_weight) num_dual_steepest_edge_weight_reject++;
@@ -476,21 +476,21 @@ void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
 }
 
 bool HighsSimplexAnalysis::predictEndDensity(const HighsInt tran_stage_type,
-                                             const HighsFloat start_density,
-                                             HighsFloat& end_density) {
+                                             const double start_density,
+                                             double& end_density) {
   return predictFromScatterData(tran_stage[tran_stage_type].rhs_density_,
                                 start_density, end_density);
 }
 
 void HighsSimplexAnalysis::afterTranStage(
-    const HighsInt tran_stage_type, const HighsFloat start_density,
-    const HighsFloat end_density, const HighsFloat historical_density,
-    const HighsFloat predicted_end_density,
+    const HighsInt tran_stage_type, const double start_density,
+    const double end_density, const double historical_density,
+    const double predicted_end_density,
     const bool use_solve_sparse_original_HFactor_logic,
     const bool use_solve_sparse_new_HFactor_logic) {
   TranStageAnalysis& stage = tran_stage[tran_stage_type];
-  const HighsFloat rp = false;
-  const HighsFloat kMaxHyperDensity = 0.1;
+  const double rp = false;
+  const double kMaxHyperDensity = 0.1;
 
   if (predicted_end_density > 0) {
     stage.num_decision_++;
@@ -500,9 +500,9 @@ void HighsSimplexAnalysis::afterTranStage(
         // Original logic makes wrong decision to use sparse TRAN
         if (rp) {
           printf("Original: Wrong sparse: ");
-          const HighsFloat start_density_tolerance =
+          const double start_density_tolerance =
               original_start_density_tolerance[tran_stage_type];
-          const HighsFloat this_historical_density_tolerance =
+          const double this_historical_density_tolerance =
               historical_density_tolerance[tran_stage_type];
           if (start_density > start_density_tolerance) {
             printf("(start = %10.4g >  %4.2f)  or ", start_density,
@@ -526,9 +526,9 @@ void HighsSimplexAnalysis::afterTranStage(
         // New logic makes wrong decision to use sparse TRAN
         if (rp) {
           printf("New     : Wrong sparse: ");
-          const HighsFloat start_density_tolerance =
+          const double start_density_tolerance =
               original_start_density_tolerance[tran_stage_type];
-          const HighsFloat end_density_tolerance =
+          const double end_density_tolerance =
               predicted_density_tolerance[tran_stage_type];
           if (start_density > start_density_tolerance) {
             printf("(start = %10.4g >  %4.2f)  or ", start_density,
@@ -617,7 +617,7 @@ HighsInt HighsSimplexAnalysis::simplexTimerNumCall(const HighsInt simplex_clock,
       ->clock_num_call[thread_simplex_clocks[thread_id].clock_[simplex_clock]];
 }
 
-HighsFloat HighsSimplexAnalysis::simplexTimerRead(const HighsInt simplex_clock,
+double HighsSimplexAnalysis::simplexTimerRead(const HighsInt simplex_clock,
                                               const HighsInt thread_id) {
   if (!analyse_simplex_time) return -1.0;
   // assert(analyse_simplex_time);
@@ -698,7 +698,7 @@ void HighsSimplexAnalysis::iterationRecordMajor() {
   sum_multi_chosen += multi_chosen;
   sum_multi_finished += multi_finished;
   assert(multi_chosen > 0);
-  const HighsFloat fraction_of_possible_minor_iterations_performed =
+  const double fraction_of_possible_minor_iterations_performed =
       1.0 * multi_finished / multi_chosen;
   if (average_fraction_of_possible_minor_iterations_performed < 0) {
     average_fraction_of_possible_minor_iterations_performed =
@@ -720,15 +720,15 @@ void HighsSimplexAnalysis::iterationRecordMajor() {
 
 void HighsSimplexAnalysis::operationRecordBefore(
     const HighsInt operation_type, const HVector& vector,
-    const HighsFloat historical_density) {
+    const double historical_density) {
   assert(analyse_simplex_summary_data);
   operationRecordBefore(operation_type, vector.count, historical_density);
 }
 
 void HighsSimplexAnalysis::operationRecordBefore(
     const HighsInt operation_type, const HighsInt current_count,
-    const HighsFloat historical_density) {
-  HighsFloat current_density = 1.0 * current_count / numRow;
+    const double historical_density) {
+  double current_density = 1.0 * current_count / numRow;
   AnIterOpRec& AnIter = AnIterOp[operation_type];
   AnIter.AnIterOpNumCa++;
   if (current_density <= AnIter.AnIterOpHyperCANCEL &&
@@ -745,17 +745,17 @@ void HighsSimplexAnalysis::operationRecordAfter(const HighsInt operation_type,
 void HighsSimplexAnalysis::operationRecordAfter(const HighsInt operation_type,
                                                 const HighsInt result_count) {
   AnIterOpRec& AnIter = AnIterOp[operation_type];
-  const HighsFloat result_density = 1.0 * result_count / AnIter.AnIterOpRsDim;
+  const double result_density = 1.0 * result_count / AnIter.AnIterOpRsDim;
   if (result_density <= kHyperResult) AnIter.AnIterOpNumHyperRs++;
   if (result_density > 0) {
     AnIter.AnIterOpSumLog10RsDensity += log(result_density) / log(10.0);
   } else {
     /*
     // TODO Investigate these zero norms
-    HighsFloat vectorNorm = 0;
+    double vectorNorm = 0;
 
     for (HighsInt index = 0; index < AnIter.AnIterOpRsDim; index++) {
-      HighsFloat vectorValue = vector.array[index];
+      double vectorValue = vector.array[index];
       vectorNorm += vectorValue * vectorValue;
     }
     vectorNorm = sqrt(vectorNorm);
@@ -800,7 +800,7 @@ void HighsSimplexAnalysis::summaryReport() {
       HighsInt lcHyperRs = AnIter.AnIterOpNumHyperRs;
       HighsInt pctHyperOp = (100 * lcHyperOp) / lcNumCa;
       HighsInt pctHyperRs = (100 * lcHyperRs) / lcNumCa;
-      HighsFloat lcRsDensity =
+      double lcRsDensity =
           pow(10.0, AnIter.AnIterOpSumLog10RsDensity / lcNumCa);
       HighsInt lcAnIterOpRsDim = AnIter.AnIterOpRsDim;
       HighsInt lcNumNNz = lcRsDensity * lcAnIterOpRsDim;
@@ -904,7 +904,7 @@ void HighsSimplexAnalysis::summaryReport() {
     printf("\n");
   }
 
-  const HighsFloat average_heap_chuzc_size =
+  const double average_heap_chuzc_size =
       num_heap_chuzc ? sum_heap_chuzc_size / num_heap_chuzc : 0;
   if (num_quad_chuzc + num_heap_chuzc) {
     printf("\nQuad/heap CHUZC summary\n");
@@ -1023,8 +1023,8 @@ void HighsSimplexAnalysis::summaryReport() {
       lcAnIter.AnIterTrace_dual_edge_weight_mode = (HighsInt)edge_weight_mode;
     }
     // Determine whether the Multi and steepest edge columns should be reported
-    HighsFloat su_multi_values = 0;
-    HighsFloat su_dse_values = 0;
+    double su_multi_values = 0;
+    double su_dse_values = 0;
     for (HighsInt rec = 1; rec <= AnIterTraceNumRec; rec++) {
       AnIterTraceRec& lcAnIter = AnIterTrace[rec];
       su_multi_values += fabs(lcAnIter.AnIterTraceMulti);
@@ -1035,7 +1035,7 @@ void HighsSimplexAnalysis::summaryReport() {
     printf("\n Iteration speed analysis\n");
     AnIterTraceRec& lcAnIter = AnIterTrace[0];
     HighsInt fmIter = lcAnIter.AnIterTraceIter;
-    HighsFloat fmTime = lcAnIter.AnIterTraceTime;
+    double fmTime = lcAnIter.AnIterTraceTime;
     printf("        Iter (      FmIter:      ToIter)      Time      Iter/sec ");
     if (report_multi) printf("| PAMI ");
     printf("| C_Aq R_Ep R_Ap ");
@@ -1050,13 +1050,13 @@ void HighsSimplexAnalysis::summaryReport() {
     for (HighsInt rec = 1; rec <= AnIterTraceNumRec; rec++) {
       AnIterTraceRec& lcAnIter = AnIterTrace[rec];
       HighsInt toIter = lcAnIter.AnIterTraceIter;
-      HighsFloat toTime = lcAnIter.AnIterTraceTime;
+      double toTime = lcAnIter.AnIterTraceTime;
       HighsInt dlIter = toIter - fmIter;
       if (rec < AnIterTraceNumRec && dlIter != AnIterTraceIterDl)
         printf("STRANGE: %" HIGHSINT_FORMAT
                " = dlIter != AnIterTraceIterDl = %" HIGHSINT_FORMAT "\n",
                dlIter, AnIterTraceIterDl);
-      HighsFloat dlTime = toTime - fmTime;
+      double dlTime = toTime - fmTime;
       HighsInt iterSpeed = 0;
       if (dlTime > 0) iterSpeed = dlIter / dlTime;
       HighsInt lc_dual_edge_weight_mode =
@@ -1083,7 +1083,7 @@ void HighsSimplexAnalysis::summaryReport() {
       printOneDensity(lcAnIter.AnIterTraceDensity[kSimplexNlaFtran]);
       printOneDensity(lcAnIter.AnIterTraceDensity[kSimplexNlaBtranEp]);
       printOneDensity(lcAnIter.AnIterTraceDensity[kSimplexNlaPriceAp]);
-      HighsFloat use_row_DSE_density;
+      double use_row_DSE_density;
       if (rp_dual_steepest_edge) {
         if (lc_dual_edge_weight_mode ==
             (HighsInt)DualEdgeWeightMode::kSteepestEdge) {
@@ -1096,7 +1096,7 @@ void HighsSimplexAnalysis::summaryReport() {
       }
       printf(" |  %3s ", str_dual_edge_weight_mode.c_str());
       if (rp_dual_steepest_edge) {
-        HighsFloat use_costly_dse;
+        double use_costly_dse;
         printf("|     ");
         if (lc_dual_edge_weight_mode ==
             (HighsInt)DualEdgeWeightMode::kSteepestEdge) {
@@ -1188,14 +1188,14 @@ void HighsSimplexAnalysis::updateInvertFormData(const HFactor& factor) {
   const bool report_kernel = false;
   num_invert++;
   assert(factor.basis_matrix_num_el);
-  HighsFloat invert_fill_factor =
+  double invert_fill_factor =
       ((1.0 * factor.invert_num_el) / factor.basis_matrix_num_el);
   if (report_kernel) printf("INVERT fill = %6.2f", invert_fill_factor);
   sum_invert_fill_factor += invert_fill_factor;
   running_average_invert_fill_factor =
       0.95 * running_average_invert_fill_factor + 0.05 * invert_fill_factor;
 
-  HighsFloat kernel_relative_dim = (1.0 * factor.kernel_dim) / numRow;
+  double kernel_relative_dim = (1.0 * factor.kernel_dim) / numRow;
   if (report_kernel) printf("; kernel dim = %11.4g", kernel_relative_dim);
   if (factor.kernel_dim) {
     num_kernel++;
@@ -1208,13 +1208,13 @@ void HighsSimplexAnalysis::updateInvertFormData(const HFactor& factor) {
         factor.invert_num_el -
         (factor.basis_matrix_num_el - factor.kernel_num_el);
     assert(factor.kernel_num_el);
-    HighsFloat kernel_fill_factor =
+    double kernel_fill_factor =
         (1.0 * kernel_invert_num_el) / factor.kernel_num_el;
     sum_kernel_fill_factor += kernel_fill_factor;
     running_average_kernel_fill_factor =
         0.95 * running_average_kernel_fill_factor + 0.05 * kernel_fill_factor;
     if (report_kernel) printf("; fill = %6.2f", kernel_fill_factor);
-    const HighsFloat kMajorKernelRelativeDimThreshold = 0.1;
+    const double kMajorKernelRelativeDimThreshold = 0.1;
     if (kernel_relative_dim > kMajorKernelRelativeDimThreshold) {
       num_major_kernel++;
       sum_major_kernel_fill_factor += kernel_fill_factor;
@@ -1338,7 +1338,7 @@ void HighsSimplexAnalysis::reportMulti(const bool header) {
   }
 }
 
-void HighsSimplexAnalysis::reportOneDensity(const HighsFloat density) {
+void HighsSimplexAnalysis::reportOneDensity(const double density) {
   assert(
       // analyse_simplex_summary_data ||
       analyse_simplex_runtime_data);
@@ -1351,7 +1351,7 @@ void HighsSimplexAnalysis::reportOneDensity(const HighsFloat density) {
   }
 }
 
-void HighsSimplexAnalysis::printOneDensity(const HighsFloat density) {
+void HighsSimplexAnalysis::printOneDensity(const double density) {
   assert(analyse_simplex_summary_data || analyse_simplex_runtime_data);
   const HighsInt log_10_density = intLog10(density);
   if (log_10_density > -99) {
@@ -1376,7 +1376,7 @@ void HighsSimplexAnalysis::reportDensity(const bool header) {
     reportOneDensity(col_aq_density);
     reportOneDensity(row_ep_density);
     reportOneDensity(row_ap_density);
-    HighsFloat use_row_DSE_density;
+    double use_row_DSE_density;
     if (rp_dual_steepest_edge) {
       use_row_DSE_density = row_DSE_density;
     } else {
@@ -1444,13 +1444,13 @@ void HighsSimplexAnalysis::reportIterationData(const bool header) {
 }
 
 void HighsSimplexAnalysis::reportRunTime(const bool header,
-                                         const HighsFloat run_time) {
+                                         const double run_time) {
   if (header) return;
   *analysis_log << highsFormatToString(" %ds", (int)run_time);
 }
 
-HighsInt HighsSimplexAnalysis::intLog10(const HighsFloat v) {
-  HighsFloat log10V = v > 0 ? -2.0 * log(v) / log(10.0) : 99;
+HighsInt HighsSimplexAnalysis::intLog10(const double v) {
+  double log10V = v > 0 ? -2.0 * log(v) / log(10.0) : 99;
   HighsInt intLog10V = log10V;
   return intLog10V;
 }

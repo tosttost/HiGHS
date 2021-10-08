@@ -28,13 +28,13 @@ class HighsMipSolver {
   const HighsLp* model_;
   const HighsLp* orig_model_;
   HighsModelStatus modelstatus_;
-  std::vector<HighsFloat> solution_;
-  HighsFloat solution_objective_;
-  HighsFloat bound_violation_;
-  HighsFloat integrality_violation_;
-  HighsFloat row_violation_;
-  HighsFloat dual_bound_;
-  HighsFloat primal_bound_;
+  std::vector<double> solution_;
+  double solution_objective_;
+  double bound_violation_;
+  double integrality_violation_;
+  double row_violation_;
+  double dual_bound_;
+  double primal_bound_;
   int64_t node_count_;
 
   bool submip;
@@ -53,19 +53,19 @@ class HighsMipSolver {
 
   HighsInt numNonzero() const { return model_->a_matrix_.numNz(); }
 
-  const HighsFloat* colCost() const { return model_->col_cost_.data(); }
+  const double* colCost() const { return model_->col_cost_.data(); }
 
-  HighsFloat colCost(HighsInt col) const { return model_->col_cost_[col]; }
+  double colCost(HighsInt col) const { return model_->col_cost_[col]; }
 
-  const HighsFloat* rowLower() const { return model_->row_lower_.data(); }
+  const double* rowLower() const { return model_->row_lower_.data(); }
 
-  HighsFloat rowLower(HighsInt col) const { return model_->row_lower_[col]; }
+  double rowLower(HighsInt col) const { return model_->row_lower_[col]; }
 
-  const HighsFloat* rowUpper() const { return model_->row_upper_.data(); }
+  const double* rowUpper() const { return model_->row_upper_.data(); }
 
-  HighsFloat rowUpper(HighsInt col) const { return model_->row_upper_[col]; }
+  double rowUpper(HighsInt col) const { return model_->row_upper_[col]; }
 
-  bool isSolutionFeasible(const std::vector<HighsFloat>& solution) const;
+  bool isSolutionFeasible(const std::vector<double>& solution) const;
 
   const HighsVarType* variableType() const {
     return model_->integrality_.data();

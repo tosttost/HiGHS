@@ -56,7 +56,7 @@ void HighsMipSolver::run() {
     if (modelstatus_ == HighsModelStatus::kOptimal) {
       mipdata_->lower_bound = 0;
       mipdata_->upper_bound = 0;
-      mipdata_->transformNewIncumbent(std::vector<HighsFloat>());
+      mipdata_->transformNewIncumbent(std::vector<double>());
     }
     cleanupSolve();
     return;
@@ -97,9 +97,9 @@ restart:
   HighsInt numHugeTreeEstim = 0;
   int64_t numNodesLastCheck = mipdata_->num_nodes;
   int64_t nextCheck = mipdata_->num_nodes;
-  HighsFloat treeweightLastCheck = 0.0;
-  HighsFloat upperLimLastCheck = mipdata_->upper_limit;
-  HighsFloat lowerBoundLastCheck = mipdata_->lower_bound;
+  double treeweightLastCheck = 0.0;
+  double upperLimLastCheck = mipdata_->upper_limit;
+  double lowerBoundLastCheck = mipdata_->lower_bound;
   while (search.hasNode()) {
     mipdata_->conflictPool.performAging();
     // set iteration limit for each lp solve during the dive to 10 times the
@@ -210,12 +210,12 @@ restart:
 
     if (!submip && mipdata_->num_nodes >= nextCheck) {
       auto nTreeRestarts = mipdata_->numRestarts - mipdata_->numRestartsRoot;
-      HighsFloat currNodeEstim =
+      double currNodeEstim =
           numNodesLastCheck - mipdata_->num_nodes_before_run +
           (mipdata_->num_nodes - numNodesLastCheck) *
-              HighsFloat(1.0 - mipdata_->pruned_treeweight) /
+              double(1.0 - mipdata_->pruned_treeweight) /
               std::max(
-                  HighsFloat(mipdata_->pruned_treeweight - treeweightLastCheck),
+                  double(mipdata_->pruned_treeweight - treeweightLastCheck),
                   mipdata_->epsilon);
       // printf(
       //     "nTreeRestarts: %d, numNodesThisRun: %ld, numNodesLastCheck: %ld,
@@ -226,13 +226,13 @@ restart:
       //     nTreeRestarts, mipdata_->num_nodes -
       //     mipdata_->num_nodes_before_run, numNodesLastCheck -
       //     mipdata_->num_nodes_before_run, currNodeEstim, 100.0 *
-      //     HighsFloat(mipdata_->pruned_treeweight - treeweightLastCheck),
+      //     double(mipdata_->pruned_treeweight - treeweightLastCheck),
       //     numHugeTreeEstim,
       //     mipdata_->num_leaves - mipdata_->num_leaves_before_run);
 
       bool doRestart = false;
 
-      HighsFloat percentageInactive = mipdata_->percentageInactiveIntegers();
+      double percentageInactive = mipdata_->percentageInactiveIntegers();
       if (percentageInactive >= 2.5 && numHugeTreeEstim > 0 &&
           mipdata_->num_nodes - mipdata_->num_nodes_before_run <= 1000) {
         doRestart =
@@ -243,10 +243,10 @@ restart:
       }
 
       if (!doRestart) {
-        HighsFloat gapReduction = 1.0;
+        double gapReduction = 1.0;
         if (mipdata_->upper_limit != kHighsInf) {
-          HighsFloat oldGap = upperLimLastCheck - lowerBoundLastCheck;
-          HighsFloat newGap = mipdata_->upper_limit - mipdata_->lower_bound;
+          double oldGap = upperLimLastCheck - lowerBoundLastCheck;
+          double newGap = mipdata_->upper_limit - mipdata_->lower_bound;
           gapReduction = oldGap / newGap;
         }
 
@@ -257,7 +257,7 @@ restart:
           ++numHugeTreeEstim;
         } else {
           numHugeTreeEstim = 0;
-          treeweightLastCheck = HighsFloat(mipdata_->pruned_treeweight);
+          treeweightLastCheck = double(mipdata_->pruned_treeweight);
           numNodesLastCheck = mipdata_->num_nodes;
           upperLimLastCheck = mipdata_->upper_limit;
           lowerBoundLastCheck = mipdata_->lower_bound;

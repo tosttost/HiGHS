@@ -22,7 +22,7 @@
 using std::fabs;
 const HighsInt kProductFormExtraEntries = 1000;
 const HighsInt kProductFormMaxUpdates = 50;
-const HighsFloat kProductFormPivotTolerance = 1e-8;
+const double kProductFormPivotTolerance = 1e-8;
 
 void ProductFormUpdate::clear() {
   valid_ = false;
@@ -36,7 +36,7 @@ void ProductFormUpdate::clear() {
 }
 
 void ProductFormUpdate::setup(const HighsInt num_row,
-                              const HighsFloat expected_density) {
+                              const double expected_density) {
   valid_ = true;
   num_row_ = num_row;
   update_count_ = 0;
@@ -52,7 +52,7 @@ HighsInt ProductFormUpdate::update(HVector* aq, HighsInt* pivot_row) {
   assert(0 <= *pivot_row && *pivot_row < num_row_);
   if (update_count_ >= kProductFormMaxUpdates)
     return kRebuildReasonUpdateLimitReached;
-  HighsFloat pivot = aq->array[*pivot_row];
+  double pivot = aq->array[*pivot_row];
   if (fabs(pivot) < kProductFormPivotTolerance)
     return kRebuildReasonPossiblySingularBasis;
   pivot_index_.push_back(*pivot_row);
@@ -74,7 +74,7 @@ void ProductFormUpdate::btran(HVector& rhs) const {
   assert((int)start_.size() == update_count_ + 1);
   for (HighsInt iX = update_count_ - 1; iX >= 0; iX--) {
     const HighsInt pivot_index = pivot_index_[iX];
-    HighsFloat pivot_value = rhs.array[pivot_index];
+    double pivot_value = rhs.array[pivot_index];
     for (HighsInt iEl = start_[iX]; iEl < start_[iX + 1]; iEl++)
       pivot_value -= value_[iEl] * rhs.array[index_[iEl]];
     pivot_value /= pivot_value_[iX];
@@ -97,7 +97,7 @@ void ProductFormUpdate::ftran(HVector& rhs) const {
 
   for (HighsInt iX = 0; iX < update_count_; iX++) {
     const HighsInt pivot_index = pivot_index_[iX];
-    HighsFloat pivot_value = rhs.array[pivot_index];
+    double pivot_value = rhs.array[pivot_index];
     if (fabs(pivot_value) > kHighsTiny) {
       assert(in_index[pivot_index]);
       pivot_value /= pivot_value_[iX];

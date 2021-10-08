@@ -11,8 +11,8 @@ TEST_CASE("testing the factorial function") {
 }
 
 // New tests, for each of the special cases.
-// - col sing HighsFloatton equality 
-// - col sing HighsFloatton inequality 
+// - col sing doubleton equality 
+// - col sing doubleton inequality 
 // - test zero cost col sing
 
 // test zero cost col sing
@@ -51,7 +51,7 @@ HighsStatus zeroCostColSing() {
   return status;
 }
 
-// handled by HighsFloatton equality
+// handled by doubleton equality
 HighsStatus colSingD0ublet0nEquality() 
 {
   HighsLp lp;
@@ -164,7 +164,7 @@ HighsStatus colSingD0ublet0nInequality()
   return status;
 }
 
-// handled by HighsFloatton equality
+// handled by doubleton equality
 HighsStatus twoColSingD0ublet0nEquality() 
 {
   HighsLp lp;
@@ -247,28 +247,28 @@ TEST_CASE("zero-cost [presolve-col-sing]") {
   CHECK(str == "OK");
 }
 
-TEST_CASE("col-sing-HighsFloatton-eq [presolve-col-sing]") {
+TEST_CASE("col-sing-doubleton-eq [presolve-col-sing]") {
   std::cout << "Presolve 2." << std::endl;
   HighsStatus status =  colSingD0ublet0nEquality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
-TEST_CASE("col-sing-HighsFloatton-ineq [presolve-col-sing]") {
+TEST_CASE("col-sing-doubleton-ineq [presolve-col-sing]") {
   std::cout << "Presolve 3." << std::endl;
   HighsStatus status =  colSingD0ublet0nInequality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
-TEST_CASE("two-col-sing-HighsFloatton-eq [presolve-col-sing]") {
+TEST_CASE("two-col-sing-doubleton-eq [presolve-col-sing]") {
   std::cout << "Presolve 4." << std::endl;
   HighsStatus status =  twoColSingD0ublet0nEquality();
   std::string str = HighsStatusToString(status);
   CHECK(str == "OK");
 }
 
-TEST_CASE("two-col-sing-HighsFloatton-ineq [presolve-col-sing]") {
+TEST_CASE("two-col-sing-doubleton-ineq [presolve-col-sing]") {
   std::cout << "Presolve 5." << std::endl;
   HighsStatus status =  twoColSingD0ublet0nInequality();
   std::string str = HighsStatusToString(status);

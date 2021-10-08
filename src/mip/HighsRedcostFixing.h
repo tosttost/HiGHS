@@ -27,11 +27,11 @@ class HighsMipSolver;
 class HighsLpRelaxation;
 
 class HighsRedcostFixing {
-  std::vector<std::multimap<HighsFloat, int>> lurkingColUpper;
-  std::vector<std::multimap<HighsFloat, int>> lurkingColLower;
+  std::vector<std::multimap<double, int>> lurkingColUpper;
+  std::vector<std::multimap<double, int>> lurkingColLower;
 
  public:
-  std::vector<std::pair<HighsFloat, HighsDomainChange>> getLurkingBounds(
+  std::vector<std::pair<double, HighsDomainChange>> getLurkingBounds(
       const HighsMipSolver& mipsolver) const;
 
   void propagateRootRedcost(const HighsMipSolver& mipsolver);
@@ -41,7 +41,7 @@ class HighsRedcostFixing {
                                const HighsLpRelaxation& lp);
 
   void addRootRedcost(const HighsMipSolver& mipsolver,
-                      const std::vector<HighsFloat>& lpredcost, HighsFloat lpobjective);
+                      const std::vector<double>& lpredcost, double lpobjective);
 };
 
 #endif

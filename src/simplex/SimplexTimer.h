@@ -244,7 +244,7 @@ class SimplexTimer {
     for (HighsInt en = 0; en < simplex_clock_list_size; en++) {
       clockList[en] = clock[simplex_clock_list[en]];
     }
-    const HighsFloat ideal_sum_time =
+    const double ideal_sum_time =
         timer_pointer->clock_time[clock[SimplexTotalClock]];
     timer_pointer->report_tl(grepStamp, clockList, ideal_sum_time, 1e-8);
   };
@@ -259,7 +259,7 @@ class SimplexTimer {
     for (HighsInt en = 0; en < simplex_clock_list_size; en++) {
       clockList[en] = clock[simplex_clock_list[en]];
     }
-    const HighsFloat ideal_sum_time = timer_pointer->read(clock[Chuzc3Clock]);
+    const double ideal_sum_time = timer_pointer->read(clock[Chuzc3Clock]);
     printf("reportChuzc3ClockList: ideal_sum_time = %g\n", ideal_sum_time);
     timer_pointer->report_tl("CHUZC3:", clockList, ideal_sum_time, 1e-8);
   };

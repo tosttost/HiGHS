@@ -25,21 +25,21 @@
 #include "util/HighsInt.h"
 
 /// class that is responsible for assiging distinct colors for each distinct
-/// HighsFloat value
+/// double value
 class HighsMatrixColoring {
   using u32 = std::uint32_t;
 
-  std::map<HighsFloat, u32> colorMap;
-  HighsFloat tolerance;
+  std::map<double, u32> colorMap;
+  double tolerance;
 
  public:
   // initialize with exact 0.0 and 1.0, to not have differing results due tiny
   // numerical differences on those values
-  HighsMatrixColoring(HighsFloat tolerance)
+  HighsMatrixColoring(double tolerance)
       : colorMap({{0.0, 1}, {1.0, 2}, {-kHighsInf, 3}, {kHighsInf, 4}}),
         tolerance(tolerance) {}
 
-  u32 color(HighsFloat value) {
+  u32 color(double value) {
     // iterator points to smallest element in map which fulfills key >= value -
     // tolerance
     auto it = colorMap.lower_bound(value - tolerance);
@@ -96,8 +96,8 @@ struct HighsOrbitopeMatrix {
   void determineOrbitopeType(HighsCliqueTable& cliquetable,
                              HighsDomain& domain);
 
-  HighsInt getBranchingColumn(const std::vector<HighsFloat>& colLower,
-                              const std::vector<HighsFloat>& colUpper,
+  HighsInt getBranchingColumn(const std::vector<double>& colLower,
+                              const std::vector<double>& colUpper,
                               HighsInt col) const;
 
  private:
@@ -126,8 +126,8 @@ struct HighsSymmetries {
 
   HighsInt propagateOrbitopes(HighsDomain& domain) const;
 
-  HighsInt getBranchingColumn(const std::vector<HighsFloat>& colLower,
-                              const std::vector<HighsFloat>& colUpper,
+  HighsInt getBranchingColumn(const std::vector<double>& colLower,
+                              const std::vector<double>& colUpper,
                               HighsInt col) const {
     if (columnToOrbitope.size() == 0) return col;
     const HighsInt* orbitope = columnToOrbitope.find(col);
@@ -272,7 +272,7 @@ class HighsSymmetryDetection {
                       HighsSymmetries& symmetries);
 
  public:
-  void loadModelAsGraph(const HighsLp& model, HighsFloat epsilon);
+  void loadModelAsGraph(const HighsLp& model, double epsilon);
 
   void run(HighsSymmetries& symmetries);
 };

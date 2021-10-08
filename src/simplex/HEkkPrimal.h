@@ -68,7 +68,7 @@ class HEkkPrimal {
   void hyperChooseColumn();
   void hyperChooseColumnStart();
   void hyperChooseColumnClear();
-  void hyperChooseColumnChangedInfeasibility(const HighsFloat infeasibility,
+  void hyperChooseColumnChangedInfeasibility(const double infeasibility,
                                              const HighsInt iCol);
   void hyperChooseColumnBasicFeasibilityChange();
   void hyperChooseColumnDualChange();
@@ -97,8 +97,8 @@ class HEkkPrimal {
   void adjustPerturbedEquationOut();
   void getBasicPrimalInfeasibility();
   bool correctPrimal(const bool initialise = false);
-  void shiftBound(const bool lower, const HighsInt iVar, const HighsFloat value,
-                  const HighsFloat random_value, HighsFloat& bound, HighsFloat& shift,
+  void shiftBound(const bool lower, const HighsInt iVar, const double value,
+                  const double random_value, double& bound, double& shift,
                   const bool report = false);
   void savePrimalRay();
   HighsDebugStatus debugPrimalSimplex(const std::string message,
@@ -114,9 +114,9 @@ class HEkkPrimal {
   HighsInt num_row;
   HighsInt num_tot;
   HighsInt solve_phase;
-  HighsFloat primal_feasibility_tolerance;
-  HighsFloat dual_feasibility_tolerance;
-  HighsFloat objective_target;
+  double primal_feasibility_tolerance;
+  double dual_feasibility_tolerance;
+  double objective_target;
   HighsInt rebuild_reason;
   // Pivot related
   HighsInt variable_in;
@@ -124,23 +124,23 @@ class HEkkPrimal {
   HighsInt row_out;
   HighsInt variable_out;
   HighsInt move_out;
-  HighsFloat theta_dual;
-  HighsFloat theta_primal;
-  HighsFloat value_in;
-  HighsFloat alpha_col;
-  HighsFloat alpha_row;
-  HighsFloat numericalTrouble;
+  double theta_dual;
+  double theta_primal;
+  double value_in;
+  double alpha_col;
+  double alpha_row;
+  double numericalTrouble;
   HighsInt num_flip_since_rebuild;
   // Primal phase 1 tools
-  vector<pair<HighsFloat, int> > ph1SorterR;
-  vector<pair<HighsFloat, int> > ph1SorterT;
+  vector<pair<double, int> > ph1SorterR;
+  vector<pair<double, int> > ph1SorterT;
   // Devex weight
   HighsInt num_devex_iterations;
   HighsInt num_bad_devex_weight;
-  vector<HighsFloat> devex_weight;
+  vector<double> devex_weight;
   vector<HighsInt> devex_index;
   const HighsInt allowed_num_bad_devex_weight = 3;
-  const HighsFloat bad_devex_weight_factor = 3;
+  const double bad_devex_weight_factor = 3;
   // Nonbasic free column data.
   HighsInt num_free_col;
   HSet nonbasic_free_col_set;
@@ -151,10 +151,10 @@ class HEkkPrimal {
   const HighsInt max_num_hyper_chuzc_candidates = 50;
   HighsInt num_hyper_chuzc_candidates;
   vector<HighsInt> hyper_chuzc_candidate;
-  vector<HighsFloat> hyper_chuzc_measure;
+  vector<double> hyper_chuzc_measure;
   HSet hyper_chuzc_candidate_set;
-  HighsFloat max_hyper_chuzc_non_candidate_measure;
-  HighsFloat max_changed_measure_value;
+  double max_hyper_chuzc_non_candidate_measure;
+  double max_changed_measure_value;
   HighsInt max_changed_measure_column;
   const bool report_hyper_chuzc = false;
   // Solve buffer

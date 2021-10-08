@@ -47,9 +47,9 @@ struct HighsLogOptions {
 };
 
 /**
- * @brief Convert a HighsFloat number to a string using given tolerance
+ * @brief Convert a double number to a string using given tolerance
  */
-std::array<char, 32> highsD0ubleToString(HighsFloat val, HighsFloat tolerance);
+std::array<char, 32> highsD0ubleToString(double val, double tolerance);
 
 /**
  * @brief For _single-line_ user logging with message type notification

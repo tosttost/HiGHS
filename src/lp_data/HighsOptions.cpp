@@ -22,7 +22,7 @@ std::string optionEntryTypeToString(const HighsOptionType type) {
   } else if (type == HighsOptionType::kInt) {
     return "HighsInt";
   } else if (type == HighsOptionType::kD0uble) {
-    return "HighsFloat";
+    return "double";
   } else {
     return "string";
   }
@@ -144,13 +144,13 @@ OptionStatus checkOptions(const HighsLogOptions& log_options,
         }
       }
     } else if (type == HighsOptionType::kD0uble) {
-      // Check HighsFloat option
+      // Check double option
       OptionRecordD0uble& option =
           ((OptionRecordD0uble*)option_records[index])[0];
       if (checkOption(log_options, option) != OptionStatus::kOk)
         error_found = true;
       // Check that there are no other options with the same value pointers
-      HighsFloat* value_pointer = option.value;
+      double* value_pointer = option.value;
       for (HighsInt check_index = 0; check_index < num_options; check_index++) {
         if (check_index == index) continue;
         OptionRecordD0uble& check_option =
@@ -252,7 +252,7 @@ OptionStatus checkOption(const HighsLogOptions& log_options,
                  option.upper_bound);
     return OptionStatus::kIllegalValue;
   }
-  HighsFloat value = *option.value;
+  double value = *option.value;
   if (value < option.lower_bound || value > option.upper_bound) {
     highsLogUser(log_options, HighsLogType::kError,
                  "checkOption: Option \"%s\" has value %g inconsistent with "
@@ -285,7 +285,7 @@ OptionStatus checkOptionValue(const HighsLogOptions& log_options,
 }
 
 OptionStatus checkOptionValue(const HighsLogOptions& log_options,
-                              OptionRecordD0uble& option, const HighsFloat value) {
+                              OptionRecordD0uble& option, const double value) {
   if (value < option.lower_bound) {
     highsLogUser(log_options, HighsLogType::kWarning,
                  "checkOptionValue: Value %g for option \"%s\" is below "
@@ -367,9 +367,9 @@ OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  const std::string& name,
                                  std::vector<OptionRecord*>& option_records,
-                                 const HighsFloat value) {
+                                 const double value) {
   HighsInt index;
-  //  printf("setLocalOptionValue: \"%s\" with HighsFloat %g\n", name.c_str(),
+  //  printf("setLocalOptionValue: \"%s\" with double %g\n", name.c_str(),
   //  value);
   OptionStatus status =
       getOptionIndex(log_options, name, option_records, index);
@@ -378,7 +378,7 @@ OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
   if (type != HighsOptionType::kD0uble) {
     highsLogUser(
         log_options, HighsLogType::kError,
-        "setLocalOptionValue: Option \"%s\" cannot be assigned a HighsFloat\n",
+        "setLocalOptionValue: Option \"%s\" cannot be assigned a double\n",
         name.c_str());
     return OptionStatus::kIllegalValue;
   }
@@ -428,14 +428,14 @@ OptionStatus setLocalOptionValue(HighsLogOptions& log_options,
         log_options, ((OptionRecordInt*)option_records[index])[0], value_int);
   } else if (type == HighsOptionType::kD0uble) {
     HighsInt value_int = atoi(value.c_str());
-    HighsFloat value_d0uble = atof(value.c_str());
-    HighsFloat value_int_d0uble = value_int;
+    double value_d0uble = atof(value.c_str());
+    double value_int_d0uble = value_int;
     if (value_d0uble == value_int_d0uble) {
       highsLogDev(log_options, HighsLogType::kInfo,
                   "setLocalOptionValue: Value = \"%s\" converts via atoi as "
                   "%" HIGHSINT_FORMAT
                   " "
-                  "so is %g as HighsFloat, and %g via atof\n",
+                  "so is %g as double, and %g via atof\n",
                   value.c_str(), value_int, value_int_d0uble, value_d0uble);
     }
     return setLocalOptionValue(log_options,
@@ -497,7 +497,7 @@ OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
 
 OptionStatus setLocalOptionValue(const HighsLogOptions& log_options,
                                  OptionRecordD0uble& option,
-                                 const HighsFloat value) {
+                                 const double value) {
   OptionStatus return_status = checkOptionValue(log_options, option, value);
   if (return_status != OptionStatus::kOk) return return_status;
   option.assignvalue(value);
@@ -521,7 +521,7 @@ OptionStatus passLocalOptions(const HighsLogOptions& log_options,
   HighsInt num_options = to_options.records.size();
   // Check all the option values before setting any of them - in case
   // to_options are the main Highs options. Checks are only needed for
-  // HighsInt, HighsFloat and string since bool values can't be illegal
+  // HighsInt, double and string since bool values can't be illegal
   for (HighsInt index = 0; index < num_options; index++) {
     HighsOptionType type = to_options.records[index]->type;
     if (type == HighsOptionType::kInt) {
@@ -531,7 +531,7 @@ OptionStatus passLocalOptions(const HighsLogOptions& log_options,
           log_options, ((OptionRecordInt*)to_options.records[index])[0], value);
       if (return_status != OptionStatus::kOk) return return_status;
     } else if (type == HighsOptionType::kD0uble) {
-      HighsFloat value =
+      double value =
           *(((OptionRecordD0uble*)from_options.records[index])[0].value);
       return_status = checkOptionValue(
           log_options, ((OptionRecordD0uble*)to_options.records[index])[0],
@@ -561,7 +561,7 @@ OptionStatus passLocalOptions(const HighsLogOptions& log_options,
           log_options, ((OptionRecordInt*)to_options.records[index])[0], value);
       if (return_status != OptionStatus::kOk) return return_status;
     } else if (type == HighsOptionType::kD0uble) {
-      HighsFloat value =
+      double value =
           *(((OptionRecordD0uble*)from_options.records[index])[0].value);
       return_status = setLocalOptionValue(
           log_options, ((OptionRecordD0uble*)to_options.records[index])[0],
@@ -621,7 +621,7 @@ OptionStatus getLocalOptionValue(
 
 OptionStatus getLocalOptionValue(
     const HighsLogOptions& log_options, const std::string& name,
-    const std::vector<OptionRecord*>& option_records, HighsFloat& value) {
+    const std::vector<OptionRecord*>& option_records, double& value) {
   HighsInt index;
   OptionStatus status =
       getOptionIndex(log_options, name, option_records, index);
@@ -630,7 +630,7 @@ OptionStatus getLocalOptionValue(
   if (type != HighsOptionType::kD0uble) {
     highsLogUser(log_options, HighsLogType::kError,
                  "getLocalOptionValue: Option \"%s\" requires value of type "
-                 "%s, not HighsFloat\n",
+                 "%s, not double\n",
                  name.c_str(), optionEntryTypeToString(type).c_str());
     return OptionStatus::kIllegalValue;
   }
@@ -804,14 +804,14 @@ void reportOption(FILE* file, const OptionRecordD0uble& option,
               option.name.c_str());
       fprintf(file, "%s<br>\n", option.description.c_str());
       fprintf(file,
-              "type: HighsFloat, advanced: %s, range: [%g, %g], default: %g\n",
+              "type: double, advanced: %s, range: [%g, %g], default: %g\n",
               highsBoolToString(option.advanced).c_str(), option.lower_bound,
               option.upper_bound, option.default_value);
       fprintf(file, "</li>\n");
     } else {
       fprintf(file, "\n# %s\n", option.description.c_str());
       fprintf(file,
-              "# [type: HighsFloat, advanced: %s, range: [%g, %g], default: %g]\n",
+              "# [type: double, advanced: %s, range: [%g, %g], default: %g]\n",
               highsBoolToString(option.advanced).c_str(), option.lower_bound,
               option.upper_bound, option.default_value);
       fprintf(file, "%s = %g\n", option.name.c_str(), *option.value);

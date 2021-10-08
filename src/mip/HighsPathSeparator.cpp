@@ -46,8 +46,8 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       continue;
     }
 
-    HighsFloat lowerslack = kHighsInf;
-    HighsFloat upperslack = kHighsInf;
+    double lowerslack = kHighsInf;
+    double upperslack = kHighsInf;
 
     if (lp.row_lower_[i] != -kHighsInf)
       lowerslack = lpSolution.row_value[i] - lp.row_lower_[i];
@@ -76,7 +76,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       ++numContinuous[lp.a_matrix_.index_[i]];
   }
 
-  std::vector<std::pair<HighsInt, HighsFloat>> colSubstitutions(
+  std::vector<std::pair<HighsInt, double>> colSubstitutions(
       lp.num_col_, std::make_pair(-1, 0.0));
 
   // identify equality rows where only a single continuous variable with nonzero
@@ -87,7 +87,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
     if (rowtype[i] == RowType::kEq && numContinuous[i] == 1) {
       HighsInt len;
       const HighsInt* rowinds;
-      const HighsFloat* rowvals;
+      const double* rowvals;
 
       lpRelaxation.getRow(i, len, rowinds, rowvals);
 
@@ -100,7 +100,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       }
 
       HighsInt col = rowinds[j];
-      HighsFloat val = rowvals[j];
+      double val = rowvals[j];
 
       assert(mip.variableType(rowinds[j]) == HighsVarType::kContinuous);
       assert(transLp.boundDistance(col) > 0.0);
@@ -124,11 +124,11 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
   // path an orientation and avoid this situation. For each aggregation of rows
   // the cut generation will try the reversed orientation in any case too.
 
-  std::vector<std::pair<HighsInt, HighsFloat>> inArcRows;
+  std::vector<std::pair<HighsInt, double>> inArcRows;
   inArcRows.reserve(maxAggrRowSize);
   std::vector<std::pair<HighsInt, HighsInt>> colInArcs(lp.num_col_);
 
-  std::vector<std::pair<HighsInt, HighsFloat>> outArcRows;
+  std::vector<std::pair<HighsInt, double>> outArcRows;
   outArcRows.reserve(maxAggrRowSize);
   std::vector<std::pair<HighsInt, HighsInt>> colOutArcs(lp.num_col_);
 
@@ -173,12 +173,12 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
   HighsCutGeneration cutGen(lpRelaxation, cutpool);
   std::vector<HighsInt> baseRowInds;
-  std::vector<HighsFloat> baseRowVals;
+  std::vector<double> baseRowVals;
   constexpr HighsInt maxPathLen = 6;
   HighsInt currentPath[maxPathLen];
-  std::vector<std::pair<std::vector<HighsInt>, std::vector<HighsFloat>>>
+  std::vector<std::pair<std::vector<HighsInt>, std::vector<double>>>
       aggregatedPath;
-  HighsFloat scales[2];
+  double scales[2];
   for (HighsInt i = 0; i != lp.num_row_; ++i) {
     switch (rowtype[i]) {
       case RowType::kUnusuable:
@@ -219,10 +219,10 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
       };
 
       bool tryNegatedScale = false;
-      const HighsFloat maxWeight = 1. / mip.mipdata_->feastol;
-      const HighsFloat minWeight = mip.mipdata_->feastol;
+      const double maxWeight = 1. / mip.mipdata_->feastol;
+      const double minWeight = mip.mipdata_->feastol;
 
-      auto checkWeight = [&](HighsFloat w) {
+      auto checkWeight = [&](double w) {
         w = std::abs(w);
         return w <= maxWeight && w >= minWeight;
       };
@@ -235,12 +235,12 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
         bool addedSubstitutionRows = false;
 
         HighsInt bestOutArcCol = -1;
-        HighsFloat outArcColVal = 0.0;
-        HighsFloat outArcColBoundDist = 0.0;
+        double outArcColVal = 0.0;
+        double outArcColBoundDist = 0.0;
 
         HighsInt bestInArcCol = -1;
-        HighsFloat inArcColVal = 0.0;
-        HighsFloat inArcColBoundDist = 0.0;
+        double inArcColVal = 0.0;
+        double inArcColBoundDist = 0.0;
 
         for (HighsInt j = 0; j != baseRowLen; ++j) {
           HighsInt col = baseRowInds[j];
@@ -329,7 +329,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
         if (addedSubstitutionRows) continue;
 
-        HighsFloat rhs = 0;
+        double rhs = 0;
 
         success = cutGen.generateCut(transLp, baseRowInds, baseRowVals, rhs);
 
@@ -354,7 +354,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
                                               colInArcs[bestOutArcCol].second);
 
           HighsInt row = inArcRows[inArcRow].first;
-          HighsFloat weight = -outArcColVal / inArcRows[inArcRow].second;
+          double weight = -outArcColVal / inArcRows[inArcRow].second;
 
           if (isRowInCurrentPath(row) || !checkWeight(weight)) {
             bool foundRow = false;
@@ -389,7 +389,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
                                                colOutArcs[bestInArcCol].second);
 
           HighsInt row = outArcRows[outArcRow].first;
-          HighsFloat weight = -inArcColVal / outArcRows[outArcRow].second;
+          double weight = -inArcColVal / outArcRows[outArcRow].second;
 
           if (isRowInCurrentPath(row) || !checkWeight(weight)) {
             bool foundRow = false;
@@ -425,19 +425,19 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
         HighsHashTable<HighsInt, HighsInt> indexPos;
 
         std::vector<HighsInt> inds;
-        std::vector<HighsFloat> solval;
-        std::vector<HighsFloat> upper;
+        std::vector<double> solval;
+        std::vector<double> upper;
         std::vector<uint8_t> isIntegral;
         inds.reserve(lp.num_col_ + lp.num_row_);
         solval.reserve(lp.num_col_ + lp.num_row_);
         upper.reserve(lp.num_col_ + lp.num_row_);
         isIntegral.reserve(lp.num_col_ + lp.num_row_);
 
-        std::vector<HighsFloat> rhs(pathLen);
-        std::vector<HighsFloat> tmpUpper;
-        std::vector<HighsFloat> tmpSolval;
+        std::vector<double> rhs(pathLen);
+        std::vector<double> tmpUpper;
+        std::vector<double> tmpSolval;
 
-        HighsFloat delta = 1.0;
+        double delta = 1.0;
 
         for (HighsInt k = 0; k < pathLen; ++k) {
           bool integralPositive = false;
@@ -489,20 +489,20 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
           HighsInt numInds = inds.size();
 
-          std::vector<HighsFloat> valueMatrix;
+          std::vector<double> valueMatrix;
           valueMatrix.resize(pathLen * numInds, 0.0);
 
           HighsCD0uble cutRhs = 0.0;
-          std::vector<HighsFloat> cutVals(numInds);
-          std::vector<HighsFloat> maxFrac(numInds);
+          std::vector<double> cutVals(numInds);
+          std::vector<double> maxFrac(numInds);
           std::vector<HighsCD0uble> downSum(numInds);
           std::vector<HighsCD0uble> fSum(numInds);
 
-          HighsFloat fLast = 0;
-          HighsFloat scale = -1.0 / delta;
+          double fLast = 0;
+          double scale = -1.0 / delta;
 
           for (HighsInt k = 0; k < pathLen; ++k) {
-            HighsFloat f = rhs[k] * scale;
+            double f = rhs[k] * scale;
             HighsCD0uble fDiff = HighsCD0uble(f) - fLast;
             HighsInt len = aggregatedPath[k].first.size();
             cutRhs += fDiff;
@@ -510,23 +510,23 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
               HighsInt i = indexPos[aggregatedPath[k].first[j]] - 1;
               assert(i >= 0);
 
-              HighsFloat gj = aggregatedPath[k].second[j] * scale;
+              double gj = aggregatedPath[k].second[j] * scale;
 
               switch (isIntegral[i]) {
                 case 0:
                   cutVals[i] = std::max(cutVals[i], gj);
                   break;
                 case 1: {
-                  HighsFloat gjdown = std::floor(gj);
-                  HighsFloat hj = gj - gjdown;
+                  double gjdown = std::floor(gj);
+                  double hj = gj - gjdown;
                   maxFrac[i] = std::max(maxFrac[i], hj);
                   downSum[i] += fDiff * gjdown;
                   fSum[i] += fDiff;
 
                   if (fSum[i] < maxFrac[i]) {
-                    cutVals[i] = HighsFloat(downSum[i] + fSum[i]);
+                    cutVals[i] = double(downSum[i] + fSum[i]);
                   } else {
-                    cutVals[i] = HighsFloat(downSum[i] + maxFrac[i]);
+                    cutVals[i] = double(downSum[i] + maxFrac[i]);
                   }
                   break;
                 }
@@ -534,7 +534,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
             }
 
             if (k > 0) {
-              HighsFloat viol = HighsFloat(cutRhs);
+              double viol = double(cutRhs);
               for (HighsInt j = 0; j < numInds; ++j) {
                 viol -= solval[j] * cutVals[j];
               }
@@ -543,7 +543,7 @@ void HighsPathSeparator::separateLpSolution(HighsLpRelaxation& lpRelaxation,
 
               if (viol > 10 * mip.mipdata_->feastol) {
                 scale = -delta;
-                HighsFloat rhs = HighsFloat(cutRhs) * scale;
+                double rhs = double(cutRhs) * scale;
                 for (HighsInt j = 0; j < numInds; ++j) {
                   cutVals[j] *= scale;
                 }

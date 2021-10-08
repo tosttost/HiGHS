@@ -5,13 +5,13 @@
 #include "catch.hpp"
 
 const bool dev_run = false;
-const HighsFloat d0uble_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 TEST_CASE("qpsolver", "[qpsolver]") {
-  HighsFloat required_objective_function_value;
-  HighsFloat required_x0;
-  HighsFloat required_x1;
-  HighsFloat required_x2;
+  double required_objective_function_value;
+  double required_x0;
+  double required_x1;
+  double required_x2;
   std::string filename;
   filename = std::string(HIGHS_DIR) + "/check/instances/qptestnw.lp";
 
@@ -23,7 +23,7 @@ TEST_CASE("qpsolver", "[qpsolver]") {
   const HighsModel& model = highs.getModel();
   const HighsInfo& info = highs.getInfo();
   const HighsSolution& solution = highs.getSolution();
-  const HighsFloat& objective_function_value = info.objective_function_value;
+  const double& objective_function_value = info.objective_function_value;
 
   if (!dev_run) highs.setOptionValue("output_flag", false);
 
@@ -33,7 +33,7 @@ TEST_CASE("qpsolver", "[qpsolver]") {
   return_status = highs.run();
   REQUIRE(return_status == HighsStatus::kOk);
 
-  HighsFloat alt_objective_function_value =
+  double alt_objective_function_value =
       model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
           d0uble_equal_tolerance);
@@ -97,14 +97,14 @@ TEST_CASE("qpsolver", "[qpsolver]") {
 TEST_CASE("test-qod", "[qpsolver]") {
   HighsStatus return_status;
   HighsModelStatus model_status;
-  HighsFloat required_objective_function_value;
-  HighsFloat required_x0;
-  HighsFloat required_x1;
+  double required_objective_function_value;
+  double required_x0;
+  double required_x1;
 
   HighsModel local_model;
   HighsLp& lp = local_model.lp_;
   HighsHessian& hessian = local_model.hessian_;
-  const HighsFloat inf = kHighsInf;
+  const double inf = kHighsInf;
 
   // Oscar's edge case
   //
@@ -127,7 +127,7 @@ TEST_CASE("test-qod", "[qpsolver]") {
   const HighsModel& model = highs.getModel();
   const HighsInfo& info = highs.getInfo();
   const HighsSolution& solution = highs.getSolution();
-  const HighsFloat& objective_function_value = info.objective_function_value;
+  const double& objective_function_value = info.objective_function_value;
 
   if (!dev_run) highs.setOptionValue("output_flag", false);
   return_status = highs.passModel(local_model);
@@ -145,7 +145,7 @@ TEST_CASE("test-qod", "[qpsolver]") {
   required_objective_function_value = 0;
   required_x0 = -0.5;
 
-  HighsFloat alt_objective_function_value =
+  double alt_objective_function_value =
       model.objectiveValue(solution.col_value);
   REQUIRE(fabs(objective_function_value - alt_objective_function_value) <
           d0uble_equal_tolerance);
@@ -200,10 +200,10 @@ TEST_CASE("test-qod", "[qpsolver]") {
   // the current offset, shifting it by the current objective and
   // checking that the objective value is changed accordingly
 
-  HighsFloat offset;
+  double offset;
   return_status = highs.getObjectiveOffset(offset);
   REQUIRE(return_status == HighsStatus::kOk);
-  HighsFloat dl_offset = -objective_function_value;
+  double dl_offset = -objective_function_value;
   offset += dl_offset;
   return_status = highs.changeObjectiveOffset(offset);
   required_objective_function_value += dl_offset;
@@ -245,12 +245,12 @@ TEST_CASE("test-qjh", "[qpsolver]") {
   // subject to x_1 + x_3 <= 2; x>=0
   HighsStatus return_status;
   HighsModelStatus model_status;
-  HighsFloat required_objective_function_value;
+  double required_objective_function_value;
 
   HighsModel local_model;
   HighsLp& lp = local_model.lp_;
   HighsHessian& hessian = local_model.hessian_;
-  const HighsFloat inf = kHighsInf;
+  const double inf = kHighsInf;
   // Start with an unconstrained QP
   lp.model_name_ = "qjh";
   lp.num_col_ = 3;
@@ -274,7 +274,7 @@ TEST_CASE("test-qjh", "[qpsolver]") {
 
   Highs highs;
   const HighsInfo& info = highs.getInfo();
-  const HighsFloat& objective_function_value = info.objective_function_value;
+  const double& objective_function_value = info.objective_function_value;
   if (!dev_run) highs.setOptionValue("output_flag", false);
   return_status = highs.passModel(local_model);
   REQUIRE(return_status == HighsStatus::kOk);

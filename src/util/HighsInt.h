@@ -18,7 +18,6 @@
 #define UTIL_HIGHS_INT_H_
 
 #include <stdint.h>
-#include <quadmath.h>
 
 #ifdef __cplusplus
 #define __STDC_FORMAT_MACROS
@@ -36,8 +35,5 @@ typedef int HighsInt;
 typedef unsigned int HighsUInt;
 #define HIGHSINT_FORMAT "d"
 #endif
-
-//typedef __float128 HighsFloat;
-typedef double HighsFloat;
 
 #endif

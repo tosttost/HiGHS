@@ -30,8 +30,8 @@
 /*
 struct HighsClockRecord {
   HighsInt calls;
-  HighsFloat start;
-  HighsFloat time;
+  double start;
+  double time;
   std::string name;
   std::string ch3_name;
 };
@@ -149,8 +149,8 @@ class HighsTimer {
     // Check that the clock's been started. It should be set to
     // -getWallTime() <= 0
     assert(clock_start[i_clock] < 0);
-    HighsFloat wall_time = getWallTime();
-    HighsFloat callClockTimes = wall_time + clock_start[i_clock];
+    double wall_time = getWallTime();
+    double callClockTimes = wall_time + clock_start[i_clock];
     clock_time[i_clock] += callClockTimes;
     clock_num_call[i_clock]++;
     // Set the start to be the WallTick to check that the clock's been
@@ -161,14 +161,14 @@ class HighsTimer {
   /**
    * @brief Read the time of a clock
    */
-  HighsFloat read(HighsInt i_clock  //!< Index of the clock to be read
+  double read(HighsInt i_clock  //!< Index of the clock to be read
   ) {
     assert(i_clock >= 0);
     assert(i_clock < num_clock);
-    HighsFloat read_time;
+    double read_time;
     if (clock_start[i_clock] < 0) {
       // The clock's been started, so find the current time
-      HighsFloat wall_time = getWallTime();
+      double wall_time = getWallTime();
       read_time = clock_time[i_clock] + wall_time + clock_start[i_clock];
     } else {
       // The clock is currently stopped, so read the current time
@@ -190,7 +190,7 @@ class HighsTimer {
   /**
    * @brief Read the RunHighs clock
    */
-  HighsFloat readRunHighsClock() { return read(run_highs_clock); }
+  double readRunHighsClock() { return read(run_highs_clock); }
 
   /**
    * @brief Test whether the RunHighs clock is running
@@ -203,9 +203,9 @@ class HighsTimer {
   void report(const char* grep_stamp,  //!< Character string used to extract
                                        //!< output using grep
               std::vector<HighsInt>& clock_list,  //!< List of indices to report
-              HighsFloat ideal_sum_time = 0  //!< Ideal value for times to sum to
+              double ideal_sum_time = 0  //!< Ideal value for times to sum to
   ) {
-    HighsFloat tl_per_cent_report = 1.0;
+    double tl_per_cent_report = 1.0;
     report_tl(grep_stamp, clock_list, ideal_sum_time, tl_per_cent_report);
   }
 
@@ -213,8 +213,8 @@ class HighsTimer {
       const char*
           grep_stamp,  //!< Character string used to extract output using grep
       std::vector<HighsInt>& clock_list,  //!< List of indices to report
-      HighsFloat ideal_sum_time = 0,          //!< Ideal value for times to sum to
-      HighsFloat tl_per_cent_report =
+      double ideal_sum_time = 0,          //!< Ideal value for times to sum to
+      double tl_per_cent_report =
           0  //!< Lower bound on percentage of total time
              //!< before an individual clock is reported
   ) {
@@ -245,12 +245,12 @@ class HighsTimer {
     // Then give the per-mille contribution relative to the total
     // HiGHS run time, and then relative to the sum of times for these
     // clocks
-    HighsFloat current_run_highs_time = readRunHighsClock();
-    HighsFloat sum_clock_times = 0;
+    double current_run_highs_time = readRunHighsClock();
+    double sum_clock_times = 0;
     for (HighsInt passNum = 0; passNum < 3; passNum++) {
       // Don't write out if there's no ideal time
       if (passNum == 1 && ideal_sum_time <= 0) continue;
-      HighsFloat suPerMille = 0;
+      double suPerMille = 0;
       if (passNum == 0) {
         printf("%s-total ", grep_stamp);
       } else if (passNum == 1) {
@@ -260,7 +260,7 @@ class HighsTimer {
       }
       for (HighsInt i = 0; i < num_clock_list_entries; i++) {
         HighsInt i_clock = clock_list[i];
-        HighsFloat perMille;
+        double perMille;
         if (passNum == 0) {
           perMille = 1000.0 * clock_time[i_clock] / current_run_highs_time;
         } else if (passNum == 1) {
@@ -291,20 +291,20 @@ class HighsTimer {
     if (ideal_sum_time > 0) printf(";  Ideal");
     printf(";  Local):    Calls  Time/Call\n");
     // Convert approximate seconds
-    HighsFloat sum_time = 0;
+    double sum_time = 0;
     for (HighsInt i = 0; i < num_clock_list_entries; i++) {
       HighsInt i_clock = clock_list[i];
-      HighsFloat time = clock_time[i_clock];
-      HighsFloat percent_run_highs = 100.0 * time / current_run_highs_time;
-      HighsFloat percent_sum_clock_times = 100.0 * time / sum_clock_times;
-      HighsFloat time_per_call = 0;
+      double time = clock_time[i_clock];
+      double percent_run_highs = 100.0 * time / current_run_highs_time;
+      double percent_sum_clock_times = 100.0 * time / sum_clock_times;
+      double time_per_call = 0;
       if (clock_num_call[i_clock] > 0) {
         time_per_call = time / clock_num_call[i_clock];
         if (percent_sum_clock_times >= tl_per_cent_report) {
           printf("%s-time  %-18s: %11.4e (%5.1f%%", grep_stamp,
                  clock_names[i_clock].c_str(), time, percent_run_highs);
           if (ideal_sum_time > 0) {
-            HighsFloat percent_ideal = 100.0 * time / ideal_sum_time;
+            double percent_ideal = 100.0 * time / ideal_sum_time;
             printf("; %5.1f%%", percent_ideal);
           }
           printf("; %5.1f%%):%9" HIGHSINT_FORMAT " %11.4e\n",
@@ -314,12 +314,12 @@ class HighsTimer {
       }
       sum_time += time;
     }
-    HighsFloat percent_sum_clock_times = 100.0;
-    HighsFloat percent_run_highs = 100.0 * sum_time / current_run_highs_time;
+    double percent_sum_clock_times = 100.0;
+    double percent_run_highs = 100.0 * sum_time / current_run_highs_time;
     printf("%s-time  SUM               : %11.4e (%5.1f%%", grep_stamp, sum_time,
            percent_run_highs);
     if (ideal_sum_time > 0) {
-      HighsFloat percent_ideal = 100.0 * sum_time / ideal_sum_time;
+      double percent_ideal = 100.0 * sum_time / ideal_sum_time;
       printf("; %5.1f%%", percent_ideal);
     }
     printf("; %5.1f%%)\n", percent_sum_clock_times);
@@ -330,9 +330,9 @@ class HighsTimer {
   /**
    * @brief Return the current wall-clock time
    */
-  HighsFloat getWallTime() {
+  double getWallTime() {
     using namespace std::chrono;
-    return duration_cast<duration<HighsFloat> >(
+    return duration_cast<duration<double> >(
                wall_clock::now().time_since_epoch())
         .count();
   }
@@ -345,12 +345,12 @@ class HighsTimer {
 
   // Dummy positive start time for clocks - so they can be checked as
   // having been stopped
-  const HighsFloat initial_clock_start = 1.0;
+  const double initial_clock_start = 1.0;
 
   HighsInt num_clock = 0;
   std::vector<HighsInt> clock_num_call;
-  std::vector<HighsFloat> clock_start;
-  std::vector<HighsFloat> clock_time;
+  std::vector<double> clock_start;
+  std::vector<double> clock_time;
   std::vector<std::string> clock_names;
   std::vector<std::string> clock_ch3_names;
   // The index of the RunHighsClock - should always be 0

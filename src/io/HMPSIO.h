@@ -50,10 +50,10 @@ const HighsInt field_6_width = 12;
 FilereaderRetcode readMps(
     const HighsLogOptions& log_options, const std::string filename,
     HighsInt mxNumRow, HighsInt mxNumCol, HighsInt& numRow, HighsInt& numCol,
-    ObjSense& objSense, HighsFloat& objOffset, vector<HighsInt>& Astart,
-    vector<HighsInt>& Aindex, vector<HighsFloat>& Avalue, vector<HighsFloat>& colCost,
-    vector<HighsFloat>& colLower, vector<HighsFloat>& colUpper,
-    vector<HighsFloat>& rowLower, vector<HighsFloat>& rowUpper,
+    ObjSense& objSense, double& objOffset, vector<HighsInt>& Astart,
+    vector<HighsInt>& Aindex, vector<double>& Avalue, vector<double>& colCost,
+    vector<double>& colLower, vector<double>& colUpper,
+    vector<double>& rowLower, vector<double>& rowUpper,
     vector<HighsVarType>& integerColumn, vector<std::string>& col_names,
     vector<std::string>& row_names, const HighsInt keep_n_rows = 0);
 
@@ -61,18 +61,18 @@ HighsStatus writeMps(
     const HighsLogOptions& log_options, const std::string filename,
     const std::string model_name, const HighsInt& num_row,
     const HighsInt& num_col, const HighsInt& q_dim, const ObjSense& sense,
-    const HighsFloat& offset, const vector<HighsFloat>& col_cost,
-    const vector<HighsFloat>& col_lower, const vector<HighsFloat>& col_upper,
-    const vector<HighsFloat>& row_lower, const vector<HighsFloat>& row_upper,
+    const double& offset, const vector<double>& col_cost,
+    const vector<double>& col_lower, const vector<double>& col_upper,
+    const vector<double>& row_lower, const vector<double>& row_upper,
     const vector<HighsInt>& a_start, const vector<HighsInt>& a_index,
-    const vector<HighsFloat>& a_value, const vector<HighsInt>& q_start,
-    const vector<HighsInt>& q_index, const vector<HighsFloat>& q_value,
+    const vector<double>& a_value, const vector<HighsInt>& q_start,
+    const vector<HighsInt>& q_index, const vector<double>& q_value,
     const vector<HighsVarType>& integrality,
     const vector<std::string>& col_names, const vector<std::string>& row_names,
     const bool use_free_format = true);
 
 bool load_mpsLine(FILE* file, HighsVarType& integerVar, HighsInt lmax,
-                  char* line, char* flag, HighsFloat* data);
+                  char* line, char* flag, double* data);
 
 HighsStatus writeModelAsMps(const HighsOptions& options,
                             const std::string filename, const HighsModel& model,

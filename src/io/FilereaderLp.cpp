@@ -57,7 +57,7 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
 
     std::map<std::shared_ptr<Variable>, std::vector<std::shared_ptr<Variable>>>
         mat;
-    std::map<std::shared_ptr<Variable>, std::vector<HighsFloat>> mat2;
+    std::map<std::shared_ptr<Variable>, std::vector<double>> mat2;
     for (std::shared_ptr<QuadTerm> qt : m.objective->quadterms) {
       if (qt->var1 != qt->var2) {
         mat[qt->var1].push_back(qt->var2);
@@ -91,14 +91,14 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
     // handle constraints
     std::map<std::shared_ptr<Variable>, std::vector<unsigned int>>
         consofvarmap_index;
-    std::map<std::shared_ptr<Variable>, std::vector<HighsFloat>> consofvarmap_value;
+    std::map<std::shared_ptr<Variable>, std::vector<double>> consofvarmap_value;
     for (HighsUInt i = 0; i < m.constraints.size(); i++) {
       std::shared_ptr<Constraint> con = m.constraints[i];
       for (HighsUInt j = 0; j < con->expr->linterms.size(); j++) {
         std::shared_ptr<LinTerm> lt = con->expr->linterms[j];
         if (consofvarmap_index.count(lt->var) == 0) {
           consofvarmap_index[lt->var] = std::vector<unsigned int>();
-          consofvarmap_value[lt->var] = std::vector<HighsFloat>();
+          consofvarmap_value[lt->var] = std::vector<double>();
         }
         consofvarmap_index[lt->var].push_back(i);
         consofvarmap_value[lt->var].push_back(lt->coef);

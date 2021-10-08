@@ -25,14 +25,14 @@ namespace presolve {
 
 HPreData::HPreData() {}
 
-HighsFloat HPreData::getRowValue(HighsInt i) {
-  HighsFloat sum = 0;
+double HPreData::getRowValue(HighsInt i) {
+  double sum = 0;
   for (HighsInt k = ARstart[i]; k < ARstart[i + 1]; k++)
     if (flagRow[ARindex[k]]) sum += ARvalue[k] * valuePrimal[ARindex[k]];
   return sum;
 }
 
-HighsFloat HPreData::getaij(HighsInt i, HighsInt j) {
+double HPreData::getaij(HighsInt i, HighsInt j) {
   HighsInt k = ARstart[i];
   while (j != ARindex[k] && k <= ARstart[i + 1]) k++;
   if (k == ARstart[i + 1]) {

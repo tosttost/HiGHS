@@ -63,7 +63,7 @@ bool HSimplexNla::frozenBasisHasInvert(const HighsInt frozen_basis_id) const {
 }
 
 HighsInt HSimplexNla::freeze(const SimplexBasis& basis,
-                             const HighsFloat col_aq_density) {
+                             const double col_aq_density) {
   this->frozen_basis_.push_back(FrozenBasis());
   HighsInt this_frozen_basis_id = this->frozen_basis_.size() - 1;
   FrozenBasis& frozen_basis = this->frozen_basis_[this_frozen_basis_id];

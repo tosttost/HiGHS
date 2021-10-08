@@ -22,13 +22,13 @@ void HighsModel::clear() {
   this->hessian_.clear();
 }
 
-HighsFloat HighsModel::objectiveValue(const std::vector<HighsFloat>& solution) const {
+double HighsModel::objectiveValue(const std::vector<double>& solution) const {
   return this->hessian_.objectiveValue(solution) +
          this->lp_.objectiveValue(solution);
 }
 
-void HighsModel::objectiveGradient(const std::vector<HighsFloat>& solution,
-                                   std::vector<HighsFloat>& gradient) const {
+void HighsModel::objectiveGradient(const std::vector<double>& solution,
+                                   std::vector<double>& gradient) const {
   if (this->hessian_.dim_ > 0) {
     this->hessian_.product(solution, gradient);
   } else {

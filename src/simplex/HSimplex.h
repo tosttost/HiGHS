@@ -42,8 +42,8 @@ void setSolutionStatus(HighsInfo& highs_info);
 // SCALE:
 
 void scaleSimplexCost(const HighsOptions& options, HighsLp& lp,
-                      HighsFloat& cost_scale);
-void unscaleSimplexCost(HighsLp& lp, HighsFloat cost_scale);
+                      double& cost_scale);
+void unscaleSimplexCost(HighsLp& lp, double cost_scale);
 
 bool isBasisRightSize(const HighsLp& lp, const SimplexBasis& basis);
 

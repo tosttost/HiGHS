@@ -83,7 +83,7 @@ class HEkkDualRHS {
    */
   void updatePrimal(
       HVector* column,  //!< Column to add into primal values
-      HighsFloat theta      //!< Multiple of column to add into primal values
+      double theta      //!< Multiple of column to add into primal values
   );
 
   /**
@@ -91,15 +91,15 @@ class HEkkDualRHS {
    */
   void updateWeightDualSteepestEdge(
       HVector* column,             //!< Pivotal column
-      const HighsFloat row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
-      HighsFloat Kai,                  //!< -2/alpha
-      HighsFloat* dse                  //!< DSE std::vector
+      const double row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
+      double Kai,                  //!< -2/alpha
+      double* dse                  //!< DSE std::vector
   );
   /**
    * @brief Update the Devex weights
    */
   void updateWeightDevex(HVector* column,            //!< Pivotal column
-                         const HighsFloat row_outWeight  //!< max(1, (Edge weight of
+                         const double row_outWeight  //!< max(1, (Edge weight of
                                                      //!< leaving row)/alpha^2)
   );
   /**
@@ -107,7 +107,7 @@ class HEkkDualRHS {
    * occurred
    */
   void updatePivots(HighsInt iRow,  //!< row where the basis change has occurred
-                    HighsFloat value    //!< New primal value in this row
+                    double value    //!< New primal value in this row
   );
 
   /**
@@ -121,7 +121,7 @@ class HEkkDualRHS {
    * @brief Create the list of greatest primal infeasibilities for efficient
    * CHUZR
    */
-  void createInfeasList(HighsFloat columnDensity);
+  void createInfeasList(double columnDensity);
   /**
    * @brief Create the std::vector of primal infeasibilities
    *
@@ -131,7 +131,7 @@ class HEkkDualRHS {
   // References:
   HEkk& ekk_instance_;
 
-  HighsFloat workCutoff;   //!< Limit for row to be in list with greatest primal
+  double workCutoff;   //!< Limit for row to be in list with greatest primal
                        //!< infeasibilities
   HighsInt workCount;  //!< Number of rows in list with greatest primal
                        //!< infeasibilities
@@ -139,10 +139,10 @@ class HEkkDualRHS {
                                //!< greatest primal infeasibilities
   std::vector<HighsInt>
       workIndex;  //!< List of rows with greatest primal infeasibilities
-  std::vector<HighsFloat>
+  std::vector<double>
       work_infeasibility;            //!< Vector of all primal infeasiblities
-  std::vector<HighsFloat> workEdWt;      //!< DSE or Dvx weight
-  std::vector<HighsFloat> workEdWtFull;  //!< Full-length std::vector where weights
+  std::vector<double> workEdWt;      //!< DSE or Dvx weight
+  std::vector<double> workEdWtFull;  //!< Full-length std::vector where weights
                                      //!< are scattered during INVERT
 
   HighsInt partNum;
@@ -151,7 +151,7 @@ class HEkkDualRHS {
   HighsInt partNumCut;
   HighsInt partSwitch;
   std::vector<HighsInt> workPartition;
-  const HighsFloat min_dual_steepest_edge_weight = 1e-4;
+  const double min_dual_steepest_edge_weight = 1e-4;
   HighsSimplexAnalysis* analysis;
 };
 

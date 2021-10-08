@@ -158,8 +158,8 @@ HighsDebugStatus debugNoInfo(const HighsInfo& info) {
                      *(((InfoRecordInt*)no_info_records[index])[0].value)) ||
                     error_found;
     } else if (type == HighsInfoType::kD0uble) {
-      HighsFloat v0 = (HighsFloat)*(((InfoRecordD0uble*)info_records[index])[0].value);
-      HighsFloat v1 = (HighsFloat)*(((InfoRecordD0uble*)info_records[index])[0].value);
+      double v0 = (double)*(((InfoRecordD0uble*)info_records[index])[0].value);
+      double v1 = (double)*(((InfoRecordD0uble*)info_records[index])[0].value);
       if (v0 != v1)
         printf("debugNoInfo: Index %" HIGHSINT_FORMAT " has %g != %g \n", index,
                v0, v1);

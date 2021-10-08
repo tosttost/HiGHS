@@ -30,19 +30,19 @@ class HighsPostsolveStack;
 class HighsPseudocost;
 
 struct HighsPseudocostInitialization {
-  std::vector<HighsFloat> pseudocostup;
-  std::vector<HighsFloat> pseudocostdown;
+  std::vector<double> pseudocostup;
+  std::vector<double> pseudocostdown;
   std::vector<HighsInt> nsamplesup;
   std::vector<HighsInt> nsamplesdown;
-  std::vector<HighsFloat> inferencesup;
-  std::vector<HighsFloat> inferencesdown;
+  std::vector<double> inferencesup;
+  std::vector<double> inferencesdown;
   std::vector<HighsInt> ninferencesup;
   std::vector<HighsInt> ninferencesdown;
-  std::vector<HighsFloat> conflictscoreup;
-  std::vector<HighsFloat> conflictscoredown;
-  HighsFloat cost_total;
-  HighsFloat inferences_total;
-  HighsFloat conflict_avg_score;
+  std::vector<double> conflictscoreup;
+  std::vector<double> conflictscoredown;
+  double cost_total;
+  double inferences_total;
+  double conflict_avg_score;
   int64_t nsamplestotal;
   int64_t ninferencestotal;
 
@@ -54,28 +54,28 @@ struct HighsPseudocostInitialization {
 };
 class HighsPseudocost {
   friend struct HighsPseudocostInitialization;
-  std::vector<HighsFloat> pseudocostup;
-  std::vector<HighsFloat> pseudocostdown;
+  std::vector<double> pseudocostup;
+  std::vector<double> pseudocostdown;
   std::vector<HighsInt> nsamplesup;
   std::vector<HighsInt> nsamplesdown;
-  std::vector<HighsFloat> inferencesup;
-  std::vector<HighsFloat> inferencesdown;
+  std::vector<double> inferencesup;
+  std::vector<double> inferencesdown;
   std::vector<HighsInt> ninferencesup;
   std::vector<HighsInt> ninferencesdown;
   std::vector<HighsInt> ncutoffsup;
   std::vector<HighsInt> ncutoffsdown;
-  std::vector<HighsFloat> conflictscoreup;
-  std::vector<HighsFloat> conflictscoredown;
+  std::vector<double> conflictscoreup;
+  std::vector<double> conflictscoredown;
 
-  HighsFloat conflict_weight;
-  HighsFloat conflict_avg_score;
-  HighsFloat cost_total;
-  HighsFloat inferences_total;
+  double conflict_weight;
+  double conflict_avg_score;
+  double cost_total;
+  double inferences_total;
   int64_t nsamplestotal;
   int64_t ninferencestotal;
   int64_t ncutoffstotal;
   HighsInt minreliable;
-  HighsFloat degeneracyFactor;
+  double degeneracyFactor;
 
  public:
   HighsPseudocost() = default;
@@ -96,7 +96,7 @@ class HighsPseudocost {
     conflict_weight *= 1.02;
 
     if (conflict_weight > 1000.0) {
-      HighsFloat scale = 1.0 / conflict_weight;
+      double scale = 1.0 / conflict_weight;
       conflict_weight = 1.0;
       conflict_avg_score *= scale;
 
@@ -108,7 +108,7 @@ class HighsPseudocost {
     }
   }
 
-  void setDegeneracyFactor(HighsFloat degeneracyFactor) {
+  void setDegeneracyFactor(double degeneracyFactor) {
     assert(degeneracyFactor >= 1.0);
     this->degeneracyFactor = degeneracyFactor;
   }
@@ -145,12 +145,12 @@ class HighsPseudocost {
       ncutoffsdown[col] += 1;
   }
 
-  void addObservation(HighsInt col, HighsFloat delta, HighsFloat objdelta) {
+  void addObservation(HighsInt col, double delta, double objdelta) {
     assert(delta != 0.0);
     assert(objdelta >= 0.0);
     if (delta > 0.0) {
-      HighsFloat unit_gain = objdelta / delta;
-      HighsFloat d = unit_gain - pseudocostup[col];
+      double unit_gain = objdelta / delta;
+      double d = unit_gain - pseudocostup[col];
       nsamplesup[col] += 1;
       pseudocostup[col] += d / nsamplesup[col];
 
@@ -158,8 +158,8 @@ class HighsPseudocost {
       ++nsamplestotal;
       cost_total += d / nsamplestotal;
     } else {
-      HighsFloat unit_gain = -objdelta / delta;
-      HighsFloat d = unit_gain - pseudocostdown[col];
+      double unit_gain = -objdelta / delta;
+      double d = unit_gain - pseudocostdown[col];
       nsamplesdown[col] += 1;
       pseudocostdown[col] += d / nsamplesdown[col];
 
@@ -171,7 +171,7 @@ class HighsPseudocost {
 
   void addInferenceObservation(HighsInt col, HighsInt ninferences,
                                bool upbranch) {
-    HighsFloat d = ninferences - inferences_total;
+    double d = ninferences - inferences_total;
     ++ninferencestotal;
     inferences_total += d / ninferencestotal;
     if (upbranch) {
@@ -197,16 +197,16 @@ class HighsPseudocost {
     return nsamplesdown[col] >= minreliable;
   }
 
-  HighsFloat getAvgPseudocost() const { return cost_total; }
+  double getAvgPseudocost() const { return cost_total; }
 
-  HighsFloat getPseudocostUp(HighsInt col, HighsFloat frac, HighsFloat offset) const {
-    HighsFloat up = std::ceil(frac) - frac;
-    HighsFloat cost;
+  double getPseudocostUp(HighsInt col, double frac, double offset) const {
+    double up = std::ceil(frac) - frac;
+    double cost;
 
     if (nsamplesup[col] == 0 || nsamplesup[col] < minreliable) {
-      HighsFloat weightPs = nsamplesup[col] == 0
+      double weightPs = nsamplesup[col] == 0
                             ? 0
-                            : 0.9 + 0.1 * nsamplesup[col] / (HighsFloat)minreliable;
+                            : 0.9 + 0.1 * nsamplesup[col] / (double)minreliable;
       cost = weightPs * pseudocostup[col];
       cost += (1.0 - weightPs) * getAvgPseudocost();
     } else
@@ -214,14 +214,14 @@ class HighsPseudocost {
     return up * (offset + cost);
   }
 
-  HighsFloat getPseudocostDown(HighsInt col, HighsFloat frac, HighsFloat offset) const {
-    HighsFloat down = frac - std::floor(frac);
-    HighsFloat cost;
+  double getPseudocostDown(HighsInt col, double frac, double offset) const {
+    double down = frac - std::floor(frac);
+    double cost;
 
     if (nsamplesdown[col] == 0 || nsamplesdown[col] < minreliable) {
-      HighsFloat weightPs = nsamplesdown[col] == 0 ? 0
+      double weightPs = nsamplesdown[col] == 0 ? 0
                                                : 0.9 + 0.1 * nsamplesdown[col] /
-                                                           (HighsFloat)minreliable;
+                                                           (double)minreliable;
       cost = weightPs * pseudocostdown[col];
       cost += (1.0 - weightPs) * getAvgPseudocost();
     } else
@@ -230,122 +230,122 @@ class HighsPseudocost {
     return down * (offset + cost);
   }
 
-  HighsFloat getPseudocostUp(HighsInt col, HighsFloat frac) const {
-    HighsFloat up = std::ceil(frac) - frac;
+  double getPseudocostUp(HighsInt col, double frac) const {
+    double up = std::ceil(frac) - frac;
     if (nsamplesup[col] == 0) return up * cost_total;
     return up * pseudocostup[col];
   }
 
-  HighsFloat getPseudocostDown(HighsInt col, HighsFloat frac) const {
-    HighsFloat down = frac - std::floor(frac);
+  double getPseudocostDown(HighsInt col, double frac) const {
+    double down = frac - std::floor(frac);
     if (nsamplesdown[col] == 0) return down * cost_total;
     return down * pseudocostdown[col];
   }
 
-  HighsFloat getConflictScoreUp(HighsInt col) const {
+  double getConflictScoreUp(HighsInt col) const {
     return conflictscoreup[col] / conflict_weight;
   }
 
-  HighsFloat getConflictScoreDown(HighsInt col) const {
+  double getConflictScoreDown(HighsInt col) const {
     return conflictscoredown[col] / conflict_weight;
   }
 
-  HighsFloat getScore(HighsInt col, HighsFloat upcost, HighsFloat downcost) const {
-    HighsFloat costScore = std::max(upcost, 1e-6) * std::max(downcost, 1e-6) /
+  double getScore(HighsInt col, double upcost, double downcost) const {
+    double costScore = std::max(upcost, 1e-6) * std::max(downcost, 1e-6) /
                        std::max(1e-6, cost_total * cost_total);
-    HighsFloat inferenceScore = std::max(inferencesup[col], 1e-6) *
+    double inferenceScore = std::max(inferencesup[col], 1e-6) *
                             std::max(inferencesdown[col], 1e-6) /
                             std::max(1e-6, inferences_total * inferences_total);
 
-    HighsFloat cutOffScoreUp =
+    double cutOffScoreUp =
         ncutoffsup[col] /
-        std::max(1.0, HighsFloat(ncutoffsup[col] + nsamplesup[col]));
-    HighsFloat cutOffScoreDown =
+        std::max(1.0, double(ncutoffsup[col] + nsamplesup[col]));
+    double cutOffScoreDown =
         ncutoffsdown[col] /
-        std::max(1.0, HighsFloat(ncutoffsdown[col] + nsamplesdown[col]));
-    HighsFloat avgCutoffs =
-        ncutoffstotal / std::max(1.0, HighsFloat(ncutoffstotal + nsamplestotal));
+        std::max(1.0, double(ncutoffsdown[col] + nsamplesdown[col]));
+    double avgCutoffs =
+        ncutoffstotal / std::max(1.0, double(ncutoffstotal + nsamplestotal));
 
-    HighsFloat cutoffScore = std::max(cutOffScoreUp, 1e-6) *
+    double cutoffScore = std::max(cutOffScoreUp, 1e-6) *
                          std::max(cutOffScoreDown, 1e-6) /
                          std::max(1e-6, avgCutoffs * avgCutoffs);
 
-    HighsFloat conflictScoreUp = conflictscoreup[col] / conflict_weight;
-    HighsFloat conflictScoreDown = conflictscoredown[col] / conflict_weight;
-    HighsFloat conflictScoreAvg =
+    double conflictScoreUp = conflictscoreup[col] / conflict_weight;
+    double conflictScoreDown = conflictscoredown[col] / conflict_weight;
+    double conflictScoreAvg =
         conflict_avg_score / (conflict_weight * conflictscoreup.size());
-    HighsFloat conflictScore = std::max(conflictScoreUp, 1e-6) *
+    double conflictScore = std::max(conflictScoreUp, 1e-6) *
                            std::max(conflictScoreDown, 1e-6) /
                            std::max(1e-6, conflictScoreAvg * conflictScoreAvg);
 
-    auto mapScore = [](HighsFloat score) { return 1.0 - 1.0 / (1.0 + score); };
+    auto mapScore = [](double score) { return 1.0 - 1.0 / (1.0 + score); };
     return mapScore(costScore) / degeneracyFactor +
            degeneracyFactor *
                (1e-2 * mapScore(conflictScore) +
                 1e-4 * (mapScore(cutoffScore) + mapScore(inferenceScore)));
   }
 
-  HighsFloat getScore(HighsInt col, HighsFloat frac) const {
-    HighsFloat upcost = getPseudocostUp(col, frac);
-    HighsFloat downcost = getPseudocostDown(col, frac);
+  double getScore(HighsInt col, double frac) const {
+    double upcost = getPseudocostUp(col, frac);
+    double downcost = getPseudocostDown(col, frac);
 
     return getScore(col, upcost, downcost);
   }
 
-  HighsFloat getScoreUp(HighsInt col, HighsFloat frac) const {
-    HighsFloat costScore = getPseudocostUp(col, frac) / std::max(1e-6, cost_total);
-    HighsFloat inferenceScore =
+  double getScoreUp(HighsInt col, double frac) const {
+    double costScore = getPseudocostUp(col, frac) / std::max(1e-6, cost_total);
+    double inferenceScore =
         inferencesup[col] / std::max(1e-6, inferences_total);
 
-    HighsFloat cutOffScoreUp =
+    double cutOffScoreUp =
         ncutoffsup[col] /
-        std::max(1.0, HighsFloat(ncutoffsup[col] + nsamplesup[col]));
-    HighsFloat avgCutoffs =
-        ncutoffstotal / std::max(1.0, HighsFloat(ncutoffstotal + nsamplestotal));
+        std::max(1.0, double(ncutoffsup[col] + nsamplesup[col]));
+    double avgCutoffs =
+        ncutoffstotal / std::max(1.0, double(ncutoffstotal + nsamplestotal));
 
-    HighsFloat cutoffScore = cutOffScoreUp / std::max(1e-6, avgCutoffs);
+    double cutoffScore = cutOffScoreUp / std::max(1e-6, avgCutoffs);
 
-    HighsFloat conflictScoreUp = conflictscoreup[col] / conflict_weight;
-    HighsFloat conflictScoreAvg =
+    double conflictScoreUp = conflictscoreup[col] / conflict_weight;
+    double conflictScoreAvg =
         conflict_avg_score / (conflict_weight * conflictscoreup.size());
-    HighsFloat conflictScore = conflictScoreUp / std::max(1e-6, conflictScoreAvg);
+    double conflictScore = conflictScoreUp / std::max(1e-6, conflictScoreAvg);
 
-    auto mapScore = [](HighsFloat score) { return 1.0 - 1.0 / (1.0 + score); };
+    auto mapScore = [](double score) { return 1.0 - 1.0 / (1.0 + score); };
 
     return mapScore(costScore) +
            (1e-2 * mapScore(conflictScore) +
             1e-4 * (mapScore(cutoffScore) + mapScore(inferenceScore)));
   }
 
-  HighsFloat getScoreDown(HighsInt col, HighsFloat frac) const {
-    HighsFloat costScore =
+  double getScoreDown(HighsInt col, double frac) const {
+    double costScore =
         getPseudocostDown(col, frac) / std::max(1e-6, cost_total);
-    HighsFloat inferenceScore =
+    double inferenceScore =
         inferencesdown[col] / std::max(1e-6, inferences_total);
 
-    HighsFloat cutOffScoreDown =
+    double cutOffScoreDown =
         ncutoffsdown[col] /
-        std::max(1.0, HighsFloat(ncutoffsdown[col] + nsamplesdown[col]));
-    HighsFloat avgCutoffs =
-        ncutoffstotal / std::max(1.0, HighsFloat(ncutoffstotal + nsamplestotal));
+        std::max(1.0, double(ncutoffsdown[col] + nsamplesdown[col]));
+    double avgCutoffs =
+        ncutoffstotal / std::max(1.0, double(ncutoffstotal + nsamplestotal));
 
-    HighsFloat cutoffScore = cutOffScoreDown / std::max(1e-6, avgCutoffs);
+    double cutoffScore = cutOffScoreDown / std::max(1e-6, avgCutoffs);
 
-    HighsFloat conflictScoreDown = conflictscoredown[col] / conflict_weight;
-    HighsFloat conflictScoreAvg =
+    double conflictScoreDown = conflictscoredown[col] / conflict_weight;
+    double conflictScoreAvg =
         conflict_avg_score / (conflict_weight * conflictscoredown.size());
-    HighsFloat conflictScore = conflictScoreDown / std::max(1e-6, conflictScoreAvg);
+    double conflictScore = conflictScoreDown / std::max(1e-6, conflictScoreAvg);
 
-    auto mapScore = [](HighsFloat score) { return 1.0 - 1.0 / (1.0 + score); };
+    auto mapScore = [](double score) { return 1.0 - 1.0 / (1.0 + score); };
 
     return mapScore(costScore) +
            (1e-2 * mapScore(conflictScore) +
             1e-4 * (mapScore(cutoffScore) + mapScore(inferenceScore)));
   }
 
-  HighsFloat getAvgInferencesUp(HighsInt col) const { return inferencesup[col]; }
+  double getAvgInferencesUp(HighsInt col) const { return inferencesup[col]; }
 
-  HighsFloat getAvgInferencesDown(HighsInt col) const {
+  double getAvgInferencesDown(HighsInt col) const {
     return inferencesdown[col];
   }
 };

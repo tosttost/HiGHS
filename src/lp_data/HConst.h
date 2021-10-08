@@ -22,14 +22,14 @@
 #include "util/HighsInt.h"
 
 const HighsInt kHighsIInf = std::numeric_limits<HighsInt>::max();
-const HighsFloat kHighsInf = std::numeric_limits<HighsFloat>::infinity();
-const HighsFloat kHighsTiny = 1e-14;
-const HighsFloat kHighsZero = 1e-50;
+const double kHighsInf = std::numeric_limits<double>::infinity();
+const double kHighsTiny = 1e-14;
+const double kHighsZero = 1e-50;
 const std::string kHighsOffString = "off";
 const std::string kHighsChooseString = "choose";
 const std::string kHighsOnString = "on";
 const HighsInt kHighsThreadLimit = 8;  // 32;
-const HighsFloat kRunningAverageMultiplier = 0.05;
+const double kRunningAverageMultiplier = 0.05;
 
 const HighsInt kHighsPrereleaseRowDualSign = -1;
 const bool kExtendInvertWhenAddingRows = false;
@@ -179,7 +179,7 @@ enum class HighsBasisStatus {
 // Illegal values of num/max/sum infeasibility - used to indicate that true
 // values aren't known
 const HighsInt kHighsIllegalInfeasibilityCount = -1;
-const HighsFloat kHighsIllegalInfeasibilityMeasure = -1;
+const double kHighsIllegalInfeasibilityMeasure = -1;
 
 // Termination link in linked lists
 const HighsInt kNoLink = -1;

@@ -44,7 +44,7 @@ std::string infoEntryTypeToString(const HighsInfoType type) {
   } else if (type == HighsInfoType::kInt) {
     return "HighsInt";
   } else {
-    return "HighsFloat";
+    return "double";
   }
 }
 
@@ -122,10 +122,10 @@ InfoStatus checkInfo(const HighsOptions& options,
         }
       }
     } else if (type == HighsInfoType::kD0uble) {
-      // Check HighsFloat info
+      // Check double info
       InfoRecordD0uble& info = ((InfoRecordD0uble*)info_records[index])[0];
       // Check that there are no other info with the same value pointers
-      HighsFloat* value_pointer = info.value;
+      double* value_pointer = info.value;
       for (HighsInt check_index = 0; check_index < num_info; check_index++) {
         if (check_index == index) continue;
         InfoRecordD0uble& check_info =
@@ -174,7 +174,7 @@ InfoStatus getLocalInfoValue(const HighsOptions& options,
 InfoStatus getLocalInfoValue(const HighsOptions& options,
                              const std::string& name, const bool valid,
                              const std::vector<InfoRecord*>& info_records,
-                             HighsFloat& value) {
+                             double& value) {
   HighsInt index;
   InfoStatus status = getInfoIndex(options, name, info_records, index);
   if (status != InfoStatus::kOk) return status;
@@ -183,7 +183,7 @@ InfoStatus getLocalInfoValue(const HighsOptions& options,
   if (type != HighsInfoType::kD0uble) {
     highsLogUser(
         options.log_options, HighsLogType::kError,
-        "getInfoValue: Info \"%s\" requires value of type %s, not HighsFloat\n",
+        "getInfoValue: Info \"%s\" requires value of type %s, not double\n",
         name.c_str(), infoEntryTypeToString(type).c_str());
     return InfoStatus::kIllegalValue;
   }
@@ -276,12 +276,12 @@ void reportInfo(FILE* file, const InfoRecordD0uble& info, const bool html) {
             "<li><tt><font size=\"+2\"><strong>%s</strong></font></tt><br>\n",
             info.name.c_str());
     fprintf(file, "%s<br>\n", info.description.c_str());
-    fprintf(file, "type: HighsFloat, advanced: %s\n",
+    fprintf(file, "type: double, advanced: %s\n",
             highsBoolToString(info.advanced).c_str());
     fprintf(file, "</li>\n");
   } else {
     fprintf(file, "\n# %s\n", info.description.c_str());
-    fprintf(file, "# [type: HighsFloat, advanced: %s]\n",
+    fprintf(file, "# [type: double, advanced: %s]\n",
             highsBoolToString(info.advanced).c_str());
     fprintf(file, "%s = %g\n", info.name.c_str(), *info.value);
   }

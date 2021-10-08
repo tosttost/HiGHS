@@ -7,7 +7,7 @@ const bool dev_run = false;
 
 void ekk_solve(Highs& highs, std::string presolve,
                const HighsModelStatus require_model_status,
-               const HighsFloat require_optimal_objective = 0) {
+               const double require_optimal_objective = 0) {
   SpecialLps special_lps;
   if (!dev_run) highs.setOptionValue("output_flag", false);
   const HighsInfo& info = highs.getInfo();
@@ -36,7 +36,7 @@ void ekk_distillation(Highs& highs) {
   special_lps.reportLpName("distillation", dev_run);
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.distillationLp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   ekk_solve(highs, "on", require_model_status, optimal_objective);
@@ -47,7 +47,7 @@ void ekk_blending(Highs& highs) {
   special_lps.reportLpName("blending", dev_run);
   HighsLp lp;
   HighsModelStatus require_model_status;
-  HighsFloat optimal_objective;
+  double optimal_objective;
   special_lps.blendingLp(lp, require_model_status, optimal_objective);
   REQUIRE(highs.passModel(lp) == HighsStatus::kOk);
   ekk_solve(highs, "on", require_model_status, optimal_objective);

@@ -41,7 +41,7 @@ void getKktFailures(const HighsOptions& options, const HighsModel& model,
                     HighsInfo& highs_info,
                     HighsPrimalDualErrors& primal_dual_errors,
                     const bool get_residuals) {
-  vector<HighsFloat> gradient;
+  vector<double> gradient;
   model.objectiveGradient(solution.col_value, gradient);
   getKktFailures(options, model.lp_, gradient, solution, basis, highs_info,
                  primal_dual_errors, get_residuals);
@@ -65,20 +65,20 @@ void getLpKktFailures(const HighsOptions& options, const HighsLp& lp,
 }
 
 void getKktFailures(const HighsOptions& options, const HighsLp& lp,
-                    const std::vector<HighsFloat>& gradient,
+                    const std::vector<double>& gradient,
                     const HighsSolution& solution, const HighsBasis& basis,
                     HighsInfo& highs_info,
                     HighsPrimalDualErrors& primal_dual_errors,
                     const bool get_residuals) {
-  HighsFloat primal_feasibility_tolerance = options.primal_feasibility_tolerance;
-  HighsFloat dual_feasibility_tolerance = options.dual_feasibility_tolerance;
+  double primal_feasibility_tolerance = options.primal_feasibility_tolerance;
+  double dual_feasibility_tolerance = options.dual_feasibility_tolerance;
   // highs_info are the values computed in this method.
   HighsInt& num_primal_infeasibility = highs_info.num_primal_infeasibilities;
-  HighsFloat& max_primal_infeasibility = highs_info.max_primal_infeasibility;
-  HighsFloat& sum_primal_infeasibility = highs_info.sum_primal_infeasibilities;
+  double& max_primal_infeasibility = highs_info.max_primal_infeasibility;
+  double& sum_primal_infeasibility = highs_info.sum_primal_infeasibilities;
   HighsInt& num_dual_infeasibility = highs_info.num_dual_infeasibilities;
-  HighsFloat& max_dual_infeasibility = highs_info.max_dual_infeasibility;
-  HighsFloat& sum_dual_infeasibility = highs_info.sum_dual_infeasibilities;
+  double& max_dual_infeasibility = highs_info.max_dual_infeasibility;
+  double& sum_dual_infeasibility = highs_info.sum_dual_infeasibilities;
 
   num_primal_infeasibility = kHighsIllegalInfeasibilityCount;
   max_primal_infeasibility = kHighsIllegalInfeasibilityMeasure;
@@ -118,23 +118,23 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
   }
 
   HighsInt& num_primal_residual = primal_dual_errors.num_primal_residual;
-  HighsFloat& max_primal_residual = primal_dual_errors.max_primal_residual;
-  HighsFloat& sum_primal_residual = primal_dual_errors.sum_primal_residual;
+  double& max_primal_residual = primal_dual_errors.max_primal_residual;
+  double& sum_primal_residual = primal_dual_errors.sum_primal_residual;
 
   HighsInt& num_dual_residual = primal_dual_errors.num_dual_residual;
-  HighsFloat& max_dual_residual = primal_dual_errors.max_dual_residual;
-  HighsFloat& sum_dual_residual = primal_dual_errors.sum_dual_residual;
+  double& max_dual_residual = primal_dual_errors.max_dual_residual;
+  double& sum_dual_residual = primal_dual_errors.sum_dual_residual;
 
   HighsInt& num_nonzero_basic_duals =
       primal_dual_errors.num_nonzero_basic_duals;
   HighsInt& num_large_nonzero_basic_duals =
       primal_dual_errors.num_large_nonzero_basic_duals;
-  HighsFloat& max_nonzero_basic_dual = primal_dual_errors.max_nonzero_basic_dual;
-  HighsFloat& sum_nonzero_basic_duals = primal_dual_errors.sum_nonzero_basic_duals;
+  double& max_nonzero_basic_dual = primal_dual_errors.max_nonzero_basic_dual;
+  double& sum_nonzero_basic_duals = primal_dual_errors.sum_nonzero_basic_duals;
 
   HighsInt& num_off_bound_nonbasic = primal_dual_errors.num_off_bound_nonbasic;
-  HighsFloat& max_off_bound_nonbasic = primal_dual_errors.max_off_bound_nonbasic;
-  HighsFloat& sum_off_bound_nonbasic = primal_dual_errors.sum_off_bound_nonbasic;
+  double& max_off_bound_nonbasic = primal_dual_errors.max_off_bound_nonbasic;
+  double& sum_off_bound_nonbasic = primal_dual_errors.sum_off_bound_nonbasic;
 
   // Initialise HighsPrimalDualErrors
 
@@ -177,8 +177,8 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
   }
   // Without a primal solution, nothing can be done!
   if (!have_primal_solution) return;
-  std::vector<HighsFloat> primal_activities;
-  std::vector<HighsFloat> dual_activities;
+  std::vector<double> primal_activities;
+  std::vector<double> dual_activities;
   if (get_residuals) {
     primal_activities.assign(lp.num_row_, 0);
     if (have_dual_solution) dual_activities.resize(lp.num_col_);
@@ -194,13 +194,13 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
   HighsBasisStatus* status_pointer = NULL;
   if (have_basis) status_pointer = &status;
 
-  HighsFloat primal_infeasibility;
-  HighsFloat dual_infeasibility;
-  HighsFloat value_residual;
-  HighsFloat lower;
-  HighsFloat upper;
-  HighsFloat value;
-  HighsFloat dual = 0;
+  double primal_infeasibility;
+  double dual_infeasibility;
+  double value_residual;
+  double lower;
+  double upper;
+  double value;
+  double dual = 0;
   for (HighsInt iVar = 0; iVar < lp.num_col_ + lp.num_row_; iVar++) {
     if (iVar < lp.num_col_) {
       HighsInt iCol = iVar;
@@ -242,7 +242,7 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
     if (have_basis) {
       if (status == HighsBasisStatus::kBasic) {
         num_basic_var++;
-        HighsFloat abs_basic_dual = dual_infeasibility;
+        double abs_basic_dual = dual_infeasibility;
         if (abs_basic_dual > 0) {
           num_nonzero_basic_duals++;
           if (abs_basic_dual > dual_feasibility_tolerance)
@@ -253,7 +253,7 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
         }
       } else {
         num_non_basic_var++;
-        HighsFloat off_bound_nonbasic = value_residual;
+        double off_bound_nonbasic = value_residual;
         if (off_bound_nonbasic > 0) num_off_bound_nonbasic++;
         max_off_bound_nonbasic =
             std::max(off_bound_nonbasic, max_off_bound_nonbasic);
@@ -267,7 +267,7 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
       for (HighsInt el = lp.a_matrix_.start_[iCol];
            el < lp.a_matrix_.start_[iCol + 1]; el++) {
         HighsInt iRow = lp.a_matrix_.index_[el];
-        HighsFloat Avalue = lp.a_matrix_.value_[el];
+        double Avalue = lp.a_matrix_.value_[el];
         primal_activities[iRow] += value * Avalue;
         // @FlipRowDual += became -=
         if (have_dual_solution)
@@ -276,9 +276,9 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
     }
   }
   if (get_residuals) {
-    const HighsFloat large_residual_error = 1e-12;
+    const double large_residual_error = 1e-12;
     for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++) {
-      HighsFloat primal_residual_error =
+      double primal_residual_error =
           std::fabs(primal_activities[iRow] - solution.row_value[iRow]);
       if (primal_residual_error > large_residual_error) num_primal_residual++;
       max_primal_residual =
@@ -287,7 +287,7 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
     }
     if (have_dual_solution) {
       for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
-        HighsFloat dual_residual_error =
+        double dual_residual_error =
             std::fabs(dual_activities[iCol] - solution.col_dual[iCol]);
         if (dual_residual_error > large_residual_error) num_dual_residual++;
         max_dual_residual = std::max(dual_residual_error, max_dual_residual);
@@ -321,15 +321,15 @@ void getKktFailures(const HighsOptions& options, const HighsLp& lp,
 // If the basis status is valid, then the numbers of basic and
 // nonbasic variables are updated, and the extent to which a nonbasic
 // variable is off its bound is returned.
-void getVariableKktFailures(const HighsFloat primal_feasibility_tolerance,
-                            const HighsFloat dual_feasibility_tolerance,
-                            const HighsFloat lower, const HighsFloat upper,
-                            const HighsFloat value, const HighsFloat dual,
+void getVariableKktFailures(const double primal_feasibility_tolerance,
+                            const double dual_feasibility_tolerance,
+                            const double lower, const double upper,
+                            const double value, const double dual,
                             HighsBasisStatus* status_pointer,
-                            HighsFloat& primal_infeasibility,
-                            HighsFloat& dual_infeasibility,
-                            HighsFloat& value_residual) {
-  const HighsFloat middle = (lower + upper) * 0.5;
+                            double& primal_infeasibility,
+                            double& dual_infeasibility,
+                            double& value_residual) {
+  const double middle = (lower + upper) * 0.5;
   // @primal_infeasibility calculation
   primal_infeasibility = 0;
   if (value < lower - primal_feasibility_tolerance) {
@@ -350,7 +350,7 @@ void getVariableKktFailures(const HighsFloat primal_feasibility_tolerance,
   }
   if (at_a_bound) {
     // At a bound
-    HighsFloat middle = (lower + upper) * 0.5;
+    double middle = (lower + upper) * 0.5;
     if (lower < upper) {
       // Non-fixed variable
       if (value < middle) {
@@ -370,8 +370,8 @@ void getVariableKktFailures(const HighsFloat primal_feasibility_tolerance,
   }
 }
 
-HighsFloat computeObjectiveValue(const HighsLp& lp, const HighsSolution& solution) {
-  HighsFloat objective_value = 0;
+double computeObjectiveValue(const HighsLp& lp, const HighsSolution& solution) {
+  double objective_value = 0;
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++)
     objective_value += lp.col_cost_[iCol] * solution.col_value[iCol];
   objective_value += lp.offset_;
@@ -390,8 +390,8 @@ void refineBasis(const HighsLp& lp, const HighsSolution& solution,
   const HighsInt num_row = lp.num_row_;
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
     if (basis.col_status[iCol] != HighsBasisStatus::kNonbasic) continue;
-    const HighsFloat lower = lp.col_lower_[iCol];
-    const HighsFloat upper = lp.col_upper_[iCol];
+    const double lower = lp.col_lower_[iCol];
+    const double upper = lp.col_upper_[iCol];
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     if (lower == upper) {
       status = HighsBasisStatus::kLower;
@@ -424,8 +424,8 @@ void refineBasis(const HighsLp& lp, const HighsSolution& solution,
 
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     if (basis.row_status[iRow] != HighsBasisStatus::kNonbasic) continue;
-    const HighsFloat lower = lp.row_lower_[iRow];
-    const HighsFloat upper = lp.row_upper_[iRow];
+    const double lower = lp.row_lower_[iRow];
+    const double upper = lp.row_upper_[iRow];
     HighsBasisStatus status = HighsBasisStatus::kNonbasic;
     if (lower == upper) {
       status = HighsBasisStatus::kLower;
@@ -460,23 +460,23 @@ void refineBasis(const HighsLp& lp, const HighsSolution& solution,
 #ifdef IPX_ON
 HighsStatus ipxSolutionToHighsSolution(
     const HighsLogOptions& log_options, const HighsLp& lp,
-    const std::vector<HighsFloat>& rhs, const std::vector<char>& constraint_type,
+    const std::vector<double>& rhs, const std::vector<char>& constraint_type,
     const HighsInt ipx_num_col, const HighsInt ipx_num_row,
-    const std::vector<HighsFloat>& ipx_x, const std::vector<HighsFloat>& ipx_slack_vars,
-    // const std::vector<HighsFloat>& ipx_y,
+    const std::vector<double>& ipx_x, const std::vector<double>& ipx_slack_vars,
+    // const std::vector<double>& ipx_y,
     HighsSolution& highs_solution) {
   // Resize the HighsSolution
   highs_solution.col_value.resize(lp.num_col_);
   highs_solution.row_value.resize(lp.num_row_);
 
-  const std::vector<HighsFloat>& ipx_col_value = ipx_x;
-  const std::vector<HighsFloat>& ipx_row_value = ipx_slack_vars;
-  //  const std::vector<HighsFloat>& ipx_col_dual = ipx_x;
-  //  const std::vector<HighsFloat>& ipx_row_dual = ipx_y;
+  const std::vector<double>& ipx_col_value = ipx_x;
+  const std::vector<double>& ipx_row_value = ipx_slack_vars;
+  //  const std::vector<double>& ipx_col_dual = ipx_x;
+  //  const std::vector<double>& ipx_row_dual = ipx_y;
 
   // Row activities are needed to set activity values of free rows -
   // which are ignored by IPX
-  vector<HighsFloat> row_activity;
+  vector<double> row_activity;
   bool get_row_activities = ipx_num_row < lp.num_row_;
   if (get_row_activities) row_activity.assign(lp.num_row_, 0);
   for (HighsInt col = 0; col < lp.num_col_; col++) {
@@ -495,8 +495,8 @@ HighsStatus ipxSolutionToHighsSolution(
   HighsInt ipx_slack = lp.num_col_;
   HighsInt num_boxed_rows = 0;
   for (HighsInt row = 0; row < lp.num_row_; row++) {
-    HighsFloat lower = lp.row_lower_[row];
-    HighsFloat upper = lp.row_upper_[row];
+    double lower = lp.row_lower_[row];
+    double upper = lp.row_upper_[row];
     if (lower <= -kHighsInf && upper >= kHighsInf) {
       // Free row - removed by IPX so set it to its row activity
       highs_solution.row_value[row] = row_activity[row];
@@ -525,7 +525,7 @@ HighsStatus ipxSolutionToHighsSolution(
 
 HighsStatus ipxBasicSolutionToHighsBasicSolution(
     const HighsLogOptions& log_options, const HighsLp& lp,
-    const std::vector<HighsFloat>& rhs, const std::vector<char>& constraint_type,
+    const std::vector<double>& rhs, const std::vector<char>& constraint_type,
     const IpxSolution& ipx_solution, HighsBasis& highs_basis,
     HighsSolution& highs_solution) {
   // Resize the HighsSolution and HighsBasis
@@ -536,10 +536,10 @@ HighsStatus ipxBasicSolutionToHighsBasicSolution(
   highs_basis.col_status.resize(lp.num_col_);
   highs_basis.row_status.resize(lp.num_row_);
 
-  const std::vector<HighsFloat>& ipx_col_value = ipx_solution.ipx_col_value;
-  const std::vector<HighsFloat>& ipx_row_value = ipx_solution.ipx_row_value;
-  const std::vector<HighsFloat>& ipx_col_dual = ipx_solution.ipx_col_dual;
-  const std::vector<HighsFloat>& ipx_row_dual = ipx_solution.ipx_row_dual;
+  const std::vector<double>& ipx_col_value = ipx_solution.ipx_col_value;
+  const std::vector<double>& ipx_row_value = ipx_solution.ipx_row_value;
+  const std::vector<double>& ipx_col_dual = ipx_solution.ipx_col_dual;
+  const std::vector<double>& ipx_row_dual = ipx_solution.ipx_row_dual;
   const std::vector<ipx::Int>& ipx_col_status = ipx_solution.ipx_col_status;
   const std::vector<ipx::Int>& ipx_row_status = ipx_solution.ipx_row_status;
 
@@ -551,7 +551,7 @@ HighsStatus ipxBasicSolutionToHighsBasicSolution(
   const ipx::Int ipx_superbasic = -3;
   // Row activities are needed to set activity values of free rows -
   // which are ignored by IPX
-  vector<HighsFloat> row_activity;
+  vector<double> row_activity;
   bool get_row_activities = ipx_solution.num_row < lp.num_row_;
   if (get_row_activities) row_activity.assign(lp.num_row_, 0);
   HighsInt num_basic_variables = 0;
@@ -622,8 +622,8 @@ HighsStatus ipxBasicSolutionToHighsBasicSolution(
   HighsInt num_boxed_row_slacks_basic = 0;
   for (HighsInt row = 0; row < lp.num_row_; row++) {
     bool unrecognised = false;
-    HighsFloat lower = lp.row_lower_[row];
-    HighsFloat upper = lp.row_upper_[row];
+    double lower = lp.row_lower_[row];
+    double upper = lp.row_upper_[row];
     HighsInt this_ipx_row = ipx_row;
     if (lower <= -kHighsInf && upper >= kHighsInf) {
       // Free row - removed by IPX so make it basic at its row activity
@@ -635,11 +635,11 @@ HighsStatus ipxBasicSolutionToHighsBasicSolution(
       if ((lower > -kHighsInf && upper < kHighsInf) && (lower < upper)) {
         // Boxed row - look at its slack
         num_boxed_rows++;
-        HighsFloat slack_value = ipx_col_value[ipx_slack];
-        HighsFloat slack_dual = ipx_col_dual[ipx_slack];
-        HighsFloat value = slack_value;
+        double slack_value = ipx_col_value[ipx_slack];
+        double slack_dual = ipx_col_dual[ipx_slack];
+        double value = slack_value;
         // @FlipRowDual -slack_dual became slack_dual
-        HighsFloat dual = slack_dual;
+        double dual = slack_dual;
         if (ipx_row_status[ipx_row] == ipx_basic) {
           // Row is basic
           num_boxed_rows_basic++;
@@ -685,9 +685,9 @@ HighsStatus ipxBasicSolutionToHighsBasicSolution(
         // Nonbasic row at fixed value, lower bound or upper bound
         assert(ipx_row_status[ipx_row] ==
                -1);  // const ipx::Int ipx_nonbasic_row = -1;
-        HighsFloat value = rhs[ipx_row] - ipx_row_value[ipx_row];
+        double value = rhs[ipx_row] - ipx_row_value[ipx_row];
         // @FlipRowDual -ipx_row_dual[ipx_row]; became ipx_row_dual[ipx_row];
-        HighsFloat dual = ipx_row_dual[ipx_row];
+        double dual = ipx_row_dual[ipx_row];
         if (constraint_type[ipx_row] == '>') {
           // Row is at its lower bound
           highs_basis.row_status[row] = HighsBasisStatus::kLower;

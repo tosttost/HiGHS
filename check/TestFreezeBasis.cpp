@@ -1,9 +1,9 @@
 #include "Highs.h"
 #include "catch.hpp"
 
-const HighsFloat inf = kHighsInf;
+const double inf = kHighsInf;
 const bool dev_run = false;
-const HighsFloat d0uble_equal_tolerance = 1e-5;
+const double d0uble_equal_tolerance = 1e-5;
 
 TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   std::string filename;
@@ -19,13 +19,13 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   const HighsInt to_col = num_col - 1;
   const HighsInfo& info = highs.getInfo();
 
-  vector<HighsFloat> original_col_lower = lp.col_lower_;
-  vector<HighsFloat> original_col_upper = lp.col_upper_;
+  vector<double> original_col_lower = lp.col_lower_;
+  vector<double> original_col_upper = lp.col_upper_;
 
   // Get the continuous solution and iteration count from a logical basis
   highs.run();
   HighsInt continuous_iteration_count = info.simplex_iteration_count;
-  HighsFloat continuous_objective = info.objective_function_value;
+  double continuous_objective = info.objective_function_value;
 
   // Get the integer solution to provide bound tightenings
   vector<HighsVarType> integrality;
@@ -36,9 +36,9 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   highs.run();
   if (dev_run) highs.setOptionValue("output_flag", true);
 
-  vector<HighsFloat> integer_solution = highs.getSolution().col_value;
-  vector<HighsFloat> local_col_lower;
-  vector<HighsFloat> local_col_upper;
+  vector<double> integer_solution = highs.getSolution().col_value;
+  vector<double> local_col_lower;
+  vector<double> local_col_upper;
 
   // Now restore the original integrality and set an explicit logical
   // basis to force reinversion
@@ -82,7 +82,7 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   if (dev_run) highs.setOptionValue("output_flag", true);
   highs.run();
   // highs.setOptionValue("output_flag", false);
-  HighsFloat semi_continuous_objective = info.objective_function_value;
+  double semi_continuous_objective = info.objective_function_value;
 
   // Now freeze the current basis and add the integer solution as upper bounds
   HighsInt frozen_basis_id2;
@@ -118,7 +118,7 @@ TEST_CASE("FreezeBasis", "[highs_test_freeze_basis]") {
   highs.run();
   // highs.setOptionValue("output_flag", false);
   REQUIRE(info.simplex_iteration_count == 0);
-  HighsFloat dl_objective =
+  double dl_objective =
       fabs(semi_continuous_objective - info.objective_function_value);
   REQUIRE(dl_objective < d0uble_equal_tolerance);
   REQUIRE(info.simplex_iteration_count == 0);

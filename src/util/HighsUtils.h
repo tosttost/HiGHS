@@ -25,10 +25,10 @@
 void highsSparseTranspose(HighsInt numRow, HighsInt numCol,
                           const std::vector<HighsInt>& Astart,
                           const std::vector<HighsInt>& Aindex,
-                          const std::vector<HighsFloat>& Avalue,
+                          const std::vector<double>& Avalue,
                           std::vector<HighsInt>& ARstart,
                           std::vector<HighsInt>& ARindex,
-                          std::vector<HighsFloat>& ARvalue);
+                          std::vector<double>& ARvalue);
 
 struct HighsIndexCollection {
   HighsInt dimension_ = -1;
@@ -48,9 +48,9 @@ struct HighsValueDistribution {
   HighsInt num_count_;
   HighsInt num_zero_;
   HighsInt num_one_;
-  HighsFloat min_value_;
-  HighsFloat max_value_;
-  std::vector<HighsFloat> limit_;
+  double min_value_;
+  double max_value_;
+  std::vector<double> limit_;
   std::vector<HighsInt> count_;
   HighsInt sum_count_;
 };
@@ -59,15 +59,15 @@ struct HighsScatterData {
   HighsInt max_num_point_;
   HighsInt num_point_;
   HighsInt last_point_;
-  std::vector<HighsFloat> value0_;
-  std::vector<HighsFloat> value1_;
+  std::vector<double> value0_;
+  std::vector<double> value1_;
   bool have_regression_coeff_;
-  HighsFloat linear_coeff0_;
-  HighsFloat linear_coeff1_;
-  HighsFloat linear_regression_error_;
-  HighsFloat log_coeff0_;
-  HighsFloat log_coeff1_;
-  HighsFloat log_regression_error_;
+  double linear_coeff0_;
+  double linear_coeff1_;
+  double linear_regression_error_;
+  double log_coeff0_;
+  double log_coeff1_;
+  double log_regression_error_;
   HighsInt num_error_comparison_;
   HighsInt num_awful_linear_;
   HighsInt num_awful_log_;
@@ -79,9 +79,9 @@ struct HighsScatterData {
   HighsInt num_better_log_;
 };
 
-const HighsFloat awful_regression_error = 2.0;
-const HighsFloat bad_regression_error = 0.2;
-const HighsFloat fair_regression_error = 0.02;
+const double awful_regression_error = 2.0;
+const double bad_regression_error = 0.2;
+const double fair_regression_error = 0.02;
 
 bool create(HighsIndexCollection& index_collection, const HighsInt from_col,
             const HighsInt to_col, const HighsInt dimension);
@@ -110,20 +110,20 @@ bool highsVarTypeUserDataNotNull(const HighsLogOptions& log_options,
                                  const std::string name);
 bool intUserDataNotNull(const HighsLogOptions& log_options,
                         const HighsInt* user_data, const std::string name);
-bool HighsFloatUserDataNotNull(const HighsLogOptions& log_options,
-                           const HighsFloat* user_data, const std::string name);
+bool doubleUserDataNotNull(const HighsLogOptions& log_options,
+                           const double* user_data, const std::string name);
 
-HighsFloat getNorm2(const std::vector<HighsFloat> values);
+double getNorm2(const std::vector<double> values);
 
 /**
- * @brief Logical check of HighsFloat being +Infinity
+ * @brief Logical check of double being +Infinity
  */
-bool highs_isInfinity(HighsFloat val  //!< Value being tested against +Infinity
+bool highs_isInfinity(double val  //!< Value being tested against +Infinity
 );
 /**
- * @brief Returns the relative difference of two HighsFloats
+ * @brief Returns the relative difference of two doubles
  */
-HighsFloat highsRelativeDifference(const HighsFloat v0, const HighsFloat v1);
+double highsRelativeDifference(const double v0, const double v1);
 
 /**
  * @brief Analyse the values of a vector, assessing how many are in
@@ -134,7 +134,7 @@ void analyseVectorValues(
     const HighsLogOptions& log_options,
     const char* message,             //!< Message to be printed
     HighsInt vecDim,                 //!< Dimension of vector
-    const std::vector<HighsFloat>& vec,  //!< Vector of values
+    const std::vector<double>& vec,  //!< Vector of values
     bool analyseValueList = false,   //!< Possibly analyse the distribution of
                                      //!< different values in the vector
     std::string model_name =
@@ -153,27 +153,27 @@ void analyseMatrixSparsity(
 
 bool initialiseValueDistribution(const std::string distribution_name,
                                  const std::string value_name,
-                                 const HighsFloat min_value_limit,
-                                 const HighsFloat max_value_limit,
-                                 const HighsFloat base_value_limit,
+                                 const double min_value_limit,
+                                 const double max_value_limit,
+                                 const double base_value_limit,
                                  HighsValueDistribution& value_distribution);
 
-bool updateValueDistribution(const HighsFloat value,
+bool updateValueDistribution(const double value,
                              HighsValueDistribution& value_distribution);
 
 HighsInt integerPercentage(const HighsInt of, const HighsInt in);
-HighsFloat HighsFloatPercentage(const HighsInt of, const HighsInt in);
+double doublePercentage(const HighsInt of, const HighsInt in);
 
 bool logValueDistribution(const HighsLogOptions& log_options,
                           const HighsValueDistribution& value_distribution,
                           const HighsInt mu = 0);
 bool initialiseScatterData(const HighsInt max_num_point,
                            HighsScatterData& scatter_data);
-bool updateScatterData(const HighsFloat value0, const HighsFloat value1,
+bool updateScatterData(const double value0, const double value1,
                        HighsScatterData& scatter_data);
 bool regressScatterData(HighsScatterData& scatter_data);
 bool predictFromScatterData(const HighsScatterData& scatter_data,
-                            const HighsFloat value0, HighsFloat& predicted_value1,
+                            const double value0, double& predicted_value1,
                             const bool log_regression = false);
 bool printScatterData(std::string name, const HighsScatterData& scatter_data);
 void printScatterDataRegressionComparison(std::string name,

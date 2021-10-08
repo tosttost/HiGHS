@@ -80,8 +80,8 @@ void appendNonbasicColsToBasis(HighsLp& lp, SimplexBasis& basis,
   // Make any new columns nonbasic
   for (HighsInt iCol = lp.num_col_; iCol < newNumCol; iCol++) {
     basis.nonbasicFlag_[iCol] = kNonbasicFlagTrue;
-    HighsFloat lower = lp.col_lower_[iCol];
-    HighsFloat upper = lp.col_upper_[iCol];
+    double lower = lp.col_lower_[iCol];
+    double upper = lp.col_upper_[iCol];
     HighsInt move = kIllegalMoveValue;
     if (lower == upper) {
       // Fixed
@@ -161,16 +161,16 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
                                 const SimplexBasis& basis,
                                 const HighsSimplexInfo& info,
                                 HighsInfo& highs_info) {
-  const HighsFloat primal_feasibility_tolerance =
+  const double primal_feasibility_tolerance =
       options.primal_feasibility_tolerance;
-  const HighsFloat dual_feasibility_tolerance = options.dual_feasibility_tolerance;
+  const double dual_feasibility_tolerance = options.dual_feasibility_tolerance;
 
   HighsInt& num_primal_infeasibilities = highs_info.num_primal_infeasibilities;
-  HighsFloat& max_primal_infeasibility = highs_info.max_primal_infeasibility;
-  HighsFloat& sum_primal_infeasibilities = highs_info.sum_primal_infeasibilities;
+  double& max_primal_infeasibility = highs_info.max_primal_infeasibility;
+  double& sum_primal_infeasibilities = highs_info.sum_primal_infeasibilities;
   HighsInt& num_dual_infeasibilities = highs_info.num_dual_infeasibilities;
-  HighsFloat& max_dual_infeasibility = highs_info.max_dual_infeasibility;
-  HighsFloat& sum_dual_infeasibilities = highs_info.sum_dual_infeasibilities;
+  double& max_dual_infeasibility = highs_info.max_dual_infeasibility;
+  double& sum_dual_infeasibilities = highs_info.sum_dual_infeasibilities;
 
   // Zero the counts of unscaled primal and dual infeasibilities
   num_primal_infeasibilities = 0;
@@ -180,7 +180,7 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
   max_dual_infeasibility = 0;
   sum_dual_infeasibilities = 0;
 
-  HighsFloat scale_mu = 1.0;
+  double scale_mu = 1.0;
   assert(int(scale.col.size()) == scale.num_col);
   assert(int(scale.row.size()) == scale.num_row);
   for (HighsInt iVar = 0; iVar < scale.num_col + scale.num_row; iVar++) {
@@ -200,12 +200,12 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
       assert(int(scale.row.size()) > iRow);
       scale_mu = scale.row[iRow] * scale.cost;
     }
-    const HighsFloat dual = info.workDual_[iVar];
-    const HighsFloat lower = info.workLower_[iVar];
-    const HighsFloat upper = info.workUpper_[iVar];
-    const HighsFloat unscaled_dual = dual * scale_mu;
+    const double dual = info.workDual_[iVar];
+    const double lower = info.workLower_[iVar];
+    const double upper = info.workUpper_[iVar];
+    const double unscaled_dual = dual * scale_mu;
 
-    HighsFloat dual_infeasibility;
+    double dual_infeasibility;
     if (highs_isInfinity(-lower) && highs_isInfinity(upper)) {
       // Free: any nonzero dual value is infeasible
       dual_infeasibility = fabs(unscaled_dual);
@@ -235,11 +235,11 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
       iRow = iVar - scale.num_col;
       scale_mu = 1 / scale.row[iRow];
     }
-    HighsFloat unscaled_lower = info.baseLower_[ix] * scale_mu;
-    HighsFloat unscaled_value = info.baseValue_[ix] * scale_mu;
-    HighsFloat unscaled_upper = info.baseUpper_[ix] * scale_mu;
+    double unscaled_lower = info.baseLower_[ix] * scale_mu;
+    double unscaled_value = info.baseValue_[ix] * scale_mu;
+    double unscaled_upper = info.baseUpper_[ix] * scale_mu;
     // @primal_infeasibility calculation
-    HighsFloat primal_infeasibility = 0;
+    double primal_infeasibility = 0;
     if (unscaled_value < unscaled_lower - primal_feasibility_tolerance) {
       primal_infeasibility = unscaled_lower - unscaled_value;
     } else if (unscaled_value > unscaled_upper + primal_feasibility_tolerance) {
@@ -274,10 +274,10 @@ void setSolutionStatus(HighsInfo& highs_info) {
 // SCALING
 
 void scaleSimplexCost(const HighsOptions& options, HighsLp& lp,
-                      HighsFloat& cost_scale) {
+                      double& cost_scale) {
   // Scale the costs by no less than minAlwCostScale
-  HighsFloat max_allowed_cost_scale = pow(2.0, options.allowed_cost_scale_factor);
-  HighsFloat max_nonzero_cost = 0;
+  double max_allowed_cost_scale = pow(2.0, options.allowed_cost_scale_factor);
+  double max_nonzero_cost = 0;
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
     if (lp.col_cost_[iCol]) {
       max_nonzero_cost = max(fabs(lp.col_cost_[iCol]), max_nonzero_cost);
@@ -289,7 +289,7 @@ void scaleSimplexCost(const HighsOptions& options, HighsLp& lp,
   // Scaling the costs down effectively decreases the dual tolerance
   // to which the problem is solved - so this can't be done too much
   cost_scale = 1;
-  const HighsFloat ln2 = log(2.0);
+  const double ln2 = log(2.0);
   // Scale if the max cost is positive and outside the range [1/16, 16]
   if ((max_nonzero_cost > 0) &&
       ((max_nonzero_cost < (1.0 / 16)) || (max_nonzero_cost > 16))) {
@@ -314,7 +314,7 @@ void scaleSimplexCost(const HighsOptions& options, HighsLp& lp,
                max_nonzero_cost);
 }
 
-void unscaleSimplexCost(HighsLp& lp, HighsFloat cost_scale) {
+void unscaleSimplexCost(HighsLp& lp, double cost_scale) {
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++)
     lp.col_cost_[iCol] *= cost_scale;
 }

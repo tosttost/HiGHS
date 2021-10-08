@@ -8,11 +8,11 @@
 const bool dev_run = false;
 
 bool GetBasisSolvesSolutionNzOk(HighsInt numRow,
-                                const vector<HighsFloat>& pass_solution_vector,
+                                const vector<double>& pass_solution_vector,
                                 HighsInt* solution_num_nz,
                                 vector<HighsInt>& solution_indices) {
   if (solution_num_nz == NULL) return true;
-  vector<HighsFloat> solution_vector;
+  vector<double> solution_vector;
   solution_vector.resize(numRow);
   bool solution_nz_ok = true;
   for (HighsInt row = 0; row < numRow; row++)
@@ -44,16 +44,16 @@ bool GetBasisSolvesSolutionNzOk(HighsInt numRow,
   return solution_nz_ok;
 }
 
-HighsFloat GetBasisSolvesCheckSolution(const HighsLp& lp,
+double GetBasisSolvesCheckSolution(const HighsLp& lp,
                                    const vector<HighsInt>& basic_variables,
-                                   const vector<HighsFloat>& rhs,
-                                   const vector<HighsFloat>& solution,
+                                   const vector<double>& rhs,
+                                   const vector<double>& solution,
                                    const bool transpose = false) {
-  const HighsFloat residual_tolerance = 1e-8;
-  HighsFloat residual_norm = 0;
+  const double residual_tolerance = 1e-8;
+  double residual_norm = 0;
   if (transpose) {
     for (HighsInt k = 0; k < lp.num_row_; k++) {
-      HighsFloat residual = 0;
+      double residual = 0;
       HighsInt var = basic_variables[k];
       if (var < 0) {
         HighsInt row = -(1 + var);
@@ -80,7 +80,7 @@ HighsFloat GetBasisSolvesCheckSolution(const HighsLp& lp,
       residual_norm += residual;
     }
   } else {
-    vector<HighsFloat> basis_matrix_times_solution;
+    vector<double> basis_matrix_times_solution;
     basis_matrix_times_solution.assign(lp.num_row_, 0);
     for (HighsInt k = 0; k < lp.num_row_; k++) {
       HighsInt var = basic_variables[k];
@@ -98,7 +98,7 @@ HighsFloat GetBasisSolvesCheckSolution(const HighsLp& lp,
       }
     }
     for (HighsInt k = 0; k < lp.num_row_; k++) {
-      HighsFloat residual = fabs(rhs[k] - basis_matrix_times_solution[k]);
+      double residual = fabs(rhs[k] - basis_matrix_times_solution[k]);
       if (residual > residual_tolerance) {
         if (dev_run)
           printf("|[B^Tx-b]_{%2" HIGHSINT_FORMAT "}| = %11.4g\n", k, residual);
@@ -110,7 +110,7 @@ HighsFloat GetBasisSolvesCheckSolution(const HighsLp& lp,
 }
 
 void GetBasisSolvesFormRHS(HighsLp& lp, vector<HighsInt>& basic_variables,
-                           vector<HighsFloat>& solution, vector<HighsFloat>& rhs,
+                           vector<double>& solution, vector<double>& rhs,
                            const bool transpose = false) {
   if (transpose) {
     for (HighsInt k = 0; k < lp.num_row_; k++) {
@@ -151,7 +151,7 @@ void testBasisSolve(Highs& highs) {
   HighsStatus highs_status;
 
   vector<HighsInt> basic_variables, solution_row_indices, solution_col_indices;
-  vector<HighsFloat> rhs, known_solution, solution_row, solution_col;
+  vector<double> rhs, known_solution, solution_row, solution_col;
 
   HighsLp lp = highs.getLp();
   HighsInt numRow = lp.num_row_;
@@ -169,9 +169,9 @@ void testBasisSolve(Highs& highs) {
   HighsInt check_row = 0;
   HighsInt check_col = 0;
 
-  HighsFloat residual_norm;
-  const HighsFloat residual_norm_tolerance = 1e-8;
-  const HighsFloat solution_error_tolerance = 1e-8;
+  double residual_norm;
+  const double residual_norm_tolerance = 1e-8;
+  const double solution_error_tolerance = 1e-8;
   HighsRandom random;
 
   HighsInt basic_col;
@@ -209,9 +209,9 @@ void testBasisSolve(Highs& highs) {
   residual_norm = GetBasisSolvesCheckSolution(lp, basic_variables, rhs,
                                               solution_col, transpose);
   REQUIRE(fabs(residual_norm) < residual_norm_tolerance);
-  HighsFloat solution_error_norm = 0;
+  double solution_error_norm = 0;
   for (HighsInt ix = 0; ix < numRow; ix++) {
-    HighsFloat solution_error = fabs(known_solution[ix] - solution_col[ix]);
+    double solution_error = fabs(known_solution[ix] - solution_col[ix]);
     if (solution_error > solution_error_tolerance) {
       if (dev_run)
         printf("Row %2" HIGHSINT_FORMAT ": |x-x^|_i = %11.4g\n", ix,
@@ -226,7 +226,7 @@ void testBasisSolve(Highs& highs) {
         "(Known solution)\n",
         residual_norm, solution_error_norm);
 
-  HighsFloat max_residual_norm;
+  double max_residual_norm;
   HighsInt max_k = min(numRow, HighsInt{9});
   HighsInt k;
 
@@ -448,7 +448,7 @@ TEST_CASE("Basis-solves", "[highs_basis_solves]") {
   if (!dev_run) highs.setOptionValue("output_flag", false);
 
   vector<HighsInt> basic_variables;
-  vector<HighsFloat> rhs, solution_row, solution_col;
+  vector<double> rhs, solution_row, solution_col;
   basic_variables.resize(1);
   rhs.resize(1);
   solution_row.resize(1);

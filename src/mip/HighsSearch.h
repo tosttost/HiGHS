@@ -41,9 +41,9 @@ class HighsSearch {
   int64_t lpiterations;
   int64_t heurlpiterations;
   int64_t sblpiterations;
-  HighsFloat upper_limit;
+  double upper_limit;
   std::vector<HighsInt> inds;
-  std::vector<HighsFloat> vals;
+  std::vector<double> vals;
   HighsInt depthoffset;
   bool inbranching;
   bool inheuristic;
@@ -75,15 +75,15 @@ class HighsSearch {
   HighsCD0uble treeweight;
 
   struct NodeData {
-    HighsFloat lower_bound;
-    HighsFloat estimate;
-    HighsFloat branching_point;
+    double lower_bound;
+    double estimate;
+    double branching_point;
     // we store the lp objective separately to the lower bound since the lower
     // bound could be above the LP objective when cuts age out or below when the
     // LP is unscaled dual infeasible and it is not set. We still want to use
     // the objective for pseudocost updates and tiebreaking of best bound node
     // selection
-    HighsFloat lp_objective;
+    double lp_objective;
     std::shared_ptr<const HighsBasis> nodeBasis;
     std::shared_ptr<const StabilizerOrbits> stabilizerOrbits;
     HighsDomainChange branchingdecision;
@@ -91,7 +91,7 @@ class HighsSearch {
     uint8_t skipDepthCount;
     uint8_t opensubtrees;
 
-    NodeData(HighsFloat parentlb = -kHighsInf, HighsFloat parentestimate = -kHighsInf,
+    NodeData(double parentlb = -kHighsInf, double parentestimate = -kHighsInf,
              std::shared_ptr<const HighsBasis> parentBasis = nullptr,
              std::shared_ptr<const StabilizerOrbits> stabilizerOrbits = nullptr)
         : lower_bound(parentlb),
@@ -105,7 +105,7 @@ class HighsSearch {
           opensubtrees(2) {}
   };
 
-  std::vector<HighsFloat> subrootsol;
+  std::vector<double> subrootsol;
   std::vector<NodeData> nodestack;
   HighsHashTable<HighsInt, int> reliableatnode;
 
@@ -129,24 +129,24 @@ class HighsSearch {
  public:
   HighsSearch(HighsMipSolver& mipsolver, const HighsPseudocost& pseudocost);
 
-  void setRINSNeighbourhood(const std::vector<HighsFloat>& basesol,
-                            const std::vector<HighsFloat>& relaxsol);
+  void setRINSNeighbourhood(const std::vector<double>& basesol,
+                            const std::vector<double>& relaxsol);
 
-  void setRENSNeighbourhood(const std::vector<HighsFloat>& lpsol);
+  void setRENSNeighbourhood(const std::vector<double>& lpsol);
 
-  HighsFloat getCutoffBound() const;
+  double getCutoffBound() const;
 
   void setLpRelaxation(HighsLpRelaxation* lp) { this->lp = lp; }
 
-  HighsFloat checkSol(const std::vector<HighsFloat>& sol, bool& integerfeasible) const;
+  double checkSol(const std::vector<double>& sol, bool& integerfeasible) const;
 
   void createNewNode();
 
   void cutoffNode();
 
-  void branchDownwards(HighsInt col, HighsFloat newub, HighsFloat branchpoint);
+  void branchDownwards(HighsInt col, double newub, double branchpoint);
 
-  void branchUpwards(HighsInt col, HighsFloat newlb, HighsFloat branchpoint);
+  void branchUpwards(HighsInt col, double newlb, double branchpoint);
 
   void setMinReliable(HighsInt minreliable);
 
@@ -171,9 +171,9 @@ class HighsSearch {
 
   bool currentNodePruned() const { return nodestack.back().opensubtrees == 0; }
 
-  HighsFloat getCurrentEstimate() const { return nodestack.back().estimate; }
+  double getCurrentEstimate() const { return nodestack.back().estimate; }
 
-  HighsFloat getCurrentLowerBound() const { return nodestack.back().lower_bound; }
+  double getCurrentLowerBound() const { return nodestack.back().lower_bound; }
 
   HighsInt getCurrentDepth() const { return nodestack.size() + depthoffset; }
 

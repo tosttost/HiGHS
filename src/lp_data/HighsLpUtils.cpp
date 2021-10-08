@@ -111,7 +111,7 @@ HighsStatus assessLp(HighsLp& lp, const HighsOptions& options) {
 
 HighsStatus assessCosts(const HighsOptions& options, const HighsInt ml_col_os,
                         const HighsIndexCollection& index_collection,
-                        vector<HighsFloat>& cost, const HighsFloat infinite_cost) {
+                        vector<double>& cost, const double infinite_cost) {
   HighsStatus return_status = HighsStatus::kOk;
   assert(ok(index_collection));
   HighsInt from_k;
@@ -159,7 +159,7 @@ HighsStatus assessCosts(const HighsOptions& options, const HighsInt ml_col_os,
     ml_col = ml_col_os + local_col;
     if (index_collection.is_mask_ && !index_collection.mask_[local_col])
       continue;
-    HighsFloat abs_cost = fabs(cost[usr_col]);
+    double abs_cost = fabs(cost[usr_col]);
     bool legal_cost = abs_cost < infinite_cost;
     if (!legal_cost) {
       error_found = !kHighsAllowInfiniteCosts;
@@ -181,8 +181,8 @@ HighsStatus assessCosts(const HighsOptions& options, const HighsInt ml_col_os,
 HighsStatus assessBounds(const HighsOptions& options, const char* type,
                          const HighsInt ml_ix_os,
                          const HighsIndexCollection& index_collection,
-                         vector<HighsFloat>& lower, vector<HighsFloat>& upper,
-                         const HighsFloat infinite_bound) {
+                         vector<double>& lower, vector<double>& upper,
+                         const double infinite_bound) {
   HighsStatus return_status = HighsStatus::kOk;
   assert(ok(index_collection));
   HighsInt from_k;
@@ -304,10 +304,10 @@ HighsStatus assessBounds(const HighsOptions& options, const char* type,
 }
 
 HighsStatus cleanBounds(const HighsOptions& options, HighsLp& lp) {
-  HighsFloat max_residual = 0;
+  double max_residual = 0;
   HighsInt num_change = 0;
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
-    HighsFloat residual = lp.col_lower_[iCol] - lp.col_upper_[iCol];
+    double residual = lp.col_lower_[iCol] - lp.col_upper_[iCol];
     if (residual > options.primal_feasibility_tolerance) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Column %" HIGHSINT_FORMAT
@@ -318,13 +318,13 @@ HighsStatus cleanBounds(const HighsOptions& options, HighsLp& lp) {
     } else if (residual > 0) {
       num_change++;
       max_residual = std::max(residual, max_residual);
-      HighsFloat mid = 0.5 * (lp.col_lower_[iCol] + lp.col_upper_[iCol]);
+      double mid = 0.5 * (lp.col_lower_[iCol] + lp.col_upper_[iCol]);
       lp.col_lower_[iCol] = mid;
       lp.col_upper_[iCol] = mid;
     }
   }
   for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++) {
-    HighsFloat residual = lp.row_lower_[iRow] - lp.row_upper_[iRow];
+    double residual = lp.row_lower_[iRow] - lp.row_upper_[iRow];
     if (residual > options.primal_feasibility_tolerance) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Row %" HIGHSINT_FORMAT
@@ -335,7 +335,7 @@ HighsStatus cleanBounds(const HighsOptions& options, HighsLp& lp) {
     } else if (residual > 0) {
       num_change++;
       max_residual = std::max(residual, max_residual);
-      HighsFloat mid = 0.5 * (lp.row_lower_[iRow] + lp.row_upper_[iRow]);
+      double mid = 0.5 * (lp.row_lower_[iRow] + lp.row_upper_[iRow]);
       lp.row_lower_[iRow] = mid;
       lp.row_upper_[iRow] = mid;
     }
@@ -391,11 +391,11 @@ void scaleLp(const HighsOptions& options, HighsLp& lp) {
   HighsInt numRow = lp.num_row_;
   // Scaling not well defined for models with no columns
   assert(numCol > 0);
-  vector<HighsFloat>& colCost = lp.col_cost_;
-  vector<HighsFloat>& colLower = lp.col_lower_;
-  vector<HighsFloat>& colUpper = lp.col_upper_;
-  vector<HighsFloat>& rowLower = lp.row_lower_;
-  vector<HighsFloat>& rowUpper = lp.row_upper_;
+  vector<double>& colCost = lp.col_cost_;
+  vector<double>& colLower = lp.col_lower_;
+  vector<double>& colUpper = lp.col_upper_;
+  vector<double>& rowLower = lp.row_lower_;
+  vector<double>& rowUpper = lp.row_upper_;
 
   // Save the simplex_scale_strategy so that the option can be
   // modified for the course of this method
@@ -410,10 +410,10 @@ void scaleLp(const HighsOptions& options, HighsLp& lp) {
   bool allow_cost_scaling = options.allowed_cost_scale_factor > 0;
   // Find out range of matrix values and skip matrix scaling if all
   // |values| are in [0.2, 5]
-  const HighsFloat no_scaling_original_matrix_min_value = 0.2;
-  const HighsFloat no_scaling_original_matrix_max_value = 5.0;
-  HighsFloat original_matrix_min_value = kHighsInf;
-  HighsFloat original_matrix_max_value = 0;
+  const double no_scaling_original_matrix_min_value = 0.2;
+  const double no_scaling_original_matrix_max_value = 5.0;
+  double original_matrix_min_value = kHighsInf;
+  double original_matrix_max_value = 0;
   lp.a_matrix_.range(original_matrix_min_value, original_matrix_max_value);
   bool no_scaling =
       (original_matrix_min_value >= no_scaling_original_matrix_min_value) &&
@@ -487,25 +487,25 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
   HighsInt numCol = lp.num_col_;
   HighsInt numRow = lp.num_row_;
   HighsScale& scale = lp.scale_;
-  vector<HighsFloat>& colScale = scale.col;
-  vector<HighsFloat>& rowScale = scale.row;
+  vector<double>& colScale = scale.col;
+  vector<double>& rowScale = scale.row;
   vector<HighsInt>& Astart = lp.a_matrix_.start_;
   vector<HighsInt>& Aindex = lp.a_matrix_.index_;
-  vector<HighsFloat>& Avalue = lp.a_matrix_.value_;
-  vector<HighsFloat>& colCost = lp.col_cost_;
+  vector<double>& Avalue = lp.a_matrix_.value_;
+  vector<double>& colCost = lp.col_cost_;
 
   HighsInt simplex_scale_strategy = use_scale_strategy;
 
-  HighsFloat original_matrix_min_value = kHighsInf;
-  HighsFloat original_matrix_max_value = 0;
+  double original_matrix_min_value = kHighsInf;
+  double original_matrix_max_value = 0;
   for (HighsInt k = 0, AnX = Astart[numCol]; k < AnX; k++) {
-    HighsFloat value = fabs(Avalue[k]);
+    double value = fabs(Avalue[k]);
     original_matrix_min_value = min(original_matrix_min_value, value);
     original_matrix_max_value = max(original_matrix_max_value, value);
   }
 
   // Include cost in scaling if minimum nonzero cost is less than 0.1
-  HighsFloat min_nonzero_cost = kHighsInf;
+  double min_nonzero_cost = kHighsInf;
   for (HighsInt i = 0; i < numCol; i++) {
     if (colCost[i]) min_nonzero_cost = min(fabs(colCost[i]), min_nonzero_cost);
   }
@@ -513,54 +513,54 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
   include_cost_in_scaling = min_nonzero_cost < 0.1;
 
   // Limits on scaling factors
-  HighsFloat max_allow_scale;
-  HighsFloat min_allow_scale;
+  double max_allow_scale;
+  double min_allow_scale;
   // Now that kHighsInf =
-  // std::numeric_limits<HighsFloat>::infinity(), this Qi-trick doesn't
+  // std::numeric_limits<double>::infinity(), this Qi-trick doesn't
   // work so, in recognition, use the old value of kHighsInf
-  const HighsFloat finite_infinity = 1e200;
+  const double finite_infinity = 1e200;
   max_allow_scale = pow(2.0, options.allowed_matrix_scale_factor);
   min_allow_scale = 1 / max_allow_scale;
 
-  HighsFloat min_allow_col_scale = min_allow_scale;
-  HighsFloat max_allow_col_scale = max_allow_scale;
-  HighsFloat min_allow_row_scale = min_allow_scale;
-  HighsFloat max_allow_row_scale = max_allow_scale;
+  double min_allow_col_scale = min_allow_scale;
+  double max_allow_col_scale = max_allow_scale;
+  double min_allow_row_scale = min_allow_scale;
+  double max_allow_row_scale = max_allow_scale;
 
   // Search up to 6 times
-  vector<HighsFloat> row_min_value(numRow, finite_infinity);
-  vector<HighsFloat> row_max_value(numRow, 1 / finite_infinity);
+  vector<double> row_min_value(numRow, finite_infinity);
+  vector<double> row_max_value(numRow, 1 / finite_infinity);
   for (HighsInt search_count = 0; search_count < 6; search_count++) {
     // Find column scale, prepare row data
     for (HighsInt iCol = 0; iCol < numCol; iCol++) {
       // For column scale (find)
-      HighsFloat col_min_value = finite_infinity;
-      HighsFloat col_max_value = 1 / finite_infinity;
-      HighsFloat abs_col_cost = fabs(colCost[iCol]);
+      double col_min_value = finite_infinity;
+      double col_max_value = 1 / finite_infinity;
+      double abs_col_cost = fabs(colCost[iCol]);
       if (include_cost_in_scaling && abs_col_cost != 0) {
         col_min_value = min(col_min_value, abs_col_cost);
         col_max_value = max(col_max_value, abs_col_cost);
       }
       for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
-        HighsFloat value = fabs(Avalue[k]) * rowScale[Aindex[k]];
+        double value = fabs(Avalue[k]) * rowScale[Aindex[k]];
         col_min_value = min(col_min_value, value);
         col_max_value = max(col_max_value, value);
       }
-      HighsFloat col_equilibration = 1 / sqrt(col_min_value * col_max_value);
+      double col_equilibration = 1 / sqrt(col_min_value * col_max_value);
       // Ensure that column scale factor is not excessively large or small
       colScale[iCol] =
           min(max(min_allow_col_scale, col_equilibration), max_allow_col_scale);
       // For row scale (only collect)
       for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
         HighsInt iRow = Aindex[k];
-        HighsFloat value = fabs(Avalue[k]) * colScale[iCol];
+        double value = fabs(Avalue[k]) * colScale[iCol];
         row_min_value[iRow] = min(row_min_value[iRow], value);
         row_max_value[iRow] = max(row_max_value[iRow], value);
       }
     }
     // For row scale (find)
     for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-      HighsFloat row_equilibration =
+      double row_equilibration =
           1 / sqrt(row_min_value[iRow] * row_max_value[iRow]);
       // Ensure that row scale factor is not excessively large or small
       rowScale[iRow] =
@@ -571,11 +571,11 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
   }
   // Make it numerically better
   // Also determine the max and min row and column scaling factors
-  HighsFloat min_col_scale = finite_infinity;
-  HighsFloat max_col_scale = 1 / finite_infinity;
-  HighsFloat min_row_scale = finite_infinity;
-  HighsFloat max_row_scale = 1 / finite_infinity;
-  const HighsFloat log2 = log(2.0);
+  double min_col_scale = finite_infinity;
+  double max_col_scale = 1 / finite_infinity;
+  double min_row_scale = finite_infinity;
+  double max_row_scale = 1 / finite_infinity;
+  const double log2 = log(2.0);
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
     colScale[iCol] = pow(2.0, floor(log(colScale[iCol]) / log2 + 0.5));
     min_col_scale = min(colScale[iCol], min_col_scale);
@@ -587,32 +587,32 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
     max_row_scale = max(rowScale[iRow], max_row_scale);
   }
   // Apply scaling to matrix and bounds
-  HighsFloat matrix_min_value = finite_infinity;
-  HighsFloat matrix_max_value = 0;
-  HighsFloat min_original_col_equilibration = finite_infinity;
-  HighsFloat sum_original_log_col_equilibration = 0;
-  HighsFloat max_original_col_equilibration = 0;
-  HighsFloat min_original_row_equilibration = finite_infinity;
-  HighsFloat sum_original_log_row_equilibration = 0;
-  HighsFloat max_original_row_equilibration = 0;
-  HighsFloat min_col_equilibration = finite_infinity;
-  HighsFloat sum_log_col_equilibration = 0;
-  HighsFloat max_col_equilibration = 0;
-  HighsFloat min_row_equilibration = finite_infinity;
-  HighsFloat sum_log_row_equilibration = 0;
-  HighsFloat max_row_equilibration = 0;
-  vector<HighsFloat> original_row_min_value(numRow, finite_infinity);
-  vector<HighsFloat> original_row_max_value(numRow, 1 / finite_infinity);
+  double matrix_min_value = finite_infinity;
+  double matrix_max_value = 0;
+  double min_original_col_equilibration = finite_infinity;
+  double sum_original_log_col_equilibration = 0;
+  double max_original_col_equilibration = 0;
+  double min_original_row_equilibration = finite_infinity;
+  double sum_original_log_row_equilibration = 0;
+  double max_original_row_equilibration = 0;
+  double min_col_equilibration = finite_infinity;
+  double sum_log_col_equilibration = 0;
+  double max_col_equilibration = 0;
+  double min_row_equilibration = finite_infinity;
+  double sum_log_row_equilibration = 0;
+  double max_row_equilibration = 0;
+  vector<double> original_row_min_value(numRow, finite_infinity);
+  vector<double> original_row_max_value(numRow, 1 / finite_infinity);
   row_min_value.assign(numRow, finite_infinity);
   row_max_value.assign(numRow, 1 / finite_infinity);
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
-    HighsFloat original_col_min_value = finite_infinity;
-    HighsFloat original_col_max_value = 1 / finite_infinity;
-    HighsFloat col_min_value = finite_infinity;
-    HighsFloat col_max_value = 1 / finite_infinity;
+    double original_col_min_value = finite_infinity;
+    double original_col_max_value = 1 / finite_infinity;
+    double col_min_value = finite_infinity;
+    double col_max_value = 1 / finite_infinity;
     for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
       HighsInt iRow = Aindex[k];
-      const HighsFloat original_value = fabs(Avalue[k]);
+      const double original_value = fabs(Avalue[k]);
       original_col_min_value = min(original_value, original_col_min_value);
       original_col_max_value = max(original_value, original_col_max_value);
       original_row_min_value[iRow] =
@@ -620,7 +620,7 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
       original_row_max_value[iRow] =
           max(original_row_max_value[iRow], original_value);
       Avalue[k] *= (colScale[iCol] * rowScale[iRow]);
-      const HighsFloat value = fabs(Avalue[k]);
+      const double value = fabs(Avalue[k]);
       col_min_value = min(value, col_min_value);
       col_max_value = max(value, col_max_value);
       row_min_value[iRow] = min(row_min_value[iRow], value);
@@ -629,40 +629,40 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
     matrix_min_value = min(matrix_min_value, col_min_value);
     matrix_max_value = max(matrix_max_value, col_max_value);
 
-    const HighsFloat original_col_equilibration =
+    const double original_col_equilibration =
         1 / sqrt(original_col_min_value * original_col_max_value);
     min_original_col_equilibration =
         min(original_col_equilibration, min_original_col_equilibration);
     sum_original_log_col_equilibration += log(original_col_equilibration);
     max_original_col_equilibration =
         max(original_col_equilibration, max_original_col_equilibration);
-    const HighsFloat col_equilibration = 1 / sqrt(col_min_value * col_max_value);
+    const double col_equilibration = 1 / sqrt(col_min_value * col_max_value);
     min_col_equilibration = min(col_equilibration, min_col_equilibration);
     sum_log_col_equilibration += log(col_equilibration);
     max_col_equilibration = max(col_equilibration, max_col_equilibration);
   }
 
   for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-    const HighsFloat original_row_equilibration =
+    const double original_row_equilibration =
         1 / sqrt(original_row_min_value[iRow] * original_row_max_value[iRow]);
     min_original_row_equilibration =
         min(original_row_equilibration, min_original_row_equilibration);
     sum_original_log_row_equilibration += log(original_row_equilibration);
     max_original_row_equilibration =
         max(original_row_equilibration, max_original_row_equilibration);
-    const HighsFloat row_equilibration =
+    const double row_equilibration =
         1 / sqrt(row_min_value[iRow] * row_max_value[iRow]);
     min_row_equilibration = min(row_equilibration, min_row_equilibration);
     sum_log_row_equilibration += log(row_equilibration);
     max_row_equilibration = max(row_equilibration, max_row_equilibration);
   }
-  const HighsFloat geomean_original_col_equilibration =
+  const double geomean_original_col_equilibration =
       exp(sum_original_log_col_equilibration / numCol);
-  const HighsFloat geomean_original_row_equilibration =
+  const double geomean_original_row_equilibration =
       exp(sum_original_log_row_equilibration / numRow);
-  const HighsFloat geomean_col_equilibration =
+  const double geomean_col_equilibration =
       exp(sum_log_col_equilibration / numCol);
-  const HighsFloat geomean_row_equilibration =
+  const double geomean_row_equilibration =
       exp(sum_log_row_equilibration / numRow);
   if (options.highs_analysis_level) {
     highsLogDev(
@@ -682,33 +682,33 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
   }
 
   // Compute the mean equilibration improvement
-  const HighsFloat geomean_original_col =
+  const double geomean_original_col =
       max(geomean_original_col_equilibration,
           1 / geomean_original_col_equilibration);
-  const HighsFloat geomean_original_row =
+  const double geomean_original_row =
       max(geomean_original_row_equilibration,
           1 / geomean_original_row_equilibration);
-  const HighsFloat geomean_col =
+  const double geomean_col =
       max(geomean_col_equilibration, 1 / geomean_col_equilibration);
-  const HighsFloat geomean_row =
+  const double geomean_row =
       max(geomean_row_equilibration, 1 / geomean_row_equilibration);
-  const HighsFloat mean_equilibration_improvement =
+  const double mean_equilibration_improvement =
       (geomean_original_col * geomean_original_row) /
       (geomean_col * geomean_row);
   // Compute the extreme equilibration improvement
-  const HighsFloat original_col_ratio =
+  const double original_col_ratio =
       max_original_col_equilibration / min_original_col_equilibration;
-  const HighsFloat original_row_ratio =
+  const double original_row_ratio =
       max_original_row_equilibration / min_original_row_equilibration;
-  const HighsFloat col_ratio = max_col_equilibration / min_col_equilibration;
-  const HighsFloat row_ratio = max_row_equilibration / min_row_equilibration;
-  const HighsFloat extreme_equilibration_improvement =
+  const double col_ratio = max_col_equilibration / min_col_equilibration;
+  const double row_ratio = max_row_equilibration / min_row_equilibration;
+  const double extreme_equilibration_improvement =
       (original_col_ratio + original_row_ratio) / (col_ratio + row_ratio);
   // Compute the max/min matrix value improvement
-  const HighsFloat matrix_value_ratio = matrix_max_value / matrix_min_value;
-  const HighsFloat original_matrix_value_ratio =
+  const double matrix_value_ratio = matrix_max_value / matrix_min_value;
+  const double original_matrix_value_ratio =
       original_matrix_max_value / original_matrix_min_value;
-  const HighsFloat matrix_value_ratio_improvement =
+  const double matrix_value_ratio_improvement =
       original_matrix_value_ratio / matrix_value_ratio;
   if (options.highs_analysis_level) {
     highsLogDev(options.log_options, HighsLogType::kInfo,
@@ -742,11 +742,11 @@ bool equilibrationScaleMatrix(const HighsOptions& options, HighsLp& lp,
   }
   const bool possibly_abandon_scaling =
       simplex_scale_strategy != kSimplexScaleStrategyForcedEquilibration;
-  const HighsFloat improvement_factor = extreme_equilibration_improvement *
+  const double improvement_factor = extreme_equilibration_improvement *
                                     mean_equilibration_improvement *
                                     matrix_value_ratio_improvement;
 
-  const HighsFloat improvement_factor_required = 1.0;
+  const double improvement_factor_required = 1.0;
   const bool poor_improvement =
       improvement_factor < improvement_factor_required;
 
@@ -804,36 +804,36 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
   HighsInt numCol = lp.num_col_;
   HighsInt numRow = lp.num_row_;
   HighsScale& scale = lp.scale_;
-  vector<HighsFloat>& colScale = scale.col;
-  vector<HighsFloat>& rowScale = scale.row;
+  vector<double>& colScale = scale.col;
+  vector<double>& rowScale = scale.row;
   vector<HighsInt>& Astart = lp.a_matrix_.start_;
   vector<HighsInt>& Aindex = lp.a_matrix_.index_;
-  vector<HighsFloat>& Avalue = lp.a_matrix_.value_;
+  vector<double>& Avalue = lp.a_matrix_.value_;
 
   HighsInt simplex_scale_strategy = use_scale_strategy;
 
   assert(options.simplex_scale_strategy == kSimplexScaleStrategyMaxValue015 ||
          options.simplex_scale_strategy == kSimplexScaleStrategyMaxValue0157);
-  const HighsFloat log2 = log(2.0);
-  const HighsFloat max_allow_scale = pow(2.0, options.allowed_matrix_scale_factor);
-  const HighsFloat min_allow_scale = 1 / max_allow_scale;
+  const double log2 = log(2.0);
+  const double max_allow_scale = pow(2.0, options.allowed_matrix_scale_factor);
+  const double min_allow_scale = 1 / max_allow_scale;
 
-  const HighsFloat min_allow_col_scale = min_allow_scale;
-  const HighsFloat max_allow_col_scale = max_allow_scale;
-  const HighsFloat min_allow_row_scale = min_allow_scale;
-  const HighsFloat max_allow_row_scale = max_allow_scale;
+  const double min_allow_col_scale = min_allow_scale;
+  const double max_allow_col_scale = max_allow_scale;
+  const double min_allow_row_scale = min_allow_scale;
+  const double max_allow_row_scale = max_allow_scale;
 
-  HighsFloat min_row_scale = kHighsInf;
-  HighsFloat max_row_scale = 0;
-  HighsFloat original_matrix_min_value = kHighsInf;
-  HighsFloat original_matrix_max_value = 0;
+  double min_row_scale = kHighsInf;
+  double max_row_scale = 0;
+  double original_matrix_min_value = kHighsInf;
+  double original_matrix_max_value = 0;
   // Determine the row scaling. Also determine the max/min row scaling
   // factors, and max/min original matrix values
-  vector<HighsFloat> row_max_value(numRow, 0);
+  vector<double> row_max_value(numRow, 0);
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
     for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
       const HighsInt iRow = Aindex[k];
-      const HighsFloat value = fabs(Avalue[k]);
+      const double value = fabs(Avalue[k]);
       row_max_value[iRow] = max(row_max_value[iRow], value);
       original_matrix_min_value = min(original_matrix_min_value, value);
       original_matrix_max_value = max(original_matrix_max_value, value);
@@ -841,7 +841,7 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
   }
   for (HighsInt iRow = 0; iRow < numRow; iRow++) {
     if (row_max_value[iRow]) {
-      HighsFloat row_scale_value = 1 / row_max_value[iRow];
+      double row_scale_value = 1 / row_max_value[iRow];
       // Convert the row scale factor to the nearest power of two, and
       // ensure that it is not excessively large or small
       row_scale_value = pow(2.0, floor(log(row_scale_value) / log2 + 0.5));
@@ -855,20 +855,20 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
   // Determine the column scaling, whilst applying the row scaling
   // Also determine the max/min column scaling factors, and max/min
   // matrix values
-  HighsFloat min_col_scale = kHighsInf;
-  HighsFloat max_col_scale = 0;
-  HighsFloat matrix_min_value = kHighsInf;
-  HighsFloat matrix_max_value = 0;
+  double min_col_scale = kHighsInf;
+  double max_col_scale = 0;
+  double matrix_min_value = kHighsInf;
+  double matrix_max_value = 0;
   for (HighsInt iCol = 0; iCol < numCol; iCol++) {
-    HighsFloat col_max_value = 0;
+    double col_max_value = 0;
     for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
       const HighsInt iRow = Aindex[k];
       Avalue[k] *= rowScale[iRow];
-      const HighsFloat value = fabs(Avalue[k]);
+      const double value = fabs(Avalue[k]);
       col_max_value = max(col_max_value, value);
     }
     if (col_max_value) {
-      HighsFloat col_scale_value = 1 / col_max_value;
+      double col_scale_value = 1 / col_max_value;
       // Convert the col scale factor to the nearest power of two, and
       // ensure that it is not excessively large or small
       col_scale_value = pow(2.0, floor(log(col_scale_value) / log2 + 0.5));
@@ -879,21 +879,21 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
       colScale[iCol] = col_scale_value;
       for (HighsInt k = Astart[iCol]; k < Astart[iCol + 1]; k++) {
         Avalue[k] *= colScale[iCol];
-        const HighsFloat value = fabs(Avalue[k]);
+        const double value = fabs(Avalue[k]);
         matrix_min_value = min(matrix_min_value, value);
         matrix_max_value = max(matrix_max_value, value);
       }
     }
   }
-  const HighsFloat matrix_value_ratio = matrix_max_value / matrix_min_value;
-  const HighsFloat original_matrix_value_ratio =
+  const double matrix_value_ratio = matrix_max_value / matrix_min_value;
+  const double original_matrix_value_ratio =
       original_matrix_max_value / original_matrix_min_value;
-  const HighsFloat matrix_value_ratio_improvement =
+  const double matrix_value_ratio_improvement =
       original_matrix_value_ratio / matrix_value_ratio;
 
-  const HighsFloat improvement_factor = matrix_value_ratio_improvement;
+  const double improvement_factor = matrix_value_ratio_improvement;
 
-  const HighsFloat improvement_factor_required = 1.0;
+  const double improvement_factor_required = 1.0;
   const bool poor_improvement =
       improvement_factor < improvement_factor_required;
 
@@ -930,7 +930,7 @@ bool maxValueScaleMatrix(const HighsOptions& options, HighsLp& lp,
 }
 
 HighsStatus applyScalingToLpCol(HighsLp& lp, const HighsInt col,
-                                const HighsFloat colScale) {
+                                const double colScale) {
   if (col < 0) return HighsStatus::kError;
   if (col >= lp.num_col_) return HighsStatus::kError;
   if (!colScale) return HighsStatus::kError;
@@ -944,7 +944,7 @@ HighsStatus applyScalingToLpCol(HighsLp& lp, const HighsInt col,
     lp.col_lower_[col] /= colScale;
     lp.col_upper_[col] /= colScale;
   } else {
-    const HighsFloat new_upper = lp.col_lower_[col] / colScale;
+    const double new_upper = lp.col_lower_[col] / colScale;
     lp.col_lower_[col] = lp.col_upper_[col] / colScale;
     lp.col_upper_[col] = new_upper;
   }
@@ -952,7 +952,7 @@ HighsStatus applyScalingToLpCol(HighsLp& lp, const HighsInt col,
 }
 
 HighsStatus applyScalingToLpRow(HighsLp& lp, const HighsInt row,
-                                const HighsFloat rowScale) {
+                                const double rowScale) {
   if (row < 0) return HighsStatus::kError;
   if (row >= lp.num_row_) return HighsStatus::kError;
   if (!rowScale) return HighsStatus::kError;
@@ -968,7 +968,7 @@ HighsStatus applyScalingToLpRow(HighsLp& lp, const HighsInt row,
     lp.row_lower_[row] /= rowScale;
     lp.row_upper_[row] /= rowScale;
   } else {
-    const HighsFloat new_upper = lp.row_lower_[row] / rowScale;
+    const double new_upper = lp.row_lower_[row] / rowScale;
     lp.row_lower_[row] = lp.row_upper_[row] / rowScale;
     lp.row_upper_[row] = new_upper;
   }
@@ -976,9 +976,9 @@ HighsStatus applyScalingToLpRow(HighsLp& lp, const HighsInt row,
 }
 
 void appendColsToLpVectors(HighsLp& lp, const HighsInt num_new_col,
-                           const vector<HighsFloat>& colCost,
-                           const vector<HighsFloat>& colLower,
-                           const vector<HighsFloat>& colUpper) {
+                           const vector<double>& colCost,
+                           const vector<double>& colLower,
+                           const vector<double>& colUpper) {
   assert(num_new_col >= 0);
   if (num_new_col == 0) return;
   HighsInt new_num_col = lp.num_col_ + num_new_col;
@@ -998,8 +998,8 @@ void appendColsToLpVectors(HighsLp& lp, const HighsInt num_new_col,
 }
 
 void appendRowsToLpVectors(HighsLp& lp, const HighsInt num_new_row,
-                           const vector<HighsFloat>& rowLower,
-                           const vector<HighsFloat>& rowUpper) {
+                           const vector<double>& rowLower,
+                           const vector<double>& rowUpper) {
   assert(num_new_row >= 0);
   if (num_new_row == 0) return;
   HighsInt new_num_row = lp.num_row_ + num_new_row;
@@ -1116,7 +1116,7 @@ void deleteRowsFromLpVectors(HighsLp& lp, HighsInt& new_num_row,
   if (have_names) lp.row_names_.resize(new_num_row);
 }
 
-void deleteScale(vector<HighsFloat>& scale,
+void deleteScale(vector<double>& scale,
                  const HighsIndexCollection& index_collection) {
   HighsStatus return_status = HighsStatus::kOk;
   assert(ok(index_collection));
@@ -1150,7 +1150,7 @@ void deleteScale(vector<HighsFloat>& scale,
 }
 
 void changeLpMatrixCoefficient(HighsLp& lp, const HighsInt row,
-                               const HighsInt col, const HighsFloat new_value) {
+                               const HighsInt col, const double new_value) {
   assert(0 <= row && row < lp.num_row_);
   assert(0 <= col && col < lp.num_col_);
   HighsInt changeElement = -1;
@@ -1215,7 +1215,7 @@ void changeLpIntegrality(HighsLp& lp,
 }
 
 void changeLpCosts(HighsLp& lp, const HighsIndexCollection& index_collection,
-                   const vector<HighsFloat>& new_col_cost) {
+                   const vector<double>& new_col_cost) {
   assert(ok(index_collection));
   HighsInt from_k;
   HighsInt to_k;
@@ -1249,24 +1249,24 @@ void changeLpCosts(HighsLp& lp, const HighsIndexCollection& index_collection,
 
 void changeLpColBounds(HighsLp& lp,
                        const HighsIndexCollection& index_collection,
-                       const vector<HighsFloat>& new_col_lower,
-                       const vector<HighsFloat>& new_col_upper) {
+                       const vector<double>& new_col_lower,
+                       const vector<double>& new_col_upper) {
   changeBounds(lp.col_lower_, lp.col_upper_, index_collection, new_col_lower,
                new_col_upper);
 }
 
 void changeLpRowBounds(HighsLp& lp,
                        const HighsIndexCollection& index_collection,
-                       const vector<HighsFloat>& new_row_lower,
-                       const vector<HighsFloat>& new_row_upper) {
+                       const vector<double>& new_row_lower,
+                       const vector<double>& new_row_upper) {
   changeBounds(lp.row_lower_, lp.row_upper_, index_collection, new_row_lower,
                new_row_upper);
 }
 
-void changeBounds(vector<HighsFloat>& lower, vector<HighsFloat>& upper,
+void changeBounds(vector<double>& lower, vector<double>& upper,
                   const HighsIndexCollection& index_collection,
-                  const vector<HighsFloat>& new_lower,
-                  const vector<HighsFloat>& new_upper) {
+                  const vector<double>& new_lower,
+                  const vector<double>& new_upper) {
   assert(ok(index_collection));
   HighsInt from_k;
   HighsInt to_k;
@@ -1309,7 +1309,7 @@ HighsInt getNumInt(const HighsLp& lp) {
 }
 
 void getLpCosts(const HighsLp& lp, const HighsInt from_col,
-                const HighsInt to_col, HighsFloat* XcolCost) {
+                const HighsInt to_col, double* XcolCost) {
   assert(0 <= from_col && to_col < lp.num_col_);
   if (from_col > to_col) return;
   for (HighsInt col = from_col; col < to_col + 1; col++)
@@ -1317,8 +1317,8 @@ void getLpCosts(const HighsLp& lp, const HighsInt from_col,
 }
 
 void getLpColBounds(const HighsLp& lp, const HighsInt from_col,
-                    const HighsInt to_col, HighsFloat* XcolLower,
-                    HighsFloat* XcolUpper) {
+                    const HighsInt to_col, double* XcolLower,
+                    double* XcolUpper) {
   assert(0 <= from_col && to_col < lp.num_col_);
   if (from_col > to_col) return;
   for (HighsInt col = from_col; col < to_col + 1; col++) {
@@ -1328,8 +1328,8 @@ void getLpColBounds(const HighsLp& lp, const HighsInt from_col,
 }
 
 void getLpRowBounds(const HighsLp& lp, const HighsInt from_row,
-                    const HighsInt to_row, HighsFloat* XrowLower,
-                    HighsFloat* XrowUpper) {
+                    const HighsInt to_row, double* XrowLower,
+                    double* XrowUpper) {
   assert(0 <= to_row && from_row < lp.num_row_);
   if (from_row > to_row) return;
   for (HighsInt row = from_row; row < to_row + 1; row++) {
@@ -1340,7 +1340,7 @@ void getLpRowBounds(const HighsLp& lp, const HighsInt from_row,
 
 // Get a single coefficient from the matrix
 void getLpMatrixCoefficient(const HighsLp& lp, const HighsInt Xrow,
-                            const HighsInt Xcol, HighsFloat* val) {
+                            const HighsInt Xcol, double* val) {
   assert(0 <= Xrow && Xrow < lp.num_row_);
   assert(0 <= Xcol && Xcol < lp.num_col_);
 
@@ -1415,7 +1415,7 @@ void reportLpObjSense(const HighsLogOptions& log_options, const HighsLp& lp) {
                  lp.sense_);
 }
 
-std::string getBoundType(const HighsFloat lower, const HighsFloat upper) {
+std::string getBoundType(const double lower, const double upper) {
   std::string type;
   if (highs_isInfinity(-lower)) {
     if (highs_isInfinity(upper)) {
@@ -1533,7 +1533,7 @@ void reportLpColMatrix(const HighsLogOptions& log_options, const HighsLp& lp) {
 void reportMatrix(const HighsLogOptions& log_options, const std::string message,
                   const HighsInt num_col, const HighsInt num_nz,
                   const HighsInt* start, const HighsInt* index,
-                  const HighsFloat* value) {
+                  const double* value) {
   if (num_col <= 0) return;
   highsLogUser(log_options, HighsLogType::kInfo,
                "%-7s Index              Value\n", message.c_str());
@@ -1552,10 +1552,10 @@ void reportMatrix(const HighsLogOptions& log_options, const std::string message,
 }
 
 void analyseLp(const HighsLogOptions& log_options, const HighsLp& lp) {
-  vector<HighsFloat> min_colBound;
-  vector<HighsFloat> min_rowBound;
-  vector<HighsFloat> colRange;
-  vector<HighsFloat> rowRange;
+  vector<double> min_colBound;
+  vector<double> min_rowBound;
+  vector<double> colRange;
+  vector<double> rowRange;
   min_colBound.resize(lp.num_col_);
   min_rowBound.resize(lp.num_row_);
   colRange.resize(lp.num_col_);
@@ -1619,10 +1619,10 @@ void writeSolutionToFile(FILE* file, const HighsOptions& options,
   const bool have_value = solution.value_valid;
   const bool have_dual = solution.dual_valid;
   const bool have_basis = basis.valid;
-  vector<HighsFloat> use_col_value;
-  vector<HighsFloat> use_row_value;
-  vector<HighsFloat> use_col_dual;
-  vector<HighsFloat> use_row_dual;
+  vector<double> use_col_value;
+  vector<double> use_row_value;
+  vector<double> use_col_dual;
+  vector<double> use_row_dual;
   vector<HighsBasisStatus> use_col_status;
   vector<HighsBasisStatus> use_row_status;
   if (have_value) {
@@ -1649,7 +1649,7 @@ void writeSolutionToFile(FILE* file, const HighsOptions& options,
     HighsCD0uble solObj = lp.offset_;
     for (HighsInt i = 0; i < lp.num_col_; ++i)
       solObj += lp.col_cost_[i] * use_col_value[i];
-    writeModelSolution(file, options, HighsFloat(solObj), lp.num_col_,
+    writeModelSolution(file, options, double(solObj), lp.num_col_,
                        lp.col_names_, use_col_value, lp.integrality_);
   } else {
     fprintf(file,
@@ -1844,29 +1844,29 @@ bool isBoundInfeasible(const HighsLogOptions& log_options, const HighsLp& lp) {
 }
 
 bool isColDataNull(const HighsLogOptions& log_options,
-                   const HighsFloat* usr_col_cost, const HighsFloat* usr_col_lower,
-                   const HighsFloat* usr_col_upper) {
+                   const double* usr_col_cost, const double* usr_col_lower,
+                   const double* usr_col_upper) {
   bool null_data = false;
   null_data =
-      HighsFloatUserDataNotNull(log_options, usr_col_cost, "column costs") ||
+      doubleUserDataNotNull(log_options, usr_col_cost, "column costs") ||
       null_data;
-  null_data = HighsFloatUserDataNotNull(log_options, usr_col_lower,
+  null_data = doubleUserDataNotNull(log_options, usr_col_lower,
                                     "column lower bounds") ||
               null_data;
-  null_data = HighsFloatUserDataNotNull(log_options, usr_col_upper,
+  null_data = doubleUserDataNotNull(log_options, usr_col_upper,
                                     "column upper bounds") ||
               null_data;
   return null_data;
 }
 
 bool isRowDataNull(const HighsLogOptions& log_options,
-                   const HighsFloat* usr_row_lower, const HighsFloat* usr_row_upper) {
+                   const double* usr_row_lower, const double* usr_row_upper) {
   bool null_data = false;
   null_data =
-      HighsFloatUserDataNotNull(log_options, usr_row_lower, "row lower bounds") ||
+      doubleUserDataNotNull(log_options, usr_row_lower, "row lower bounds") ||
       null_data;
   null_data =
-      HighsFloatUserDataNotNull(log_options, usr_row_upper, "row upper bounds") ||
+      doubleUserDataNotNull(log_options, usr_row_upper, "row upper bounds") ||
       null_data;
   return null_data;
 }
@@ -1874,7 +1874,7 @@ bool isRowDataNull(const HighsLogOptions& log_options,
 bool isMatrixDataNull(const HighsLogOptions& log_options,
                       const HighsInt* usr_matrix_start,
                       const HighsInt* usr_matrix_index,
-                      const HighsFloat* usr_matrix_value) {
+                      const double* usr_matrix_value) {
   bool null_data = false;
   null_data =
       intUserDataNotNull(log_options, usr_matrix_start, "matrix starts") ||
@@ -1883,7 +1883,7 @@ bool isMatrixDataNull(const HighsLogOptions& log_options,
       intUserDataNotNull(log_options, usr_matrix_index, "matrix indices") ||
       null_data;
   null_data =
-      HighsFloatUserDataNotNull(log_options, usr_matrix_value, "matrix values") ||
+      doubleUserDataNotNull(log_options, usr_matrix_value, "matrix values") ||
       null_data;
   return null_data;
 }
@@ -1967,12 +1967,12 @@ bool isLessInfeasibleDSECandidate(const HighsLogOptions& log_options,
     col_length_k[col_num_en]++;
     for (HighsInt en = lp.a_matrix_.start_[col];
          en < lp.a_matrix_.start_[col + 1]; en++) {
-      HighsFloat value = lp.a_matrix_.value_[en];
+      double value = lp.a_matrix_.value_[en];
       // All nonzeros must be +1 or -1
       if (fabs(value) != 1) return false;
     }
   }
-  HighsFloat average_col_num_en = lp.a_matrix_.start_[lp.num_col_];
+  double average_col_num_en = lp.a_matrix_.start_[lp.num_col_];
   average_col_num_en = average_col_num_en / lp.num_col_;
   LiDSE_candidate =
       LiDSE_candidate && average_col_num_en <= max_average_col_num_en;

@@ -35,17 +35,17 @@ using std::string;
 struct HighsPrimalDualErrors {
   HighsInt num_nonzero_basic_duals;
   HighsInt num_large_nonzero_basic_duals;
-  HighsFloat max_nonzero_basic_dual;
-  HighsFloat sum_nonzero_basic_duals;
+  double max_nonzero_basic_dual;
+  double sum_nonzero_basic_duals;
   HighsInt num_off_bound_nonbasic;
-  HighsFloat max_off_bound_nonbasic;
-  HighsFloat sum_off_bound_nonbasic;
+  double max_off_bound_nonbasic;
+  double sum_off_bound_nonbasic;
   HighsInt num_primal_residual;
-  HighsFloat max_primal_residual;
-  HighsFloat sum_primal_residual;
+  double max_primal_residual;
+  double sum_primal_residual;
   HighsInt num_dual_residual;
-  HighsFloat max_dual_residual;
-  HighsFloat sum_dual_residual;
+  double max_dual_residual;
+  double sum_dual_residual;
 };
 
 void getKktFailures(const HighsOptions& options, const HighsModel& model,
@@ -69,35 +69,35 @@ void getLpKktFailures(const HighsOptions& options, const HighsLp& lp,
                       const bool get_residuals = false);
 
 void getKktFailures(const HighsOptions& options, const HighsLp& lp,
-                    const std::vector<HighsFloat>& gradient,
+                    const std::vector<double>& gradient,
                     const HighsSolution& solution, const HighsBasis& basis,
                     HighsInfo& highs_info,
                     HighsPrimalDualErrors& primal_dual_errors,
                     const bool get_residuals = false);
 
-void getVariableKktFailures(const HighsFloat primal_feasibility_tolerance,
-                            const HighsFloat dual_feasibility_tolerance,
-                            const HighsFloat lower, const HighsFloat upper,
-                            const HighsFloat value, const HighsFloat dual,
+void getVariableKktFailures(const double primal_feasibility_tolerance,
+                            const double dual_feasibility_tolerance,
+                            const double lower, const double upper,
+                            const double value, const double dual,
                             HighsBasisStatus* status_pointer,
-                            HighsFloat& primal_infeasibility,
-                            HighsFloat& dual_infeasibility, HighsFloat& value_residual);
+                            double& primal_infeasibility,
+                            double& dual_infeasibility, double& value_residual);
 
-HighsFloat computeObjectiveValue(const HighsLp& lp, const HighsSolution& solution);
+double computeObjectiveValue(const HighsLp& lp, const HighsSolution& solution);
 
 void refineBasis(const HighsLp& lp, const HighsSolution& solution,
                  HighsBasis& basis);
 
 HighsStatus ipxSolutionToHighsSolution(
     const HighsLogOptions& log_options, const HighsLp& lp,
-    const std::vector<HighsFloat>& rhs, const std::vector<char>& constraint_type,
+    const std::vector<double>& rhs, const std::vector<char>& constraint_type,
     const HighsInt ipx_num_col, const HighsInt ipx_num_row,
-    const std::vector<HighsFloat>& ipx_x, const std::vector<HighsFloat>& ipx_slack_vars,
-    // const std::vector<HighsFloat>& ipx_y,
+    const std::vector<double>& ipx_x, const std::vector<double>& ipx_slack_vars,
+    // const std::vector<double>& ipx_y,
     HighsSolution& highs_solution);
 HighsStatus ipxBasicSolutionToHighsBasicSolution(
     const HighsLogOptions& log_options, const HighsLp& lp,
-    const std::vector<HighsFloat>& rhs, const std::vector<char>& constraint_type,
+    const std::vector<double>& rhs, const std::vector<char>& constraint_type,
     const IpxSolution& ipx_solution, HighsBasis& highs_basis,
     HighsSolution& highs_solution);
 

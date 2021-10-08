@@ -21,56 +21,56 @@ namespace presolve {
 
 void printRowwise(
     const HighsInt numRow, const HighsInt numCol,
-    const std::vector<HighsFloat>& colCost, const std::vector<HighsFloat>& colLower,
-    const std::vector<HighsFloat>& colUpper, const std::vector<HighsFloat>& rowLower,
-    const std::vector<HighsFloat>& rowUpper, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue);
+    const std::vector<double>& colCost, const std::vector<double>& colLower,
+    const std::vector<double>& colUpper, const std::vector<double>& rowLower,
+    const std::vector<double>& rowUpper, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue);
 
 void printRow(
     const HighsInt row, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& rowLower, const std::vector<HighsFloat>& rowUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue);
+    const std::vector<double>& rowLower, const std::vector<double>& rowUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue);
 
 void printCol(
     const HighsInt col, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& colLower, const std::vector<HighsFloat>& colUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& Astart,
+    const std::vector<double>& colLower, const std::vector<double>& colUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& Astart,
     const std::vector<HighsInt>& Aend, const std::vector<HighsInt>& Aindex,
-    const std::vector<HighsFloat>& Avalue);
+    const std::vector<double>& Avalue);
 
 void printCol(
     const HighsInt col, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& colLower, const std::vector<HighsFloat>& colUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& Astart,
-    const std::vector<HighsInt>& Aindex, const std::vector<HighsFloat>& Avalue);
+    const std::vector<double>& colLower, const std::vector<double>& colUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& Astart,
+    const std::vector<HighsInt>& Aindex, const std::vector<double>& Avalue);
 
 void printRowOneLine(
     const HighsInt row, const HighsInt numRow, const HighsInt numCol,
     const std::vector<HighsInt>& flagRow, const std::vector<HighsInt>& flagCol,
-    const std::vector<HighsFloat>& rowLower, const std::vector<HighsFloat>& rowUpper,
-    const std::vector<HighsFloat>& values, const std::vector<HighsInt>& ARstart,
-    const std::vector<HighsInt>& ARindex, const std::vector<HighsFloat>& ARvalue);
+    const std::vector<double>& rowLower, const std::vector<double>& rowUpper,
+    const std::vector<double>& values, const std::vector<HighsInt>& ARstart,
+    const std::vector<HighsInt>& ARindex, const std::vector<double>& ARvalue);
 
 void printAR(const HighsInt numRow, const HighsInt numCol,
-             const std::vector<HighsFloat>& colCost,
-             const std::vector<HighsFloat>& rowLower,
-             const std::vector<HighsFloat>& rowUpper,
+             const std::vector<double>& colCost,
+             const std::vector<double>& rowLower,
+             const std::vector<double>& rowUpper,
              const std::vector<HighsInt>& ARstart,
              const std::vector<HighsInt>& ARindex,
-             std::vector<HighsFloat>& ARvalue);
+             std::vector<double>& ARvalue);
 
 void printA(const HighsInt numRow, const HighsInt numCol,
-            const std::vector<HighsFloat>& colCost,
-            const std::vector<HighsFloat>& rowLower,
-            const std::vector<HighsFloat>& rowUpper,
-            const std::vector<HighsFloat>& colLower,
-            const std::vector<HighsFloat>& colUpper,
+            const std::vector<double>& colCost,
+            const std::vector<double>& rowLower,
+            const std::vector<double>& rowUpper,
+            const std::vector<double>& colLower,
+            const std::vector<double>& colUpper,
             const std::vector<HighsInt>& Astart,
-            const std::vector<HighsInt>& Aindex, std::vector<HighsFloat>& Avalue);
+            const std::vector<HighsInt>& Aindex, std::vector<double>& Avalue);
 
 }  // namespace presolve
 
