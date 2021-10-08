@@ -105,7 +105,7 @@ HighsStatus getRangingData(HighsRanging& ranging,
     xi[i] = max(xi[i], (double)Blower_[i]);
     xi[i] = min(xi[i], (double)Bupper_[i]);
   }
-  vector<double> dj; for (HighsInt j = 0; j < numTotal; j++) xi.push_back((double)dual_[j]);
+  vector<double> dj; for (HighsInt j = 0; j < numTotal; j++) dj.push_back((double)dual_[j]);
   for (HighsInt j = 0; j < numTotal; j++) {
     if (Nflag_[j] && (lower_[j] != upper_[j])) {
       if (value_[j] == lower_[j]) dj[j] = max(dj[j], 0.0);
