@@ -29,7 +29,6 @@
 #include "mip/HighsMipSolver.h"
 #include "model/HighsHessianUtils.h"
 #include "presolve/ICrashX.h"
-#include "qpsolver/solver.hpp"
 #include "simplex/HSimplex.h"
 #include "simplex/HSimplexDebug.h"
 #include "util/HighsMatrixPic.h"
@@ -585,11 +584,7 @@ HighsStatus Highs::run() {
                 "Solving model: %s\n", model_.lp_.model_name_.c_str());
 
   if (!options_.solver.compare(kHighsChooseString) && model_.isQp()) {
-    // Solve the model as a QP
-    call_status = callSolveQp();
-    return_status = interpretCallStatus(options_.log_options, call_status,
-                                        return_status, "callSolveQp");
-    return returnFromRun(return_status);
+    return returnFromRun(HighsStatus::kError);
   }
 
   if (!options_.solver.compare(kHighsChooseString) && model_.isMip()) {
@@ -2125,113 +2120,6 @@ HighsStatus Highs::callSolveLp(HighsLp& lp, const string message) {
   scaled_model_status_ = solver_object.scaled_model_status_;
   if (model_status_ == HighsModelStatus::kOptimal)
     checkOptimality("LP", return_status);
-  return return_status;
-}
-
-HighsStatus Highs::callSolveQp() {
-  // Check that the model is column-wise
-  HighsLp& lp = model_.lp_;
-  HighsHessian& hessian = model_.hessian_;
-  assert(model_.lp_.a_matrix_.isColwise());
-  if (hessian.dim_ != lp.num_col_) {
-    highsLogDev(options_.log_options, HighsLogType::kError,
-                "Hessian dimension = %" HIGHSINT_FORMAT
-                " incompatible with matrix dimension = %" HIGHSINT_FORMAT "\n",
-                hessian.dim_, lp.num_col_);
-    scaled_model_status_ = HighsModelStatus::kModelError;
-    model_status_ = scaled_model_status_;
-    solution_.value_valid = false;
-    solution_.dual_valid = false;
-    return HighsStatus::kError;
-  }
-  //
-  // Run the QP solver
-  Instance instance(lp.num_col_, lp.num_row_);
-
-  instance.num_con = lp.num_row_;
-  instance.num_var = lp.num_col_;
-
-  instance.A.mat.num_col = lp.num_col_;
-  instance.A.mat.num_row = lp.num_row_;
-  instance.A.mat.start = lp.a_matrix_.start_;
-  instance.A.mat.index = lp.a_matrix_.index_;
-  instance.A.mat.value = lp.a_matrix_.value_;
-  instance.c.value = lp.col_cost_;
-  instance.con_lo = lp.row_lower_;
-  instance.con_up = lp.row_upper_;
-  instance.var_lo = lp.col_lower_;
-  instance.var_up = lp.col_upper_;
-  instance.Q.mat.num_col = lp.num_col_;
-  instance.Q.mat.num_row = lp.num_col_;
-  triangularToSquareHessian(hessian, instance.Q.mat.start, instance.Q.mat.index,
-                            instance.Q.mat.value);
-
-  for (HighsInt i = 0; i < instance.c.value.size(); i++) {
-    if (instance.c.value[i] != 0.0) {
-      instance.c.index[instance.c.num_nz++] = i;
-    }
-  }
-
-  if (lp.sense_ != ObjSense::kMinimize) {
-    for (double& i : instance.c.value) {
-      i *= -1.0;
-    }
-  }
-
-  Runtime runtime(instance);
-
-  runtime.settings.reportingfequency = 1000;
-  runtime.endofiterationevent.subscribe([this](Runtime& rt) {
-    int rep = rt.statistics.iteration.size() - 1;
-
-    highsLogUser(options_.log_options, HighsLogType::kInfo,
-                 "%" HIGHSINT_FORMAT ", %lf, %" HIGHSINT_FORMAT
-                 ", %lf, %lf, %" HIGHSINT_FORMAT ", %lf, %lf\n",
-                 rt.statistics.iteration[rep], rt.statistics.objval[rep],
-                 rt.statistics.nullspacedimension[rep], rt.statistics.time[rep],
-                 rt.statistics.sum_primal_infeasibilities[rep],
-                 rt.statistics.num_primal_infeasibilities[rep],
-                 rt.statistics.density_nullspace[rep],
-                 rt.statistics.density_factor[rep]);
-  });
-  runtime.settings.iterationlimit = std::numeric_limits<int>::max();
-  runtime.settings.ratiotest =
-      new RatiotestTwopass(instance, 0.000000001, 0.000001);
-  Solver solver(runtime);
-  solver.solve();
-  // Set the return_status, model status and, for completeness, scaled
-  // model status
-  HighsStatus return_status = HighsStatus::kOk;
-  model_status_ = runtime.status == ProblemStatus::OPTIMAL
-                      ? HighsModelStatus::kOptimal
-                      : runtime.status == ProblemStatus::UNBOUNDED
-                            ? HighsModelStatus::kUnbounded
-                            : HighsModelStatus::kInfeasible;
-  scaled_model_status_ = model_status_;
-  // Extract the solution
-  solution_.col_value.resize(lp.num_col_);
-  solution_.col_dual.resize(lp.num_col_);
-  for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
-    solution_.col_value[iCol] = runtime.primal.value[iCol];
-    solution_.col_dual[iCol] = runtime.dualvar.value[iCol];
-  }
-  solution_.row_value.resize(lp.num_row_);
-  solution_.row_dual.resize(lp.num_row_);
-  for (HighsInt iRow = 0; iRow < lp.num_row_; iRow++) {
-    solution_.row_value[iRow] = runtime.rowactivity.value[iRow];
-    solution_.row_dual[iRow] = runtime.dualcon.value[iRow];
-  }
-  solution_.value_valid = true;
-  solution_.dual_valid = true;
-  // Get the objective and any KKT failures
-  info_.objective_function_value = model_.objectiveValue(solution_.col_value);
-  getKktFailures(options_, model_, solution_, basis_, info_);
-  // Set the QP-specific values of info_
-  info_.simplex_iteration_count += runtime.statistics.phase1_iterations;
-  info_.qp_iteration_count += runtime.statistics.num_iterations;
-  info_.valid = true;
-  if (model_status_ == HighsModelStatus::kOptimal)
-    checkOptimality("QP", return_status);
   return return_status;
 }
 

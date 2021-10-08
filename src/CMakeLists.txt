@@ -140,9 +140,6 @@ set(sources
     presolve/PresolveComponent.cpp
     presolve/Presolve.cpp
     presolve/PresolveUtils.cpp
-    qpsolver/basis.cpp
-    qpsolver/solver.cpp
-    qpsolver/ratiotest.cpp
     simplex/HEkk.cpp
     simplex/HEkkControl.cpp
     simplex/HEkkDebug.cpp
@@ -237,8 +234,6 @@ set(headers
     model/HighsHessian.h
     model/HighsHessianUtils.h
     model/HighsModel.h
-    qpsolver/solver.hpp
-    qpsolver/vector.hpp
     simplex/HApp.h
     simplex/FactorTimer.h
     simplex/HEkk.h
@@ -562,9 +557,6 @@ target_sources(libhighs PRIVATE
     presolve/PresolveComponent.cpp
     presolve/Presolve.cpp
     presolve/PresolveUtils.cpp
-    qpsolver/basis.cpp
-    qpsolver/solver.cpp
-    qpsolver/ratiotest.cpp
     simplex/HEkk.cpp
     simplex/HEkkControl.cpp
     simplex/HEkkDebug.cpp
@@ -673,8 +665,6 @@ set(headers_fast_build_
     model/HighsHessian.h
     model/HighsHessianUtils.h
     model/HighsModel.h
-    qpsolver/solver.hpp
-    qpsolver/vector.hpp
     simplex/HApp.h
     simplex/FactorTimer.h
     simplex/HEkk.h
