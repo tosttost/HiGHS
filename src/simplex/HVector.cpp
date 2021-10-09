@@ -72,13 +72,13 @@ void HVector::clear() {
 
 void HVector::tight() {
   /*
-   * Zero values in Vector.array that do not exceed kHighsTiny in magnitude
+   * Zero values in Vector.array that do not exceed kHighsFloatTiny in magnitude
    */
   HighsInt totalCount = 0;
   for (HighsInt i = 0; i < count; i++) {
     const HighsInt my_index = index[i];
     const HighsFloat value = array[my_index];
-    if (fabs((double)value) >= kHighsTiny) {
+    if (fabs(value) >= kHighsFloatTiny) {
       index[totalCount++] = my_index;
     } else {
       array[my_index] = 0;
@@ -155,7 +155,7 @@ void HVector::saxpy(const HighsFloat pivotX, const HVector* pivot) {
     const HighsFloat x0 = workArray[iRow];
     const HighsFloat x1 = x0 + pivotX * pivotArray[iRow];
     if (x0 == 0) workIndex[workCount++] = iRow;
-    workArray[iRow] = (fabs((double)x1) < kHighsTiny) ? kHighsZero : x1;
+    workArray[iRow] = (fabs(x1) < kHighsFloatTiny) ? kHighsZero : x1;
   }
   count = workCount;
 }

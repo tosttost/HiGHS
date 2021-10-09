@@ -80,7 +80,7 @@ void ProductFormUpdate::btran(HVector& rhs) const {
     pivot_value /= pivot_value_[iX];
     if (rhs.array[pivot_index] == 0) rhs.index[rhs.count++] = pivot_index;
     rhs.array[pivot_index] =
-        (fabs(pivot_value) < kHighsTiny) ? 1e-100 : pivot_value;
+        (fabs(pivot_value) < kHighsFloatTiny) ? 1e-100 : pivot_value;
   }
 }
 
@@ -98,7 +98,7 @@ void ProductFormUpdate::ftran(HVector& rhs) const {
   for (HighsInt iX = 0; iX < update_count_; iX++) {
     const HighsInt pivot_index = pivot_index_[iX];
     HighsFloat pivot_value = rhs.array[pivot_index];
-    if (fabs(pivot_value) > kHighsTiny) {
+    if (fabs(pivot_value) > kHighsFloatTiny) {
       assert(in_index[pivot_index]);
       pivot_value /= pivot_value_[iX];
       rhs.array[pivot_index] = pivot_value;

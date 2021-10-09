@@ -19,7 +19,12 @@
 
 #include <util/HighsCD0uble.h>
 
+// Settings for double precision
 // typedef double HighsFloat;
+// const HighsFloat kHighsFloatTiny = 1e-14; // = kHighsTiny;
+
+// Settings for psudo-quad precision
 typedef HighsCD0uble HighsFloat;
+const HighsFloat kHighsFloatTiny = 1e-32;
 
 #endif

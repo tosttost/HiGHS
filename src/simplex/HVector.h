@@ -55,7 +55,7 @@ class HVector {
   HVector* next;           //!< Allows vectors to be linked for PAMI
 
   /*
-   * Zero values in Vector.array that exceed kHighsTiny in magnitude
+   * Zero values in Vector.array that exceed kHighsFloatTiny in magnitude
    */
   void tight();
 

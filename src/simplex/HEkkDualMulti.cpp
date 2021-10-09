@@ -467,7 +467,7 @@ void HEkkDual::minorUpdateRows() {
       if (multi_choice[ich].row_out >= 0) {
         HVector* next_ep = &multi_choice[ich].row_ep;
         HighsFloat pivotX = a_matrix->computeDot(*next_ep, variable_in);
-        if (fabs(pivotX) < kHighsTiny) continue;
+        if (fabs(pivotX) < kHighsFloatTiny) continue;
         multi_vector[multi_nTasks] = next_ep;
         multi_xpivot[multi_nTasks] = -pivotX / alpha_row;
         multi_iwhich[multi_nTasks] = ich;
@@ -498,7 +498,7 @@ void HEkkDual::minorUpdateRows() {
       if (multi_choice[ich].row_out >= 0) {
         HVector* next_ep = &multi_choice[ich].row_ep;
         HighsFloat pivotX = a_matrix->computeDot(*next_ep, variable_in);
-        if (fabs(pivotX) < kHighsTiny) continue;
+        if (fabs(pivotX) < kHighsFloatTiny) continue;
         next_ep->saxpy(-pivotX / alpha_row, Row);
         next_ep->tight();
         if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
@@ -579,7 +579,7 @@ void HEkkDual::majorUpdateFtranPrepare() {
         HighsInt iRow = Vec->index[k];
         pivotX += Vec->array[iRow] * jRow_epArray[iRow];
       }
-      if (fabs(pivotX) > kHighsTiny) {
+      if (fabs(pivotX) > kHighsFloatTiny) {
         pivotX /= jFinish->alpha_row;
         a_matrix->collectAj(*Vec, jFinish->variable_in, -pivotX);
         a_matrix->collectAj(*Vec, jFinish->variable_out, pivotX);
@@ -694,7 +694,7 @@ void HEkkDual::majorUpdateFtranFinal() {
         HighsFloat pivotX2 = myRow[pivotRow];
 
         // The FTRAN regular buffer
-        if (fabs(pivotX1) > kHighsTiny) {
+        if (fabs(pivotX1) > kHighsFloatTiny) {
           const HighsFloat pivot = pivotX1 / pivotAlpha;
 #pragma omp parallel for
           for (HighsInt i = 0; i < solver_num_row; i++)
@@ -702,7 +702,7 @@ void HEkkDual::majorUpdateFtranFinal() {
           myCol[pivotRow] = pivot;
         }
         // The FTRAN-DSE buffer
-        if (fabs(pivotX2) > kHighsTiny) {
+        if (fabs(pivotX2) > kHighsFloatTiny) {
           const HighsFloat pivot = pivotX2 / pivotAlpha;
 #pragma omp parallel for
           for (HighsInt i = 0; i < solver_num_row; i++)
@@ -721,14 +721,14 @@ void HEkkDual::majorUpdateFtranFinal() {
         HighsInt pivotRow = jFinish->row_out;
         HighsFloat pivotX1 = Col->array[pivotRow];
         // The FTRAN regular buffer
-        if (fabs(pivotX1) > kHighsTiny) {
+        if (fabs(pivotX1) > kHighsFloatTiny) {
           pivotX1 /= jFinish->alpha_row;
           Col->saxpy(-pivotX1, jFinish->col_aq);
           Col->array[pivotRow] = pivotX1;
         }
         // The FTRAN-DSE buffer
         HighsFloat pivotX2 = Row->array[pivotRow];
-        if (fabs(pivotX2) > kHighsTiny) {
+        if (fabs(pivotX2) > kHighsFloatTiny) {
           pivotX2 /= jFinish->alpha_row;
           Row->saxpy(-pivotX2, jFinish->col_aq);
           Row->array[pivotRow] = pivotX2;

@@ -1081,7 +1081,7 @@ void HighsSparseMatrix::priceByColumn(HVector& result,
          iEl++) {
       value += column.array[this->index_[iEl]] * this->value_[iEl];
     }
-    if (fabs((double)value) > kHighsTiny) {
+    if (fabs(value) > kHighsFloatTiny) {
       result.array[iCol] = value;
       result.index[result.count++] = iCol;
     }
@@ -1135,7 +1135,7 @@ void HighsSparseMatrix::priceByRowWithSwitch(
         HighsFloat value1 = value0 + multiplier * this->value_[iEl];
         if (value0 == 0) result.index[result.count++] = iCol;
         result.array[iCol] =
-            (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+            (fabs(value1) < kHighsFloatTiny) ? kHighsZero : value1;
       }
       next_index = ix + 1;
     }
@@ -1207,7 +1207,7 @@ void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
       HighsFloat value1 = value0 + (HighsFloat)multiplier * this->value_[iEl];
       if (value0 == 0) column.index[column.count++] = iRow;
       column.array[iRow] =
-          (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+          (fabs(value1) < kHighsFloatTiny) ? kHighsZero : value1;
     }
   } else {
     HighsInt iRow = use_col - this->num_col_;
@@ -1215,7 +1215,7 @@ void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
     HighsFloat value1 = value0 + (HighsFloat)multiplier;
     if (value0 == 0) column.index[column.count++] = iRow;
     column.array[iRow] =
-        (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+        (fabs(value1) < kHighsFloatTiny) ? kHighsZero : value1;
   }
 }
 
@@ -1239,14 +1239,14 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
       HighsFloat value0 = result.array[iCol];
       HighsFloat value1 = value0 + multiplier * this->value_[iEl];
       result.array[iCol] =
-          (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+          (fabs(value1) < kHighsFloatTiny) ? kHighsZero : value1;
     }
   }
   // Determine indices of nonzeros in result
   result.count = 0;
   for (HighsInt iCol = 0; iCol < this->num_col_; iCol++) {
     double value1 = (double)result.array[iCol];
-    if (fabs(value1) < kHighsTiny) {
+    if (fabs(value1) < kHighsFloatTiny) {
       result.array[iCol] = 0;
     } else {
       result.index[result.count++] = iCol;
