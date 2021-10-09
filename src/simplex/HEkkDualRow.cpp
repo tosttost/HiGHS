@@ -100,7 +100,6 @@ void HEkkDualRow::choosePossible() {
     if (alpha > Ta) {
       workData[workCount++] = make_pair(iCol, alpha);
       const HighsFloat relax = workDual[iCol] * move + Td;
-      const HighsFloat workTheta_alpha = workTheta * alpha;
       if (workTheta * alpha > relax) workTheta = relax / alpha;
     }
   }
@@ -590,7 +589,6 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
   for (HighsInt i = 0; i < workCount; i++) {
     const HighsInt iCol = workData[i].first;
-    const HighsFloat delta = workData[i].second;
     const HighsFloat value = unpack_value[iCol];
     const HighsInt move = workMove[iCol];
     const HighsFloat dual = workDual[iCol];
@@ -600,7 +598,7 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
     const bool infeasible = infeasibility_after_flip < -Td;
     if (infeasible) {
       printf(
-          "%3d: iCol = %4d; dual = %11.4g; value = %11.4g; move = %2d; delta = "
+          "%3d: iCol = %4d; dual = %11.4g; value = %11.4g; move = %2d; delta_dual = "
           "%11.4g; new_dual = %11.4g; infeasibility = %11.4g: %d\n",
           (int)i, (int)iCol, (double)dual, (double)value, (int)move,
           (double)delta_dual, (double)new_dual,
