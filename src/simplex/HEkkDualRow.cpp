@@ -476,7 +476,7 @@ void HEkkDualRow::updateFlip(HVector* bfrtColumn) {
     ekk_instance_.lp_.a_matrix_.collectAj(*bfrtColumn, iCol, change);
   }
   ekk_instance_.info_.updated_dual_objective_value +=
-    (double)dual_objective_value_change;
+      (double)dual_objective_value_change;
 }
 
 void HEkkDualRow::updateDual(HighsFloat theta) {
@@ -602,7 +602,8 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
       printf(
           "%3d: iCol = %4d; dual = %11.4g; value = %11.4g; move = %2d; delta = "
           "%11.4g; new_dual = %11.4g; infeasibility = %11.4g: %d\n",
-          (int)i, (int)iCol, (double)dual, (double)value, (int)move, (double)delta_dual, (double)new_dual,
+          (int)i, (int)iCol, (double)dual, (double)value, (int)move,
+          (double)delta_dual, (double)new_dual,
           (double)infeasibility_after_flip, infeasible);
 
       num_infeasibility++;
@@ -631,9 +632,9 @@ void HEkkDualRow::debugReportBfrtVar(
   }
   printf("%2d %4d %2d %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %3d\n",
          (int)ix, (int)iCol, (int)move,
-	 (double)ekk_instance_.info_.workLower_[iCol],
+         (double)ekk_instance_.info_.workLower_[iCol],
          (double)ekk_instance_.info_.workValue_[iCol],
-         (double)ekk_instance_.info_.workUpper_[iCol],
-	 (double)value, (double)dual, (double)fabs(dual / value),
-         (double)new_dual, infeasible);
+         (double)ekk_instance_.info_.workUpper_[iCol], (double)value,
+         (double)dual, (double)fabs(dual / value), (double)new_dual,
+         infeasible);
 }

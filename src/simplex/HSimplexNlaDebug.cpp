@@ -315,7 +315,8 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
   const HighsOptions* options = this->options_;
   double solve_error_norm = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-    double solve_error = (double)fabs(solution.array[iRow] - true_solution.array[iRow]);
+    double solve_error =
+        (double)fabs(solution.array[iRow] - true_solution.array[iRow]);
     solve_error_norm = std::max(solve_error, solve_error_norm);
   }
   double residual_error_norm =

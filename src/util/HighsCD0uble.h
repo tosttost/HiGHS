@@ -308,7 +308,6 @@ class HighsCD0uble {
   }
 
   friend HighsCD0uble round(const HighsCD0uble& x) { return floor(x + 0.5); }
-
 };
 
 #endif

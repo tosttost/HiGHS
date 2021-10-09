@@ -386,12 +386,14 @@ class HFactor {
   /**
    * Local in-line functions
    */
-  void colInsert(const HighsInt iCol, const HighsInt iRow, const HighsFloat value) {
+  void colInsert(const HighsInt iCol, const HighsInt iRow,
+                 const HighsFloat value) {
     const HighsInt iput = MCstart[iCol] + MCcountA[iCol]++;
     MCindex[iput] = iRow;
     MCvalue[iput] = value;
   }
-  void colStoreN(const HighsInt iCol, const HighsInt iRow, const HighsFloat value) {
+  void colStoreN(const HighsInt iCol, const HighsInt iRow,
+                 const HighsFloat value) {
     const HighsInt iput = MCstart[iCol] + MCspace[iCol] - (++MCcountN[iCol]);
     MCindex[iput] = iRow;
     MCvalue[iput] = value;

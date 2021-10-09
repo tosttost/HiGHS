@@ -1134,7 +1134,8 @@ void HighsSparseMatrix::priceByRowWithSwitch(
         HighsFloat value0 = result.array[iCol];
         HighsFloat value1 = value0 + multiplier * this->value_[iEl];
         if (value0 == 0) result.index[result.count++] = iCol;
-        result.array[iCol] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+        result.array[iCol] =
+            (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
       }
       next_index = ix + 1;
     }
@@ -1205,14 +1206,16 @@ void HighsSparseMatrix::collectAj(HVector& column, const HighsInt use_col,
       HighsFloat value0 = column.array[iRow];
       HighsFloat value1 = value0 + (HighsFloat)multiplier * this->value_[iEl];
       if (value0 == 0) column.index[column.count++] = iRow;
-      column.array[iRow] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+      column.array[iRow] =
+          (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
     }
   } else {
     HighsInt iRow = use_col - this->num_col_;
     HighsFloat value0 = column.array[iRow];
     HighsFloat value1 = value0 + (HighsFloat)multiplier;
     if (value0 == 0) column.index[column.count++] = iRow;
-    column.array[iRow] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+    column.array[iRow] =
+        (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
   }
 }
 
@@ -1235,7 +1238,8 @@ void HighsSparseMatrix::priceByRowDenseResult(HVector& result,
       HighsInt iCol = this->index_[iEl];
       HighsFloat value0 = result.array[iCol];
       HighsFloat value1 = value0 + multiplier * this->value_[iEl];
-      result.array[iCol] = (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
+      result.array[iCol] =
+          (fabs((double)value1) < kHighsTiny) ? kHighsZero : value1;
     }
   }
   // Determine indices of nonzeros in result

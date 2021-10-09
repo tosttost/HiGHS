@@ -500,7 +500,6 @@ class HEkkDual {
   HighsInt multi_chooseAgain;
   MChoice multi_choice[kHighsThreadLimit];
   MFinish multi_finish[kHighsThreadLimit];
-
 };
 
 #endif /* SIMPLEX_HEKKDUAL_H_ */

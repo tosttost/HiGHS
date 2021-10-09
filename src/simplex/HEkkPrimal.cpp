@@ -819,11 +819,13 @@ void HEkkPrimal::chuzc() {
       chooseColumn(false);
       double hyper_sparse_measure = 0;
       if (hyper_sparse_variable_in >= 0)
-        hyper_sparse_measure = fabs((double)workDual[hyper_sparse_variable_in]) /
-                               devex_weight[hyper_sparse_variable_in];
+        hyper_sparse_measure =
+            fabs((double)workDual[hyper_sparse_variable_in]) /
+            devex_weight[hyper_sparse_variable_in];
       double measure = 0;
       if (variable_in >= 0)
-        measure = fabs((double)workDual[variable_in]) / devex_weight[variable_in];
+        measure =
+            fabs((double)workDual[variable_in]) / devex_weight[variable_in];
       double abs_measure_error = fabs(hyper_sparse_measure - measure);
       bool measure_error = abs_measure_error > 1e-12;
       if (measure_error) {
@@ -873,7 +875,8 @@ void HEkkPrimal::chooseColumn(const bool hyper_sparse) {
       }
       // Now look at other columns
       for (HighsInt iCol = 0; iCol < num_tot; iCol++) {
-        double dual_infeasibility = -nonbasicMove[iCol] * (double)workDual[iCol];
+        double dual_infeasibility =
+            -nonbasicMove[iCol] * (double)workDual[iCol];
         if (dual_infeasibility > dual_feasibility_tolerance) {
           double measure = dual_infeasibility / devex_weight[iCol];
           addToDecreasingHeap(
@@ -966,7 +969,8 @@ bool HEkkPrimal::useVariableIn() {
   // Reassign theta_dual to be the computed value
   theta_dual = info.workDual_[variable_in];
   // Determine whether theta_dual is too small or has changed sign
-  const bool theta_dual_small = fabs((double)theta_dual) <= dual_feasibility_tolerance;
+  const bool theta_dual_small =
+      fabs((double)theta_dual) <= dual_feasibility_tolerance;
   const bool theta_dual_sign_error =
       updated_theta_dual * computed_theta_dual <= 0;
 
@@ -1863,7 +1867,7 @@ void HEkkPrimal::phase2UpdatePrimal(const bool initialise) {
         primal_infeasibility = (double)(value - upper);
       }
       max_local_primal_infeasibility =
-	max(primal_infeasibility, max_local_primal_infeasibility);
+          max(primal_infeasibility, max_local_primal_infeasibility);
       if (primal_infeasibility > primal_feasibility_tolerance) {
         info.num_primal_infeasibilities++;
         primal_infeasible = true;
@@ -1913,7 +1917,7 @@ void HEkkPrimal::phase2UpdatePrimal(const bool initialise) {
            max_ignored_violation);
   }
   info.updated_primal_objective_value +=
-    (double)(info.workDual_[variable_in] * theta_primal);
+      (double)(info.workDual_[variable_in] * theta_primal);
 
   analysis->simplexTimerStop(UpdatePrimalClock);
 }
@@ -2330,7 +2334,8 @@ void HEkkPrimal::localReportIter(const bool header) {
       }
       printf(": Var %2" HIGHSINT_FORMAT " (%1" HIGHSINT_FORMAT
              ", %2" HIGHSINT_FORMAT ") [%9.4g, %9.4g, %9.4g]",
-             check_column, flag, move, (double)lower, (double)value, (double)upper);
+             check_column, flag, move, (double)lower, (double)value,
+             (double)upper);
       if (flag == kNonbasicFlagTrue) {
         HighsFloat dual = info.workDual_[check_column];
         double weight = devex_weight[check_column];
@@ -2339,7 +2344,8 @@ void HEkkPrimal::localReportIter(const bool header) {
           infeasibility = fabs((double)dual);
         if (infeasibility < dual_feasibility_tolerance) infeasibility = 0;
         double measure = infeasibility / weight;
-        printf(" Du = %9.4g; Wt = %9.4g; Ms = %9.4g", (double)dual, weight, measure);
+        printf(" Du = %9.4g; Wt = %9.4g; Ms = %9.4g", (double)dual, weight,
+               measure);
       }
     }
     printf("\n");
@@ -2470,8 +2476,9 @@ void HEkkPrimal::getBasicPrimalInfeasibility() {
 }
 
 void HEkkPrimal::shiftBound(const bool lower, const HighsInt iVar,
-                            const HighsFloat value, const HighsFloat random_value,
-                            HighsFloat& bound, HighsFloat& shift, const bool report) {
+                            const HighsFloat value,
+                            const HighsFloat random_value, HighsFloat& bound,
+                            HighsFloat& shift, const bool report) {
   HighsFloat feasibility = (1 + random_value) * primal_feasibility_tolerance;
   HighsFloat old_bound = bound;
   std::string type;

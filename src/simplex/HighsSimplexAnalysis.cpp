@@ -390,7 +390,8 @@ void HighsSimplexAnalysis::userInvertReport(const bool header,
 }
 
 void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
-    const HighsFloat computed_edge_weight, const HighsFloat updated_edge_weight) {
+    const HighsFloat computed_edge_weight,
+    const HighsFloat updated_edge_weight) {
   const double kWeightErrorThreshold = 4.0;
   const bool accept_weight =
       updated_edge_weight >= kAcceptDseWeightThreshold * computed_edge_weight;

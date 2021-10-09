@@ -31,20 +31,21 @@ void debugDualChuzcFailNorms(
 HighsDebugStatus debugDualChuzcFailQuad0(
     const HighsOptions& options, const HighsInt workCount,
     const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
-    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
-    const HighsFloat remainTheta, const bool force = false);
+    const HighsInt numVar, const HighsFloat* workDual,
+    const HighsFloat selectTheta, const HighsFloat remainTheta,
+    const bool force = false);
 
 HighsDebugStatus debugDualChuzcFailQuad1(
     const HighsOptions& options, const HighsInt workCount,
     const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
-    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
-    const bool force = false);
+    const HighsInt numVar, const HighsFloat* workDual,
+    const HighsFloat selectTheta, const bool force = false);
 
 HighsDebugStatus debugDualChuzcFailHeap(
     const HighsOptions& options, const HighsInt workCount,
     const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
-    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
-    const bool force = false);
+    const HighsInt numVar, const HighsFloat* workDual,
+    const HighsFloat selectTheta, const bool force = false);
 
 HighsDebugStatus debugNonbasicFlagConsistent(const HighsOptions& options,
                                              const HighsLp& lp,

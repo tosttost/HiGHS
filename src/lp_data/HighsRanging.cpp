@@ -100,12 +100,14 @@ HighsStatus getRangingData(HighsRanging& ranging,
   HVector column;
   column.setup(numRow);
 
-  vector<double> xi; for (HighsInt i = 0; i < numRow; i++) xi.push_back((double)Bvalue_[i]);
+  vector<double> xi;
+  for (HighsInt i = 0; i < numRow; i++) xi.push_back((double)Bvalue_[i]);
   for (HighsInt i = 0; i < numRow; i++) {
     xi[i] = max(xi[i], (double)Blower_[i]);
     xi[i] = min(xi[i], (double)Bupper_[i]);
   }
-  vector<double> dj; for (HighsInt j = 0; j < numTotal; j++) dj.push_back((double)dual_[j]);
+  vector<double> dj;
+  for (HighsInt j = 0; j < numTotal; j++) dj.push_back((double)dual_[j]);
   for (HighsInt j = 0; j < numTotal; j++) {
     if (Nflag_[j] && (lower_[j] != upper_[j])) {
       if (value_[j] == lower_[j]) dj[j] = max(dj[j], 0.0);
@@ -396,7 +398,8 @@ HighsStatus getRangingData(HighsRanging& ranging,
       }
 
       // Check if b_up_b > upper
-      if ((double)value_[j] != (double)upper_[j] && b_up_b[j] > (double)upper_[j]) {
+      if ((double)value_[j] != (double)upper_[j] &&
+          b_up_b[j] > (double)upper_[j]) {
         b_up_b[j] = (double)upper_[j];
         assert(lower_[j] > -kHighsInf);
         b_up_f[j] = objective + sense * (double)(upper_[j] - lower_[j]) * dualv;
@@ -421,7 +424,8 @@ HighsStatus getRangingData(HighsRanging& ranging,
       }
 
       // Check if b_dn_b < lower
-      if ((double)value_[j] != (double)lower_[j] && b_dn_b[j] < (double)lower_[j]) {
+      if ((double)value_[j] != (double)lower_[j] &&
+          b_dn_b[j] < (double)lower_[j]) {
         b_dn_b[j] = (double)lower_[j];
         assert(upper_[j] < kHighsInf);
         b_dn_f[j] = objective + sense * (double)(lower_[j] - upper_[j]) * dualv;

@@ -541,7 +541,8 @@ void HEkk::debugReportReinvertOnNumericalTrouble(
   if (this->options_->highs_debug_level < kHighsDebugLevelCheap) return;
   const HighsFloat abs_alpha_from_col = abs(alpha_from_col);
   const HighsFloat abs_alpha_from_row = abs(alpha_from_row);
-  const HighsFloat abs_alpha_diff = abs(abs_alpha_from_col - abs_alpha_from_row);
+  const HighsFloat abs_alpha_diff =
+      abs(abs_alpha_from_col - abs_alpha_from_row);
   const HighsInt iteration_count = this->iteration_count_;
   const HighsInt update_count = this->info_.update_count;
   const std::string model_name = this->lp_.model_name_;
@@ -588,9 +589,10 @@ HighsDebugStatus HEkk::debugUpdatedDual(const HighsFloat updated_dual,
   HighsDebugStatus return_status = HighsDebugStatus::kOk;
   std::string error_adjective;
   HighsLogType report_level;
-  double updated_dual_absolute_error = abs(double(updated_dual - computed_dual));
+  double updated_dual_absolute_error =
+      abs(double(updated_dual - computed_dual));
   double updated_dual_relative_error =
-    updated_dual_absolute_error / max(abs((double)computed_dual), 1.0);
+      updated_dual_absolute_error / max(abs((double)computed_dual), 1.0);
   bool sign_error = updated_dual * computed_dual <= 0;
   bool at_least_small_error =
       sign_error ||
@@ -1055,7 +1057,8 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
                     "For variable %" HIGHSINT_FORMAT
                     ", info.workRange_ should be %g = %g - %g "
                     "but is %g\n",
-                    var, (double)info.workUpper_[var] - (double)info.workLower_[var],
+                    var,
+                    (double)info.workUpper_[var] - (double)info.workLower_[var],
                     (double)info.workUpper_[var], (double)info.workLower_[var],
                     (double)info.workRange_[var]);
         return ok;
@@ -1123,8 +1126,8 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                       "%11g] so nonbasic "
                       "move should be zero but is %" HIGHSINT_FORMAT "\n",
                       var, lp.num_col_, (double)info.workLower_[var],
-                      (double)info.workValue_[var], (double)info.workUpper_[var],
-                      basis.nonbasicMove_[var]);
+                      (double)info.workValue_[var],
+                      (double)info.workUpper_[var], basis.nonbasicMove_[var]);
           return ok;
         }
         ok = info.workValue_[var] == info.workLower_[var];
@@ -1151,8 +1154,9 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
               ") [%11g, %11g, "
               "%11g] range %g so "
               "nonbasic move should be up/down but is  %" HIGHSINT_FORMAT "\n",
-              var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var],
-              (double)info.workUpper_[var], (double)info.workUpper_[var] - (double)info.workLower_[var],
+              var, lp.num_col_, (double)info.workLower_[var],
+              (double)info.workValue_[var], (double)info.workUpper_[var],
+              (double)info.workUpper_[var] - (double)info.workLower_[var],
               basis.nonbasicMove_[var]);
           return ok;
         }
@@ -1199,20 +1203,21 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
                     " but is  "
                     "%" HIGHSINT_FORMAT "\n",
                     var, lp.num_col_, (double)info.workLower_[var],
-                    (double)info.workValue_[var], (double)info.workUpper_[var], kNonbasicMoveUp,
-                    basis.nonbasicMove_[var]);
+                    (double)info.workValue_[var], (double)info.workUpper_[var],
+                    kNonbasicMoveUp, basis.nonbasicMove_[var]);
         return ok;
       }
       ok = info.workValue_[var] == info.workLower_[var];
       if (!ok) {
-        highsLogDev(
-            options.log_options, HighsLogType::kError,
-            "Finite lower bound and infinite upper bound variable "
-            "%" HIGHSINT_FORMAT
-            " "
-            "(lp.num_col_ = "
-            "%" HIGHSINT_FORMAT ") so work value should be %g but is %g\n",
-            var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var]);
+        highsLogDev(options.log_options, HighsLogType::kError,
+                    "Finite lower bound and infinite upper bound variable "
+                    "%" HIGHSINT_FORMAT
+                    " "
+                    "(lp.num_col_ = "
+                    "%" HIGHSINT_FORMAT
+                    ") so work value should be %g but is %g\n",
+                    var, lp.num_col_, (double)info.workLower_[var],
+                    (double)info.workValue_[var]);
         return ok;
       }
     }
@@ -1230,20 +1235,22 @@ bool HEkk::debugOneNonbasicMoveVsWorkArraysOk(const HighsInt var) const {
             "%" HIGHSINT_FORMAT
             ") [%11g, %11g, %11g] so nonbasic move should be down but is  "
             "%" HIGHSINT_FORMAT "\n",
-            var, lp.num_col_, (double)info.workLower_[var], (double)info.workValue_[var],
-            (double)info.workUpper_[var], basis.nonbasicMove_[var]);
+            var, lp.num_col_, (double)info.workLower_[var],
+            (double)info.workValue_[var], (double)info.workUpper_[var],
+            basis.nonbasicMove_[var]);
         return ok;
       }
       ok = info.workValue_[var] == info.workUpper_[var];
       if (!ok) {
-        highsLogDev(
-            options.log_options, HighsLogType::kError,
-            "Finite upper bound and infinite lower bound variable "
-            "%" HIGHSINT_FORMAT
-            " "
-            "(lp.num_col_ = "
-            "%" HIGHSINT_FORMAT ") so work value should be %g but is %g\n",
-            var, lp.num_col_, (double)info.workUpper_[var], (double)info.workValue_[var]);
+        highsLogDev(options.log_options, HighsLogType::kError,
+                    "Finite upper bound and infinite lower bound variable "
+                    "%" HIGHSINT_FORMAT
+                    " "
+                    "(lp.num_col_ = "
+                    "%" HIGHSINT_FORMAT
+                    ") so work value should be %g but is %g\n",
+                    var, lp.num_col_, (double)info.workUpper_[var],
+                    (double)info.workValue_[var]);
         return ok;
       }
     } else {
@@ -1342,8 +1349,8 @@ HighsDebugStatus HEkk::debugNonbasicFreeColumnSet(
                   " in nonbasic free "
                   "set has nonbasicFlag = %" HIGHSINT_FORMAT
                   " and bounds [%g, %g]\n",
-                  iVar, basis.nonbasicFlag_[iVar], (double)info.workLower_[iVar],
-                  (double)info.workUpper_[iVar]);
+                  iVar, basis.nonbasicFlag_[iVar],
+                  (double)info.workLower_[iVar], (double)info.workUpper_[iVar]);
       return HighsDebugStatus::kLogicalError;
     }
   }
@@ -1392,7 +1399,7 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
   double norm_basic_costs = 0;
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
     const double value = (double)(info.workCost_[basis.basicIndex_[iRow]] +
-				  info.workShift_[basis.basicIndex_[iRow]]);
+                                  info.workShift_[basis.basicIndex_[iRow]]);
     norm_basic_costs = max(fabs(value), norm_basic_costs);
   }
 

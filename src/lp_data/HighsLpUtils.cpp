@@ -454,13 +454,25 @@ void scaleLp(const HighsOptions& options, HighsLp& lp) {
     if (scaled_matrix) {
       // Matrix is scaled, so scale the bounds and costs
       for (HighsInt iCol = 0; iCol < numCol; iCol++) {
-        colLower[iCol] /= scale.col[iCol];
-        colUpper[iCol] /= scale.col[iCol];
+        //        colLower[iCol] /= scale.col[iCol];
+        //        colUpper[iCol] /= scale.col[iCol];
+        colLower[iCol] = colLower[iCol] == -kHighsInf
+                             ? colLower[iCol]
+                             : colLower[iCol] / scale.col[iCol];
+        colUpper[iCol] = colUpper[iCol] == kHighsInf
+                             ? colUpper[iCol]
+                             : colUpper[iCol] / scale.col[iCol];
         colCost[iCol] *= scale.col[iCol];
       }
       for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-        rowLower[iRow] *= scale.row[iRow];
-        rowUpper[iRow] *= scale.row[iRow];
+        //        rowLower[iRow] *= scale.row[iRow];
+        //        rowUpper[iRow] *= scale.row[iRow];
+        rowLower[iRow] = rowLower[iRow] == -kHighsInf
+                             ? rowLower[iRow]
+                             : rowLower[iRow] * scale.row[iRow];
+        rowUpper[iRow] = rowUpper[iRow] == kHighsInf
+                             ? rowUpper[iRow]
+                             : rowUpper[iRow] * scale.row[iRow];
       }
       scale.has_scaling = true;
       scale.num_col = numCol;

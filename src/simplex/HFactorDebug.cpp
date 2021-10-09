@@ -104,7 +104,8 @@ void debugReportRankDeficientASM(
   if (highs_debug_level == kHighsDebugLevelNone) return;
   if (rank_deficiency > 10) return;
   HighsFloat* ASM;
-  ASM = (HighsFloat*)malloc(sizeof(HighsFloat) * rank_deficiency * rank_deficiency);
+  ASM = (HighsFloat*)malloc(sizeof(HighsFloat) * rank_deficiency *
+                            rank_deficiency);
   for (HighsInt i = 0; i < rank_deficiency; i++) {
     for (HighsInt j = 0; j < rank_deficiency; j++) {
       ASM[i + j * rank_deficiency] = 0;

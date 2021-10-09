@@ -1444,7 +1444,8 @@ void HEkkDual::chooseRow() {
       local_row_ep_density, ekk_instance_.info_.row_ep_density);
 }
 
-bool HEkkDual::acceptDualSteepestEdgeWeight(const HighsFloat updated_edge_weight) {
+bool HEkkDual::acceptDualSteepestEdgeWeight(
+    const HighsFloat updated_edge_weight) {
   // Accept the updated weight if it is at least a quarter of the
   // computed weight. Excessively large updated weights don't matter!
   const bool accept_weight =
@@ -1471,8 +1472,9 @@ bool HEkkDual::newDevexFramework(const HighsFloat updated_edge_weight) {
   const double kMinRlvNumberDevexIterations = 1e-2;
   const double kMaxAllowedDevexWeightRatio = 3.0;
 
-  double devex_ratio = max((double)(updated_edge_weight / computed_edge_weight),
-                           (double)(computed_edge_weight / updated_edge_weight));
+  double devex_ratio =
+      max((double)(updated_edge_weight / computed_edge_weight),
+          (double)(computed_edge_weight / updated_edge_weight));
   HighsInt i_te = solver_num_row / kMinRlvNumberDevexIterations;
   i_te = max(kMinAbsNumberDevexIterations, i_te);
   // Square kMaxAllowedDevexWeightRatio due to keeping squared
@@ -1870,24 +1872,26 @@ void HEkkDual::updateDual() {
   const HighsInt variable_in_nonbasicFlag =
       ekk_instance_.basis_.nonbasicFlag_[variable_in];
   dual_objective_value_change =
-    variable_in_nonbasicFlag * (double)(-variable_in_value * variable_in_delta_dual);
+      variable_in_nonbasicFlag *
+      (double)(-variable_in_value * variable_in_delta_dual);
   dual_objective_value_change *= ekk_instance_.cost_scale_;
   ekk_instance_.info_.updated_dual_objective_value +=
-    dual_objective_value_change;
+      dual_objective_value_change;
   // Surely variable_out_nonbasicFlag is always 0 since it's basic - so there's
   // no dual objective change
   const HighsInt variable_out_nonbasicFlag =
       ekk_instance_.basis_.nonbasicFlag_[variable_out];
   assert(variable_out_nonbasicFlag == 0);
   if (variable_out_nonbasicFlag) {
-    const HighsFloat variable_out_delta_dual = workDual[variable_out] - theta_dual;
+    const HighsFloat variable_out_delta_dual =
+        workDual[variable_out] - theta_dual;
     const HighsFloat variable_out_value = workValue[variable_out];
     dual_objective_value_change =
         variable_out_nonbasicFlag *
-      (double)(-variable_out_value * variable_out_delta_dual);
+        (double)(-variable_out_value * variable_out_delta_dual);
     dual_objective_value_change *= ekk_instance_.cost_scale_;
     ekk_instance_.info_.updated_dual_objective_value +=
-      dual_objective_value_change;
+        dual_objective_value_change;
   }
   workDual[variable_in] = 0;
   workDual[variable_out] = -theta_dual;
@@ -2403,7 +2407,8 @@ double HEkkDual::computeExactDualObjectiveValue() {
   double norm_delta_dual = 0;
   for (HighsInt iCol = 0; iCol < lp.num_col_; iCol++) {
     if (!basis.nonbasicFlag_[iCol]) continue;
-    HighsFloat exact_dual = (HighsFloat)lp.col_cost_[iCol] - dual_row.array[iCol];
+    HighsFloat exact_dual =
+        (HighsFloat)lp.col_cost_[iCol] - dual_row.array[iCol];
     HighsFloat residual = fabs(exact_dual - info.workDual_[iCol]);
     norm_dual += fabs((double)exact_dual);
     norm_delta_dual += (double)residual;
@@ -2427,7 +2432,8 @@ double HEkkDual::computeExactDualObjectiveValue() {
           ekk_instance_.options_->log_options, HighsLogType::kWarning,
           "Row %4" HIGHSINT_FORMAT
           ": ExactDual = %11.4g; WorkDual = %11.4g; Residual = %11.4g\n",
-          iRow, (double)exact_dual, (double)info.workDual_[iVar], (double)residual);
+          iRow, (double)exact_dual, (double)info.workDual_[iVar],
+          (double)residual);
     dual_objective += double(info.workValue_[iVar] * exact_dual);
   }
   double relative_delta = norm_delta_dual / std::max(norm_dual, 1.0);

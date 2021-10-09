@@ -353,7 +353,8 @@ void HEkkDual::minorUpdateDual() {
     if (ich == multi_iChoice || multi_choice[ich].row_out >= 0) {
       HVector* this_ep = &multi_choice[ich].row_ep;
       for (HighsInt i = 0; i < dualRow.workCount; i++) {
-        HighsFloat dot = a_matrix->computeDot(*this_ep, dualRow.workData[i].first);
+        HighsFloat dot =
+            a_matrix->computeDot(*this_ep, dualRow.workData[i].first);
         multi_choice[ich].baseValue -= dualRow.workData[i].second * dot;
       }
     }
@@ -823,7 +824,8 @@ void HEkkDual::majorUpdatePrimal() {
   for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
     MFinish* finish = &multi_finish[iFn];
     HighsInt iRow = finish->row_out;
-    HighsFloat value = baseValue[iRow] - finish->basicBound + finish->basicValue;
+    HighsFloat value =
+        baseValue[iRow] - finish->basicBound + finish->basicValue;
     dualRHS.updatePivots(iRow, value);
   }
 

@@ -22,7 +22,7 @@
 #include "util/HighsInt.h"
 
 const HighsInt kHighsIInf = std::numeric_limits<HighsInt>::max();
-const double kHighsInf = std::numeric_limits<double>::infinity();
+const double kHighsInf = 1e+200;  // std::numeric_limits<double>::infinity();
 const double kHighsTiny = 1e-14;
 const double kHighsZero = 1e-50;
 const std::string kHighsOffString = "off";

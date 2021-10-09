@@ -47,9 +47,9 @@ void maxheapsort(
  * indices
  */
 void maxheapsort(
-    HighsFloat* heap_v,    //!< Values to be sorted
-    HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
-    HighsInt n         //!< Number of values to be sorted
+    HighsFloat* heap_v,  //!< Values to be sorted
+    HighsInt* heap_i,    //!< Indices corrresponding to (sorted) values
+    HighsInt n           //!< Number of values to be sorted
 );
 /**
  * @brief Build a value heap for sorting values[1..n] of an array by increasing
@@ -72,9 +72,9 @@ void buildMaxheap(
  * increasing value
  */
 void buildMaxheap(
-    HighsFloat* heap_v,    //!< Values to be sorted
-    HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
-    HighsInt n         //!< Number of values to be sorted
+    HighsFloat* heap_v,  //!< Values to be sorted
+    HighsInt* heap_i,    //!< Indices corrresponding to (sorted) values
+    HighsInt n           //!< Number of values to be sorted
 );
 /**
  * @brief Sort by increasing value a heap built with buildMaxheap
@@ -94,9 +94,9 @@ void maxHeapsort(
  * @brief Sort by increasing value a heap built with buildMaxheap
  */
 void maxHeapsort(
-    HighsFloat* heap_v,    //!< Values to be sorted
-    HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
-    HighsInt n         //!< Number of values to be sorted
+    HighsFloat* heap_v,  //!< Values to be sorted
+    HighsInt* heap_i,    //!< Indices corrresponding to (sorted) values
+    HighsInt n           //!< Number of values to be sorted
 );
 /**
  * @brief Heapify function for sorting by increasing value

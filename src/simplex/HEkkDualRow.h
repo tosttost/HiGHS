@@ -114,8 +114,9 @@ class HEkkDualRow {
    * @brief Update the dual values
    */
   void updateDual(
-      HighsFloat theta  //!< Multiple of pivotal row to add HighsInt to duals
-                    //      HighsInt variable_out  //!< Index of leaving column
+      HighsFloat
+          theta  //!< Multiple of pivotal row to add HighsInt to duals
+                 //      HighsInt variable_out  //!< Index of leaving column
   );
   /**
    * @brief Create a list of nonbasic free columns
@@ -174,17 +175,17 @@ class HEkkDualRow {
   std::set<HighsInt> freeList;  //!< Freelist itself
 
   // packed data:
-  HighsInt packCount = 0;           //!< number of packed indices/values
-  std::vector<HighsInt> packIndex;  //!< Packed indices
-  std::vector<HighsFloat> packValue;    //!< Packed values
+  HighsInt packCount = 0;             //!< number of packed indices/values
+  std::vector<HighsInt> packIndex;    //!< Packed indices
+  std::vector<HighsFloat> packValue;  //!< Packed values
 
   // (Local) value of computed weight
   HighsFloat computed_edge_weight = 0.;
 
-  HighsFloat workDelta = 0.;   //!< Local copy of dual.delta_primal
-  HighsFloat workAlpha = 0.;   //!< Original copy of pivotal computed row-wise
-  HighsFloat workTheta = 0.;   //!< Original copy of dual step workDual[workPivot] /
-                           //!< workAlpha;
+  HighsFloat workDelta = 0.;  //!< Local copy of dual.delta_primal
+  HighsFloat workAlpha = 0.;  //!< Original copy of pivotal computed row-wise
+  HighsFloat workTheta = 0.;  //!< Original copy of dual step
+                              //!< workDual[workPivot] / workAlpha;
   HighsInt workPivot = 0;  //!< Index of the column entering the basis
   HighsInt workCount = 0;  //!< Number of BFRT flips
 

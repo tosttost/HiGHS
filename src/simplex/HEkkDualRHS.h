@@ -83,14 +83,14 @@ class HEkkDualRHS {
    */
   void updatePrimal(
       HVector* column,  //!< Column to add into primal values
-      HighsFloat theta      //!< Multiple of column to add into primal values
+      HighsFloat theta  //!< Multiple of column to add into primal values
   );
 
   /**
    * @brief Update the DSE weights
    */
   void updateWeightDualSteepestEdge(
-      HVector* column,             //!< Pivotal column
+      HVector* column,                 //!< Pivotal column
       const HighsFloat row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
       HighsFloat Kai,                  //!< -2/alpha
       HighsFloat* dse                  //!< DSE std::vector
@@ -98,16 +98,17 @@ class HEkkDualRHS {
   /**
    * @brief Update the Devex weights
    */
-  void updateWeightDevex(HVector* column,            //!< Pivotal column
-                         const HighsFloat row_outWeight  //!< max(1, (Edge weight of
-                                                     //!< leaving row)/alpha^2)
+  void updateWeightDevex(
+      HVector* column,                //!< Pivotal column
+      const HighsFloat row_outWeight  //!< max(1, (Edge weight of
+                                      //!< leaving row)/alpha^2)
   );
   /**
    * @brief Update the primal value for the row where the basis change has
    * occurred
    */
   void updatePivots(HighsInt iRow,  //!< row where the basis change has occurred
-                    HighsFloat value    //!< New primal value in this row
+                    HighsFloat value  //!< New primal value in this row
   );
 
   /**
@@ -141,9 +142,10 @@ class HEkkDualRHS {
       workIndex;  //!< List of rows with greatest primal infeasibilities
   std::vector<HighsFloat>
       work_infeasibility;            //!< Vector of all primal infeasiblities
-  std::vector<HighsFloat> workEdWt;      //!< DSE or Dvx weight
-  std::vector<HighsFloat> workEdWtFull;  //!< Full-length std::vector where weights
-                                     //!< are scattered during INVERT
+  std::vector<HighsFloat> workEdWt;  //!< DSE or Dvx weight
+  std::vector<HighsFloat>
+      workEdWtFull;  //!< Full-length std::vector where weights
+                     //!< are scattered during INVERT
 
   HighsInt partNum;
   HighsInt partNumRow;

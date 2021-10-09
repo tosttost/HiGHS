@@ -98,8 +98,8 @@ class HEkkPrimal {
   void getBasicPrimalInfeasibility();
   bool correctPrimal(const bool initialise = false);
   void shiftBound(const bool lower, const HighsInt iVar, const HighsFloat value,
-                  const HighsFloat random_value, HighsFloat& bound, HighsFloat& shift,
-                  const bool report = false);
+                  const HighsFloat random_value, HighsFloat& bound,
+                  HighsFloat& shift, const bool report = false);
   void savePrimalRay();
   HighsDebugStatus debugPrimalSimplex(const std::string message,
                                       const bool initialise = false);

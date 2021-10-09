@@ -1459,7 +1459,8 @@ HighsSolution HEkk::getSolution() {
 
   for (HighsInt iCol = 0; iCol < lp_.num_col_; iCol++) {
     solution.col_value[iCol] = (double)info_.workValue_[iCol];
-    solution.col_dual[iCol] = (HighsInt)lp_.sense_ * (double)info_.workDual_[iCol];
+    solution.col_dual[iCol] =
+        (HighsInt)lp_.sense_ * (double)info_.workDual_[iCol];
   }
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
     solution.row_value[iRow] = -(double)info_.workValue_[lp_.num_col_ + iRow];
@@ -1978,7 +1979,7 @@ void HEkk::computePrimalObjectiveValue() {
     HighsInt iVar = basis_.basicIndex_[iRow];
     if (iVar < lp_.num_col_) {
       info_.primal_objective_value +=
-	(double)info_.baseValue_[iRow] * lp_.col_cost_[iVar];
+          (double)info_.baseValue_[iRow] * lp_.col_cost_[iVar];
     }
   }
   for (HighsInt iCol = 0; iCol < lp_.num_col_; iCol++) {
@@ -2001,10 +2002,11 @@ void HEkk::computeDualObjectiveValue(const HighsInt phase) {
   const HighsInt num_tot = lp_.num_col_ + lp_.num_row_;
   for (HighsInt iCol = 0; iCol < num_tot; iCol++) {
     if (basis_.nonbasicFlag_[iCol]) {
-      const double term = (double)(info_.workValue_[iCol] * info_.workDual_[iCol]);
+      const double term =
+          (double)(info_.workValue_[iCol] * info_.workDual_[iCol]);
       if (term) {
         info_.dual_objective_value +=
-	  (double)(info_.workValue_[iCol] * info_.workDual_[iCol]);
+            (double)(info_.workValue_[iCol] * info_.workDual_[iCol]);
       }
     }
   }
@@ -2737,7 +2739,7 @@ void HEkk::computeDual() {
   dual_col.clear();
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
     const HighsFloat value = info_.workCost_[basis_.basicIndex_[iRow]] +
-                         info_.workShift_[basis_.basicIndex_[iRow]];
+                             info_.workShift_[basis_.basicIndex_[iRow]];
     if (value != 0) {
       dual_col.index[dual_col.count++] = iRow;
       dual_col.array[iRow] = value;
@@ -2822,11 +2824,11 @@ void HEkk::computeDualInfeasibleWithFlips() {
 }
 
 HighsFloat HEkk::computeDualForTableauColumn(const HighsInt iVar,
-                                         const HVector& tableau_column) {
+                                             const HVector& tableau_column) {
   //  const vector<double>& workCost = info_.workCost_;
   const vector<HighsInt>& basicIndex = basis_.basicIndex_;
 
- HighsFloat dual = info_.workCost_[iVar];
+  HighsFloat dual = info_.workCost_[iVar];
   for (HighsInt i = 0; i < tableau_column.count; i++) {
     HighsInt iRow = tableau_column.index[i];
     dual -= tableau_column.array[iRow] * info_.workCost_[basicIndex[iRow]];
@@ -2878,7 +2880,7 @@ void HEkk::correctDual(HighsInt* free_infeasibility_count) {
       if (fixed || dual_infeasibility > kUseFlipMultiplier * tau_d) {
         // Fixed, or dual infeasibility is relatively large, so flip
         min_dual_infeasibility_for_flip =
-	  min((double)dual_infeasibility, min_dual_infeasibility_for_flip);
+            min((double)dual_infeasibility, min_dual_infeasibility_for_flip);
         if (dual_infeasibility >= tau_d) num_dual_infeasibilities_for_flip++;
         sum_dual_infeasibilities_for_flip += (double)dual_infeasibility;
         max_dual_infeasibility_for_flip =
@@ -2906,7 +2908,8 @@ void HEkk::correctDual(HighsInt* free_infeasibility_count) {
     // Cost shifting must always be possible
     assert(info_.allow_cost_shifting);
     // Other variable = shift
-    if ((double)dual_infeasibility >= tau_d) num_dual_infeasibilities_for_shift++;
+    if ((double)dual_infeasibility >= tau_d)
+      num_dual_infeasibilities_for_shift++;
     sum_dual_infeasibilities_for_shift += (double)dual_infeasibility;
     max_dual_infeasibility_for_shift =
         max((double)dual_infeasibility, max_dual_infeasibility_for_shift);
@@ -3742,14 +3745,14 @@ double HEkk::factorSolveError() {
 
   double ftran_solution_error = 0;
   for (HighsInt iX = 0; iX < solution_value.size(); iX++)
-    ftran_solution_error =
-        max(fabs((double)ftran_rhs.array[solution_index[iX]] - solution_value[iX]),
-            ftran_solution_error);
+    ftran_solution_error = max(
+        fabs((double)ftran_rhs.array[solution_index[iX]] - solution_value[iX]),
+        ftran_solution_error);
   double btran_solution_error = 0;
   for (HighsInt iX = 0; iX < solution_value.size(); iX++)
-    btran_solution_error =
-        max(fabs((double)btran_rhs.array[solution_index[iX]] - solution_value[iX]),
-            btran_solution_error);
+    btran_solution_error = max(
+        fabs((double)btran_rhs.array[solution_index[iX]] - solution_value[iX]),
+        btran_solution_error);
   double solution_error = max(ftran_solution_error, btran_solution_error);
   return solution_error;
 }

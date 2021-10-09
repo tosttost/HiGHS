@@ -37,8 +37,8 @@ using std::pair;
 void solveMatrixT(const HighsInt Xstart, const HighsInt Xend,
                   const HighsInt Ystart, const HighsInt Yend,
                   const HighsInt* Tindex, const HighsFloat* Tvalue,
-                  const HighsFloat Tpivot, HighsInt* RHScount, HighsInt* RHSindex,
-                  HighsFloat* RHSarray) {
+                  const HighsFloat Tpivot, HighsInt* RHScount,
+                  HighsInt* RHSindex, HighsFloat* RHSarray) {
   // Collect by X
   HighsFloat pivotX = 0;
   for (HighsInt k = Xstart; k < Xend; k++)
@@ -64,7 +64,8 @@ void solveMatrixT(const HighsInt Xstart, const HighsInt Xend,
 void solveHyper(const HighsInt Hsize, const HighsInt* Hlookup,
                 const HighsInt* HpivotIndex, const HighsFloat* HpivotValue,
                 const HighsInt* Hstart, const HighsInt* Hend,
-                const HighsInt* Hindex, const HighsFloat* Hvalue, HVector* rhs) {
+                const HighsInt* Hindex, const HighsFloat* Hvalue,
+                HVector* rhs) {
   HighsInt RHScount = rhs->count;
   HighsInt* RHSindex = &rhs->index[0];
   HighsFloat* RHSarray = &rhs->array[0];
@@ -627,7 +628,7 @@ void HFactor::buildSimple() {
         for (HighsInt k = pivot_k + 1; k < end; k++) {
           if (report_singletons)
             printf("Col singleton: U En (%4d, %11.4g)\n", (int)Bindex[k],
-		   (double)Bvalue[k]);
+                   (double)Bvalue[k]);
           Uindex.push_back(Bindex[k]);
           Uvalue.push_back(Bvalue[k]);
         }
@@ -1190,7 +1191,8 @@ void HFactor::ftranL(HVector& rhs, const double expected_density,
     // Alias to factor L
     const HighsInt* Lstart = &this->Lstart[0];
     const HighsInt* Lindex = this->Lindex.size() > 0 ? &this->Lindex[0] : NULL;
-    const HighsFloat* Lvalue = this->Lvalue.size() > 0 ? &this->Lvalue[0] : NULL;
+    const HighsFloat* Lvalue =
+        this->Lvalue.size() > 0 ? &this->Lvalue[0] : NULL;
 
     // Transform
     for (HighsInt i = 0; i < numRow; i++) {
@@ -1212,7 +1214,8 @@ void HFactor::ftranL(HVector& rhs, const double expected_density,
   } else {
     factor_timer.start(FactorFtranLowerHyper, factor_timer_clock_pointer);
     const HighsInt* Lindex = this->Lindex.size() > 0 ? &this->Lindex[0] : NULL;
-    const HighsFloat* Lvalue = this->Lvalue.size() > 0 ? &this->Lvalue[0] : NULL;
+    const HighsFloat* Lvalue =
+        this->Lvalue.size() > 0 ? &this->Lvalue[0] : NULL;
     solveHyper(numRow, &LpivotLookup[0], &LpivotIndex[0], 0, &Lstart[0],
                &Lstart[1], &Lindex[0], &Lvalue[0], &rhs);
     factor_timer.stop(FactorFtranLowerHyper, factor_timer_clock_pointer);
@@ -1236,7 +1239,8 @@ void HFactor::btranL(HVector& rhs, const double expected_density,
     const HighsInt* LRstart = &this->LRstart[0];
     const HighsInt* LRindex =
         this->LRindex.size() > 0 ? &this->LRindex[0] : NULL;
-    const HighsFloat* LRvalue = this->LRvalue.size() > 0 ? &this->LRvalue[0] : NULL;
+    const HighsFloat* LRvalue =
+        this->LRvalue.size() > 0 ? &this->LRvalue[0] : NULL;
 
     // Transform
     for (HighsInt i = numRow - 1; i >= 0; i--) {
@@ -1260,7 +1264,8 @@ void HFactor::btranL(HVector& rhs, const double expected_density,
     factor_timer.start(FactorBtranLowerHyper, factor_timer_clock_pointer);
     const HighsInt* LRindex =
         this->LRindex.size() > 0 ? &this->LRindex[0] : NULL;
-    const HighsFloat* LRvalue = this->LRvalue.size() > 0 ? &this->LRvalue[0] : NULL;
+    const HighsFloat* LRvalue =
+        this->LRvalue.size() > 0 ? &this->LRvalue[0] : NULL;
     solveHyper(numRow, &LpivotLookup[0], &LpivotIndex[0], 0, &LRstart[0],
                &LRstart[1], &LRindex[0], &LRvalue[0], &rhs);
     factor_timer.stop(FactorBtranLowerHyper, factor_timer_clock_pointer);
@@ -1320,7 +1325,8 @@ void HFactor::ftranU(HVector& rhs, const double expected_density,
     const HighsInt* Ustart = &this->Ustart[0];
     const HighsInt* Uend = &this->Ulastp[0];
     const HighsInt* Uindex = this->Uindex.size() > 0 ? &this->Uindex[0] : NULL;
-    const HighsFloat* Uvalue = this->Uvalue.size() > 0 ? &this->Uvalue[0] : NULL;
+    const HighsFloat* Uvalue =
+        this->Uvalue.size() > 0 ? &this->Uvalue[0] : NULL;
 
     // Transform
     HighsInt UpivotCount = UpivotIndex.size();
@@ -1373,7 +1379,8 @@ void HFactor::ftranU(HVector& rhs, const double expected_density,
       use_clock = FactorFtranUpperHyper0;
     factor_timer.start(use_clock, factor_timer_clock_pointer);
     const HighsInt* Uindex = this->Uindex.size() > 0 ? &this->Uindex[0] : NULL;
-    const HighsFloat* Uvalue = this->Uvalue.size() > 0 ? &this->Uvalue[0] : NULL;
+    const HighsFloat* Uvalue =
+        this->Uvalue.size() > 0 ? &this->Uvalue[0] : NULL;
     solveHyper(numRow, &UpivotLookup[0], &UpivotIndex[0], &UpivotValue[0],
                &Ustart[0], &Ulastp[0], &Uindex[0], &Uvalue[0], &rhs);
     factor_timer.stop(use_clock, factor_timer_clock_pointer);
@@ -1479,7 +1486,8 @@ void HFactor::ftranFT(HVector& vector) const {
 
   const HighsInt* PFstart = this->PFstart.size() > 0 ? &this->PFstart[0] : NULL;
   const HighsInt* PFindex = this->PFindex.size() > 0 ? &this->PFindex[0] : NULL;
-  const HighsFloat* PFvalue = this->PFvalue.size() > 0 ? &this->PFvalue[0] : NULL;
+  const HighsFloat* PFvalue =
+      this->PFvalue.size() > 0 ? &this->PFvalue[0] : NULL;
 
   // Alias to non constant
   HighsInt RHScount = vector.count;
@@ -1517,7 +1525,8 @@ void HFactor::btranFT(HVector& vector) const {
       this->PFpivotIndex.size() > 0 ? &this->PFpivotIndex[0] : NULL;
   const HighsInt* PFstart = this->PFstart.size() > 0 ? &this->PFstart[0] : NULL;
   const HighsInt* PFindex = this->PFindex.size() > 0 ? &this->PFindex[0] : NULL;
-  const HighsFloat* PFvalue = this->PFvalue.size() > 0 ? &this->PFvalue[0] : NULL;
+  const HighsFloat* PFvalue =
+      this->PFvalue.size() > 0 ? &this->PFvalue[0] : NULL;
 
   // Alias to non constant
   double RHS_synthetic_tick = 0;
