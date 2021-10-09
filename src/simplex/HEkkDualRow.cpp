@@ -482,10 +482,20 @@ void HEkkDualRow::updateDual(HighsFloat theta) {
   analysis->simplexTimerStart(UpdateDualClock);
   HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
   HighsFloat dual_objective_value_change = 0;
+  printf("\nHEkkDualRow::updateDual: theta = %g\n", (double)theta);
   for (HighsInt i = 0; i < packCount; i++) {
-    workDual[packIndex[i]] -= theta * packValue[i];
-    // Identify the change to the dual objective
     HighsInt iCol = packIndex[i];
+    HighsFloat dual = workDual[iCol];
+    HighsFloat new_dual = dual -  theta * packValue[i];
+    printf("i = %2d; Icol = %2d: dual = %21.17g; packValue = %21.17g; new_dual = %21.17g\n",
+	   (int)i,
+	   (int)iCol,
+	   (double)dual, (double)packValue[i],
+	   (double)new_dual);
+    workDual[packIndex[i]] -= theta * packValue[i];
+   
+    // Identify the change to the dual objective
+    //    HighsInt iCol = packIndex[i];
     const HighsFloat delta_dual = theta * packValue[i];
     const HighsFloat local_value = ekk_instance_.info_.workValue_[iCol];
     HighsFloat local_dual_objective_change =

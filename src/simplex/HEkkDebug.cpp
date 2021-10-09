@@ -75,9 +75,9 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   static double max_max_primal_residual;
   static double max_max_dual_residual;
   if (initialise) {
-    max_max_basic_dual = 0;
-    max_max_primal_residual = 0;
-    max_max_dual_residual = 0;
+    max_max_basic_dual = -1;
+    max_max_primal_residual = -1;
+    max_max_dual_residual = -1;
     return ::HighsDebugStatus::kOk;
   }
   HighsDebugStatus return_status = HighsDebugStatus::kOk;
@@ -112,32 +112,32 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       options.primal_feasibility_tolerance;
   const double dual_feasibility_tolerance = options.dual_feasibility_tolerance;
   HighsInt num_dual_infeasibility = 0;
-  double max_dual_infeasibility = 0;
-  double sum_dual_infeasibility = 0;
+  HighsFloat max_dual_infeasibility = 0;
+  HighsFloat sum_dual_infeasibility = 0;
   HighsInt num_primal_infeasibility = 0;
-  double max_primal_infeasibility = 0;
-  double sum_primal_infeasibility = 0;
+  HighsFloat max_primal_infeasibility = 0;
+  HighsFloat sum_primal_infeasibility = 0;
   // Check the nonbasic variables
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
     if (basis.nonbasicFlag_[iVar] == kNonbasicFlagFalse) continue;
     // For nonbasic variables, check that they are on a bound (or free
     // at 0 with correct nonbasic move. Determine dual infeasibilities
-    double dual = (double)info.workDual_[iVar];
-    double lower = (double)info.workLower_[iVar];
-    double upper = (double)info.workUpper_[iVar];
-    double value = (double)info.workValue_[iVar];
-    double primal_error = 0;
-    double dual_infeasibility = 0;
+    HighsFloat dual = info.workDual_[iVar];
+    HighsFloat lower = info.workLower_[iVar];
+    HighsFloat upper = info.workUpper_[iVar];
+    HighsFloat value = info.workValue_[iVar];
+    HighsFloat primal_error = 0;
+    HighsFloat dual_infeasibility = 0;
     HighsInt move;
     if (lower == upper) {
       primal_error = abs(lower - value);
       move = kNonbasicMoveZe;
     } else if (value == lower) {
       move = kNonbasicMoveUp;
-      dual_infeasibility = max(-dual, 0.);
+      dual_infeasibility = max(-dual, (HighsFloat)0.);
     } else if (value == upper) {
       move = kNonbasicMoveDn;
-      dual_infeasibility = max(dual, 0.);
+      dual_infeasibility = max(dual, (HighsFloat)0.);
     } else {
       // If not fixed or at a bound, only valid status can be zero and free
       primal_error = abs(value);
@@ -151,7 +151,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       max_dual_infeasibility = max(dual_infeasibility, max_dual_infeasibility);
       sum_dual_infeasibility += dual_infeasibility;
     }
-    if (primal_error) {
+    if ((double)primal_error) {
       highsLogDev(options.log_options, HighsLogType::kError,
                   "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT
                   " Nonbasic variable %" HIGHSINT_FORMAT
@@ -160,7 +160,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
                   "= %g for [%g, %g, %g]\n",
                   message.c_str(), iteration_count, iVar, primal_error, lower,
                   value, upper);
-      assert(!primal_error);
+      assert(!(double)primal_error);
       return HighsDebugStatus::kLogicalError;
     }
     bool move_error = move != basis.nonbasicMove_[iVar];
@@ -179,8 +179,8 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
   }
   // Check the basic variables
-  double max_basic_dual = 0;
-  const double base =
+  HighsFloat max_basic_dual = 0;
+  const HighsFloat base =
       info.primal_simplex_phase1_cost_perturbation_multiplier * 5e-7;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
@@ -212,13 +212,13 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       assert(!nonbasicMove_error);
       return HighsDebugStatus::kLogicalError;
     }
-    double workLower = (double)info.workLower_[iVar];
-    double workUpper = (double)info.workUpper_[iVar];
-    double cost = (double)info.workCost_[iVar];
-    double dual = (double)info.workDual_[iVar];
-    double lower = (double)info.baseLower_[iRow];
-    double upper = (double)info.baseUpper_[iRow];
-    double value = (double)info.baseValue_[iRow];
+    HighsFloat workLower = info.workLower_[iVar];
+    HighsFloat workUpper = info.workUpper_[iVar];
+    HighsFloat cost = info.workCost_[iVar];
+    HighsFloat dual = info.workDual_[iVar];
+    HighsFloat lower = info.baseLower_[iRow];
+    HighsFloat upper = info.baseUpper_[iRow];
+    HighsFloat value = info.baseValue_[iRow];
     bool baseBound_error = workLower != lower || workUpper != upper;
     if (baseBound_error) {
       highsLogDev(options.log_options, HighsLogType::kError,
@@ -241,9 +241,9 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       bound_violated = 1;
     }
     if (algorithm == SimplexAlgorithm::kPrimal && phase == 1) {
-      double primal_phase1_cost = bound_violated;
-      if (base) primal_phase1_cost *= 1 + base * info.numTotRandomValue_[iRow];
-      bool primal_phase1_cost_error = abs(cost - primal_phase1_cost);
+      HighsFloat primal_phase1_cost = bound_violated;
+      if ((double)base) primal_phase1_cost *= 1 + base * info.numTotRandomValue_[iRow];
+      bool primal_phase1_cost_error = (double)abs(cost - primal_phase1_cost);
       if (primal_phase1_cost_error) {
         highsLogDev(options.log_options, HighsLogType::kError,
                     "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT
@@ -260,7 +260,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
     if (!bound_violated) continue;
     // @primal_infeasibility calculation
-    double primal_infeasibility = 0;
+    HighsFloat primal_infeasibility = 0;
     if (bound_violated < 0) {
       primal_infeasibility = lower - value;
     } else {
@@ -269,7 +269,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     if (primal_infeasibility > primal_feasibility_tolerance)
       num_primal_infeasibility++;
     max_primal_infeasibility =
-        max(primal_infeasibility, max_primal_infeasibility);
+      max(primal_infeasibility, max_primal_infeasibility);
     sum_primal_infeasibility += primal_infeasibility;
   }
   // Report on basic dual values
@@ -289,10 +289,10 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   if (max_basic_dual > 2 * max_max_basic_dual) {
     highsLogDev(options.log_options, report_level,
                 "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT
-                " %-9s max   basic dual = %9.4g\n",
+                " %-9s max      basic dual = %9.4g\n",
                 message.c_str(), iteration_count, value_adjective.c_str(),
                 max_basic_dual);
-    max_max_basic_dual = max_basic_dual;
+    max_max_basic_dual = (double)max_basic_dual;
   }
   // Check that the number, max and sums of primal and dual infeasibilities (if
   // known) are correct
@@ -452,23 +452,23 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   // and costs for basic rows. The latter are normally zero, but will
   // be nonzero if the constraint is violated in primal phase 1, or if
   // the row cost is a perturbed zero in dual simplex.
-  vector<double> primal_value(num_tot);
-  vector<double> dual_value(num_tot);
+  vector<HighsFloat> primal_value(num_tot);
+  vector<HighsFloat> dual_value(num_tot);
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-    primal_value[iVar] = (double)info.workValue_[iVar];
-    dual_value[iVar] = (double)info.workDual_[iVar];
+    primal_value[iVar] = info.workValue_[iVar];
+    dual_value[iVar] = info.workDual_[iVar];
   }
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
-    primal_value[iVar] = (double)info.baseValue_[iRow];
-    dual_value[iVar] = -(double)info.workCost_[iVar];
+    primal_value[iVar] = info.baseValue_[iRow];
+    dual_value[iVar] = -info.workCost_[iVar];
   }
   // Accumulate primal_activities
-  double max_dual_residual = 0;
-  vector<double> primal_activity(num_row, 0);
+  HighsFloat max_dual_residual = 0;
+  vector<HighsFloat> primal_activity(num_row, 0);
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
-    double dual = (double)info.workCost_[iCol];
-    double value = primal_value[iCol];
+    HighsFloat dual = info.workCost_[iCol];
+    HighsFloat value = primal_value[iCol];
     for (HighsInt iEl = lp.a_matrix_.start_[iCol];
          iEl < lp.a_matrix_.start_[iCol + 1]; iEl++) {
       HighsInt iRow = lp.a_matrix_.index_[iEl];
@@ -477,14 +477,21 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       primal_activity[iRow] += value * Avalue;
       dual += dual_value[iVar] * Avalue;
     }
-    double dual_residual = abs(dual - (double)info.workDual_[iCol]);
+    HighsFloat dual_residual = abs(dual - info.workDual_[iCol]);
     max_dual_residual = max(dual_residual, max_dual_residual);
+    if ((double)dual_residual) {
+      printf("Icol = %2d: dual = %21.17g; workDual = %21.17g; residual = %11.7g; max_residual = %11.7g\n",
+	     (int)iCol,
+	     (double)dual, (double)info.workDual_[iCol],
+	     (double)dual_residual,
+	     (double)max_dual_residual);
+    }
   }
   // Remember that simplex row values are the negated row activities
-  double max_primal_residual = 0;
+  HighsFloat max_primal_residual = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = num_col + iRow;
-    double primal_residual = abs(primal_activity[iRow] + primal_value[iVar]);
+    HighsFloat primal_residual = abs(primal_activity[iRow] + primal_value[iVar]);
     max_primal_residual = max(primal_residual, max_primal_residual);
   }
   if (max_primal_residual > excessive_residual_error) {
@@ -500,13 +507,13 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     report_level = HighsLogType::kVerbose;
     return_status = debugWorseStatus(HighsDebugStatus::kOk, return_status);
   }
-  if (max_primal_residual > 2 * max_max_primal_residual) {
+  if ((double)max_primal_residual > 2 * max_max_primal_residual) {
     highsLogDev(options.log_options, report_level,
                 "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT
                 " %-9s max primal residual = %9.4g\n",
                 message.c_str(), iteration_count, value_adjective.c_str(),
-                max_primal_residual);
-    max_max_primal_residual = max_primal_residual;
+                (double)max_primal_residual);
+    max_max_primal_residual = (double)max_primal_residual;
   }
   if (max_dual_residual > excessive_residual_error) {
     value_adjective = "Excessive";
@@ -521,13 +528,13 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     report_level = HighsLogType::kVerbose;
     return_status = debugWorseStatus(HighsDebugStatus::kOk, return_status);
   }
-  if (max_dual_residual > 2 * max_max_dual_residual) {
+  if ((double)max_dual_residual > 2 * max_max_dual_residual) {
     highsLogDev(options.log_options, report_level,
                 "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT
                 " %-9s max   dual residual = %9.4g\n",
                 message.c_str(), iteration_count, value_adjective.c_str(),
-                max_dual_residual);
-    max_max_dual_residual = max_dual_residual;
+                (double)max_dual_residual);
+    max_max_dual_residual = (double)max_dual_residual;
   }
   return return_status;
 }
