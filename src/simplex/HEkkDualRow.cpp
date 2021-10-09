@@ -100,6 +100,7 @@ void HEkkDualRow::choosePossible() {
     if (alpha > Ta) {
       workData[workCount++] = make_pair(iCol, alpha);
       const HighsFloat relax = workDual[iCol] * move + Td;
+      const HighsFloat workTheta_alpha = workTheta * alpha;
       if (workTheta * alpha > relax) workTheta = relax / alpha;
     }
   }

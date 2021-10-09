@@ -114,7 +114,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
         const HighsFloat pivotX = 1 / Avalue[pivot_k];
         if (report_singletons)
           printf("Stage %d: Row singleton (%4d, %g)\n", (int)iK, (int)pivot_k,
-                 pivotX);
+                 (double)pivotX);
         for (HighsInt section = 0; section < 2; section++) {
           HighsInt p0 = section == 0 ? start : pivot_k + 1;
           HighsInt p1 = section == 0 ? pivot_k : end;
@@ -123,7 +123,7 @@ HighsInt HFactor::rebuild(HighsTimerClock* factor_timer_clock_pointer) {
             if (!has_pivot[local_iRow]) {
               if (report_singletons)
                 printf("Row singleton: L En (%4d, %11.4g)\n", (int)local_iRow,
-                       Avalue[k] * pivotX);
+                       double(Avalue[k] * pivotX));
               Lindex.push_back(local_iRow);
               Lvalue.push_back(Avalue[k] * pivotX);
             } else {
