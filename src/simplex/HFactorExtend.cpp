@@ -93,7 +93,8 @@ void HFactor::addRows(const HighsSparseMatrix* ar_matrix) {
     for (HighsInt iX = 0; iX < rhs_num_nz; iX++) {
       HighsInt iCol = rhs.index[iX];
       new_lr_rows.index_.push_back(iCol);
-      new_lr_rows.value_.push_back(rhs.array[iCol]);
+      // ToDo Avoid loss of precision here
+      new_lr_rows.value_.push_back((double)rhs.array[iCol]);
       //      printf("   %4d, %11.4g\n", (int)iCol, rhs.array[iCol]);
     }
     new_lr_rows.start_.push_back(new_lr_rows.index_.size());

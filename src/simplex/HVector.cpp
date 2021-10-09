@@ -121,7 +121,7 @@ void HVector::copy(const HVector* from) {
   }
 }
 
-double HVector::norm2() {
+HighsFloat HVector::norm2() {
   /*
    * Compute the squared 2-norm of the vector
    */
@@ -134,10 +134,10 @@ double HVector::norm2() {
     HighsFloat value = workArray[workIndex[i]];
     result += value * value;
   }
-  return (double)result;
+  return result;
 }
 
-void HVector::saxpy(const double pivotX, const HVector* pivot) {
+void HVector::saxpy(const HighsFloat pivotX, const HVector* pivot) {
   /*
    * Add a multiple pivotX of *pivot into this vector, maintaining
    * indices of nonzeros but not tracking cancellation

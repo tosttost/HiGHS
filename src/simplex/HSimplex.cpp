@@ -200,9 +200,9 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
       assert(int(scale.row.size()) > iRow);
       scale_mu = scale.row[iRow] * scale.cost;
     }
-    const double dual = info.workDual_[iVar];
-    const double lower = info.workLower_[iVar];
-    const double upper = info.workUpper_[iVar];
+    const double dual = (double)info.workDual_[iVar];
+    const double lower = (double)info.workLower_[iVar];
+    const double upper = (double)info.workUpper_[iVar];
     const double unscaled_dual = dual * scale_mu;
 
     double dual_infeasibility;
@@ -235,11 +235,11 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
       iRow = iVar - scale.num_col;
       scale_mu = 1 / scale.row[iRow];
     }
-    double unscaled_lower = info.baseLower_[ix] * scale_mu;
-    double unscaled_value = info.baseValue_[ix] * scale_mu;
-    double unscaled_upper = info.baseUpper_[ix] * scale_mu;
+    HighsFloat unscaled_lower = info.baseLower_[ix] * scale_mu;
+    HighsFloat unscaled_value = info.baseValue_[ix] * scale_mu;
+    HighsFloat unscaled_upper = info.baseUpper_[ix] * scale_mu;
     // @primal_infeasibility calculation
-    double primal_infeasibility = 0;
+    HighsFloat primal_infeasibility = 0;
     if (unscaled_value < unscaled_lower - primal_feasibility_tolerance) {
       primal_infeasibility = unscaled_lower - unscaled_value;
     } else if (unscaled_value > unscaled_upper + primal_feasibility_tolerance) {
@@ -248,8 +248,8 @@ void getUnscaledInfeasibilities(const HighsOptions& options,
     if (primal_infeasibility > 0) {
       num_primal_infeasibilities++;
       max_primal_infeasibility =
-          max(primal_infeasibility, max_primal_infeasibility);
-      sum_primal_infeasibilities += primal_infeasibility;
+          max((double)primal_infeasibility, max_primal_infeasibility);
+      sum_primal_infeasibilities += (double)primal_infeasibility;
     }
   }
   setSolutionStatus(highs_info);

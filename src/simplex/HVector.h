@@ -79,13 +79,13 @@ class HVector {
   /**
    * @brief Compute the squared 2-norm of the vector
    */
-  double norm2();
+  HighsFloat norm2();
 
   /**
    * @brief Add a multiple pivotX of *pivot into this vector,
    * maintaining indices of nonzeros but not tracking cancellation
    */
-  void saxpy(const double pivotX,  //!< The multiple of *pivot to be added
+  void saxpy(const HighsFloat pivotX,  //!< The multiple of *pivot to be added
              const HVector* pivot  //!< The vector whose multiple is to be added
   );
   bool isEqual(HVector& v0);

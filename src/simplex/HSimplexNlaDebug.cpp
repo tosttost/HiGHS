@@ -176,7 +176,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
       double inverse_col_error_norm = 0;
       for (HighsInt lc_iRow = 0; lc_iRow < num_row; lc_iRow++) {
         double ckValue = lc_iRow == iRow ? 1 : 0;
-        double inverse_error = fabs(column.array[lc_iRow] - ckValue);
+        double inverse_error = fabs((double)column.array[lc_iRow] - ckValue);
         inverse_col_error_norm =
             std::max(inverse_error, inverse_col_error_norm);
       }
@@ -220,7 +220,7 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
         }
       }
       for (HighsInt iCol = 0; iCol < num_row; iCol++) {
-        if (column.array[iCol]) column.index[column.count++] = iCol;
+        if ((double)column.array[iCol]) column.index[column.count++] = iCol;
       }
       const bool report_row = report && iRow == check_row;
       if (report_row) {
@@ -232,9 +232,9 @@ HighsDebugStatus HSimplexNla::debugCheckInvert(
       if (report_row) reportArray("Check col after  BTRAN", &column, true);
       double inverse_col_error_norm = 0;
       for (HighsInt lc_iRow = 0; lc_iRow < num_row; lc_iRow++) {
-        double value = column.array[lc_iRow];
+        HighsFloat value = column.array[lc_iRow];
         double ckValue = lc_iRow == iRow ? 1 : 0;
-        double inverse_error = fabs(value - ckValue);
+        double inverse_error = (double)fabs(value - ckValue);
         inverse_col_error_norm =
             std::max(inverse_error, inverse_col_error_norm);
       }
@@ -274,18 +274,18 @@ double HSimplexNla::debugInvertResidualError(const bool transposed,
         for (HighsInt iEl = a_matrix_start[iCol];
              iEl < a_matrix_start[iCol + 1]; iEl++) {
           HighsInt index = a_matrix_index[iEl];
-          double value = solution.array[index];
+          HighsFloat value = solution.array[index];
           residual.array[iRow] -= value * a_matrix_value[iEl];
         }
       } else {
         HighsInt index = iCol - num_col;
-        double value = solution.array[index];
+        HighsFloat value = solution.array[index];
         residual.array[iRow] -= value;
       }
     }
   } else {
     for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-      double value = solution.array[iRow];
+      HighsFloat value = solution.array[iRow];
       HighsInt iCol = base_index[iRow];
       if (iCol < num_col) {
         for (HighsInt iEl = a_matrix_start[iCol];
@@ -302,7 +302,7 @@ double HSimplexNla::debugInvertResidualError(const bool transposed,
 
   double residual_error_norm = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-    double residual_error = fabs(residual.array[iRow]);
+    double residual_error = (double)fabs(residual.array[iRow]);
     residual_error_norm = std::max(residual_error, residual_error_norm);
   }
   return residual_error_norm;
@@ -315,7 +315,7 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
   const HighsOptions* options = this->options_;
   double solve_error_norm = 0;
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
-    double solve_error = fabs(solution.array[iRow] - true_solution.array[iRow]);
+    double solve_error = (double)fabs(solution.array[iRow] - true_solution.array[iRow]);
     solve_error_norm = std::max(solve_error, solve_error_norm);
   }
   double residual_error_norm =

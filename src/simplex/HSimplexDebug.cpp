@@ -28,13 +28,13 @@ void debugDualChuzcFailNorms(
   workDataNorm = 0;
   for (HighsInt i = 0; i < workCount; i++) {
     HighsFloat value = workData[i].second;
-    workDataNorm += value * value;
+    workDataNorm += (double)(value * value);
   }
   workDataNorm = sqrt(workDataNorm);
   workDualNorm = 0;
   for (HighsInt iVar = 0; iVar < numVar; iVar++) {
     HighsFloat value = workDual[iVar];
-    workDualNorm += value * value;
+    workDualNorm += (double)(value * value);
   }
   workDualNorm = sqrt(workDualNorm);
 }

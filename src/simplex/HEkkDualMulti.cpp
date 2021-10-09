@@ -136,7 +136,7 @@ void HEkkDual::majorChooseRow() {
       for (HighsInt i = 0; i < multi_num; i++) {
         const HighsInt iRow = multi_choice[i].row_out;
         if (iRow < 0) continue;
-        double updated_edge_weight = dualRHS.workEdWt[iRow];
+        HighsFloat updated_edge_weight = dualRHS.workEdWt[iRow];
         computed_edge_weight = dualRHS.workEdWt[iRow] =
             multi_choice[i].infeasEdWt;
         //      if (updated_edge_weight < 0.25 * computed_edge_weight) {
@@ -181,7 +181,7 @@ void HEkkDual::majorChooseRowBtran() {
   HighsInt multi_ntasks = 0;
   HighsInt multi_iRow[kHighsThreadLimit];
   HighsInt multi_iwhich[kHighsThreadLimit];
-  double multi_EdWt[kHighsThreadLimit];
+  HighsFloat multi_EdWt[kHighsThreadLimit];
   HVector_ptr multi_vector[kHighsThreadLimit];
   for (HighsInt ich = 0; ich < multi_num; ich++) {
     if (multi_choice[ich].row_out >= 0) {
@@ -245,9 +245,9 @@ void HEkkDual::minorChooseRow() {
   for (HighsInt ich = 0; ich < multi_num; ich++) {
     const HighsInt iRow = multi_choice[ich].row_out;
     if (iRow < 0) continue;
-    double infeasValue = multi_choice[ich].infeasValue;
-    double infeasEdWt = multi_choice[ich].infeasEdWt;
-    double infeasMerit = infeasValue / infeasEdWt;
+    HighsFloat infeasValue = multi_choice[ich].infeasValue;
+    HighsFloat infeasEdWt = multi_choice[ich].infeasEdWt;
+    double infeasMerit = (double)(infeasValue / infeasEdWt);
     if (bestMerit < infeasMerit) {
       bestMerit = infeasMerit;
       multi_iChoice = ich;
@@ -264,9 +264,9 @@ void HEkkDual::minorChooseRow() {
     // Assign useful variables
     row_out = workChoice->row_out;
     variable_out = ekk_instance_.basis_.basicIndex_[row_out];
-    double valueOut = workChoice->baseValue;
-    double lowerOut = workChoice->baseLower;
-    double upperOut = workChoice->baseUpper;
+    HighsFloat valueOut = workChoice->baseValue;
+    HighsFloat lowerOut = workChoice->baseLower;
+    HighsFloat upperOut = workChoice->baseUpper;
     delta_primal = valueOut - (valueOut < lowerOut ? lowerOut : upperOut);
     move_out = delta_primal < 0 ? -1 : 1;
 
@@ -316,8 +316,8 @@ void HEkkDual::minorUpdate() {
   for (HighsInt i = 0; i < multi_num; i++) {
     HighsInt iRow = multi_choice[i].row_out;
     if (iRow < 0) continue;
-    double myInfeas = multi_choice[i].infeasValue;
-    double myWeight = multi_choice[i].infeasEdWt;
+    HighsFloat myInfeas = multi_choice[i].infeasValue;
+    HighsFloat myWeight = multi_choice[i].infeasEdWt;
     countRemain += (myInfeas / myWeight > multi_choice[i].infeasLimit);
   }
   if (countRemain == 0) multi_chooseAgain = 1;
@@ -353,7 +353,7 @@ void HEkkDual::minorUpdateDual() {
     if (ich == multi_iChoice || multi_choice[ich].row_out >= 0) {
       HVector* this_ep = &multi_choice[ich].row_ep;
       for (HighsInt i = 0; i < dualRow.workCount; i++) {
-        double dot = a_matrix->computeDot(*this_ep, dualRow.workData[i].first);
+        HighsFloat dot = a_matrix->computeDot(*this_ep, dualRow.workData[i].first);
         multi_choice[ich].baseValue -= dualRow.workData[i].second * dot;
       }
     }
@@ -363,9 +363,9 @@ void HEkkDual::minorUpdateDual() {
 void HEkkDual::minorUpdatePrimal() {
   MChoice* choice = &multi_choice[multi_iChoice];
   MFinish* finish = &multi_finish[multi_nFinish];
-  double valueOut = choice->baseValue;
-  double lowerOut = choice->baseLower;
-  double upperOut = choice->baseUpper;
+  HighsFloat valueOut = choice->baseValue;
+  HighsFloat lowerOut = choice->baseLower;
+  HighsFloat upperOut = choice->baseUpper;
   if (delta_primal < 0) {
     theta_primal = (valueOut - lowerOut) / alpha_row;
     finish->basicBound = lowerOut;
@@ -382,14 +382,14 @@ void HEkkDual::minorUpdatePrimal() {
     if (row_out < 0)
       printf("ERROR: row_out = %" HIGHSINT_FORMAT " in minorUpdatePrimal\n",
              row_out);
-    const double updated_edge_weight = dualRHS.workEdWt[row_out];
+    const HighsFloat updated_edge_weight = dualRHS.workEdWt[row_out];
     new_devex_framework = newDevexFramework(updated_edge_weight);
     minor_new_devex_framework = new_devex_framework;
     // Transform the edge weight of the pivotal row according to the
     // simplex update
-    double new_pivotal_edge_weight =
+    HighsFloat new_pivotal_edge_weight =
         computed_edge_weight / (alpha_row * alpha_row);
-    new_pivotal_edge_weight = max(1.0, new_pivotal_edge_weight);
+    new_pivotal_edge_weight = max((HighsFloat)1.0, new_pivotal_edge_weight);
     // Store the Devex weight of the leaving row now - OK since it's
     // stored in finish->EdWt and the updated weights are stored in
     // multi_choice[*].infeasEdWt
@@ -403,20 +403,20 @@ void HEkkDual::minorUpdatePrimal() {
   for (HighsInt ich = 0; ich < multi_num; ich++) {
     if (multi_choice[ich].row_out >= 0) {
       HVector* this_ep = &multi_choice[ich].row_ep;
-      double dot = a_matrix->computeDot(*this_ep, variable_in);
+      HighsFloat dot = a_matrix->computeDot(*this_ep, variable_in);
       multi_choice[ich].baseValue -= theta_primal * dot;
-      double value = multi_choice[ich].baseValue;
-      double lower = multi_choice[ich].baseLower;
-      double upper = multi_choice[ich].baseUpper;
-      double infeas = 0;
+      HighsFloat value = multi_choice[ich].baseValue;
+      HighsFloat lower = multi_choice[ich].baseLower;
+      HighsFloat upper = multi_choice[ich].baseUpper;
+      HighsFloat infeas = 0;
       if (value < lower - Tp) infeas = value - lower;
       if (value > upper + Tp) infeas = value - upper;
       infeas *= infeas;
       multi_choice[ich].infeasValue = infeas;
       if (dual_edge_weight_mode == DualEdgeWeightMode::kDevex) {
         // Update the other Devex weights
-        const double new_pivotal_edge_weight = finish->EdWt;
-        double aa_iRow = dot;
+        const HighsFloat new_pivotal_edge_weight = finish->EdWt;
+        HighsFloat aa_iRow = dot;
         multi_choice[ich].infeasEdWt =
             max(multi_choice[ich].infeasEdWt,
                 new_pivotal_edge_weight * aa_iRow * aa_iRow);
@@ -452,7 +452,7 @@ void HEkkDual::minorUpdateRows() {
   if (updateRows_inDense) {
     HighsInt multi_nTasks = 0;
     HighsInt multi_iwhich[kHighsThreadLimit];
-    double multi_xpivot[kHighsThreadLimit];
+    HighsFloat multi_xpivot[kHighsThreadLimit];
     HVector_ptr multi_vector[kHighsThreadLimit];
 
     /*
@@ -465,7 +465,7 @@ void HEkkDual::minorUpdateRows() {
     for (HighsInt ich = 0; ich < multi_num; ich++) {
       if (multi_choice[ich].row_out >= 0) {
         HVector* next_ep = &multi_choice[ich].row_ep;
-        double pivotX = a_matrix->computeDot(*next_ep, variable_in);
+        HighsFloat pivotX = a_matrix->computeDot(*next_ep, variable_in);
         if (fabs(pivotX) < kHighsTiny) continue;
         multi_vector[multi_nTasks] = next_ep;
         multi_xpivot[multi_nTasks] = -pivotX / alpha_row;
@@ -478,7 +478,7 @@ void HEkkDual::minorUpdateRows() {
 #pragma omp parallel for schedule(dynamic)
     for (HighsInt i = 0; i < multi_nTasks; i++) {
       HVector_ptr nextEp = multi_vector[i];
-      const double xpivot = multi_xpivot[i];
+      const HighsFloat xpivot = multi_xpivot[i];
       nextEp->saxpy(xpivot, Row);
       nextEp->tight();
       if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
@@ -496,7 +496,7 @@ void HEkkDual::minorUpdateRows() {
     for (HighsInt ich = 0; ich < multi_num; ich++) {
       if (multi_choice[ich].row_out >= 0) {
         HVector* next_ep = &multi_choice[ich].row_ep;
-        double pivotX = a_matrix->computeDot(*next_ep, variable_in);
+        HighsFloat pivotX = a_matrix->computeDot(*next_ep, variable_in);
         if (fabs(pivotX) < kHighsTiny) continue;
         next_ep->saxpy(-pivotX / alpha_row, Row);
         next_ep->tight();
@@ -572,8 +572,8 @@ void HEkkDual::majorUpdateFtranPrepare() {
     // Update this buffer by previous Row_ep
     for (HighsInt jFn = iFn - 1; jFn >= 0; jFn--) {
       MFinish* jFinish = &multi_finish[jFn];
-      double* jRow_epArray = &jFinish->row_ep->array[0];
-      double pivotX = 0;
+      HighsFloat* jRow_epArray = &jFinish->row_ep->array[0];
+      HighsFloat pivotX = 0;
       for (HighsInt k = 0; k < Vec->count; k++) {
         HighsInt iRow = Vec->index[k];
         pivotX += Vec->array[iRow] * jRow_epArray[iRow];
@@ -683,18 +683,18 @@ void HEkkDual::majorUpdateFtranFinal() {
     for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
       multi_finish[iFn].col_aq->count = -1;
       multi_finish[iFn].row_ep->count = -1;
-      double* myCol = &multi_finish[iFn].col_aq->array[0];
-      double* myRow = &multi_finish[iFn].row_ep->array[0];
+      HighsFloat* myCol = &multi_finish[iFn].col_aq->array[0];
+      HighsFloat* myRow = &multi_finish[iFn].row_ep->array[0];
       for (HighsInt jFn = 0; jFn < iFn; jFn++) {
         HighsInt pivotRow = multi_finish[jFn].row_out;
-        const double pivotAlpha = multi_finish[jFn].alpha_row;
-        const double* pivotArray = &multi_finish[jFn].col_aq->array[0];
-        double pivotX1 = myCol[pivotRow];
-        double pivotX2 = myRow[pivotRow];
+        const HighsFloat pivotAlpha = multi_finish[jFn].alpha_row;
+        const HighsFloat* pivotArray = &multi_finish[jFn].col_aq->array[0];
+        HighsFloat pivotX1 = myCol[pivotRow];
+        HighsFloat pivotX2 = myRow[pivotRow];
 
         // The FTRAN regular buffer
         if (fabs(pivotX1) > kHighsTiny) {
-          const double pivot = pivotX1 / pivotAlpha;
+          const HighsFloat pivot = pivotX1 / pivotAlpha;
 #pragma omp parallel for
           for (HighsInt i = 0; i < solver_num_row; i++)
             myCol[i] -= pivot * pivotArray[i];
@@ -702,7 +702,7 @@ void HEkkDual::majorUpdateFtranFinal() {
         }
         // The FTRAN-DSE buffer
         if (fabs(pivotX2) > kHighsTiny) {
-          const double pivot = pivotX2 / pivotAlpha;
+          const HighsFloat pivot = pivotX2 / pivotAlpha;
 #pragma omp parallel for
           for (HighsInt i = 0; i < solver_num_row; i++)
             myRow[i] -= pivot * pivotArray[i];
@@ -718,7 +718,7 @@ void HEkkDual::majorUpdateFtranFinal() {
       for (HighsInt jFn = 0; jFn < iFn; jFn++) {
         MFinish* jFinish = &multi_finish[jFn];
         HighsInt pivotRow = jFinish->row_out;
-        double pivotX1 = Col->array[pivotRow];
+        HighsFloat pivotX1 = Col->array[pivotRow];
         // The FTRAN regular buffer
         if (fabs(pivotX1) > kHighsTiny) {
           pivotX1 /= jFinish->alpha_row;
@@ -726,7 +726,7 @@ void HEkkDual::majorUpdateFtranFinal() {
           Col->array[pivotRow] = pivotX1;
         }
         // The FTRAN-DSE buffer
-        double pivotX2 = Row->array[pivotRow];
+        HighsFloat pivotX2 = Row->array[pivotRow];
         if (fabs(pivotX2) > kHighsTiny) {
           pivotX2 /= jFinish->alpha_row;
           Row->saxpy(-pivotX2, jFinish->col_aq);
@@ -743,15 +743,15 @@ void HEkkDual::majorUpdatePrimal() {
   if (updatePrimal_inDense) {
     // Dense update of primal values, infeasibility list and
     // non-pivotal edge weights
-    const double* mixArray = &col_BFRT.array[0];
-    double* local_work_infeasibility = &dualRHS.work_infeasibility[0];
+    const HighsFloat* mixArray = &col_BFRT.array[0];
+    HighsFloat* local_work_infeasibility = &dualRHS.work_infeasibility[0];
 #pragma omp parallel for schedule(static)
     for (HighsInt iRow = 0; iRow < solver_num_row; iRow++) {
       baseValue[iRow] -= mixArray[iRow];
-      const double value = baseValue[iRow];
-      const double less = baseLower[iRow] - value;
-      const double more = value - baseUpper[iRow];
-      double infeas = less > Tp ? less : (more > Tp ? more : 0);
+      const HighsFloat value = baseValue[iRow];
+      const HighsFloat less = baseLower[iRow] - value;
+      const HighsFloat more = value - baseUpper[iRow];
+      HighsFloat infeas = less > Tp ? less : (more > Tp ? more : 0);
       if (ekk_instance_.info_.store_squared_primal_infeasibility)
         local_work_infeasibility[iRow] = infeas * infeas;
       else
@@ -765,16 +765,16 @@ void HEkkDual::majorUpdatePrimal() {
       for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
         // multi_finish[iFn].EdWt has already been transformed to correspond to
         // the new basis
-        const double new_pivotal_edge_weight = multi_finish[iFn].EdWt;
-        const double* colArray = &multi_finish[iFn].col_aq->array[0];
-        double* EdWt = &dualRHS.workEdWt[0];
+        const HighsFloat new_pivotal_edge_weight = multi_finish[iFn].EdWt;
+        const HighsFloat* colArray = &multi_finish[iFn].col_aq->array[0];
+        HighsFloat* EdWt = &dualRHS.workEdWt[0];
         if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
           // Update steepest edge weights
-          const double* dseArray = &multi_finish[iFn].row_ep->array[0];
-          const double Kai = -2 / multi_finish[iFn].alpha_row;
+          const HighsFloat* dseArray = &multi_finish[iFn].row_ep->array[0];
+          const HighsFloat Kai = -2 / multi_finish[iFn].alpha_row;
 #pragma omp parallel for schedule(static)
           for (HighsInt iRow = 0; iRow < solver_num_row; iRow++) {
-            const double aa_iRow = colArray[iRow];
+            const HighsFloat aa_iRow = colArray[iRow];
             EdWt[iRow] += aa_iRow * (new_pivotal_edge_weight * aa_iRow +
                                      Kai * dseArray[iRow]);
             if (EdWt[iRow] < 1e-4) EdWt[iRow] = 1e-4;
@@ -782,7 +782,7 @@ void HEkkDual::majorUpdatePrimal() {
         } else {
           // Update Devex weights
           for (HighsInt iRow = 0; iRow < solver_num_row; iRow++) {
-            const double aa_iRow = colArray[iRow];
+            const HighsFloat aa_iRow = colArray[iRow];
             EdWt[iRow] =
                 max(EdWt[iRow], new_pivotal_edge_weight * aa_iRow * aa_iRow);
           }
@@ -803,11 +803,11 @@ void HEkkDual::majorUpdatePrimal() {
     for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
       MFinish* finish = &multi_finish[iFn];
       HVector* Col = finish->col_aq;
-      const double new_pivotal_edge_weight = finish->EdWt;
+      const HighsFloat new_pivotal_edge_weight = finish->EdWt;
       if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
         // Update steepest edge weights
         HVector* Row = finish->row_ep;
-        double Kai = -2 / finish->alpha_row;
+        HighsFloat Kai = -2 / finish->alpha_row;
         dualRHS.updateWeightDualSteepestEdge(Col, new_pivotal_edge_weight, Kai,
                                              &Row->array[0]);
       } else if (dual_edge_weight_mode == DualEdgeWeightMode::kDevex &&
@@ -823,7 +823,7 @@ void HEkkDual::majorUpdatePrimal() {
   for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
     MFinish* finish = &multi_finish[iFn];
     HighsInt iRow = finish->row_out;
-    double value = baseValue[iRow] - finish->basicBound + finish->basicValue;
+    HighsFloat value = baseValue[iRow] - finish->basicBound + finish->basicValue;
     dualRHS.updatePivots(iRow, value);
   }
 
@@ -834,17 +834,17 @@ void HEkkDual::majorUpdatePrimal() {
     // Update weights for the pivots using the computed values.
     for (HighsInt iFn = 0; iFn < multi_nFinish; iFn++) {
       const HighsInt iRow = multi_finish[iFn].row_out;
-      const double new_pivotal_edge_weight = multi_finish[iFn].EdWt;
-      const double* colArray = &multi_finish[iFn].col_aq->array[0];
+      const HighsFloat new_pivotal_edge_weight = multi_finish[iFn].EdWt;
+      const HighsFloat* colArray = &multi_finish[iFn].col_aq->array[0];
       // The weight for this pivot is known, but weights for rows
       // pivotal earlier need to be updated
       if (dual_edge_weight_mode == DualEdgeWeightMode::kSteepestEdge) {
-        const double* dseArray = &multi_finish[iFn].row_ep->array[0];
-        double Kai = -2 / multi_finish[iFn].alpha_row;
+        const HighsFloat* dseArray = &multi_finish[iFn].row_ep->array[0];
+        HighsFloat Kai = -2 / multi_finish[iFn].alpha_row;
         for (HighsInt jFn = 0; jFn < iFn; jFn++) {
           HighsInt jRow = multi_finish[jFn].row_out;
-          double value = colArray[jRow];
-          double EdWt = dualRHS.workEdWt[jRow];
+          HighsFloat value = colArray[jRow];
+          HighsFloat EdWt = dualRHS.workEdWt[jRow];
           EdWt +=
               value * (new_pivotal_edge_weight * value + Kai * dseArray[jRow]);
           if (EdWt < min_dual_steepest_edge_weight)
@@ -855,8 +855,8 @@ void HEkkDual::majorUpdatePrimal() {
       } else {
         for (HighsInt jFn = 0; jFn < iFn; jFn++) {
           HighsInt jRow = multi_finish[jFn].row_out;
-          const double aa_iRow = colArray[iRow];
-          double EdWt = dualRHS.workEdWt[jRow];
+          const HighsFloat aa_iRow = colArray[iRow];
+          HighsFloat EdWt = dualRHS.workEdWt[jRow];
           EdWt = max(EdWt, new_pivotal_edge_weight * aa_iRow * aa_iRow);
           dualRHS.workEdWt[jRow] = EdWt;
         }
@@ -928,13 +928,13 @@ void HEkkDual::majorRollback() {
 bool HEkkDual::checkNonUnitWeightError(std::string message) {
   bool error_found = false;
   if (dual_edge_weight_mode == DualEdgeWeightMode::kDantzig) {
-    double unit_wt_error = 0;
+    HighsFloat unit_wt_error = 0;
     for (HighsInt iRow = 0; iRow < solver_num_row; iRow++) {
       unit_wt_error += fabs(dualRHS.workEdWt[iRow] - 1.0);
     }
     error_found = unit_wt_error > 1e-4;
     if (error_found)
-      printf("Non-unit Edge weight error of %g: %s\n", unit_wt_error,
+      printf("Non-unit Edge weight error of %g: %s\n", (double)unit_wt_error,
              message.c_str());
   }
   return error_found;
@@ -958,7 +958,7 @@ void HEkkDual::iterationAnalysisMinor() {
 
 void HEkkDual::iterationAnalysisMajorData() {
   HighsSimplexInfo& info = ekk_instance_.info_;
-  analysis->numerical_trouble = numericalTrouble;
+  analysis->numerical_trouble = (double)numericalTrouble;
   analysis->min_threads = info.min_threads;
   analysis->num_threads = info.num_threads;
   analysis->max_threads = info.max_threads;

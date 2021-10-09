@@ -402,7 +402,7 @@ void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
   if (!accept_weight) num_dual_steepest_edge_weight_reject++;
   if (updated_edge_weight < computed_edge_weight) {
     // Updated weight is low
-    weight_error = computed_edge_weight / updated_edge_weight;
+    weight_error = (double)(computed_edge_weight / updated_edge_weight);
     if (weight_error > kWeightErrorThreshold) {
       low_weight_error = 1;
       error_type = " Low";
@@ -412,7 +412,7 @@ void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
         0.01 * log(weight_error);
   } else {
     // Updated weight is correct or high
-    weight_error = updated_edge_weight / computed_edge_weight;
+    weight_error = (double)(updated_edge_weight / computed_edge_weight);
     if (weight_error > kWeightErrorThreshold) {
       high_weight_error = 1;
       error_type = "High";
@@ -459,8 +459,8 @@ void HighsSimplexAnalysis::dualSteepestEdgeWeightError(
           "%10.4g %10.4g %10.4g %10.4g %10.4g\n",
           simplex_iteration_count, accept_weight,
           num_dual_steepest_edge_weight_check,
-          num_dual_steepest_edge_weight_reject, computed_edge_weight,
-          updated_edge_weight, weight_error, error_type.c_str(),
+          num_dual_steepest_edge_weight_reject, (double)computed_edge_weight,
+          (double)updated_edge_weight, weight_error, error_type.c_str(),
           average_frequency_low_dual_steepest_edge_weight,
           average_log_low_dual_steepest_edge_weight_error,
           average_frequency_high_dual_steepest_edge_weight,

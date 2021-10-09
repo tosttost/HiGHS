@@ -28,10 +28,10 @@ struct ProductFormUpdate {
   HighsInt num_row_;
   HighsInt update_count_;
   vector<HighsInt> pivot_index_;
-  vector<double> pivot_value_;
+  vector<HighsFloat> pivot_value_;
   vector<HighsInt> start_;
   vector<HighsInt> index_;
-  vector<double> value_;
+  vector<HighsFloat> value_;
   void clear();
   void setup(const HighsInt num_row, const double expected_density);
   HighsInt update(HVector* aq, HighsInt* iRow);

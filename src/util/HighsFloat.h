@@ -19,7 +19,7 @@
 
 #include <util/HighsCD0uble.h>
 
-typedef double HighsFloat;
-//typedef HighsCD0uble HighsFloat;
+//typedef double HighsFloat;
+typedef HighsCD0uble HighsFloat;
 
 #endif

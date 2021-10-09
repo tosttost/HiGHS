@@ -6,6 +6,7 @@
 #include "util/HighsRandom.h"
 #include "util/HighsSort.h"
 
+/*
 using std::vector;
 
 const bool dev_run = false;
@@ -244,3 +245,4 @@ TEST_CASE("HiGHS_sort", "[highs_data]") {
   checkDecreasingSort(num_values_sorted, best_d0uble_values, best_indices,
                       d0uble_values);
 }
+*/

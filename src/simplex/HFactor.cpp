@@ -575,7 +575,7 @@ void HFactor::buildSimple() {
         const HighsFloat pivotX = 1 / Bvalue[pivot_k];
         if (report_singletons)
           printf("Stage %d: Row singleton (%4d, %g)\n",
-                 (int)(Lstart.size() - 1), (int)pivot_k, pivotX);
+                 (int)(Lstart.size() - 1), (int)pivot_k, (double)pivotX);
         for (HighsInt section = 0; section < 2; section++) {
           HighsInt p0 = section == 0 ? start : pivot_k + 1;
           HighsInt p1 = section == 0 ? pivot_k : end;
@@ -584,13 +584,13 @@ void HFactor::buildSimple() {
             if (MRcountb4[iRow] > 0) {
               if (report_singletons)
                 printf("Row singleton: L En (%4d, %11.4g)\n", (int)iRow,
-                       Bvalue[k] * pivotX);
+                       (double)(Bvalue[k] * pivotX));
               Lindex.push_back(iRow);
               Lvalue.push_back(Bvalue[k] * pivotX);
             } else {
               if (report_singletons)
                 printf("Row singleton: U En (%4d, %11.4g)\n", (int)iRow,
-                       Bvalue[k]);
+                       (double)Bvalue[k]);
               Uindex.push_back(iRow);
               Uvalue.push_back(Bvalue[k]);
             }
@@ -604,7 +604,7 @@ void HFactor::buildSimple() {
 
         if (report_singletons)
           printf("Row singleton: U Pv (%4d, %11.4g)\n", (int)iRow,
-                 Bvalue[pivot_k]);
+                 (double)Bvalue[pivot_k]);
         UpivotIndex.push_back(iRow);
         UpivotValue.push_back(Bvalue[pivot_k]);
         Ustart.push_back(Uindex.size());
@@ -620,14 +620,14 @@ void HFactor::buildSimple() {
         for (HighsInt k = start; k < pivot_k; k++) {
           if (report_singletons)
             printf("Col singleton: U En (%4d, %11.4g)\n", (int)Bindex[k],
-                   Bvalue[k]);
+                   (double)Bvalue[k]);
           Uindex.push_back(Bindex[k]);
           Uvalue.push_back(Bvalue[k]);
         }
         for (HighsInt k = pivot_k + 1; k < end; k++) {
           if (report_singletons)
             printf("Col singleton: U En (%4d, %11.4g)\n", (int)Bindex[k],
-                   Bvalue[k]);
+		   (double)Bvalue[k]);
           Uindex.push_back(Bindex[k]);
           Uvalue.push_back(Bvalue[k]);
         }
@@ -639,7 +639,7 @@ void HFactor::buildSimple() {
 
         if (report_singletons)
           printf("Col singleton: U Pv (%4d, %11.4g)\n", (int)iRow,
-                 Bvalue[pivot_k]);
+                 (double)Bvalue[pivot_k]);
         UpivotIndex.push_back(iRow);
         UpivotValue.push_back(Bvalue[pivot_k]);
         Ustart.push_back(Uindex.size());
@@ -1496,7 +1496,7 @@ void HFactor::ftranFT(HVector& vector) const {
     for (HighsInt k = start; k < end; k++)
       value1 -= RHSarray[PFindex[k]] * PFvalue[k];
     // This would skip the situation where they are both zeros
-    if (value0 || value1) {
+    if ((double)value0 || (double)value1) {
       if (value0 == 0) RHSindex[RHScount++] = iRow;
       RHSarray[iRow] = (fabs(value1) < kHighsTiny) ? kHighsZero : value1;
     }
@@ -1529,7 +1529,7 @@ void HFactor::btranFT(HVector& vector) const {
   for (HighsInt i = PFpivotCount - 1; i >= 0; i--) {
     HighsInt pivotRow = PFpivotIndex[i];
     HighsFloat pivotX = RHSarray[pivotRow];
-    if (pivotX) {
+    if ((double)pivotX) {
       const HighsInt start = PFstart[i];
       const HighsInt end = PFstart[i + 1];
       RHS_synthetic_tick += (end - start);
