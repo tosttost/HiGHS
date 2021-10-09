@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "lp_data/HConst.h"
+#include "util/HighsFloat.h"
 
 using std::vector;
 
@@ -46,7 +47,7 @@ void maxheapsort(
  * indices
  */
 void maxheapsort(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -71,7 +72,7 @@ void buildMaxheap(
  * increasing value
  */
 void buildMaxheap(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -93,7 +94,7 @@ void maxHeapsort(
  * @brief Sort by increasing value a heap built with buildMaxheap
  */
 void maxHeapsort(
-    double* heap_v,    //!< Values to be sorted
+    HighsFloat* heap_v,    //!< Values to be sorted
     HighsInt* heap_i,  //!< Indices corrresponding to (sorted) values
     HighsInt n         //!< Number of values to be sorted
 );
@@ -110,7 +111,7 @@ void maxHeapify(HighsInt* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
 /**%
  * @brief Heapify function for sorting by increasing value
  */
-void maxHeapify(double* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
+void maxHeapify(HighsFloat* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n);
 
 /**
  * @brief Check that a set of integers is in increasing order and in bounds

@@ -138,7 +138,7 @@ void maxheapsort(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   maxHeapsort(heap_v, heap_i, n);
 }
 
-void maxheapsort(double* heap_v, HighsInt* heap_i, HighsInt n) {
+void maxheapsort(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
   buildMaxheap(heap_v, heap_i, n);
   maxHeapsort(heap_v, heap_i, n);
 }
@@ -157,7 +157,7 @@ void buildMaxheap(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   }
 }
 
-void buildMaxheap(double* heap_v, HighsInt* heap_i, HighsInt n) {
+void buildMaxheap(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
   HighsInt i;
   for (i = n / 2; i >= 1; i--) {
     maxHeapify(heap_v, heap_i, i, n);
@@ -189,8 +189,8 @@ void maxHeapsort(HighsInt* heap_v, HighsInt* heap_i, HighsInt n) {
   }
 }
 
-void maxHeapsort(double* heap_v, HighsInt* heap_i, HighsInt n) {
-  double temp_v;
+void maxHeapsort(HighsFloat* heap_v, HighsInt* heap_i, HighsInt n) {
+  HighsFloat temp_v;
   HighsInt i, temp_i;
   for (i = n; i >= 2; i--) {
     temp_v = heap_v[i];
@@ -242,8 +242,8 @@ void maxHeapify(HighsInt* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
   return;
 }
 
-void maxHeapify(double* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
-  double temp_v;
+void maxHeapify(HighsFloat* heap_v, HighsInt* heap_i, HighsInt i, HighsInt n) {
+  HighsFloat temp_v;
   HighsInt j, temp_i;
   temp_v = heap_v[i];
   temp_i = heap_i[i];

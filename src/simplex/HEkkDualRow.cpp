@@ -71,11 +71,11 @@ void HEkkDualRow::chooseMakepack(const HVector* row, const HighsInt offset) {
    */
   const HighsInt rowCount = row->count;
   const HighsInt* rowIndex = &row->index[0];
-  const double* rowArray = &row->array[0];
+  const HighsFloat* rowArray = &row->array[0];
 
   for (HighsInt i = 0; i < rowCount; i++) {
     const HighsInt index = rowIndex[i];
-    const double value = rowArray[index];
+    const HighsFloat value = rowArray[index];
     packIndex[packCount] = index + offset;
     packValue[packCount++] = value;
   }
@@ -96,10 +96,10 @@ void HEkkDualRow::choosePossible() {
   for (HighsInt i = 0; i < packCount; i++) {
     const HighsInt iCol = packIndex[i];
     const HighsInt move = workMove[iCol];
-    const double alpha = packValue[i] * move_out * move;
+    const HighsFloat alpha = packValue[i] * move_out * move;
     if (alpha > Ta) {
       workData[workCount++] = make_pair(iCol, alpha);
-      const double relax = workDual[iCol] * move + Td;
+      const HighsFloat relax = workDual[iCol] * move + Td;
       if (workTheta * alpha > relax) workTheta = relax / alpha;
     }
   }
@@ -111,7 +111,7 @@ void HEkkDualRow::chooseJoinpack(const HEkkDualRow* otherRow) {
    * candidates in otherRow
    */
   const HighsInt otherCount = otherRow->workCount;
-  const pair<HighsInt, double>* otherData = &otherRow->workData[0];
+  const pair<HighsInt, HighsFloat>* otherData = &otherRow->workData[0];
   copy(otherData, otherData + otherCount, &workData[workCount]);
   workCount = workCount + otherCount;
   workTheta = min(workTheta, otherRow->workTheta);
@@ -132,14 +132,14 @@ HighsInt HEkkDualRow::chooseFinal() {
   analysis->simplexTimerStart(Chuzc2Clock);
   HighsInt fullCount = workCount;
   workCount = 0;
-  double totalChange = 0;
-  const double totalDelta = fabs(workDelta);
-  double selectTheta = 10 * workTheta + 1e-7;
+  HighsFloat totalChange = 0;
+  const HighsFloat totalDelta = fabs(workDelta);
+  HighsFloat selectTheta = 10 * workTheta + 1e-7;
   for (;;) {
     for (HighsInt i = workCount; i < fullCount; i++) {
       HighsInt iCol = workData[i].first;
-      double alpha = workData[i].second;
-      double tight = workMove[iCol] * workDual[iCol];
+      HighsFloat alpha = workData[i].second;
+      HighsFloat tight = workMove[iCol] * workDual[iCol];
       if (alpha * selectTheta >= tight) {
         swap(workData[workCount++], workData[i]);
         totalChange += workRange[iCol] * alpha;
@@ -249,7 +249,7 @@ HighsInt HEkkDualRow::chooseFinal() {
     }
   } else {
     printf("DebugHeapSortCHUZC: Pivot = %4d; alpha = %11.4g; theta = %11.4g\n",
-           (int)workPivot, workAlpha, workTheta);
+           (int)workPivot, (double)workAlpha, (double)workTheta);
     debugReportBfrtVar(-1, sorted_workData);
     for (HighsInt i = 0; i < alt_workGroup[breakGroup]; i++) {
       const HighsInt iCol = sorted_workData[i].first;
@@ -267,11 +267,11 @@ HighsInt HEkkDualRow::chooseFinal() {
     for (HighsInt i = alt_workGroup[breakGroup]; i < to_i; i++) {
       debugReportBfrtVar(i, sorted_workData);
       const HighsInt iCol = sorted_workData[i].first;
-      const double value = sorted_workData[i].second;
+      const HighsFloat value = sorted_workData[i].second;
       const HighsInt move = workMove[iCol];
-      const double dual = workDual[iCol];
-      const double new_dual = dual - move_out * move * workTheta * value;
-      const double new_dual_infeasibility = move * new_dual;
+      const HighsFloat dual = workDual[iCol];
+      const HighsFloat new_dual = dual - move_out * move * workTheta * value;
+      const HighsFloat new_dual_infeasibility = move * new_dual;
       const bool infeasible = new_dual_infeasibility < -Td;
       if (infeasible) {
         //	num_infeasibility++;
@@ -304,24 +304,24 @@ bool HEkkDualRow::chooseFinalWorkGroupQuad() {
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
   HighsInt fullCount = workCount;
   workCount = 0;
-  double totalChange = kInitialTotalChange;
-  double selectTheta = workTheta;
-  const double totalDelta = fabs(workDelta);
+  HighsFloat totalChange = kInitialTotalChange;
+  HighsFloat selectTheta = workTheta;
+  const HighsFloat totalDelta = fabs(workDelta);
   workGroup.clear();
   workGroup.push_back(0);
   HighsInt prev_workCount = workCount;
-  double prev_remainTheta = kInitialRemainTheta;
-  double prev_selectTheta = selectTheta;
+  HighsFloat prev_remainTheta = kInitialRemainTheta;
+  HighsFloat prev_selectTheta = selectTheta;
   HighsInt debug_num_loop = 0;
 
   while (selectTheta < kMaxSelectTheta) {
-    double remainTheta = kInitialRemainTheta;
+    HighsFloat remainTheta = kInitialRemainTheta;
     debug_num_loop++;
     HighsInt debug_loop_ln = 0;
     for (HighsInt i = workCount; i < fullCount; i++) {
       HighsInt iCol = workData[i].first;
-      double value = workData[i].second;
-      double dual = workMove[iCol] * workDual[iCol];
+      HighsFloat value = workData[i].second;
+      HighsFloat dual = workMove[iCol] * workDual[iCol];
       // Tight satisfy
       if (dual <= selectTheta * value) {
         swap(workData[workCount++], workData[i]);
@@ -365,19 +365,19 @@ bool HEkkDualRow::chooseFinalWorkGroupQuad() {
 bool HEkkDualRow::chooseFinalWorkGroupHeap() {
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
   HighsInt fullCount = alt_workCount;
-  double totalChange = kInitialTotalChange;
-  double selectTheta = workTheta;
-  const double totalDelta = fabs(workDelta);
+  HighsFloat totalChange = kInitialTotalChange;
+  HighsFloat selectTheta = workTheta;
+  const HighsFloat totalDelta = fabs(workDelta);
   HighsInt heap_num_en = 0;
   std::vector<HighsInt> heap_i;
-  std::vector<double> heap_v;
+  std::vector<HighsFloat> heap_v;
   heap_i.resize(fullCount + 1);
   heap_v.resize(fullCount + 1);
   for (HighsInt i = 0; i < fullCount; i++) {
     HighsInt iCol = original_workData[i].first;
-    double value = original_workData[i].second;
-    double dual = workMove[iCol] * workDual[iCol];
-    double ratio = dual / value;
+    HighsFloat value = original_workData[i].second;
+    HighsFloat dual = workMove[iCol] * workDual[iCol];
+    HighsFloat ratio = dual / value;
     if (ratio < kMaxSelectTheta) {
       heap_num_en++;
       heap_i[heap_num_en] = i;
@@ -402,8 +402,8 @@ bool HEkkDualRow::chooseFinalWorkGroupHeap() {
   for (HighsInt en = 1; en <= heap_num_en; en++) {
     HighsInt i = heap_i[en];
     HighsInt iCol = original_workData[i].first;
-    double value = original_workData[i].second;
-    double dual = workMove[iCol] * workDual[iCol];
+    HighsFloat value = original_workData[i].second;
+    HighsFloat dual = workMove[iCol] * workDual[iCol];
     if (dual > selectTheta * value) {
       // Breakpoint is in the next group, so record the pointer to its
       // first entry
@@ -427,17 +427,17 @@ bool HEkkDualRow::chooseFinalWorkGroupHeap() {
 
 void HEkkDualRow::chooseFinalLargeAlpha(
     HighsInt& breakIndex, HighsInt& breakGroup, HighsInt pass_workCount,
-    const std::vector<std::pair<HighsInt, double>>& pass_workData,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
     const std::vector<HighsInt>& pass_workGroup) {
-  double finalCompare = 0;
+  HighsFloat finalCompare = 0;
   for (HighsInt i = 0; i < pass_workCount; i++)
     finalCompare = max(finalCompare, pass_workData[i].second);
-  finalCompare = min(0.1 * finalCompare, 1.0);
+  finalCompare = min(0.1 * finalCompare, (HighsFloat)1.0);
   HighsInt countGroup = pass_workGroup.size() - 1;
   breakGroup = -1;
   breakIndex = -1;
   for (HighsInt iGroup = countGroup - 1; iGroup >= 0; iGroup--) {
-    double dMaxFinal = 0;
+    HighsFloat dMaxFinal = 0;
     HighsInt iMaxFinal = -1;
     for (HighsInt i = pass_workGroup[iGroup]; i < pass_workGroup[iGroup + 1];
          i++) {
@@ -462,39 +462,39 @@ void HEkkDualRow::chooseFinalLargeAlpha(
 }
 
 void HEkkDualRow::updateFlip(HVector* bfrtColumn) {
-  double* workDual = &ekk_instance_.info_.workDual_[0];
-  double dual_objective_value_change = 0;
+  HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
+  HighsFloat dual_objective_value_change = 0;
   bfrtColumn->clear();
   for (HighsInt i = 0; i < workCount; i++) {
     const HighsInt iCol = workData[i].first;
-    const double change = workData[i].second;
-    double local_dual_objective_change = change * workDual[iCol];
+    const HighsFloat change = workData[i].second;
+    HighsFloat local_dual_objective_change = change * workDual[iCol];
     local_dual_objective_change *= ekk_instance_.cost_scale_;
     dual_objective_value_change += local_dual_objective_change;
     ekk_instance_.flipBound(iCol);
     ekk_instance_.lp_.a_matrix_.collectAj(*bfrtColumn, iCol, change);
   }
   ekk_instance_.info_.updated_dual_objective_value +=
-      dual_objective_value_change;
+    (double)dual_objective_value_change;
 }
 
-void HEkkDualRow::updateDual(double theta) {
+void HEkkDualRow::updateDual(HighsFloat theta) {
   analysis->simplexTimerStart(UpdateDualClock);
-  double* workDual = &ekk_instance_.info_.workDual_[0];
-  double dual_objective_value_change = 0;
+  HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
+  HighsFloat dual_objective_value_change = 0;
   for (HighsInt i = 0; i < packCount; i++) {
     workDual[packIndex[i]] -= theta * packValue[i];
     // Identify the change to the dual objective
     HighsInt iCol = packIndex[i];
-    const double delta_dual = theta * packValue[i];
-    const double local_value = ekk_instance_.info_.workValue_[iCol];
-    double local_dual_objective_change =
+    const HighsFloat delta_dual = theta * packValue[i];
+    const HighsFloat local_value = ekk_instance_.info_.workValue_[iCol];
+    HighsFloat local_dual_objective_change =
         ekk_instance_.basis_.nonbasicFlag_[iCol] * (-local_value * delta_dual);
     local_dual_objective_change *= ekk_instance_.cost_scale_;
     dual_objective_value_change += local_dual_objective_change;
   }
   ekk_instance_.info_.updated_dual_objective_value +=
-      dual_objective_value_change;
+      (double)dual_objective_value_change;
   analysis->simplexTimerStop(UpdateDualClock);
 }
 
@@ -503,8 +503,8 @@ void HEkkDualRow::createFreelist() {
   for (HighsInt i = 0;
        i < ekk_instance_.lp_.num_col_ + ekk_instance_.lp_.num_row_; i++) {
     if (ekk_instance_.basis_.nonbasicFlag_[i] &&
-        highs_isInfinity(-ekk_instance_.info_.workLower_[i]) &&
-        highs_isInfinity(ekk_instance_.info_.workUpper_[i]))
+        highs_isInfinity(-(double)ekk_instance_.info_.workLower_[i]) &&
+        highs_isInfinity((double)ekk_instance_.info_.workUpper_[i]))
       freeList.insert(i);
   }
   //  debugFreeListNumEntries(ekk_instance_, freeList);
@@ -521,7 +521,7 @@ void HEkkDualRow::createFreemove(HVector* row_ep) {
     for (sit = freeList.begin(); sit != freeList.end(); sit++) {
       HighsInt iCol = *sit;
       assert(iCol < ekk_instance_.lp_.num_col_);
-      double alpha = ekk_instance_.lp_.a_matrix_.computeDot(*row_ep, iCol);
+      HighsFloat alpha = ekk_instance_.lp_.a_matrix_.computeDot(*row_ep, iCol);
       if (fabs(alpha) > Ta) {
         if (alpha * move_out > 0)
           ekk_instance_.basis_.nonbasicMove_[iCol] = 1;
@@ -554,8 +554,8 @@ void HEkkDualRow::computeDevexWeight(const HighsInt slice) {
   for (HighsInt el_n = 0; el_n < packCount; el_n++) {
     HighsInt vr_n = packIndex[el_n];
     if (!ekk_instance_.basis_.nonbasicFlag_[vr_n]) continue;
-    double pv = work_devex_index[vr_n] * packValue[el_n];
-    if (pv) {
+    HighsFloat pv = work_devex_index[vr_n] * packValue[el_n];
+    if ((double)pv) {
       computed_edge_weight += pv * pv;
     }
   }
@@ -564,13 +564,13 @@ void HEkkDualRow::computeDevexWeight(const HighsInt slice) {
       printf("HEkkDualRow::computeDevexWeight: Slice %1" HIGHSINT_FORMAT
              "; computed_edge_weight = "
              "%11.4g\n",
-             slice, computed_edge_weight);
+             slice, (double)computed_edge_weight);
   }
 }
 
 HighsInt HEkkDualRow::debugFindInWorkData(
     const HighsInt iCol, const HighsInt count,
-    const std::vector<std::pair<HighsInt, double>>& workData_) {
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData_) {
   for (HighsInt Ix = 0; Ix < count; Ix++)
     if (workData_[Ix].first == iCol) return Ix;
   return -1;
@@ -581,7 +581,7 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
   if (ekk_instance_.options_->highs_debug_level < kHighsDebugLevelCheap)
     return num_infeasibility;
   const HighsInt move_out = workDelta < 0 ? -1 : 1;
-  std::vector<double> unpack_value;
+  std::vector<HighsFloat> unpack_value;
   HighsLp& lp = ekk_instance_.lp_;
   unpack_value.resize(lp.num_col_ + lp.num_row_);
   for (HighsInt ix = 0; ix < packCount; ix++)
@@ -589,20 +589,20 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
   for (HighsInt i = 0; i < workCount; i++) {
     const HighsInt iCol = workData[i].first;
-    const double delta = workData[i].second;
-    const double value = unpack_value[iCol];
+    const HighsFloat delta = workData[i].second;
+    const HighsFloat value = unpack_value[iCol];
     const HighsInt move = workMove[iCol];
-    const double dual = workDual[iCol];
-    const double delta_dual = fabs(workTheta * value);
-    const double new_dual = dual - workTheta * value;
-    const double infeasibility_after_flip = -move * new_dual;
+    const HighsFloat dual = workDual[iCol];
+    const HighsFloat delta_dual = fabs(workTheta * value);
+    const HighsFloat new_dual = dual - workTheta * value;
+    const HighsFloat infeasibility_after_flip = -move * new_dual;
     const bool infeasible = infeasibility_after_flip < -Td;
     if (infeasible) {
       printf(
           "%3d: iCol = %4d; dual = %11.4g; value = %11.4g; move = %2d; delta = "
           "%11.4g; new_dual = %11.4g; infeasibility = %11.4g: %d\n",
-          (int)i, (int)iCol, dual, value, (int)move, delta_dual, new_dual,
-          infeasibility_after_flip, infeasible);
+          (int)i, (int)iCol, (double)dual, (double)value, (int)move, (double)delta_dual, (double)new_dual,
+          (double)infeasibility_after_flip, infeasible);
 
       num_infeasibility++;
     }
@@ -612,15 +612,15 @@ HighsInt HEkkDualRow::debugChooseColumnInfeasibilities() const {
 }
 void HEkkDualRow::debugReportBfrtVar(
     const HighsInt ix,
-    const std::vector<std::pair<HighsInt, double>>& pass_workData) const {
+    const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData) const {
   const HighsInt move_out = workDelta < 0 ? -1 : 1;
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
   const HighsInt iCol = sorted_workData[ix].first;
-  const double value = sorted_workData[ix].second;
+  const HighsFloat value = sorted_workData[ix].second;
   const HighsInt move = workMove[iCol];
-  const double dual = workDual[iCol];
-  const double new_dual = dual - move_out * move * workTheta * value;
-  const double new_dual_infeasibility = move * new_dual;
+  const HighsFloat dual = workDual[iCol];
+  const HighsFloat new_dual = dual - move_out * move * workTheta * value;
+  const HighsFloat new_dual_infeasibility = move * new_dual;
   const bool infeasible = new_dual_infeasibility < -Td;
   if (ix < 0) {
     printf(
@@ -629,8 +629,10 @@ void HEkkDualRow::debugReportBfrtVar(
     return;
   }
   printf("%2d %4d %2d %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %3d\n",
-         (int)ix, (int)iCol, (int)move, ekk_instance_.info_.workLower_[iCol],
-         ekk_instance_.info_.workValue_[iCol],
-         ekk_instance_.info_.workUpper_[iCol], value, dual, fabs(dual / value),
-         new_dual, infeasible);
+         (int)ix, (int)iCol, (int)move,
+	 (double)ekk_instance_.info_.workLower_[iCol],
+         (double)ekk_instance_.info_.workValue_[iCol],
+         (double)ekk_instance_.info_.workUpper_[iCol],
+	 (double)value, (double)dual, (double)fabs(dual / value),
+         (double)new_dual, infeasible);
 }

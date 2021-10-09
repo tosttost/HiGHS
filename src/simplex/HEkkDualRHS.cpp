@@ -72,12 +72,12 @@ void HEkkDualRHS::chooseNormal(HighsInt* chIndex) {
       const HighsInt end = (section == 0) ? numRow : randomStart;
       for (HighsInt iRow = start; iRow < end; iRow++) {
         if (work_infeasibility[iRow] > kHighsZero) {
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           //	  printf("Dense: Row %4" HIGHSINT_FORMAT " weight = %g\n", iRow,
           // myWeight);
           if (bestMerit * myWeight < myInfeas) {
-            bestMerit = myInfeas / myWeight;
+            bestMerit = (double)(myInfeas / myWeight);
             bestIndex = iRow;
           }
         }
@@ -103,15 +103,15 @@ void HEkkDualRHS::chooseNormal(HighsInt* chIndex) {
       for (HighsInt i = start; i < end; i++) {
         HighsInt iRow = workIndex[i];
         if (work_infeasibility[iRow] > kHighsZero) {
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           /*
           const double myMerit = myInfeas / myWeight;
           printf("CHUZR: iRow = %6" HIGHSINT_FORMAT "; Infeas = %11.4g; Weight =
           %11.4g; Merit = %11.4g\n", iRow, myInfeas, myWeight, myMerit);
           */
           if (bestMerit * myWeight < myInfeas) {
-            bestMerit = myInfeas / myWeight;
+            bestMerit = (double)(myInfeas / myWeight);
             bestIndex = iRow;
           }
         }
@@ -142,7 +142,7 @@ void HEkkDualRHS::chooseMultiGlobal(HighsInt* chIndex, HighsInt* chCount,
   for (HighsInt i = 0; i < chLimit; i++) chIndex[i] = -1;
 
   const HighsUInt chooseCHECK = chLimit * 2;
-  vector<pair<double, int>> setP;
+  vector<pair<HighsFloat, int>> setP;
   setP.reserve(chooseCHECK);
 
   if (workCount < 0) {
@@ -159,8 +159,8 @@ void HEkkDualRHS::chooseMultiGlobal(HighsInt* chIndex, HighsInt* chCount,
         //    for (HighsInt iRow = 0; iRow < numRow; iRow++) {
         // Continue
         if (work_infeasibility[iRow] > kHighsZero) {
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           if (cutoffMerit * myWeight < myInfeas) {
             // Save
             setP.push_back(make_pair(-myInfeas / myWeight, iRow));
@@ -168,7 +168,7 @@ void HEkkDualRHS::chooseMultiGlobal(HighsInt* chIndex, HighsInt* chCount,
             if (setP.size() >= chooseCHECK) {
               pdqsort(setP.begin(), setP.end());
               setP.resize(chLimit);
-              cutoffMerit = -setP.back().first;
+              cutoffMerit = -(double)setP.back().first;
             }
           }
         }
@@ -194,8 +194,8 @@ void HEkkDualRHS::chooseMultiGlobal(HighsInt* chIndex, HighsInt* chCount,
         // Continue
         HighsInt iRow = workIndex[i];
         if (work_infeasibility[iRow] > kHighsZero) {
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           /*
           const double myMerit = myInfeas / myWeight;
           printf("CHUZR: iRow = %6" HIGHSINT_FORMAT "; Infeas = %11.4g; Weight =
@@ -208,7 +208,7 @@ void HEkkDualRHS::chooseMultiGlobal(HighsInt* chIndex, HighsInt* chCount,
             if (setP.size() >= chooseCHECK) {
               pdqsort(setP.begin(), setP.end());
               setP.resize(chLimit);
-              cutoffMerit = -setP.back().first;
+              cutoffMerit = -(double)setP.back().first;
             }
           }
         }
@@ -263,10 +263,10 @@ void HEkkDualRHS::chooseMultiHyperGraphPart(HighsInt* chIndex,
       for (HighsInt iRow = start; iRow < end; iRow++) {
         if (work_infeasibility[iRow] > kHighsZero) {
           HighsInt iPart = workPartition[iRow];
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           if (bestMerit[iPart] * myWeight < myInfeas) {
-            bestMerit[iPart] = myInfeas / myWeight;
+            bestMerit[iPart] = (double)(myInfeas / myWeight);
             bestIndex[iPart] = iRow;
           }
         }
@@ -296,10 +296,10 @@ void HEkkDualRHS::chooseMultiHyperGraphPart(HighsInt* chIndex,
         HighsInt iRow = workIndex[i];
         if (work_infeasibility[iRow] > kHighsZero) {
           HighsInt iPart = workPartition[iRow];
-          const double myInfeas = work_infeasibility[iRow];
-          const double myWeight = workEdWt[iRow];
+          const HighsFloat myInfeas = work_infeasibility[iRow];
+          const HighsFloat myWeight = workEdWt[iRow];
           if (bestMerit[iPart] * myWeight < myInfeas) {
-            bestMerit[iPart] = myInfeas / myWeight;
+            bestMerit[iPart] = (double)(myInfeas / myWeight);
             bestIndex[iPart] = iRow;
           }
         }
@@ -317,28 +317,28 @@ void HEkkDualRHS::chooseMultiHyperGraphPart(HighsInt* chIndex,
   analysis->simplexTimerStop(ChuzrDualClock);
 }
 
-void HEkkDualRHS::updatePrimal(HVector* column, double theta) {
+void HEkkDualRHS::updatePrimal(HVector* column, HighsFloat theta) {
   analysis->simplexTimerStart(UpdatePrimalClock);
 
   const HighsInt numRow = ekk_instance_.lp_.num_row_;
   const HighsInt columnCount = column->count;
   const HighsInt* variable_index = &column->index[0];
-  const double* columnArray = &column->array[0];
+  const HighsFloat* columnArray = &column->array[0];
 
-  const double* baseLower = &ekk_instance_.info_.baseLower_[0];
-  const double* baseUpper = &ekk_instance_.info_.baseUpper_[0];
+  const HighsFloat* baseLower = &ekk_instance_.info_.baseLower_[0];
+  const HighsFloat* baseUpper = &ekk_instance_.info_.baseUpper_[0];
   const double Tp = ekk_instance_.options_->primal_feasibility_tolerance;
-  double* baseValue = &ekk_instance_.info_.baseValue_[0];
+  HighsFloat* baseValue = &ekk_instance_.info_.baseValue_[0];
 
   bool updatePrimal_inDense = columnCount < 0 || columnCount > 0.4 * numRow;
 
   if (updatePrimal_inDense) {
     for (HighsInt iRow = 0; iRow < numRow; iRow++) {
       baseValue[iRow] -= theta * columnArray[iRow];
-      const double value = baseValue[iRow];
-      const double less = baseLower[iRow] - value;
-      const double more = value - baseUpper[iRow];
-      double infeas = less > Tp ? less : (more > Tp ? more : 0);
+      const HighsFloat value = baseValue[iRow];
+      const HighsFloat less = baseLower[iRow] - value;
+      const HighsFloat more = value - baseUpper[iRow];
+      HighsFloat infeas = less > Tp ? less : (more > Tp ? more : 0);
       //    work_infeasibility[iRow] = infeas * infeas;
       if (ekk_instance_.info_.store_squared_primal_infeasibility)
         work_infeasibility[iRow] = infeas * infeas;
@@ -349,10 +349,10 @@ void HEkkDualRHS::updatePrimal(HVector* column, double theta) {
     for (HighsInt i = 0; i < columnCount; i++) {
       HighsInt iRow = variable_index[i];
       baseValue[iRow] -= theta * columnArray[iRow];
-      const double value = baseValue[iRow];
-      const double less = baseLower[iRow] - value;
-      const double more = value - baseUpper[iRow];
-      double infeas = less > Tp ? less : (more > Tp ? more : 0);
+      const HighsFloat value = baseValue[iRow];
+      const HighsFloat less = baseLower[iRow] - value;
+      const HighsFloat more = value - baseUpper[iRow];
+      HighsFloat infeas = less > Tp ? less : (more > Tp ? more : 0);
       if (ekk_instance_.info_.store_squared_primal_infeasibility)
         work_infeasibility[iRow] = infeas * infeas;
       else
@@ -365,19 +365,19 @@ void HEkkDualRHS::updatePrimal(HVector* column, double theta) {
 
 // Update the DSE weights
 void HEkkDualRHS::updateWeightDualSteepestEdge(
-    HVector* column, const double new_pivotal_edge_weight, double Kai,
-    double* dseArray) {
+    HVector* column, const HighsFloat new_pivotal_edge_weight, HighsFloat Kai,
+    HighsFloat* dseArray) {
   analysis->simplexTimerStart(DseUpdateWeightClock);
 
   const HighsInt numRow = ekk_instance_.lp_.num_row_;
   const HighsInt columnCount = column->count;
   const HighsInt* variable_index = &column->index[0];
-  const double* columnArray = &column->array[0];
+  const HighsFloat* columnArray = &column->array[0];
 
   bool updateWeight_inDense = columnCount < 0 || columnCount > 0.4 * numRow;
   if (updateWeight_inDense) {
     for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-      const double aa_iRow = columnArray[iRow];
+      const HighsFloat aa_iRow = columnArray[iRow];
       workEdWt[iRow] +=
           aa_iRow * (new_pivotal_edge_weight * aa_iRow + Kai * dseArray[iRow]);
       if (workEdWt[iRow] < min_dual_steepest_edge_weight)
@@ -386,7 +386,7 @@ void HEkkDualRHS::updateWeightDualSteepestEdge(
   } else {
     for (HighsInt i = 0; i < columnCount; i++) {
       const HighsInt iRow = variable_index[i];
-      const double aa_iRow = columnArray[iRow];
+      const HighsFloat aa_iRow = columnArray[iRow];
       workEdWt[iRow] +=
           aa_iRow * (new_pivotal_edge_weight * aa_iRow + Kai * dseArray[iRow]);
       if (workEdWt[iRow] < min_dual_steepest_edge_weight)
@@ -397,25 +397,25 @@ void HEkkDualRHS::updateWeightDualSteepestEdge(
 }
 // Update the Devex weights
 void HEkkDualRHS::updateWeightDevex(HVector* column,
-                                    const double new_pivotal_edge_weight) {
+                                    const HighsFloat new_pivotal_edge_weight) {
   analysis->simplexTimerStart(DevexUpdateWeightClock);
 
   const HighsInt numRow = ekk_instance_.lp_.num_row_;
   const HighsInt columnCount = column->count;
   const HighsInt* variable_index = &column->index[0];
-  const double* columnArray = &column->array[0];
+  const HighsFloat* columnArray = &column->array[0];
 
   bool updateWeight_inDense = columnCount < 0 || columnCount > 0.4 * numRow;
   if (updateWeight_inDense) {
     for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-      double aa_iRow = columnArray[iRow];
+      HighsFloat aa_iRow = columnArray[iRow];
       workEdWt[iRow] =
           max(workEdWt[iRow], new_pivotal_edge_weight * aa_iRow * aa_iRow);
     }
   } else {
     for (HighsInt i = 0; i < columnCount; i++) {
       HighsInt iRow = variable_index[i];
-      double aa_iRow = columnArray[iRow];
+      HighsFloat aa_iRow = columnArray[iRow];
       workEdWt[iRow] =
           max(workEdWt[iRow], new_pivotal_edge_weight * aa_iRow * aa_iRow);
     }
@@ -423,17 +423,17 @@ void HEkkDualRHS::updateWeightDevex(HVector* column,
   analysis->simplexTimerStop(DevexUpdateWeightClock);
 }
 
-void HEkkDualRHS::updatePivots(HighsInt iRow, double value) {
+void HEkkDualRHS::updatePivots(HighsInt iRow, HighsFloat value) {
   // Update the primal value for the row (iRow) where the basis change
   // has occurred, and set the corresponding squared primal
   // infeasibility value in work_infeasibility
   //
-  const double* baseLower = &ekk_instance_.info_.baseLower_[0];
-  const double* baseUpper = &ekk_instance_.info_.baseUpper_[0];
+  const HighsFloat* baseLower = &ekk_instance_.info_.baseLower_[0];
+  const HighsFloat* baseUpper = &ekk_instance_.info_.baseUpper_[0];
   const double Tp = ekk_instance_.options_->primal_feasibility_tolerance;
-  double* baseValue = &ekk_instance_.info_.baseValue_[0];
+  HighsFloat* baseValue = &ekk_instance_.info_.baseValue_[0];
   baseValue[iRow] = value;
-  double pivotInfeas = 0;
+  HighsFloat pivotInfeas = 0;
   if (baseValue[iRow] < baseLower[iRow] - Tp)
     pivotInfeas = baseValue[iRow] - baseLower[iRow];
   if (baseValue[iRow] > baseUpper[iRow] + Tp)
@@ -459,7 +459,7 @@ void HEkkDualRHS::updateInfeasList(HVector* column) {
     for (HighsInt i = 0; i < columnCount; i++) {
       HighsInt iRow = variable_index[i];
       if (workMark[iRow] == 0) {
-        if (work_infeasibility[iRow]) {
+        if ((double)work_infeasibility[iRow]) {
           workIndex[workCount++] = iRow;
           workMark[iRow] = 1;
         }
@@ -483,15 +483,15 @@ void HEkkDualRHS::updateInfeasList(HVector* column) {
 
 void HEkkDualRHS::createArrayOfPrimalInfeasibilities() {
   HighsInt numRow = ekk_instance_.lp_.num_row_;
-  const double* baseValue = &ekk_instance_.info_.baseValue_[0];
-  const double* baseLower = &ekk_instance_.info_.baseLower_[0];
-  const double* baseUpper = &ekk_instance_.info_.baseUpper_[0];
+  const HighsFloat* baseValue = &ekk_instance_.info_.baseValue_[0];
+  const HighsFloat* baseLower = &ekk_instance_.info_.baseLower_[0];
+  const HighsFloat* baseUpper = &ekk_instance_.info_.baseUpper_[0];
   const double Tp = ekk_instance_.options_->primal_feasibility_tolerance;
   for (HighsInt i = 0; i < numRow; i++) {
-    const double value = baseValue[i];
-    const double less = baseLower[i] - value;
-    const double more = value - baseUpper[i];
-    double infeas = less > Tp ? less : (more > Tp ? more : 0);
+    const HighsFloat value = baseValue[i];
+    const HighsFloat less = baseLower[i] - value;
+    const HighsFloat more = value - baseUpper[i];
+    HighsFloat infeas = less > Tp ? less : (more > Tp ? more : 0);
     //    work_infeasibility[i] = infeas * infeas;
     if (ekk_instance_.info_.store_squared_primal_infeasibility)
       work_infeasibility[i] = infeas * infeas;
@@ -502,14 +502,14 @@ void HEkkDualRHS::createArrayOfPrimalInfeasibilities() {
 
 void HEkkDualRHS::createInfeasList(double columnDensity) {
   HighsInt numRow = ekk_instance_.lp_.num_row_;
-  double* dwork = &workEdWtFull[0];
+  HighsFloat* dwork = &workEdWtFull[0];
 
   // 1. Build the full list
   fill_n(&workMark[0], numRow, 0);
   workCount = 0;
   workCutoff = 0;
   for (HighsInt iRow = 0; iRow < numRow; iRow++) {
-    if (work_infeasibility[iRow]) {
+    if ((double)work_infeasibility[iRow]) {
       workMark[iRow] = 1;
       workIndex[workCount++] = iRow;
     }
@@ -522,12 +522,12 @@ void HEkkDualRHS::createInfeasList(double columnDensity) {
     double maxMerit = 0;
     for (HighsInt iRow = 0, iPut = 0; iRow < numRow; iRow++)
       if (workMark[iRow]) {
-        double myMerit = work_infeasibility[iRow] / workEdWt[iRow];
+        double myMerit = (double)(work_infeasibility[iRow] / workEdWt[iRow]);
         if (maxMerit < myMerit) maxMerit = myMerit;
         dwork[iPut++] = -myMerit;
       }
     nth_element(dwork, dwork + icutoff, dwork + workCount);
-    double cutMerit = -dwork[icutoff];
+    double cutMerit = -(double)dwork[icutoff];
     workCutoff = min(maxMerit * 0.99999, cutMerit * 1.00001);
 
     // Create again

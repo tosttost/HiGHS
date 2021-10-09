@@ -132,8 +132,8 @@ class HighsSimplexAnalysis {
   void reportInvertFormData();
 
   // Control methods to be moved to HEkkControl
-  void dualSteepestEdgeWeightError(const double computed_edge_weight,
-                                   const double updated_edge_weight);
+  void dualSteepestEdgeWeightError(const HighsFloat computed_edge_weight,
+                                   const HighsFloat updated_edge_weight);
   //  bool switchToDevex();
 
   std::vector<HighsTimerClock> thread_simplex_clocks;

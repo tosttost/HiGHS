@@ -83,7 +83,7 @@ class HEkkDualRHS {
    */
   void updatePrimal(
       HVector* column,  //!< Column to add into primal values
-      double theta      //!< Multiple of column to add into primal values
+      HighsFloat theta      //!< Multiple of column to add into primal values
   );
 
   /**
@@ -91,15 +91,15 @@ class HEkkDualRHS {
    */
   void updateWeightDualSteepestEdge(
       HVector* column,             //!< Pivotal column
-      const double row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
-      double Kai,                  //!< -2/alpha
+      const HighsFloat row_outWeight,  //!< (Edge weight of leaving row)/alpha^2
+      HighsFloat Kai,                  //!< -2/alpha
       HighsFloat* dse                  //!< DSE std::vector
   );
   /**
    * @brief Update the Devex weights
    */
   void updateWeightDevex(HVector* column,            //!< Pivotal column
-                         const double row_outWeight  //!< max(1, (Edge weight of
+                         const HighsFloat row_outWeight  //!< max(1, (Edge weight of
                                                      //!< leaving row)/alpha^2)
   );
   /**
@@ -107,7 +107,7 @@ class HEkkDualRHS {
    * occurred
    */
   void updatePivots(HighsInt iRow,  //!< row where the basis change has occurred
-                    double value    //!< New primal value in this row
+                    HighsFloat value    //!< New primal value in this row
   );
 
   /**

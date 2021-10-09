@@ -24,26 +24,26 @@
 
 void debugDualChuzcFailNorms(
     const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    double& workDataNorm, const HighsInt numVar, const double* workDual,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    double& workDataNorm, const HighsInt numVar, const HighsFloat* workDual,
     double& workDualNorm);
 
 HighsDebugStatus debugDualChuzcFailQuad0(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
-    const double remainTheta, const bool force = false);
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
+    const HighsFloat remainTheta, const bool force = false);
 
 HighsDebugStatus debugDualChuzcFailQuad1(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force = false);
 
 HighsDebugStatus debugDualChuzcFailHeap(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force = false);
 
 HighsDebugStatus debugNonbasicFlagConsistent(const HighsOptions& options,

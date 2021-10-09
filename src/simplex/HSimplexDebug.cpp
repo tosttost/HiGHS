@@ -22,18 +22,18 @@
 
 void debugDualChuzcFailNorms(
     const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    double& workDataNorm, const HighsInt numVar, const double* workDual,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    double& workDataNorm, const HighsInt numVar, const HighsFloat* workDual,
     double& workDualNorm) {
   workDataNorm = 0;
   for (HighsInt i = 0; i < workCount; i++) {
-    double value = workData[i].second;
+    HighsFloat value = workData[i].second;
     workDataNorm += value * value;
   }
   workDataNorm = sqrt(workDataNorm);
   workDualNorm = 0;
   for (HighsInt iVar = 0; iVar < numVar; iVar++) {
-    double value = workDual[iVar];
+    HighsFloat value = workDual[iVar];
     workDualNorm += value * value;
   }
   workDualNorm = sqrt(workDualNorm);
@@ -41,9 +41,9 @@ void debugDualChuzcFailNorms(
 
 HighsDebugStatus debugDualChuzcFailQuad0(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
-    const double remainTheta, const bool force) {
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
+    const HighsFloat remainTheta, const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)
     return HighsDebugStatus::kNotChecked;
@@ -66,8 +66,8 @@ HighsDebugStatus debugDualChuzcFailQuad0(
 
 HighsDebugStatus debugDualChuzcFailQuad1(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)
@@ -92,8 +92,8 @@ HighsDebugStatus debugDualChuzcFailQuad1(
 
 HighsDebugStatus debugDualChuzcFailHeap(
     const HighsOptions& options, const HighsInt workCount,
-    const std::vector<std::pair<HighsInt, double>>& workData,
-    const HighsInt numVar, const double* workDual, const double selectTheta,
+    const std::vector<std::pair<HighsInt, HighsFloat>>& workData,
+    const HighsInt numVar, const HighsFloat* workDual, const HighsFloat selectTheta,
     const bool force) {
   // Non-trivially expensive assessment of CHUZC failure
   if (options.highs_debug_level < kHighsDebugLevelCostly && !force)

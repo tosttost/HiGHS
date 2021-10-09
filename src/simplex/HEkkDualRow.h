@@ -95,12 +95,12 @@ class HEkkDualRow {
 
   void chooseFinalLargeAlpha(
       HighsInt& breakIndex, HighsInt& breakGroup, HighsInt pass_workCount,
-      const std::vector<std::pair<HighsInt, double>>& pass_workData,
+      const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
       const std::vector<HighsInt>& pass_workGroup);
 
   void reportWorkDataAndGroup(
       const std::string message, const HighsInt reportWorkCount,
-      const std::vector<std::pair<HighsInt, double>>& reportWorkData,
+      const std::vector<std::pair<HighsInt, HighsFloat>>& reportWorkData,
       const std::vector<HighsInt>& reportWorkGroup);
   bool compareWorkDataAndGroup();
 
@@ -148,11 +148,11 @@ class HEkkDualRow {
 
   HighsInt debugFindInWorkData(
       const HighsInt iCol, const HighsInt count,
-      const std::vector<std::pair<HighsInt, double>>& workData_);
+      const std::vector<std::pair<HighsInt, HighsFloat>>& workData_);
   HighsInt debugChooseColumnInfeasibilities() const;
   void debugReportBfrtVar(
       const HighsInt ix,
-      const std::vector<std::pair<HighsInt, double>>& pass_workData) const;
+      const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData) const;
   // References:
   HEkk& ekk_instance_;
 
@@ -188,15 +188,15 @@ class HEkkDualRow {
   HighsInt workPivot = 0;  //!< Index of the column entering the basis
   HighsInt workCount = 0;  //!< Number of BFRT flips
 
-  std::vector<std::pair<HighsInt, double>>
+  std::vector<std::pair<HighsInt, HighsFloat>>
       workData;  //!< Index-Value pairs for ratio test
   std::vector<HighsInt>
       workGroup;  //!< Pointers into workData for degenerate nodes in BFRT
 
   // Independent identifiers for heap-based sort in BFRT
   HighsInt alt_workCount = 0;
-  std::vector<std::pair<HighsInt, double>> original_workData;
-  std::vector<std::pair<HighsInt, double>> sorted_workData;
+  std::vector<std::pair<HighsInt, HighsFloat>> original_workData;
+  std::vector<std::pair<HighsInt, HighsFloat>> sorted_workData;
   std::vector<HighsInt> alt_workGroup;
 
   HighsSimplexAnalysis* analysis = nullptr;
