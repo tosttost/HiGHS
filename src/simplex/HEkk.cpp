@@ -2738,8 +2738,8 @@ void HEkk::computeDual() {
   dual_col.setup(lp_.num_row_);
   dual_col.clear();
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
-    const HighsFloat value = info_.workCost_[basis_.basicIndex_[iRow]] +
-                             info_.workShift_[basis_.basicIndex_[iRow]];
+    const HighsInt iVar = basis_.basicIndex_[iRow];
+    const HighsFloat value = info_.workCost_[iVar] + info_.workShift_[iVar];
     if (value != 0) {
       dual_col.index[dual_col.count++] = iRow;
       dual_col.array[iRow] = value;
@@ -2750,8 +2750,10 @@ void HEkk::computeDual() {
   //  debugSimplexDualInfeasible();
   // Copy the costs in case the basic costs are all zero
   const HighsInt num_tot = lp_.num_col_ + lp_.num_row_;
-  for (HighsInt i = 0; i < num_tot; i++)
-    info_.workDual_[i] = info_.workCost_[i];
+  for (HighsInt i = 0; i < num_tot; i++) {
+    info_.workDual_[i] = info_.workCost_[i];// + info_.workShift_[i];
+    assert(!(double)info_.workShift_[i]);
+  }
 
   if (dual_col.count) {
     fullBtran(dual_col);

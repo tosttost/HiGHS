@@ -452,20 +452,26 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   // and costs for basic rows. The latter are normally zero, but will
   // be nonzero if the constraint is violated in primal phase 1, or if
   // the row cost is a perturbed zero in dual simplex.
+  //
+  // The vector dual_value is the negation of the pi vector
   vector<HighsFloat> primal_value(num_tot);
   vector<HighsFloat> dual_value(num_tot);
+  // Initialise the primal and dual values using all the primal and
+  // dual values. The basic primal and dual values will be
+  // over-written in the next loop
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-    primal_value[iVar] = info.workValue_[iVar];
+    primal_value[iVar] = info.workValue_[iVar];    
     dual_value[iVar] = info.workDual_[iVar];
   }
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
     primal_value[iVar] = info.baseValue_[iRow];
-    //    dual_value[iVar] = -(info.workCost_[iVar] + info_.workShift_[iVar]);
+    dual_value[iVar] = -(info.workCost_[iVar] + info_.workShift_[iVar]);
   }
   // Accumulate primal_activities
   HighsFloat max_dual_residual = 0;
   vector<HighsFloat> primal_activity(num_row, 0);
+  const bool report = true;
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
     HighsFloat dual = (info.workCost_[iCol] + info_.workShift_[iCol]);
     HighsFloat value = primal_value[iCol];
@@ -474,20 +480,18 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       HighsInt iRow = lp.a_matrix_.index_[iEl];
       HighsInt iVar = num_col + iRow;
       HighsFloat Avalue = lp.a_matrix_.value_[iEl];
-      HighsFloat dual_Avalue = dual_value[iVar] * Avalue;
       primal_activity[iRow] += value * Avalue;
       dual += dual_value[iVar] * Avalue;
     }
     HighsFloat dual_residual = abs(dual - info.workDual_[iCol]);
     max_dual_residual = max(dual_residual, max_dual_residual);
-    const std::string status = basis.nonbasicFlag_[iCol] ? "Nonbasic" : "Basic";
-    if ((double)dual_residual) {
-      printf("Icol = %2d (%8s): dual = %11.4g; workDual = %11.4g; residual = %11.4g; max_residual = %11.4g\n",
-	     (int)iCol, status.c_str(),
-	     (double)dual, (double)info.workDual_[iCol],
+    if ((double)dual_residual && report)
+      printf("Icol = %2d (%8s): workDual = %11.4g; dual = %11.4g; residual = %11.4g; max_residual = %11.4g\n",
+	     (int)iCol, (basis.nonbasicFlag_[iCol] ? "Nonbasic" : "Basic"),
+	     (double)info.workDual_[iCol],
+	     (double)dual, 
 	     (double)dual_residual,
 	     (double)max_dual_residual);
-    }
   }
   // Remember that simplex row values are the negated row activities
   HighsFloat max_primal_residual = 0;
