@@ -275,6 +275,8 @@ class HighsCD0uble {
 
   friend HighsCD0uble abs(const HighsCD0uble& v) { return v < 0 ? -v : v; }
   friend HighsCD0uble fabs(const HighsCD0uble& v) { return v < 0 ? -v : v; }
+  friend HighsCD0uble max(const HighsCD0uble a, const HighsCD0uble b) { return a-b > 0 ? a : b; };
+  friend HighsCD0uble min(const HighsCD0uble a, const HighsCD0uble b) { return a-b < 0 ? a : b; };
 
   friend HighsCD0uble sqrt(const HighsCD0uble& v) {
     double c = std::sqrt(v.hi + v.lo);

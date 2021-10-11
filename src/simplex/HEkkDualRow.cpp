@@ -230,6 +230,10 @@ HighsInt HEkkDualRow::chooseFinal() {
   }
   if (workDual[workPivot] * workMove[workPivot] > 0) {
     workTheta = workDual[workPivot] / workAlpha;
+    const HighsFloat check_dual = workTheta * workAlpha;
+    const HighsFloat check_dual_err = check_dual - workDual[workPivot];
+    printf("HEkkDualRow::chooseFinal workTheta = %g; workAlpha = %g; check_dual = %g; check_dual_err = %g\n",
+	   (double)workTheta, (double)workAlpha, (double)check_dual, (double)check_dual_err);
   } else {
     workTheta = 0;
   }
@@ -482,16 +486,19 @@ void HEkkDualRow::updateDual(HighsFloat theta) {
   analysis->simplexTimerStart(UpdateDualClock);
   HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
   HighsFloat dual_objective_value_change = 0;
-  printf("\nHEkkDualRow::updateDual: theta = %g\n", (double)theta);
+  const bool report = true;
+  if (report) printf("\nHEkkDualRow::updateDual: theta = %g\n", (double)theta);
   for (HighsInt i = 0; i < packCount; i++) {
-    HighsInt iCol = packIndex[i];
-    HighsFloat dual = workDual[iCol];
-    HighsFloat new_dual = dual -  theta * packValue[i];
-    printf("i = %2d; Icol = %2d: dual = %21.17g; packValue = %21.17g; new_dual = %21.17g\n",
-	   (int)i,
-	   (int)iCol,
-	   (double)dual, (double)packValue[i],
-	   (double)new_dual);
+      HighsInt iCol = packIndex[i];
+    if (report) {
+      HighsFloat dual = workDual[iCol];
+      HighsFloat new_dual = dual -  theta * packValue[i];
+      printf("i = %2d; Icol = %2d: dual = %11.4g; packValue = %11.4g; new_dual = %11.4g\n",
+	     (int)i,
+	     (int)iCol,
+	     (double)dual, (double)packValue[i],
+	     (double)new_dual);
+    }
     workDual[packIndex[i]] -= theta * packValue[i];
    
     // Identify the change to the dual objective

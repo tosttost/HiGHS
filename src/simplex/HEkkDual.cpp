@@ -1893,7 +1893,10 @@ void HEkkDual::updateDual() {
     ekk_instance_.info_.updated_dual_objective_value +=
         dual_objective_value_change;
   }
-  workDual[variable_in] = 0;
+  // ToDo: Is it radical to leave this as it was so that dual residuals are correct
+  //  workDual[variable_in] = 0;
+  printf("HEkkDual::updateDual Leaving workDual[variable_in] = %g\n", (double)workDual[variable_in]);
+  assert((double)fabs(workDual[variable_in]) < 1e-24);
   workDual[variable_out] = -theta_dual;
 
   //  debugUpdatedObjectiveValue(ekk_instance_, algorithm, solve_phase, "Before

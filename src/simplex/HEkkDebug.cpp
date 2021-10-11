@@ -461,27 +461,29 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
     primal_value[iVar] = info.baseValue_[iRow];
-    dual_value[iVar] = -info.workCost_[iVar];
+    //    dual_value[iVar] = -(info.workCost_[iVar] + info_.workShift_[iVar]);
   }
   // Accumulate primal_activities
   HighsFloat max_dual_residual = 0;
   vector<HighsFloat> primal_activity(num_row, 0);
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
-    HighsFloat dual = info.workCost_[iCol];
+    HighsFloat dual = (info.workCost_[iCol] + info_.workShift_[iCol]);
     HighsFloat value = primal_value[iCol];
     for (HighsInt iEl = lp.a_matrix_.start_[iCol];
          iEl < lp.a_matrix_.start_[iCol + 1]; iEl++) {
       HighsInt iRow = lp.a_matrix_.index_[iEl];
       HighsInt iVar = num_col + iRow;
-      double Avalue = lp.a_matrix_.value_[iEl];
+      HighsFloat Avalue = lp.a_matrix_.value_[iEl];
+      HighsFloat dual_Avalue = dual_value[iVar] * Avalue;
       primal_activity[iRow] += value * Avalue;
       dual += dual_value[iVar] * Avalue;
     }
     HighsFloat dual_residual = abs(dual - info.workDual_[iCol]);
     max_dual_residual = max(dual_residual, max_dual_residual);
+    const std::string status = basis.nonbasicFlag_[iCol] ? "Nonbasic" : "Basic";
     if ((double)dual_residual) {
-      printf("Icol = %2d: dual = %21.17g; workDual = %21.17g; residual = %11.7g; max_residual = %11.7g\n",
-	     (int)iCol,
+      printf("Icol = %2d (%8s): dual = %11.4g; workDual = %11.4g; residual = %11.4g; max_residual = %11.4g\n",
+	     (int)iCol, status.c_str(),
 	     (double)dual, (double)info.workDual_[iCol],
 	     (double)dual_residual,
 	     (double)max_dual_residual);
