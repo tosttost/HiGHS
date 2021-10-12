@@ -93,6 +93,10 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   std::string value_adjective;
   HighsLogType report_level;
 
+  highsLogDev(options.log_options, HighsLogType::kError,
+	      "HEkk::debugSimplex - %s: Iteration %" HIGHSINT_FORMAT"\n",
+	      message.c_str(), iteration_count);
+
   // Check the nonbasic flags are all kNonbasicFlagTrue or kNonbasicFlagFalse
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
     HighsInt flag = basis.nonbasicFlag_[iVar];
@@ -297,7 +301,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   // Check that the number, max and sums of primal and dual infeasibilities (if
   // known) are correct
   const HighsInt info_num_primal_infeasibility =
-      this->info_.num_primal_infeasibilities;
+      info.num_primal_infeasibilities;
   if (info_num_primal_infeasibility >= 0) {
     const bool illegal_num_primal_infeasibility =
         num_primal_infeasibility != info_num_primal_infeasibility;
@@ -314,7 +318,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
   }
   const double info_max_primal_infeasibility =
-      this->info_.max_primal_infeasibility;
+      info.max_primal_infeasibility;
   if (info_max_primal_infeasibility >= 0) {
     const bool illegal_max_primal_infeasibility =
         abs(max_primal_infeasibility - info_max_primal_infeasibility) >
@@ -331,7 +335,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
   }
   const double info_sum_primal_infeasibility =
-      this->info_.sum_primal_infeasibilities;
+      info.sum_primal_infeasibilities;
   if (info_sum_primal_infeasibility >= 0) {
     const bool illegal_sum_primal_infeasibility =
         abs(sum_primal_infeasibility - info_sum_primal_infeasibility) >
@@ -348,7 +352,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
   }
   const HighsInt info_num_dual_infeasibility =
-      this->info_.num_dual_infeasibilities;
+      info.num_dual_infeasibilities;
   if (info_num_dual_infeasibility >= 0) {
     const bool illegal_num_dual_infeasibility =
         num_dual_infeasibility != info_num_dual_infeasibility;
@@ -364,7 +368,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       return HighsDebugStatus::kLogicalError;
     }
   }
-  const double info_max_dual_infeasibility = this->info_.max_dual_infeasibility;
+  const double info_max_dual_infeasibility = info.max_dual_infeasibility;
   if (info_max_dual_infeasibility >= 0) {
     const bool illegal_max_dual_infeasibility =
         abs(max_dual_infeasibility - info_max_dual_infeasibility) >
@@ -381,7 +385,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
     }
   }
   const double info_sum_dual_infeasibility =
-      this->info_.sum_dual_infeasibilities;
+      info.sum_dual_infeasibilities;
   if (info_sum_dual_infeasibility >= 0) {
     const bool illegal_sum_dual_infeasibility =
         abs(sum_dual_infeasibility - info_sum_dual_infeasibility) >
@@ -421,7 +425,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   }
   bool require_dual_feasible_in_dual_simplex =
       algorithm == SimplexAlgorithm::kDual && this->status_.has_fresh_rebuild &&
-      this->info_.allow_cost_perturbation;
+      info.allow_cost_perturbation;
 
   bool illegal_dual_infeasibility =
       (require_dual_feasible_in_dual_simplex || phase == 0) &&
@@ -453,27 +457,30 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
   // be nonzero if the constraint is violated in primal phase 1, or if
   // the row cost is a perturbed zero in dual simplex.
   //
-  // The vector dual_value is the negation of the pi vector
-  vector<HighsFloat> primal_value(num_tot);
-  vector<HighsFloat> dual_value(num_tot);
   // Initialise the primal and dual values using all the primal and
   // dual values. The basic primal and dual values will be
   // over-written in the next loop
-  for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-    primal_value[iVar] = info.workValue_[iVar];    
-    dual_value[iVar] = info.workDual_[iVar];
-  }
+  const bool report = false;
+  vector<HighsFloat> primal_value = info.workValue_;
+  vector<HighsFloat> pi_value = info.workDual_;
+  for (HighsInt iVar = lp_.num_col_; iVar < num_tot; iVar++)
+    pi_value[iVar] = -info.workDual_[iVar];
   for (HighsInt iRow = 0; iRow < num_row; iRow++) {
     HighsInt iVar = basis.basicIndex_[iRow];
     primal_value[iVar] = info.baseValue_[iRow];
-    dual_value[iVar] = -(info.workCost_[iVar] + info_.workShift_[iVar]);
+    pi_value[iVar] = info.workCost_[iVar] + info.workShift_[iVar];
+  }
+  if (report) {
+    for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
+      HighsInt iVar = basis.basicIndex_[iRow];
+      printf("   pi[%2d] = %11.4g\n", (int)iRow, (double)pi_value[iVar]);
+    }
   }
   // Accumulate primal_activities
   HighsFloat max_dual_residual = 0;
   vector<HighsFloat> primal_activity(num_row, 0);
-  const bool report = true;
   for (HighsInt iCol = 0; iCol < num_col; iCol++) {
-    HighsFloat dual = (info.workCost_[iCol] + info_.workShift_[iCol]);
+    HighsFloat dual = (info.workCost_[iCol] + info.workShift_[iCol]);
     HighsFloat value = primal_value[iCol];
     for (HighsInt iEl = lp.a_matrix_.start_[iCol];
          iEl < lp.a_matrix_.start_[iCol + 1]; iEl++) {
@@ -481,7 +488,7 @@ HighsDebugStatus HEkk::debugSimplex(const std::string message,
       HighsInt iVar = num_col + iRow;
       HighsFloat Avalue = lp.a_matrix_.value_[iEl];
       primal_activity[iRow] += value * Avalue;
-      dual += dual_value[iVar] * Avalue;
+      dual += pi_value[iVar] * Avalue;
     }
     HighsFloat dual_residual = abs(dual - info.workDual_[iCol]);
     max_dual_residual = max(dual_residual, max_dual_residual);
@@ -1081,7 +1088,7 @@ bool HEkk::debugWorkArraysOk(const SimplexAlgorithm algorithm,
   // Don't check costs against the LP, when using primal simplex in
   // primal phase 1, if the LP is primal infeasible, or if the costs
   // have been changed
-  const bool costs_changed = info_.costs_perturbed || info_.costs_shifted;
+  const bool costs_changed = info.costs_perturbed || info.costs_shifted;
   if (!(primal_phase1 || this->model_status_ == HighsModelStatus::kInfeasible ||
         costs_changed)) {
     for (HighsInt col = 0; col < lp.num_col_; ++col) {
@@ -1429,17 +1436,20 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
     norm_nonbasic_costs = max(fabs(value), norm_nonbasic_costs);
   }
 
-  const double zero_delta_dual =
-      max(0.5 * (norm_basic_costs + norm_nonbasic_costs) * 1e-16, 1e-16);
+  const HighsFloat zero_delta_dual = kHighsFloatTiny;
+  //      max(0.5 * (norm_basic_costs + norm_nonbasic_costs) * 1e-16, 1e-16);
+  HighsFloat max_delta_dual = 0;
   for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
     if (!basis.nonbasicFlag_[iVar]) {
       previous_dual[iVar] = 0;
       new_dual[iVar] = 0;
       continue;
     }
-    double delta = (double)(new_dual[iVar] - previous_dual[iVar]);
+    HighsFloat delta = new_dual[iVar] - previous_dual[iVar];
+    max_delta_dual = max(fabs(delta), max_delta_dual);
     if (fabs(delta) < zero_delta_dual) continue;
-    delta_dual[iVar] = delta;
+    printf("debugComputeDual: iVar = %2d; delta_dual = %g\n", (int)iVar, (double)delta);
+    delta_dual[iVar] = (double)delta;
     const bool sign_change =
         fabs(previous_dual[iVar]) > options.dual_feasibility_tolerance &&
         fabs(new_dual[iVar]) > options.dual_feasibility_tolerance &&
@@ -1447,13 +1457,11 @@ HighsDebugStatus HEkk::debugComputeDual(const bool initialise) const {
     if (sign_change) num_dual_sign_change++;
     num_delta_dual_values++;
   }
+    printf("\nHEkk::debugComputeDual Iteration %d: |cB| = %g; |cN| = %g; max delta dual = %g; zero delta dual = %g\n",
+	   (int)iteration_count_, norm_basic_costs,
+           norm_nonbasic_costs, (double)max_delta_dual, (double)zero_delta_dual);
   if (num_delta_dual_values) {
-    printf(
-        "\nHEkk::debugComputeDual Iteration %d: Number of dual sign changes = "
-        "%d\n",
-        (int)iteration_count_, (int)num_dual_sign_change);
-    printf("   |cB| = %g; |cN| = %g; zero delta dual = %g\n", norm_basic_costs,
-           norm_nonbasic_costs, zero_delta_dual);
+    printf("Number of dual sign changes = %d\n", (int)num_dual_sign_change);
     //    analyseVectorValues(options.log_options, "Previous duals", num_tot,
     //    previous_dual); analyseVectorValues(options.log_options, "New duals",
     //    num_tot, new_dual);

@@ -228,12 +228,15 @@ HighsInt HEkkDualRow::chooseFinal() {
     workAlpha =
         sorted_workData[breakIndex].second * move_out * workMove[workPivot];
   }
+  const bool report = false;  // ekk_instance_.iteration_count_ == check_iter;
   if (workDual[workPivot] * workMove[workPivot] > 0) {
     workTheta = workDual[workPivot] / workAlpha;
-    const HighsFloat check_dual = workTheta * workAlpha;
-    const HighsFloat check_dual_err = check_dual - workDual[workPivot];
-    printf("HEkkDualRow::chooseFinal workTheta = %g; workAlpha = %g; check_dual = %g; check_dual_err = %g\n",
-	   (double)workTheta, (double)workAlpha, (double)check_dual, (double)check_dual_err);
+    if (report) {
+      const HighsFloat check_dual = workTheta * workAlpha;
+      const HighsFloat check_dual_err = check_dual - workDual[workPivot];
+      printf("HEkkDualRow::chooseFinal workTheta = %g; workAlpha = %g; check_dual = %g; check_dual_err = %g\n",
+	     (double)workTheta, (double)workAlpha, (double)check_dual, (double)check_dual_err);
+    }
   } else {
     workTheta = 0;
   }
@@ -244,7 +247,6 @@ HighsInt HEkkDualRow::chooseFinal() {
   // 4. Determine BFRT flip index: flip all
   fullCount = breakIndex;  // Not used
   workCount = 0;
-  const bool report = true;  // ekk_instance_.iteration_count_ == check_iter;
   if (use_quad_sort) {
     for (HighsInt i = 0; i < workGroup[breakGroup]; i++) {
       const HighsInt iCol = workData[i].first;
@@ -486,7 +488,7 @@ void HEkkDualRow::updateDual(HighsFloat theta) {
   analysis->simplexTimerStart(UpdateDualClock);
   HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
   HighsFloat dual_objective_value_change = 0;
-  const bool report = true;
+  const bool report = false;
   if (report) printf("\nHEkkDualRow::updateDual: theta = %g\n", (double)theta);
   for (HighsInt i = 0; i < packCount; i++) {
       HighsInt iCol = packIndex[i];

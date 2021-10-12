@@ -25,6 +25,6 @@
 
 // Settings for psudo-quad precision
 typedef HighsCD0uble HighsFloat;
-const HighsFloat kHighsFloatTiny = 1e-32;
+const HighsFloat kHighsFloatTiny = 1e-30;
 
 #endif

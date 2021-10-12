@@ -1736,13 +1736,13 @@ void HEkkPrimal::phase1UpdatePrimal() {
     } else if (value > upper + primal_feasibility_tolerance) {
       bound_violated = 1.0;
     }
-    double cost = bound_violated;
+    HighsFloat cost = bound_violated;
     if (base) cost *= 1 + base * info.numTotRandomValue_[iRow];
     info.workCost_[iCol] = cost;
     if (was_cost) {
-      if (!cost) info.num_primal_infeasibilities--;
+      if (!(double)cost) info.num_primal_infeasibilities--;
     } else {
-      if (cost) info.num_primal_infeasibilities++;
+      if ((double)cost) info.num_primal_infeasibilities++;
     }
     HighsFloat delta_cost = cost - was_cost;
     if ((double)delta_cost) {
@@ -1776,7 +1776,7 @@ void HEkkPrimal::considerInfeasibleValueIn() {
   // The primal value of the entering variable is not feasible
   if (solve_phase == kSolvePhase1) {
     info.num_primal_infeasibilities++;
-    double cost = bound_violated;
+    HighsFloat cost = bound_violated;
     if (base) cost *= 1 + base * info.numTotRandomValue_[row_out];
     info.workCost_[variable_in] = cost;
     info.workDual_[variable_in] += cost;

@@ -337,7 +337,8 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
   HighsDebugStatus return_status = HighsDebugStatus::kOk;
   std::string type = "";
   if (transposed) type = "transposed ";
-  if (solve_error_norm>=1e-20) {
+  const HighsFloat no_report_tolerance = 0; //1e-20;
+  if (solve_error_norm > no_report_tolerance) {
     if (solve_error_norm > kSolveExcessiveError) {
       value_adjective = "Excessive";
       report_level = HighsLogType::kError;
@@ -355,7 +356,7 @@ HighsDebugStatus HSimplexNla::debugReportInvertSolutionError(
                 source.c_str());
   }
 
-  if (residual_error_norm>=1e-20) {
+  if (residual_error_norm > no_report_tolerance) {
     if (residual_error_norm > kResidualExcessiveError) {
       value_adjective = "Excessive";
       report_level = HighsLogType::kError;

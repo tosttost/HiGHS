@@ -108,7 +108,7 @@ struct HighsSimplexInfo {
   // Vectors of random reals for column cost perturbation, a random
   // permutation of all indices for CHUZR and a random permutation of
   // column indices for permuting the columns
-  std::vector<double> numTotRandomValue_;
+  std::vector<HighsFloat> numTotRandomValue_;
   std::vector<HighsInt> numTotPermutation_;
   std::vector<HighsInt> numColPermutation_;
 

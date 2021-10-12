@@ -1734,7 +1734,7 @@ void HEkk::initialiseSimplexLpRandomVectors() {
 
   // Generate a vector of random reals
   info_.numTotRandomValue_.resize(num_tot);
-  vector<double>& numTotRandomValue = info_.numTotRandomValue_;
+  vector<HighsFloat>& numTotRandomValue = info_.numTotRandomValue_;
   for (HighsInt i = 0; i < num_tot; i++) {
     numTotRandomValue[i] = random.fraction();
   }
@@ -2310,7 +2310,7 @@ void HEkk::initialiseCost(const SimplexAlgorithm algorithm,
                   boxedRate, max_abs_cost);
   }
   // Determine the perturbation base
-  const double col_cost_base =
+  const HighsFloat col_cost_base =
       info_.dual_simplex_cost_perturbation_multiplier * 5e-7 * max_abs_cost;
   if (report_cost_perturbation)
     highsLogDev(options_->log_options, HighsLogType::kInfo,
@@ -2320,9 +2320,9 @@ void HEkk::initialiseCost(const SimplexAlgorithm algorithm,
   for (HighsInt i = 0; i < lp_.num_col_; i++) {
     double lower = lp_.col_lower_[i];
     double upper = lp_.col_upper_[i];
-    double xpert = (1 + info_.numTotRandomValue_[i]) *
-                   (fabs((double)info_.workCost_[i]) + 1) * col_cost_base;
-    const double previous_cost = (double)info_.workCost_[i];
+    HighsFloat xpert = ((HighsFloat)1 + info_.numTotRandomValue_[i]) *
+                   (fabs(info_.workCost_[i]) + (HighsFloat)1) * col_cost_base;
+    //    const double previous_cost = (double)info_.workCost_[i];
     if (lower <= -kHighsInf && upper >= kHighsInf) {
       // Free - no perturb
     } else if (upper >= kHighsInf) {  // Lower
@@ -2341,13 +2341,13 @@ void HEkk::initialiseCost(const SimplexAlgorithm algorithm,
     //                                analysis_.cost_perturbation1_distribution);
     //    }
   }
-  const double row_cost_base =
+  const HighsFloat row_cost_base =
       info_.dual_simplex_cost_perturbation_multiplier * 1e-12;
   if (report_cost_perturbation)
     highsLogDev(options_->log_options, HighsLogType::kInfo,
                 "   Perturbation row    base = %g\n", row_cost_base);
   for (HighsInt i = lp_.num_col_; i < num_tot; i++) {
-    double perturbation2 = (0.5 - info_.numTotRandomValue_[i]) * row_cost_base;
+    HighsFloat perturbation2 = ((HighsFloat)0.5 - info_.numTotRandomValue_[i]) * row_cost_base;
     info_.workCost_[i] += perturbation2;
     //    if (report_cost_perturbation) {
     //      perturbation2 = fabs(perturbation2);
@@ -2396,12 +2396,12 @@ void HEkk::initialiseBound(const SimplexAlgorithm algorithm,
     const double base =
         info_.primal_simplex_bound_perturbation_multiplier * 5e-7;
     for (HighsInt iVar = 0; iVar < num_tot; iVar++) {
-      double lower = (double)info_.workLower_[iVar];
-      double upper = (double)info_.workUpper_[iVar];
+      HighsFloat lower = info_.workLower_[iVar];
+      HighsFloat upper = info_.workUpper_[iVar];
       const bool fixed = lower == upper;
       // Don't perturb bounds of nonbasic fixed variables as they stay nonbasic
       if (basis_.nonbasicFlag_[iVar] == kNonbasicFlagTrue && fixed) continue;
-      double random_value = info_.numTotRandomValue_[iVar];
+      HighsFloat random_value = info_.numTotRandomValue_[iVar];
       if (lower > -kHighsInf) {
         if (lower < -1) {
           lower -= random_value * base * (-lower);
@@ -2733,44 +2733,67 @@ void HEkk::computePrimal() {
 
 void HEkk::computeDual() {
   analysis_.simplexTimerStart(ComputeDualClock);
+  HighsSimplexInfo& info = this->info_;
+  const SimplexBasis& basis = this->basis_;
+  vector<HighsFloat> debug_pi = info.workDual_;
+  for (HighsInt iVar = lp_.num_col_; iVar < lp_.num_col_ + lp_.num_row_; iVar++)
+    debug_pi[iVar] = -info.workDual_[iVar];
+  for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
+    HighsInt iVar = basis_.basicIndex_[iRow];
+    debug_pi[iVar] = info.workCost_[iVar] + info.workShift_[iVar];
+  }
+  
   // Create a local buffer for the pi vector
   HVector dual_col;
   dual_col.setup(lp_.num_row_);
   dual_col.clear();
   for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
     const HighsInt iVar = basis_.basicIndex_[iRow];
-    const HighsFloat value = info_.workCost_[iVar] + info_.workShift_[iVar];
+    const HighsFloat value = info.workCost_[iVar] + info.workShift_[iVar];
     if (value != 0) {
       dual_col.index[dual_col.count++] = iRow;
       dual_col.array[iRow] = value;
     }
   }
   // If debugging, save the current duals
-  //  debugComputeDual(true);
+  const bool report = false;
+    if (report) debugComputeDual(true);
   //  debugSimplexDualInfeasible();
   // Copy the costs in case the basic costs are all zero
   const HighsInt num_tot = lp_.num_col_ + lp_.num_row_;
-  for (HighsInt i = 0; i < num_tot; i++) {
-    info_.workDual_[i] = info_.workCost_[i];// + info_.workShift_[i];
-    assert(!(double)info_.workShift_[i]);
-  }
+  // Was workShift_multiplier = 0
+  const HighsInt workShift_multiplier = 1;
+  for (HighsInt iVar = 0; iVar < num_tot; iVar++)
+    info.workDual_[iVar] = info.workCost_[iVar] + workShift_multiplier * info.workShift_[iVar];
 
+  if (report) printf("\nHEkk::computeDual\n");
   if (dual_col.count) {
     fullBtran(dual_col);
+    if (report) {
+      for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
+	HighsInt iVar = basis_.basicIndex_[iRow];
+	HighsFloat pi_delta = abs(debug_pi[iVar] - dual_col.array[iRow]);
+	printf("Row %2d; iVar = %2d; pi = %11.4g debug_pi = %11.4g; pi_delta = %11.4g\n",
+	       (int)iRow,(int)iVar,
+	       (double)dual_col.array[iRow],
+	       (double)debug_pi[iVar],
+	       (double)pi_delta);
+      }
+    }
     // Create a local buffer for the values of reduced costs
     HVector dual_row;
     dual_row.setup(lp_.num_col_);
     fullPrice(dual_col, dual_row);
-    for (HighsInt i = 0; i < lp_.num_col_; i++)
-      info_.workDual_[i] -= dual_row.array[i];
-    for (HighsInt i = lp_.num_col_; i < num_tot; i++)
-      info_.workDual_[i] -= dual_col.array[i - lp_.num_col_];
-    //    debugComputeDual();
+    for (HighsInt iRow = 0; iRow < lp_.num_col_; iRow++)
+      info.workDual_[iRow] -= dual_row.array[iRow];
+    for (HighsInt iVar = lp_.num_col_; iVar < num_tot; iVar++)
+      info.workDual_[iVar] -= dual_col.array[iVar - lp_.num_col_];
+    if (report) debugComputeDual();
   }
   // Indicate that the dual infeasiblility information isn't known
-  info_.num_dual_infeasibilities = kHighsIllegalInfeasibilityCount;
-  info_.max_dual_infeasibility = kHighsIllegalInfeasibilityMeasure;
-  info_.sum_dual_infeasibilities = kHighsIllegalInfeasibilityMeasure;
+  info.num_dual_infeasibilities = kHighsIllegalInfeasibilityCount;
+  info.max_dual_infeasibility = kHighsIllegalInfeasibilityMeasure;
+  info.sum_dual_infeasibilities = kHighsIllegalInfeasibilityMeasure;
 
   analysis_.simplexTimerStop(ComputeDualClock);
 }

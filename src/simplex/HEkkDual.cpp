@@ -1237,6 +1237,14 @@ void HEkkDual::iterate() {
 
   // Analyse the iteration: possibly report; possibly switch strategy
   iterationAnalysis();
+
+  const bool debug = false;
+  if (debug) {
+    debugDualSimplex("After iterate()");
+    ekk_instance_.computeDual();
+    debugDualSimplex("After computeDual()");
+  }
+  
 }
 
 void HEkkDual::iterateTasks() {
@@ -1894,8 +1902,12 @@ void HEkkDual::updateDual() {
         dual_objective_value_change;
   }
   // ToDo: Is it radical to leave this as it was so that dual residuals are correct
-  //  workDual[variable_in] = 0;
-  printf("HEkkDual::updateDual Leaving workDual[variable_in] = %g\n", (double)workDual[variable_in]);
+  const bool nonzero_variable_in_dual = false;
+  if (nonzero_variable_in_dual) {
+    printf("HEkkDual::updateDual Leaving workDual[variable_in] = %g\n", (double)workDual[variable_in]);
+  } else {
+  workDual[variable_in] = 0;
+  }
   assert((double)fabs(workDual[variable_in]) < 1e-24);
   workDual[variable_out] = -theta_dual;
 

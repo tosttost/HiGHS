@@ -79,7 +79,7 @@ class HighsCD0uble {
 
   HighsCD0uble& operator+=(const HighsCD0uble& v) {
     (*this) += v.hi;
-    lo += v.lo;
+    (*this) += v.lo;
     return *this;
   }
 
@@ -90,7 +90,7 @@ class HighsCD0uble {
 
   HighsCD0uble& operator-=(const HighsCD0uble& v) {
     (*this) -= v.hi;
-    lo -= v.lo;
+    (*this) -= v.lo;
     return *this;
   }
 
@@ -135,14 +135,14 @@ class HighsCD0uble {
     HighsCD0uble res;
 
     two_sum(res.hi, res.lo, hi, v);
-    res.lo += lo;
+    res += lo;
 
     return res;
   }
 
   HighsCD0uble operator+(const HighsCD0uble& v) const {
     HighsCD0uble res = (*this) + v.hi;
-    res.lo += v.lo;
+    res += v.lo;
 
     return res;
   }
@@ -155,14 +155,14 @@ class HighsCD0uble {
     HighsCD0uble res;
 
     two_sum(res.hi, res.lo, hi, -v);
-    res.lo += lo;
+    res += lo;
 
     return res;
   }
 
   HighsCD0uble operator-(const HighsCD0uble& v) const {
     HighsCD0uble res = (*this) - v.hi;
-    res.lo -= v.lo;
+    res -= v.lo;
 
     return res;
   }
