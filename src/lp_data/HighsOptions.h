@@ -694,7 +694,7 @@ class HighsOptions : public HighsOptionsStruct {
     record_bool = new OptionRecordBool(
         "use_implied_bounds_from_presolve",
         "Use relaxed implied bounds from presolve", advanced,
-        &use_implied_bounds_from_presolve, false);
+        &use_implied_bounds_from_presolve, true);
     records.push_back(record_bool);
 
     record_bool = new OptionRecordBool("mps_parser_type_free",

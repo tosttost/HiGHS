@@ -1190,7 +1190,7 @@ void HEkkDual::iterate() {
   //  debugUpdatedObjectiveValue(ekk_instance_, algorithm, solve_phase, "After
   //  updatePrimal");
 
-  if (ekk_instance_.checkForCycling(variable_in, row_out)) {
+  if (!rebuild_reason && ekk_instance_.checkForCycling(variable_in, row_out)) {
     printf("Cycling_detected: solve %d\n",
            (int)ekk_instance_.debug_solve_call_num_);
     assert(1 == 0);

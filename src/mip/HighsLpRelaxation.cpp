@@ -675,7 +675,13 @@ HighsLpRelaxation::Status HighsLpRelaxation::run(bool resolve_on_error) {
   lpsolver.setOptionValue(
       "time_limit", lpsolver.getRunTime() + mipsolver.options_mip_->time_limit -
                         mipsolver.timer_.read(mipsolver.timer_.solve_clock));
-  // lpsolver.setOptionValue("output_flag", true);
+  if( mipsolver.submip && mipsolver.mipdata_->num_nodes >= 100 )
+  { 
+    lpsolver.setOptionValue("output_flag", true);
+    lpsolver.setOptionValue("log_dev_level", kHighsLogDevLevelDetailed);
+    
+  }
+
   HighsStatus callstatus = lpsolver.run();
 
   const HighsInfo& info = lpsolver.getInfo();
@@ -810,14 +816,14 @@ HighsLpRelaxation::Status HighsLpRelaxation::run(bool resolve_on_error) {
 
       return Status::kUnscaledInfeasible;
     case HighsModelStatus::kIterationLimit: {
-      if (resolve_on_error) {
+      if (!mipsolver.submip && resolve_on_error) {
         // printf(
         //     "error: lpsolver reached iteration limit, resolving with basis "
         //     "from ipm\n");
         Highs ipm;
         ipm.passModel(lpsolver.getLp());
         ipm.setOptionValue("solver", "ipm");
-        ipm.setOptionValue("output_flag", false);
+        ipm.setOptionValue("output_flag", true);
         ipm.setOptionValue("ipm_iteration_limit", 200);
         // todo @ Julian : If you remove this you can see the looping on
         // istanbul-no-cutoff
@@ -827,6 +833,9 @@ HighsLpRelaxation::Status HighsLpRelaxation::run(bool resolve_on_error) {
         lpsolver.setBasis(ipm.getBasis());
         return run(false);
       }
+
+      // lpsolver.clearSolver();
+      // recoverBasis();
 
       // printf("error: lpsolver reached iteration limit\n");
       return Status::kError;

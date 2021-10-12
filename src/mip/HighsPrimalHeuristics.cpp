@@ -84,7 +84,7 @@ bool HighsPrimalHeuristics::solveSubMip(
 
   // set limits
   submipoptions.mip_max_leaves = maxleaves;
-  submipoptions.output_flag = false;
+  submipoptions.output_flag = true;
   submipoptions.mip_max_nodes = maxnodes;
   submipoptions.mip_max_stall_nodes = stallnodes;
   submipoptions.mip_pscost_minreliable = 0;

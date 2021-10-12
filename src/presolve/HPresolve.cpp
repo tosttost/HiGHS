@@ -1479,13 +1479,13 @@ HPresolve::Result HPresolve::runProbing(HighsPostsolveStack& postSolveStack) {
     // finally apply substitutions
     HPRESOLVE_CHECKED_CALL(applyConflictGraphSubstitutions(postSolveStack));
 
-    highsLogDev(options->log_options, HighsLogType::kInfo,
-                "%" HIGHSINT_FORMAT " probing evaluations: %" HIGHSINT_FORMAT
-                " deleted rows, %" HIGHSINT_FORMAT
-                " deleted "
-                "columns, %" HIGHSINT_FORMAT " lifted nonzeros\n",
-                numProbed - oldNumProbed, numDeletedRows, numDeletedCols,
-                addednnz);
+    highsLogUser(options->log_options, HighsLogType::kInfo,
+                 "%" HIGHSINT_FORMAT " probing evaluations: %" HIGHSINT_FORMAT
+                 " deleted rows, %" HIGHSINT_FORMAT
+                 " deleted "
+                 "columns, %" HIGHSINT_FORMAT " lifted nonzeros\n",
+                 numProbed - oldNumProbed, numDeletedRows, numDeletedCols,
+                 addednnz);
   }
 
   return checkLimits(postSolveStack);
