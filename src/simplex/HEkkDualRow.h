@@ -98,6 +98,11 @@ class HEkkDualRow {
       const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
       const std::vector<HighsInt>& pass_workGroup);
 
+  void refineChooseFinalLargeAlpha(
+      HighsInt& breakIndex, HighsInt& breakGroup, 
+      const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
+      const std::vector<HighsInt>& pass_workGroup);
+
   void reportWorkDataAndGroup(
       const std::string message, const HighsInt reportWorkCount,
       const std::vector<std::pair<HighsInt, HighsFloat>>& reportWorkData,
@@ -200,6 +205,9 @@ class HEkkDualRow {
   std::vector<std::pair<HighsInt, HighsFloat>> sorted_workData;
   std::vector<HighsInt> alt_workGroup;
 
+  // Data from final choice
+  HighsFloat finalCompare;
+  HighsInt num_final_ties;
   HighsSimplexAnalysis* analysis = nullptr;
 };
 

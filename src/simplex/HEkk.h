@@ -171,9 +171,17 @@ class HEkk {
   vector<HighsInt> upper_bound_col_;
   vector<HighsInt> upper_bound_row_;
 
+  double local_col_aq_density;
+  double local_row_ep_density;
+  double local_row_ap_density;
+  HighsInt local_num_bfrt_flips;
+
   double build_synthetic_tick_;
   double total_synthetic_tick_;
   HighsInt debug_solve_call_num_ = 0;
+
+  std::vector<HighsSimplexTabooRecord> taboo_col;
+  std::vector<HighsSimplexTabooRecord> taboo_row;
 
  private:
   bool isUnconstrainedLp();
@@ -252,6 +260,11 @@ class HEkk {
   double computeBasisCondition();
   void initialiseAnalysis();
   std::string rebuildReason(const HighsInt rebuild_reason);
+
+  void clearTaboo();
+  void addTabooRow(const HighsInt iRow, const TabooReason reason, const double density=0);
+  void applyTabooRow(vector<HighsFloat>& values, double overwrite_with);
+  void unapplyTabooRow(vector<HighsFloat>& values);
 
   // Methods in HEkkControl
   void initialiseControl();

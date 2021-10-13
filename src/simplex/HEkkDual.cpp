@@ -1003,7 +1003,10 @@ void HEkkDual::rebuild() {
       solve_phase = kSolvePhaseError;
       return;
     }
+    // Record the synthetic clock for INVERT, and zero it for UPDATE
     ekk_instance_.resetSyntheticClock();
+    // Clear any taboo rows/cols
+    ekk_instance_.clearTaboo();
   }
 
   if (!ekk_instance_.status_.has_ar_matrix) {
@@ -1083,7 +1086,9 @@ void HEkkDual::rebuild() {
   }
 
   // Record the synthetic clock for INVERT, and zero it for UPDATE
-  ekk_instance_.resetSyntheticClock();
+  // Done above, so surely not here, now that each rebuild() does not
+  // imply a factorization
+  //  ekk_instance_.resetSyntheticClock();
 
   // Dual simplex doesn't maintain the number of primal
   // infeasiblities, so set it to an illegal value now
@@ -1161,6 +1166,10 @@ void HEkkDual::iterate() {
   // Reporting:
   // Row-wise matrix after update in updateMatrix(variable_in, variable_out);
 
+  // Reset the flag to abandon an iteration
+  abandon_iteration = false;
+  ekk_instance_.local_num_bfrt_flips = 0;
+
   analysis->simplexTimerStart(IterateChuzrClock);
   chooseRow();
   analysis->simplexTimerStop(IterateChuzrClock);
@@ -1190,6 +1199,13 @@ void HEkkDual::iterate() {
   analysis->simplexTimerStart(IterateDualClock);
   updateDual();
   analysis->simplexTimerStop(IterateDualClock);
+
+  const bool debug_chuzc = false;
+  if (debug_chuzc) {
+    ekk_instance_.debugSimplexDualInfeasible(true);
+    fflush(stdout);
+    assert(ekk_instance_.info_.num_dual_infeasibilities==0);
+  }
 
   //  debugUpdatedObjectiveValue(ekk_instance_, algorithm, solve_phase, "Before
   //  updatePrimal");
@@ -1238,8 +1254,8 @@ void HEkkDual::iterate() {
   // Analyse the iteration: possibly report; possibly switch strategy
   iterationAnalysis();
 
-  const bool debug = false;
-  if (debug) {
+  const bool debug_update_dual = false;
+  if (debug_update_dual) {
     debugDualSimplex("After iterate()");
     ekk_instance_.computeDual();
     debugDualSimplex("After computeDual()");
@@ -1378,6 +1394,8 @@ void HEkkDual::chooseRow() {
   //
   // If reinversion is needed then skip this method
   if (rebuild_reason) return;
+  // Zero the infeasibility of any taboo rows
+  ekk_instance_.applyTabooRow(dualRHS.work_infeasibility, 0);
   // Choose candidates repeatedly until candidate is OK or optimality is
   // detected
   for (;;) {
@@ -1427,6 +1445,15 @@ void HEkkDual::chooseRow() {
       break;
     }
   }
+  // Recover the infeasibility of any taboo rows
+  ekk_instance_.unapplyTabooRow(dualRHS.work_infeasibility);
+
+  // Update the record of average row_ep (pi_p) density. This ignores
+  // any BTRANs done for skipped candidates
+  ekk_instance_.local_row_ep_density = (double)row_ep.count / solver_num_row;
+  ekk_instance_.updateOperationResultDensity(
+      ekk_instance_.local_row_ep_density, ekk_instance_.info_.row_ep_density);
+
   // Index of row to leave the basis has been found
   //
   // Assign basic info:
@@ -1445,11 +1472,6 @@ void HEkkDual::chooseRow() {
   // Set move_out to be -1 if delta_primal<0, otherwise +1 (since
   // delta_primal>0)
   move_out = delta_primal < 0 ? -1 : 1;
-  // Update the record of average row_ep (pi_p) density. This ignores
-  // any BTRANs done for skipped candidates
-  const double local_row_ep_density = (double)row_ep.count / solver_num_row;
-  ekk_instance_.updateOperationResultDensity(
-      local_row_ep_density, ekk_instance_.info_.row_ep_density);
 }
 
 bool HEkkDual::acceptDualSteepestEdgeWeight(
@@ -1762,9 +1784,9 @@ void HEkkDual::updateFtran() {
                      analysis->pointer_serial_factor_clocks);
   if (analysis->analyse_simplex_summary_data)
     analysis->operationRecordAfter(kSimplexNlaFtran, col_aq);
-  const double local_col_aq_density = (double)col_aq.count / solver_num_row;
+  ekk_instance_.local_col_aq_density = (double)col_aq.count / solver_num_row;
   ekk_instance_.updateOperationResultDensity(
-      local_col_aq_density, ekk_instance_.info_.col_aq_density);
+      ekk_instance_.local_col_aq_density, ekk_instance_.info_.col_aq_density);
   // Save the pivot value computed column-wise - used for numerical checking
   alpha_col = col_aq.array[row_out];
   analysis->simplexTimerStop(FtranClock);

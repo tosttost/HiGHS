@@ -181,6 +181,18 @@ enum class LpAction {
   kBacktracking
 };
 
+// Densities that are always OK
+const double kColAqOkDensity = 1e-4;
+const double kRowEpOkDensity = 1e-4;
+const double kRowApOkDensity = 1e-4;
+const double kTabooDensityMultiplier = 100;
+const double kTabooMinIteration = 20;
+enum class TabooReason {
+  kDense = 0,
+  kSingular,
+  kCycling
+};
+		  
 //
 // Relation between HiGHS basis and Simplex basis
 //

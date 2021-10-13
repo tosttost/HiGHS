@@ -128,6 +128,12 @@ HighsInt HEkkDualRow::chooseFinal() {
    * (4) determine final flip variables
    */
 
+  const HighsInt check_iter = -15;
+    if (ekk_instance_.iteration_count_ == check_iter) {
+      printf("Checking iteration %d\n", (int)check_iter);
+    }
+
+
   // 1. Reduce by large step BFRT
   analysis->simplexTimerStart(Chuzc2Clock);
   HighsInt fullCount = workCount;
@@ -228,6 +234,87 @@ HighsInt HEkkDualRow::chooseFinal() {
     workAlpha =
         sorted_workData[breakIndex].second * move_out * workMove[workPivot];
   }
+  const bool report_refine_pivot = true;//ekk_instance_.iteration_count_ == check_iter;
+  const HighsInt countGroup = workGroup.size() - 1;
+  const bool refine_pivot_for_sparsity = true;
+  if (refine_pivot_for_sparsity) {
+    // Consider alternative, trading size of pivot for sparsity
+    assert(use_quad_sort);
+    const HighsInt original_breakIndex = breakIndex;
+    const HighsInt original_breakGroup = breakGroup;
+    // Data for printing
+    const HighsInt countGroup = workGroup.size() - 1;
+    const bool from_last_group = breakGroup == countGroup - 1;
+    const HighsInt num_col = ekk_instance_.lp_.num_row_;
+    const vector<HighsInt>& start = ekk_instance_.lp_.a_matrix_.start_;
+    // Collect data from the original choice
+    const HighsInt original_workPivot = workPivot;
+    const HighsInt choose_group_size = workGroup[breakGroup + 1] - workGroup[breakGroup];
+    const HighsFloat original_workAlpha = workAlpha;
+    const HighsFloat original_abs_alpha = abs(original_workAlpha);
+    const HighsFloat original_workTheta =
+      workDual[workPivot] * workMove[workPivot] > 0 ?
+      workDual[workPivot] / workAlpha : 0;
+    const HighsInt original_choose_col_num_nz =
+      original_workPivot < num_col ? start[original_workPivot+1]-start[original_workPivot] : 1;
+    const HighsInt original_num_final_ties = num_final_ties;
+    // 
+    refineChooseFinalLargeAlpha(breakIndex, breakGroup, workData, workGroup);
+    const HighsInt refine_workPivot = workData[breakIndex].first;
+    const HighsFloat refine_workAlpha = workData[breakIndex].second * move_out * workMove[refine_workPivot];
+    const HighsFloat refine_abs_alpha = abs(refine_workAlpha);
+    const HighsFloat refine_workTheta =
+			   workDual[refine_workPivot] * workMove[refine_workPivot] > 0 ?
+      workDual[refine_workPivot] / refine_workAlpha : 0;
+    const HighsInt refine_choose_col_num_nz =
+			   refine_workPivot < num_col ? start[refine_workPivot+1]-start[refine_workPivot] : 1;
+    const HighsInt refine_num_final_ties = num_final_ties;
+    const bool new_breakIndex = breakIndex != original_breakIndex;
+    const HighsInt dl_nz = refine_choose_col_num_nz - original_choose_col_num_nz;
+    if (dl_nz>0) {
+      printf("dl_nz>0 in It = %6d\n", (int)ekk_instance_.iteration_count_);
+      fflush(stdout);
+    }
+    if (new_breakIndex && dl_nz & report_refine_pivot) {
+      printf("It = %6d; Lst = %1d; Sz = %4d;"
+	     //	     " Cmpr = %11.4g;"
+	     " CHUZC/Ties/|Alpha|/Theta/num_nz"
+	     " Og(%7d / %4d / %11.4g / %11.4g / %3d)"
+	     " Rf(%7d / %4d / %11.4g / %11.4g / %3d)"
+	     //	   " Diff %1d"
+	     " DlNz %3d"
+	     "\n",
+	     (int)ekk_instance_.iteration_count_,
+	     from_last_group, (int)choose_group_size,
+	     //	     (double)finalCompare,
+	     (int)original_workPivot,
+	     (int)original_num_final_ties,
+	     (double)original_abs_alpha,
+	     (double)original_workTheta,
+	     (int)original_choose_col_num_nz,
+	     (int)refine_workPivot,
+	     (int)refine_num_final_ties,
+	     (double)refine_abs_alpha,
+	     (double)refine_workTheta,
+	     (int)refine_choose_col_num_nz,
+	     //	   new_breakIndex,
+	     (int)dl_nz
+	     );
+      fflush(stdout);
+    }
+    assert(dl_nz<=0);
+    if (dl_nz<0) {
+      // Fewer nonzeros in column after refined search
+      workPivot = refine_workPivot;
+      workAlpha = refine_workAlpha;
+    } else {
+      // No better, so use the original choice
+      breakIndex = original_breakIndex;
+      breakGroup = original_breakGroup;
+      assert(workPivot == original_workPivot);
+      assert(workAlpha == original_workAlpha);
+    }
+  }
   const bool report = false;  // ekk_instance_.iteration_count_ == check_iter;
   if (workDual[workPivot] * workMove[workPivot] > 0) {
     workTheta = workDual[workPivot] / workAlpha;
@@ -248,7 +335,10 @@ HighsInt HEkkDualRow::chooseFinal() {
   fullCount = breakIndex;  // Not used
   workCount = 0;
   if (use_quad_sort) {
+    const bool report_bfrt = ekk_instance_.iteration_count_ == check_iter;//false;
+    if (report_bfrt) debugReportBfrtVar(-1, workData);
     for (HighsInt i = 0; i < workGroup[breakGroup]; i++) {
+      if (report_bfrt) debugReportBfrtVar(i, workData);
       const HighsInt iCol = workData[i].first;
       const HighsInt move = workMove[iCol];
       workData[workCount++] = make_pair(iCol, move * workRange[iCol]);
@@ -258,9 +348,9 @@ HighsInt HEkkDualRow::chooseFinal() {
            (int)workPivot, (double)workAlpha, (double)workTheta);
     debugReportBfrtVar(-1, sorted_workData);
     for (HighsInt i = 0; i < alt_workGroup[breakGroup]; i++) {
+      debugReportBfrtVar(i, sorted_workData);
       const HighsInt iCol = sorted_workData[i].first;
       const HighsInt move = workMove[iCol];
-      debugReportBfrtVar(i, sorted_workData);
       workData[workCount++] = make_pair(iCol, move * workRange[iCol]);
     }
     // Look at all entries of final group to see what dual
@@ -435,11 +525,11 @@ void HEkkDualRow::chooseFinalLargeAlpha(
     HighsInt& breakIndex, HighsInt& breakGroup, HighsInt pass_workCount,
     const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
     const std::vector<HighsInt>& pass_workGroup) {
-  HighsFloat finalCompare = 0;
+  finalCompare = 0;
   for (HighsInt i = 0; i < pass_workCount; i++)
     finalCompare = max(finalCompare, pass_workData[i].second);
   finalCompare = min(0.1 * finalCompare, (HighsFloat)1.0);
-  HighsInt countGroup = pass_workGroup.size() - 1;
+  const HighsInt countGroup = pass_workGroup.size() - 1;
   breakGroup = -1;
   breakIndex = -1;
   for (HighsInt iGroup = countGroup - 1; iGroup >= 0; iGroup--) {
@@ -450,7 +540,9 @@ void HEkkDualRow::chooseFinalLargeAlpha(
       if (dMaxFinal < pass_workData[i].second) {
         dMaxFinal = pass_workData[i].second;
         iMaxFinal = i;
+	num_final_ties = 0;
       } else if (dMaxFinal == pass_workData[i].second) {
+	num_final_ties++;
         HighsInt jCol = pass_workData[iMaxFinal].first;
         HighsInt iCol = pass_workData[i].first;
         if (workNumTotPermutation[iCol] < workNumTotPermutation[jCol]) {
@@ -467,7 +559,83 @@ void HEkkDualRow::chooseFinalLargeAlpha(
   }
 }
 
+void HEkkDualRow::refineChooseFinalLargeAlpha(
+    HighsInt& breakIndex, HighsInt& breakGroup, 
+    const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData,
+    const std::vector<HighsInt>& pass_workGroup) {
+  const HighsInt countGroup = pass_workGroup.size() - 1;
+  const HighsFloat ok_alpha_margin = 0.1;
+  const HighsFloat ok_alpha = ok_alpha_margin * pass_workData[breakIndex].second;
+  const HighsInt num_col = ekk_instance_.lp_.num_row_;
+  const vector<HighsInt>& start = ekk_instance_.lp_.a_matrix_.start_;
+
+  const HighsInt check_iter = -15;
+  // Look through all groups for a sparser column with sufficient change and OK alpha
+  //  const HighsFloat totalDelta = fabs(workDelta);
+  //  HighsFloat totalChange = 0;
+  HighsInt break_num_nz = kHighsIInf;
+  const HighsInt move_out = workDelta < 0 ? -1 : 1;
+  HighsInt original_breakIndex = breakIndex;
+  HighsInt original_breakGroup = breakGroup;
+  breakGroup = -1;
+  breakIndex = -1;
+  HighsInt iMaxFinal = -1;
+  HighsFloat dMaxFinal = 0;
+  for (HighsInt iGroup = 0; iGroup < countGroup; iGroup++) {
+    for (HighsInt i = pass_workGroup[iGroup]; i < pass_workGroup[iGroup + 1];
+	 i++) {
+      const HighsInt iVar = pass_workData[i].first;
+      const HighsFloat alpha = pass_workData[i].second;
+      //      totalChange += workRange[iVar] * alpha;
+      // Sufficient change achieved, or 
+      const HighsInt num_nz = iVar < num_col ? start[iVar+1]-start[iVar] : 1;
+      const bool alpha_ok = alpha > ok_alpha;
+      if (ekk_instance_.iteration_count_ == check_iter) {
+	printf("iVar = %6d; ok_alpha = %11.4g; alpha = %11.4g; num_nz = %3d: OK = %1d\n",
+	       (int)iVar, (double)ok_alpha, (double)alpha, (int)num_nz, alpha_ok);
+      }
+      if (alpha_ok) {
+	if (break_num_nz > num_nz) {
+	  // Smaller number of nonzeros: take entry
+	  num_final_ties = 0;
+	  iMaxFinal = i;
+	  dMaxFinal = alpha;
+	  breakGroup = iGroup;
+	  break_num_nz = num_nz;
+	} else if (num_nz == break_num_nz) {
+	  num_final_ties++;
+	  if (dMaxFinal < alpha) {
+	    // Identical number of nonzeros but bigger alpha: take entry
+	    iMaxFinal = i;
+	    dMaxFinal = alpha;
+	    breakGroup = iGroup;
+	    num_final_ties = 0;
+	  } else if (dMaxFinal == alpha) {
+	    // Identical number of nonzeros and alpha
+	    if (iGroup > breakGroup) {
+	      // In a later group: take entry
+	      iMaxFinal = i;
+	      dMaxFinal = alpha;
+	      breakGroup = iGroup;
+	    } else {
+	      // In the same group: break tie randomly
+	      HighsInt jVar = pass_workData[iMaxFinal].first;
+	      HighsInt iVar = pass_workData[i].first;
+	      if (workNumTotPermutation[iVar] < workNumTotPermutation[jVar]) iMaxFinal = i;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  if (iMaxFinal<0) fflush(stdout);
+  assert(iMaxFinal>=0);
+  assert(pass_workData[iMaxFinal].second > finalCompare);
+  breakIndex = iMaxFinal;
+}
+
 void HEkkDualRow::updateFlip(HVector* bfrtColumn) {
+  ekk_instance_.local_num_bfrt_flips = workCount;
   HighsFloat* workDual = &ekk_instance_.info_.workDual_[0];
   HighsFloat dual_objective_value_change = 0;
   bfrtColumn->clear();
@@ -634,8 +802,8 @@ void HEkkDualRow::debugReportBfrtVar(
     const std::vector<std::pair<HighsInt, HighsFloat>>& pass_workData) const {
   const HighsInt move_out = workDelta < 0 ? -1 : 1;
   const double Td = ekk_instance_.options_->dual_feasibility_tolerance;
-  const HighsInt iCol = sorted_workData[ix].first;
-  const HighsFloat value = sorted_workData[ix].second;
+  const HighsInt iCol = pass_workData[ix].first;
+  const HighsFloat value = pass_workData[ix].second;
   const HighsInt move = workMove[iCol];
   const HighsFloat dual = workDual[iCol];
   const HighsFloat new_dual = dual - move_out * move * workTheta * value;

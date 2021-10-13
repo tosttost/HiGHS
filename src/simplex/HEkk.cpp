@@ -1596,6 +1596,8 @@ HighsInt HEkk::initialiseSimplexLpBasisAndFactor(
     }
     // Record the synthetic clock for INVERT, and zero it for UPDATE
     resetSyntheticClock();
+    // Clear any taboo rows/cols
+    clearTaboo();
   }
   assert(status_.has_invert);
   return 0;
@@ -2567,7 +2569,7 @@ void HEkk::pivotColumnFtran(const HighsInt iCol, HVector& col_aq) {
   if (analysis_.analyse_simplex_summary_data)
     analysis_.operationRecordAfter(kSimplexNlaFtran, col_aq);
   HighsInt num_row = lp_.num_row_;
-  const double local_col_aq_density = (double)col_aq.count / num_row;
+  local_col_aq_density = (double)col_aq.count / num_row;
   updateOperationResultDensity(local_col_aq_density, info_.col_aq_density);
   analysis_.simplexTimerStop(FtranClock);
 }
@@ -2587,7 +2589,7 @@ void HEkk::unitBtran(const HighsInt iRow, HVector& row_ep) {
   if (analysis_.analyse_simplex_summary_data)
     analysis_.operationRecordAfter(kSimplexNlaBtranEp, row_ep);
   HighsInt num_row = lp_.num_row_;
-  const double local_row_ep_density = (double)row_ep.count / num_row;
+  local_row_ep_density = (double)row_ep.count / num_row;
   updateOperationResultDensity(local_row_ep_density, info_.row_ep_density);
   analysis_.simplexTimerStop(BtranClock);
 }
@@ -2672,8 +2674,8 @@ void HEkk::tableauRowPrice(const HVector& row_ep, HVector& row_ap) {
     for (HighsInt iCol = 0; iCol < solver_num_col; iCol++)
       row_ap.array[iCol] *= nonbasicFlag[iCol];
   }
+  local_row_ap_density = (double)row_ap.count / solver_num_col;
   // Update the record of average row_ap density
-  const double local_row_ap_density = (double)row_ap.count / solver_num_col;
   updateOperationResultDensity(local_row_ap_density, info_.row_ap_density);
   if (analysis_.analyse_simplex_summary_data)
     analysis_.operationRecordAfter(kSimplexNlaPriceAp, row_ap);
@@ -2735,13 +2737,13 @@ void HEkk::computeDual() {
   analysis_.simplexTimerStart(ComputeDualClock);
   HighsSimplexInfo& info = this->info_;
   const SimplexBasis& basis = this->basis_;
-  vector<HighsFloat> debug_pi = info.workDual_;
-  for (HighsInt iVar = lp_.num_col_; iVar < lp_.num_col_ + lp_.num_row_; iVar++)
-    debug_pi[iVar] = -info.workDual_[iVar];
-  for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
-    HighsInt iVar = basis_.basicIndex_[iRow];
-    debug_pi[iVar] = info.workCost_[iVar] + info.workShift_[iVar];
-  }
+  //  vector<HighsFloat> debug_pi = info.workDual_;
+  //  for (HighsInt iVar = lp_.num_col_; iVar < lp_.num_col_ + lp_.num_row_; iVar++)
+  //    debug_pi[iVar] = -info.workDual_[iVar];
+  //  for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
+  //    HighsInt iVar = basis_.basicIndex_[iRow];
+  //    debug_pi[iVar] = info.workCost_[iVar] + info.workShift_[iVar];
+  //  }
   
   // Create a local buffer for the pi vector
   HVector dual_col;
@@ -2769,17 +2771,17 @@ void HEkk::computeDual() {
   if (report) printf("\nHEkk::computeDual\n");
   if (dual_col.count) {
     fullBtran(dual_col);
-    if (report) {
-      for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
-	HighsInt iVar = basis_.basicIndex_[iRow];
-	HighsFloat pi_delta = abs(debug_pi[iVar] - dual_col.array[iRow]);
-	printf("Row %2d; iVar = %2d; pi = %11.4g debug_pi = %11.4g; pi_delta = %11.4g\n",
-	       (int)iRow,(int)iVar,
-	       (double)dual_col.array[iRow],
-	       (double)debug_pi[iVar],
-	       (double)pi_delta);
-      }
-    }
+    //    if (report) {
+    //      for (HighsInt iRow = 0; iRow < lp_.num_row_; iRow++) {
+    //	HighsInt iVar = basis_.basicIndex_[iRow];
+    //	HighsFloat pi_delta = abs(debug_pi[iVar] - dual_col.array[iRow]);
+    //	printf("Row %2d; iVar = %2d; pi = %11.4g debug_pi = %11.4g; pi_delta = %11.4g\n",
+    //	       (int)iRow,(int)iVar,
+    //	       (double)dual_col.array[iRow],
+    //	       (double)debug_pi[iVar],
+    //	       (double)pi_delta);
+    //      }
+    //    }
     // Create a local buffer for the values of reduced costs
     HVector dual_row;
     dual_row.setup(lp_.num_col_);
@@ -3781,3 +3783,33 @@ double HEkk::factorSolveError() {
   double solution_error = max(ftran_solution_error, btran_solution_error);
   return solution_error;
 }
+
+void HEkk::clearTaboo() {
+  taboo_col.clear();
+  taboo_row.clear();
+}
+
+void HEkk::addTabooRow(const HighsInt iRow, const TabooReason reason, const double density) {
+  HighsSimplexTabooRecord record;
+  record.reason = reason;
+  record.row = iRow;
+  record.col = -1;
+  record.density = density;
+  taboo_row.push_back(record);
+}
+
+void HEkk::applyTabooRow(vector<HighsFloat>& values, double overwrite_with) {
+  assert(values.size() >= lp_.num_row_);
+  for (HighsInt iX = 0; iX < (HighsInt)taboo_row.size(); iX++) {
+    HighsInt iRow = taboo_row[iX].row;
+    taboo_row[iX].save_value = values[iRow];
+    values[iRow] = overwrite_with;
+  }
+}
+
+void HEkk::unapplyTabooRow(vector<HighsFloat>& values) {
+  assert(values.size() >= lp_.num_row_);
+  for (HighsInt iX = 0; iX < (HighsInt)taboo_row.size(); iX++)
+    values[taboo_row[iX].row] = taboo_row[iX].save_value;
+}
+

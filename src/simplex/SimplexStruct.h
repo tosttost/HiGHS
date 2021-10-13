@@ -151,7 +151,7 @@ struct HighsSimplexInfo {
   double factor_pivot_threshold;
   HighsInt update_limit;
 
-  // Simplex control parameters from HSA
+  // Simplex control parameters
   HighsInt control_iteration_count0;
   double col_aq_density;
   double row_ep_density;
@@ -162,6 +162,7 @@ struct HighsSimplexInfo {
   double col_BFRT_density;
   double primal_col_density;
   double dual_col_density;
+
   // For control of switch from DSE to Devex in dual simplex
   bool allow_dual_steepest_edge_to_devex_switch;
   double dual_steepest_edge_weight_log_error_threshold;
@@ -237,6 +238,13 @@ struct HighsSimplexInfo {
   double updated_primal_objective_value;
   // Number of logical variables in the basis
   HighsInt num_basic_logicals;
+};
+struct HighsSimplexTabooRecord {
+  TabooReason reason;
+  HighsInt row;
+  HighsInt col;
+  double density;
+  HighsFloat save_value;
 };
 
 #endif /* SIMPLEX_SIMPLEXSTRUCT_H_ */

@@ -323,6 +323,7 @@ struct HighsOptionsStruct {
   double factor_pivot_threshold;
   double factor_pivot_tolerance;
   double start_crossover_tolerance;
+  double taboo_density_multiplier;
   bool less_infeasible_DSE_check;
   bool less_infeasible_DSE_choose_row;
   bool use_original_HFactor_logic;
@@ -842,6 +843,12 @@ class HighsOptions : public HighsOptionsStruct {
         "start_crossover_tolerance",
         "Tolerance to be satisfied before IPM crossover will start", advanced,
         &start_crossover_tolerance, 1e-12, 1e-8, kHighsInf);
+    records.push_back(record_d0uble);
+
+    record_d0uble = new OptionRecordD0uble("taboo_density_multiplier",
+					   "Multiplier to determine taboo density in simplex",
+					   advanced, &taboo_density_multiplier,
+					   0, kHighsInf, kHighsInf);
     records.push_back(record_d0uble);
 
     record_bool = new OptionRecordBool(
