@@ -144,6 +144,7 @@ class HSimplexNla {
   friend class HEkk;
   friend class HEkkPrimal;
   friend class HEkkDual;
+  friend class HEkkDualRow;
 };
 
 #endif /* HSIMPLEXNLA_H_ */

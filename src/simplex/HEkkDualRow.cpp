@@ -128,7 +128,7 @@ HighsInt HEkkDualRow::chooseFinal() {
    * (4) determine final flip variables
    */
 
-  const HighsInt check_iter = -15;
+  const HighsInt check_iter = 100;
     if (ekk_instance_.iteration_count_ == check_iter) {
       printf("Checking iteration %d\n", (int)check_iter);
     }
@@ -234,87 +234,94 @@ HighsInt HEkkDualRow::chooseFinal() {
     workAlpha =
         sorted_workData[breakIndex].second * move_out * workMove[workPivot];
   }
-  const bool report_refine_pivot = true;//ekk_instance_.iteration_count_ == check_iter;
   const HighsInt countGroup = workGroup.size() - 1;
-  const bool refine_pivot_for_sparsity = true;
+  const bool refine_pivot_for_sparsity = ekk_instance_.iteration_count_ >= check_iter;//true;
+  const HighsInt max_num_choose_col = min((HighsInt)5, workGroup[breakGroup+1]);
   if (refine_pivot_for_sparsity) {
     // Consider alternative, trading size of pivot for sparsity
     assert(use_quad_sort);
-    const HighsInt original_breakIndex = breakIndex;
-    const HighsInt original_breakGroup = breakGroup;
-    // Data for printing
-    const HighsInt countGroup = workGroup.size() - 1;
-    const bool from_last_group = breakGroup == countGroup - 1;
-    const HighsInt num_col = ekk_instance_.lp_.num_row_;
+    const HighsInt num_col = ekk_instance_.lp_.num_col_;
+    const HighsInt num_row = ekk_instance_.lp_.num_row_;
     const vector<HighsInt>& start = ekk_instance_.lp_.a_matrix_.start_;
-    // Collect data from the original choice
-    const HighsInt original_workPivot = workPivot;
-    const HighsInt choose_group_size = workGroup[breakGroup + 1] - workGroup[breakGroup];
-    const HighsFloat original_workAlpha = workAlpha;
-    const HighsFloat original_abs_alpha = abs(original_workAlpha);
-    const HighsFloat original_workTheta =
-      workDual[workPivot] * workMove[workPivot] > 0 ?
-      workDual[workPivot] / workAlpha : 0;
-    const HighsInt original_choose_col_num_nz =
-      original_workPivot < num_col ? start[original_workPivot+1]-start[original_workPivot] : 1;
-    const HighsInt original_num_final_ties = num_final_ties;
-    // 
-    refineChooseFinalLargeAlpha(breakIndex, breakGroup, workData, workGroup);
-    const HighsInt refine_workPivot = workData[breakIndex].first;
-    const HighsFloat refine_workAlpha = workData[breakIndex].second * move_out * workMove[refine_workPivot];
-    const HighsFloat refine_abs_alpha = abs(refine_workAlpha);
-    const HighsFloat refine_workTheta =
-			   workDual[refine_workPivot] * workMove[refine_workPivot] > 0 ?
-      workDual[refine_workPivot] / refine_workAlpha : 0;
-    const HighsInt refine_choose_col_num_nz =
-			   refine_workPivot < num_col ? start[refine_workPivot+1]-start[refine_workPivot] : 1;
-    const HighsInt refine_num_final_ties = num_final_ties;
-    const bool new_breakIndex = breakIndex != original_breakIndex;
-    const HighsInt dl_nz = refine_choose_col_num_nz - original_choose_col_num_nz;
-    if (dl_nz>0) {
-      printf("dl_nz>0 in It = %6d\n", (int)ekk_instance_.iteration_count_);
-      fflush(stdout);
+    HVector col_aq;
+    col_aq.setup(num_row);
+    ChuzcTabooRecord record;
+    vector<ChuzcTabooRecord> chuzc_taboo;
+    HighsInt num_choose_col = 0;
+    HighsInt best_choose_col = -1;
+    HighsInt best_choose_count = -1;
+    HighsFloat best_choose_abs_theta = 0;
+    const double average_density = ekk_instance_.info_.col_aq_density;
+    for (;;) {
+      workTheta = 
+	workDual[workPivot] * workMove[workPivot] > 0 ?
+	workDual[workPivot] / workAlpha : 0;
+      HighsFloat abs_theta = abs(workTheta);
+      record.break_index = breakIndex;
+      record.break_group = breakGroup;
+      record.work_pivot = workPivot;
+      record.work_alpha = workAlpha;
+      record.work_theta = workTheta;
+      record.work_data2 = workData[breakIndex].second;
+      // Form the pivotal column
+      HighsInt iCol = workData[breakIndex].first;
+      col_aq.clear();
+      col_aq.packFlag = true;
+      ekk_instance_.lp_.a_matrix_.collectAj(col_aq, iCol, 1);
+      record.rhs_count = col_aq.count;
+      ekk_instance_.simplex_nla_.ftran(col_aq, ekk_instance_.info_.col_aq_density);
+      record.half_count = col_aq.packCount;
+      record.full_count = col_aq.count;
+      //      double density = (1.0 * col_aq.count) / num_row;
+      //      if (density < 1e-6*average_density) break;
+      if (num_choose_col) {
+	const bool better =
+	  (best_choose_count > 1e0 * col_aq.count && best_choose_abs_theta < 1e1 * abs_theta) ||
+	  (best_choose_count > 1e1 * col_aq.count && best_choose_abs_theta < 1e2 * abs_theta) ||
+	  (best_choose_count > 1e2 * col_aq.count && best_choose_abs_theta < 1e3 * abs_theta) ||
+	  (best_choose_count == col_aq.count && best_choose_abs_theta < abs_theta);
+	if (better) {
+	  best_choose_col = num_choose_col;
+	  best_choose_count = col_aq.count;
+	  best_choose_abs_theta = abs_theta;
+	}
+      } else {
+	best_choose_col = 0;
+	best_choose_count = col_aq.count;
+	best_choose_abs_theta = abs_theta;
+      }
+      num_choose_col++;
+      chuzc_taboo.push_back(record);
+      if (num_choose_col >= max_num_choose_col) {
+	record = chuzc_taboo[best_choose_col];
+	breakIndex = record.break_index;
+	breakGroup = record.break_group;
+	workPivot = record.work_pivot;
+	workAlpha = record.work_alpha;
+	break;
+      }
+      workData[breakIndex].second = 0;
+      refineChooseFinalLargeAlpha(breakIndex, breakGroup, workData, workGroup);
+      workPivot = workData[breakIndex].first;
+      workAlpha = workData[breakIndex].second * move_out * workMove[workPivot];
     }
-    if (new_breakIndex && dl_nz & report_refine_pivot) {
-      printf("It = %6d; Lst = %1d; Sz = %4d;"
-	     //	     " Cmpr = %11.4g;"
-	     " CHUZC/Ties/|Alpha|/Theta/num_nz"
-	     " Og(%7d / %4d / %11.4g / %11.4g / %3d)"
-	     " Rf(%7d / %4d / %11.4g / %11.4g / %3d)"
-	     //	   " Diff %1d"
-	     " DlNz %3d"
-	     "\n",
-	     (int)ekk_instance_.iteration_count_,
-	     from_last_group, (int)choose_group_size,
-	     //	     (double)finalCompare,
-	     (int)original_workPivot,
-	     (int)original_num_final_ties,
-	     (double)original_abs_alpha,
-	     (double)original_workTheta,
-	     (int)original_choose_col_num_nz,
-	     (int)refine_workPivot,
-	     (int)refine_num_final_ties,
-	     (double)refine_abs_alpha,
-	     (double)refine_workTheta,
-	     (int)refine_choose_col_num_nz,
-	     //	   new_breakIndex,
-	     (int)dl_nz
-	     );
-      fflush(stdout);
+    for (HighsInt iX = 0; iX < num_choose_col; iX++) {
+      HighsInt to_ix = chuzc_taboo[iX].break_index;
+      workData[to_ix].second = chuzc_taboo[iX].work_data2;
     }
-    assert(dl_nz<=0);
-    if (dl_nz<0) {
-      // Fewer nonzeros in column after refined search
-      workPivot = refine_workPivot;
-      workAlpha = refine_workAlpha;
-    } else {
-      // No better, so use the original choice
-      breakIndex = original_breakIndex;
-      breakGroup = original_breakGroup;
-      assert(workPivot == original_workPivot);
-      assert(workAlpha == original_workAlpha);
+    const bool report_taboo = true;
+    if (report_taboo && num_choose_col>1) {
+      const bool report_full = true;//best_choose_col>0;
+      if (report_full) {
+	printf("\n");
+	for (HighsInt iX = 0; iX < num_choose_col; iX++) {
+	  bool best = iX == best_choose_col;
+	  chuzc_taboo[iX].report(iX, best);
+	}
+      }
     }
   }
+  
   const bool report = false;  // ekk_instance_.iteration_count_ == check_iter;
   if (workDual[workPivot] * workMove[workPivot] > 0) {
     workTheta = workDual[workPivot] / workAlpha;
@@ -565,7 +572,7 @@ void HEkkDualRow::refineChooseFinalLargeAlpha(
     const std::vector<HighsInt>& pass_workGroup) {
   const HighsInt countGroup = pass_workGroup.size() - 1;
   const HighsFloat ok_alpha_margin = 0.1;
-  const HighsFloat ok_alpha = ok_alpha_margin * pass_workData[breakIndex].second;
+  const HighsFloat ok_alpha = ok_alpha_margin * finalCompare;
   const HighsInt num_col = ekk_instance_.lp_.num_row_;
   const vector<HighsInt>& start = ekk_instance_.lp_.a_matrix_.start_;
 
@@ -590,10 +597,9 @@ void HEkkDualRow::refineChooseFinalLargeAlpha(
       // Sufficient change achieved, or 
       const HighsInt num_nz = iVar < num_col ? start[iVar+1]-start[iVar] : 1;
       const bool alpha_ok = alpha > ok_alpha;
-      if (ekk_instance_.iteration_count_ == check_iter) {
-	printf("iVar = %6d; ok_alpha = %11.4g; alpha = %11.4g; num_nz = %3d: OK = %1d\n",
-	       (int)iVar, (double)ok_alpha, (double)alpha, (int)num_nz, alpha_ok);
-      }
+      if (ekk_instance_.iteration_count_ == check_iter) 
+	printf("iGroup = %2d; i = %2d; iVar = %6d; ok_alpha = %11.4g; alpha = %11.4g; num_nz = %3d: OK = %1d\n",
+	       (int)iGroup, (int)i, (int)iVar, (double)ok_alpha, (double)alpha, (int)num_nz, alpha_ok);
       if (alpha_ok) {
 	if (break_num_nz > num_nz) {
 	  // Smaller number of nonzeros: take entry
@@ -630,7 +636,6 @@ void HEkkDualRow::refineChooseFinalLargeAlpha(
   }
   if (iMaxFinal<0) fflush(stdout);
   assert(iMaxFinal>=0);
-  assert(pass_workData[iMaxFinal].second > finalCompare);
   breakIndex = iMaxFinal;
 }
 
@@ -811,15 +816,26 @@ void HEkkDualRow::debugReportBfrtVar(
   const bool infeasible = new_dual_infeasibility < -Td;
   if (ix < 0) {
     printf(
-        "Ix iCol Mv       Lower      Primal       Upper       Value        "
+        "Ix   iCol Mv       Lower      Primal       Upper       Value        "
         "Dual       Ratio      NwDual Ifs\n");
     return;
   }
-  printf("%2d %4d %2d %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %3d\n",
+  printf("%2d %6d %2d %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %11.4g %3d\n",
          (int)ix, (int)iCol, (int)move,
          (double)ekk_instance_.info_.workLower_[iCol],
          (double)ekk_instance_.info_.workValue_[iCol],
          (double)ekk_instance_.info_.workUpper_[iCol], (double)value,
          (double)dual, (double)fabs(dual / value), (double)new_dual,
          infeasible);
+}
+
+void ChuzcTabooRecord::report(const HighsInt ix, const bool best) {
+  if (ix>=0) {
+    printf("%2d:", (int)ix);
+  } else {
+    printf("  :");
+  }
+  printf(" Gp %4d; Ix %4d; Pv %7d; rhs_k %7d; half_k %7d; Alpha %11.4g; Da2 %11.4g; Theta %11.4g; full_k %7d %1s\n",
+	 (int)break_group, (int)break_index, (int)work_pivot, (int)rhs_count, (int)half_count, 
+	 (double)work_alpha, (double)work_data2, (double)work_theta, (int)full_count, best ? " <" : "");
 }

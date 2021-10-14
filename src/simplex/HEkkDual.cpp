@@ -1770,7 +1770,7 @@ void HEkkDual::updateFtran() {
   // If reinversion is needed then skip this method
   if (rebuild_reason) return;
   analysis->simplexTimerStart(FtranClock);
-  // Clear the picotal column and indicate that its values should be packed
+  // Clear the pivotal column and indicate that its values should be packed
   col_aq.clear();
   col_aq.packFlag = true;
   // Get the constraint matrix column by combining just one column

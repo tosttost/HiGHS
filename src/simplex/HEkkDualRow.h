@@ -26,6 +26,19 @@ const double kInitialTotalChange = 1e-12;
 const double kInitialRemainTheta = 1e100;
 const double kMaxSelectTheta = 1e18;
 
+struct ChuzcTabooRecord {
+  HighsInt break_index;
+  HighsInt break_group;
+  HighsInt work_pivot;
+  HighsInt rhs_count;
+  HighsInt half_count;
+  HighsInt full_count;
+  HighsFloat work_alpha;
+  HighsFloat work_theta;
+  HighsFloat work_data2;
+  void report(const HighsInt ix=-1, const bool best = false);
+};
+
 /**
  * @brief Dual simplex ratio test for HiGHS
  *
